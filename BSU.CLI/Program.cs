@@ -7,10 +7,24 @@ namespace BSU.CLI
     {
         static int Main(string[] args)
         {
+            new Program().Main();
+            return 0;
+        }
+
+        void Main()
+        {
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             var core = new Core.Core(settingsFile);
 
-            return 0;
+            var commands = new Commands(this);
+            
+            
+        }
+
+        [CliCommand("addrepo", "Adds a repository.", "url name")]
+        void AddRepo(string[] args)
+        {
+            
         }
     }
 }
