@@ -5,12 +5,52 @@ namespace BSU.CLI
 {
     class Program
     {
+        private Core.Core _core;
+
         static int Main(string[] args)
         {
-            var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
-            var core = new Core.Core(settingsFile);
+            return new Program().Main();
+        }
 
-            return 0;
+        int Main()
+        {
+            var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
+            _core = new Core.Core(settingsFile);
+
+            var commands = new Commands(this);
+
+            while (true)
+            {
+                Console.Write("> ");
+                var command = Console.ReadLine();
+                if (command == "exit") return 0;
+                try
+                {
+                    commands.Process(command);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.GetType().Name}\n{e.Message}");
+                }
+            }
+        }
+
+        [CliCommand("addrepo", "Adds a repository.", "type name url")]
+        void AddRepo(string[] args)
+        {
+            _core.AddRepo(args[1], args[2], args[0]);
+        }
+
+        [CliCommand("addstorage", "Adds a storage.", "type name path")]
+        void AddStorage(string[] args)
+        {
+            _core.AddStorage(args[1], new DirectoryInfo(args[2]), args[0]);
+        }
+
+        [CliCommand("printintstate", "Prints the internal state.")]
+        void PrintInternalState(string[] args)
+        {
+            _core.PrintInternalState();
         }
     }
 }
