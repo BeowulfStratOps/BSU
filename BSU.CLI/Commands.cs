@@ -10,7 +10,7 @@ namespace BSU.CLI
     internal class CliCommand : Attribute
     {
         public string Name, Description, Usage;
-        public CliCommand(string name, string description, string usage)
+        public CliCommand(string name, string description, string usage=null)
         {
             Name = name;
             Description = description;
@@ -35,7 +35,39 @@ namespace BSU.CLI
 
         public void Process(string line)
         {
-            
+            var command = ParseCommand(line, out var args);
+            if (command == null)
+            {
+                Help();
+                return;
+            }
+
+            command.Func(args);
+        }
+
+        private Command ParseCommand(string line, out string[] args)
+        {
+            args = null;
+            if (line == null) return null;
+
+            var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0) return null;
+
+            if (!_commands.TryGetValue(parts[0], out var command)) return null;
+
+            args = parts.Skip(1).ToArray();
+            return command;
+        }
+
+        private void Help()
+        {
+            Console.WriteLine("Available commands:");
+            Console.WriteLine("help - prints this help.");
+            foreach (var command in _commands)
+            {
+                Console.WriteLine($"{command.Key} - {command.Value.Description}" +
+                                  (command.Value == null ? "" : $" Usage: {command.Key} {command.Value.Usage}"));
+            }
         }
 
         class Command

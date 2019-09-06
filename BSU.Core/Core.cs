@@ -28,5 +28,7 @@ namespace BSU.Core
         {
             throw new NotImplementedException();
         }
+
+        public void PrintInternalState() => _state.PrintState();
     }
 }

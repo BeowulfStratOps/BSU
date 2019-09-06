@@ -90,5 +90,19 @@ namespace BSU.Core
                     throw new NotSupportedException($"Storage type {storage.Type} is not supported.");
             }
         }
+
+        public void PrintState()
+        {
+            Console.WriteLine("Repos:");
+            foreach (var repository in _repositories)
+            {
+                Console.WriteLine($"  {repository.GetType().Name} {repository.GetName()} {repository.GetLocation()}");
+            }
+            Console.WriteLine("Storages:");
+            foreach (var storage in _storages)
+            {
+                Console.WriteLine($"  {storage.GetType().Name} {storage.GetName()} {storage.GetLocation()}");
+            }
+        }
     }
 }

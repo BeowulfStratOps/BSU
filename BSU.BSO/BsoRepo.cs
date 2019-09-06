@@ -6,9 +6,12 @@ namespace BSU.BSO
 {
     public class BsoRepo : IRepository
     {
+        private string _url, _name;
+
         public BsoRepo(string url, string name)
         {
-
+            _url = url;
+            _name = name;
         }
 
         public List<IRemoteMod> GetMods()
@@ -16,14 +19,8 @@ namespace BSU.BSO
             throw new NotImplementedException();
         }
 
-        public string GetName()
-        {
-            throw new NotImplementedException();
-        }
+        public string GetName() => _name;
 
-        public string GetLocation()
-        {
-            throw new NotImplementedException();
-        }
+        public string GetLocation() => _url;
     }
 }
