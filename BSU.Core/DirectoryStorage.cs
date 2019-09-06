@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using BSU.CoreInterface;
 
-namespace BSU.BSO
+namespace BSU.Core
 {
-    public class BsoRepo : IRepository
+    public class DirectoryStorage : IStorage
     {
-        public BsoRepo(string url, string name)
+        public DirectoryStorage(string path, string name)
         {
 
         }
 
-        public List<IRemoteMod> GetMods()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetName()
+        public List<ILocalMod> GetMods()
         {
             throw new NotImplementedException();
         }
 
         public string GetLocation()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetName()
         {
             throw new NotImplementedException();
         }
