@@ -102,6 +102,10 @@ namespace BSU.Core
             foreach (var storage in _storages)
             {
                 Console.WriteLine($"  {storage.GetType().Name} {storage.GetName()} {storage.GetLocation()}");
+                foreach (var localMod in storage.GetMods())
+                {
+                    Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()} in {localMod.GetBaseDirectory().FullName}");
+                }
             }
         }
     }
