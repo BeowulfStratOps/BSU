@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using BSO.Util;
+using BSU.Util;
 using BSU.BSO.FileStructures;
 using BSU.CoreInterface;
 using Newtonsoft.Json;

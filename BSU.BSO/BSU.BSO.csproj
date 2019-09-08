@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BSO.Util\BSO.Util.csproj" />
+    <ProjectReference Include="..\BSU.Util\BSU.Util.csproj" />
     <ProjectReference Include="..\BSU.CoreInterface\BSU.CoreInterface.csproj" />
   </ItemGroup>
 

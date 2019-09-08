@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.Core", "BSU.Core\BSU.Co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.BSO", "BSU.BSO\BSU.BSO.csproj", "{FE4F8C2F-BD06-4F20-9C52-E6346EF7233E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSO.Util", "BSO.Util\BSO.Util.csproj", "{1D9F88D8-7826-4DE9-A519-D7A199A69678}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.Util", "BSU.Util\BSU.Util.csproj", "{1D9F88D8-7826-4DE9-A519-D7A199A69678}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

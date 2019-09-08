@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using BSO.Util;
+using BSU.Util;
 using BSU.CoreInterface;
 
 namespace BSU.Core
