@@ -63,6 +63,7 @@ namespace BSU.CLI
         {
             Console.WriteLine("Available commands:");
             Console.WriteLine("help - prints this help.");
+            Console.WriteLine("exit - exit (duh).");
             foreach (var command in _commands)
             {
                 Console.WriteLine($"{command.Key} - {command.Value.Description}" +

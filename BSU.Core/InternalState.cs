@@ -97,6 +97,10 @@ namespace BSU.Core
             foreach (var repository in _repositories)
             {
                 Console.WriteLine($"  {repository.GetType().Name} {repository.GetName()} {repository.GetLocation()}");
+                foreach (var localMod in repository.GetMods())
+                {
+                    Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()}");
+                }
             }
             Console.WriteLine("Storages:");
             foreach (var storage in _storages)
