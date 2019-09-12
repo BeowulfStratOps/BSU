@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BSU.CoreInterface;
 
 namespace BSU.Core
@@ -26,7 +27,28 @@ namespace BSU.Core
         /// <returns></returns>
         public ViewState GetViewState()
         {
-            throw new NotImplementedException();
+            var view = new ViewState {Repositories = new List<RepoView>()};
+
+            foreach (var repository in _state.GetRepositories())
+            {
+                var repoView = new RepoView {Mods = new List<RepoModView>(), Name = repository.GetName()};
+                view.Repositories.Add(repoView);
+                foreach (var remoteMod in repository.GetMods())
+                {
+                    var modView = new RepoModView {Candidates = new List<StorageModView>(), Name = remoteMod.GetIdentifier()};
+                    repoView.Mods.Add(modView);
+                    var matching = remoteMod.GetMatchingMods(_state.GetStorages().SelectMany(s => s.GetMods()).ToList());
+                    foreach (var match in matching)
+                    {
+                        modView.Candidates.Add(new StorageModView
+                        {
+                            Name = match.GetIdentifier()
+                        });
+                    }
+                }
+            }
+
+            return view;
         }
 
         public void PrintInternalState() => _state.PrintState();

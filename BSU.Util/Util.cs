@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace BSU.Util
 {
-    public static class ModDisplayName
+    public static class Util
     {
         public static string GetDisplayName(string modCpp, List<string> keynames)
         {
@@ -27,7 +27,7 @@ namespace BSU.Util
             return name + " - " + version;
         }
 
-        private static Dictionary<string, string> ParseModCpp(string data)
+        public static Dictionary<string, string> ParseModCpp(string data)
         {
             data = data.Replace("\r", "");
             var matches = Regex.Matches(data, "^([a-zA-Z_]+)\\s*=\\s*\"([^\"]*)\";$", RegexOptions.Multiline);

@@ -54,7 +54,7 @@ namespace BSU.Core
             var keyDir = new DirectoryInfo(Path.Combine(_dir.FullName, "keys"));
             var keys = keyDir.Exists ? keyDir.EnumerateFiles("*.bikey").Select(n => n.Name.Replace(".bikey", "")).ToList() : null;
 
-            return ModDisplayName.GetDisplayName(modData, keys);
+            return Util.Util.GetDisplayName(modData, keys);
         }
 
         public string GetIdentifier() => _dir.Name;

@@ -52,5 +52,24 @@ namespace BSU.CLI
         {
             _core.PrintInternalState();
         }
+
+        [CliCommand("getstate", "Calculate state.")]
+        void GetState(string[] args)
+        {
+            var state = _core.GetViewState();
+
+            foreach (var repo in state.Repositories)
+            {
+                Console.WriteLine(repo.Name);
+                foreach (var mod in repo.Mods)
+                {
+                    Console.WriteLine("  " + mod.Name);
+                    foreach (var candidate in mod.Candidates)
+                    {
+                        Console.WriteLine("    " + candidate.Name);
+                    }
+                }
+            }
+        }
     }
 }
