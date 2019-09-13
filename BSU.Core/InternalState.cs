@@ -40,9 +40,9 @@ namespace BSU.Core
                 Type = type,
                 Url = url
             };
+            AddRepoToState(repo);
             _settings.Repositories.Add(repo);
             _settings.Store();
-            AddRepoToState(repo);
         }
 
 
@@ -69,9 +69,9 @@ namespace BSU.Core
                 Type = type,
                 Updating = new Dictionary<string, string>()
             };
+            AddStorageToState(storage);
             _settings.Storages.Add(storage);
             _settings.Store();
-            AddStorageToState(storage);
         }
 
         private void AddStorageToState(StorageEntry storage)

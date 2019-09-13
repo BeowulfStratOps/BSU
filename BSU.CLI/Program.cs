@@ -14,10 +14,14 @@ namespace BSU.CLI
 
         int Main()
         {
+            Console.WriteLine("Loading...");
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             _core = new Core.Core(settingsFile);
 
             var commands = new Commands(this);
+
+            Console.Clear();
+            Console.WriteLine("Ready. Enter help for help.");
 
             while (true)
             {

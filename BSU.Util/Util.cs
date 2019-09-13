@@ -15,7 +15,8 @@ namespace BSU.Util
             if (modCpp == null) return "Unknown";
             var modData = ParseModCpp(modCpp);
 
-            var name = modData["name"];
+            var name = modData.GetValueOrDefault("name");
+            if (name == null) return "Unknown";
 
             if (modData.TryGetValue("version", out var version)) return name + " - " + version;
 
