@@ -47,6 +47,7 @@ namespace BSU.CLI
 
         private Command ParseCommand(string line, out string[] args)
         {
+            // TODO: support args with spaces (quoted)
             args = null;
             if (line == null) return null;
 

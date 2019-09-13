@@ -35,6 +35,7 @@ namespace BSU.BSO
 
         public List<ILocalMod> GetMatchingMods(List<ILocalMod> allLocalMods)
         {
+            // TODO: use keys as well
             var remote = MatchHash.FromRemoteMod(this);
             var result = new List<ILocalMod>();
 
