@@ -70,7 +70,7 @@ namespace BSU.CLI
                     Console.WriteLine("  " + mod.Name);
                     foreach (var candidate in mod.Candidates)
                     {
-                        Console.WriteLine("    " + candidate.Name);
+                        Console.WriteLine($"    {(candidate.Item2 ? "Match:": "No match:")} " + candidate.Item1.Name);
                     }
                 }
             }

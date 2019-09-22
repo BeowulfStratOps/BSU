@@ -50,7 +50,9 @@ namespace BSU.BSO
 
         public bool IsVersionMatching(ILocalMod localMod)
         {
-            throw new NotImplementedException();
+            var localHash = VersionHash.FromLocalMod(localMod);
+            var remoteHash = VersionHash.FromRemoteMod(this);
+            return localHash.Matches(remoteHash);
         }
 
         public string GetDisplayName()

@@ -24,7 +24,7 @@ namespace BSU.Core
         public string Name;
         public bool IsUpToDate;
         public List<ModActionView> Actions;
-        public List<StorageModView> Candidates;
+        public List<Tuple<StorageModView, bool>> Candidates;
     }
 
     public enum ModActionType

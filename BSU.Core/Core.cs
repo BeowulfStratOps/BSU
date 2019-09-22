@@ -33,17 +33,20 @@ namespace BSU.Core
             {
                 var repoView = new RepoView {Mods = new List<RepoModView>(), Name = repository.GetName()};
                 view.Repositories.Add(repoView);
+                Console.WriteLine("Repo " + repository.GetName());
                 foreach (var remoteMod in repository.GetMods())
                 {
-                    var modView = new RepoModView {Candidates = new List<StorageModView>(), Name = remoteMod.GetIdentifier()};
+                    Console.WriteLine("Checking " + remoteMod.GetIdentifier());
+                    var modView = new RepoModView {Candidates = new List<Tuple<StorageModView, bool>>(), Name = remoteMod.GetIdentifier()};
                     repoView.Mods.Add(modView);
                     var matching = remoteMod.GetMatchingMods(_state.GetStorages().SelectMany(s => s.GetMods()).ToList());
                     foreach (var match in matching)
                     {
-                        modView.Candidates.Add(new StorageModView
+                        var storageModView = new StorageModView
                         {
                             Name = match.GetIdentifier()
-                        });
+                        };
+                        modView.Candidates.Add(Tuple.Create(storageModView, remoteMod.IsVersionMatching(match)));
                     }
                 }
             }
