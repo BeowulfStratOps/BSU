@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using BSU.Core;
 
 namespace BSU.CLI
 {
@@ -62,15 +63,23 @@ namespace BSU.CLI
         {
             var state = _core.GetViewState();
 
-            foreach (var repo in state.Repositories)
+            foreach (var repo in state.Repos)
             {
                 Console.WriteLine(repo.Name);
                 foreach (var mod in repo.Mods)
                 {
                     Console.WriteLine("  " + mod.Name);
-                    foreach (var candidate in mod.Candidates)
+                    foreach (var action in mod.Actions)
                     {
-                        Console.WriteLine($"    {(candidate.Item2 ? "Match:": "No match:")} " + candidate.Item1.Name);
+                        switch (action)
+                        {
+                            case UseActionView use:
+                                Console.WriteLine($"    Use: {use.LocalMod.Location}");
+                                break;
+                            case UpdateActionView update:
+                                Console.WriteLine($"    Update: {update.LocalMod.Location}");
+                                break;
+                        }
                     }
                 }
             }

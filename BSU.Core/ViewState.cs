@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using BSU.CoreInterface;
 
@@ -7,62 +8,98 @@ namespace BSU.Core
 {
     public class ViewState
     {
-        public List<RepoView> Repositories;
-        public List<StorageView> Storages;
+        public readonly List<RepoView> Repos;
+        public readonly List<StorageView> Storages;
+
+        internal ViewState(IReadOnlyList<IRepository> repos, IReadOnlyList<IStorage> storages, Dictionary<IRemoteMod, ModActions> state)
+        {
+            Storages = storages.Select(s => new StorageView(s)).ToList();
+            Repos = repos.Select(r => new RepoView(r, state)).ToList();
+        }
     }
 
     public class RepoView
     {
-        public string Name, Location;
-        public bool IsUpToDate;
-        public List<RepoModView> Mods;
+        public readonly List<RepoModView> Mods;
+        public readonly string Name;
+
+        internal RepoView(IRepository repo, Dictionary<IRemoteMod, ModActions> state)
+        {
+            Mods = repo.GetMods().Select(m => new RepoModView(m, state.GetValueOrDefault(m, new ModActions()))).ToList();
+            Name = repo.GetName();
+        }
     }
 
     public class RepoModView
     {
-        public RepoView Parent;
-        public string Name;
-        public bool IsUpToDate;
-        public List<ModActionView> Actions;
-        public List<Tuple<StorageModView, bool>> Candidates;
-    }
+        public readonly string Name;
+        public readonly IReadOnlyList<ModActionView> Actions;
+        public ModActionView Selected = null;
 
-    public enum ModActionType
-    {
-        Download,
-        Use,
-        AwaitUpdate,
-        Update
+        internal RepoModView(IRemoteMod mod, ModActions modActions)
+        {
+            Name = mod.GetIdentifier();
+            var actions = new List<ModActionView>();
+
+            actions.AddRange(modActions.Use.Select(l => new UseActionView(new StorageModView(l))));
+            actions.AddRange(modActions.Update.Select(l => new UpdateActionView(new StorageModView(l))));
+
+            Actions = actions.AsReadOnly();
+            if (actions.Any())
+                Selected = actions[0];
+        }
     }
 
     public class ModActionView
     {
-        public List<RepoView> Conflicts;
-        public ModActionType Type;
-        public StorageView Storage;
-        public StorageModView Mod;
-        public RepoModView Parent;
+    }
 
-        public bool IsSelected;
-        public void Select()
+    public class UseActionView : ModActionView
+    {
+        public readonly StorageModView LocalMod;
+
+        internal UseActionView(StorageModView localMod)
         {
-            throw new NotImplementedException();
+            LocalMod = localMod;
+        }
+    }
+
+    public class UpdateActionView : ModActionView
+    {
+        public readonly StorageModView LocalMod;
+
+        internal UpdateActionView(StorageModView localMod)
+        {
+            LocalMod = localMod;
         }
     }
 
     public class StorageView
     {
-        public List<StorageModView> Mods;
+        public readonly List<StorageModView> Mods;
+
+        internal StorageView(IStorage storage)
+        {
+            Mods = storage.GetMods().Select(m => new StorageModView(m)).ToList();
+        }
     }
 
     public class StorageModView
     {
-        public string Name, DisplayName, Location;
+        public readonly string Name, Location;
+
+        internal StorageModView(ILocalMod mod)
+        {
+            Name = mod.GetIdentifier();
+            Location = mod.GetBaseDirectory().FullName;
+        }
+
+        /*public string Name, DisplayName, Location;
         public StorageView Parent;
         public List<RepoModView> UsedBy;
 
         // can't be broken and updating.
         public bool IsBroken;
-        public RepoModView UpdatingTo;
+        public RepoModView UpdatingTo;*/
     }
 }
