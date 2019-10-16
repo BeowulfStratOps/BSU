@@ -14,7 +14,7 @@ namespace BSU.Core
         internal ViewState(IReadOnlyList<IRepository> repos, IReadOnlyList<IStorage> storages, Dictionary<IRemoteMod, ModActions> state)
         {
             Storages = storages.Select(s => new StorageView(s)).ToList();
-            Repos = repos.Select(r => new RepoView(r, state)).ToList();
+            Repos = repos.Select(r => new RepoView(r, state, Storages)).ToList();
         }
     }
 
@@ -23,9 +23,9 @@ namespace BSU.Core
         public readonly List<RepoModView> Mods;
         public readonly string Name;
 
-        internal RepoView(IRepository repo, Dictionary<IRemoteMod, ModActions> state)
+        internal RepoView(IRepository repo, Dictionary<IRemoteMod, ModActions> state, List<StorageView> storages)
         {
-            Mods = repo.GetMods().Select(m => new RepoModView(m, state.GetValueOrDefault(m, new ModActions()))).ToList();
+            Mods = repo.GetMods().Select(m => new RepoModView(m, state.GetValueOrDefault(m, new ModActions()), storages)).ToList();
             Name = repo.GetName();
         }
     }
@@ -36,16 +36,19 @@ namespace BSU.Core
         public readonly IReadOnlyList<ModActionView> Actions;
         public ModActionView Selected = null;
 
-        internal RepoModView(IRemoteMod mod, ModActions modActions)
+        internal RepoModView(IRemoteMod mod, ModActions modActions, List<StorageView> storages)
         {
             Name = mod.GetIdentifier();
             var actions = new List<ModActionView>();
 
+            // TODO: grab already existing storageModView??
             actions.AddRange(modActions.Use.Select(l => new UseActionView(new StorageModView(l))));
             actions.AddRange(modActions.Update.Select(l => new UpdateActionView(new StorageModView(l))));
 
+            actions.AddRange(storages.Where(s => s.CanWrite).Select(s => new DownloadActionView(s)));
+
             Actions = actions.AsReadOnly();
-            if (actions.Any())
+            if (actions.Any(a => a is UseActionView))
                 Selected = actions[0];
         }
     }
@@ -74,13 +77,27 @@ namespace BSU.Core
         }
     }
 
+    public class DownloadActionView : ModActionView
+    {
+        public readonly StorageView Storage;
+
+        internal DownloadActionView(StorageView storage)
+        {
+            Storage = storage;
+        }
+    }
+
     public class StorageView
     {
         public readonly List<StorageModView> Mods;
+        public readonly string Location;
+        public readonly bool CanWrite;
 
         internal StorageView(IStorage storage)
         {
             Mods = storage.GetMods().Select(m => new StorageModView(m)).ToList();
+            Location = storage.GetLocation();
+            CanWrite = storage.CanWrite();
         }
     }
 

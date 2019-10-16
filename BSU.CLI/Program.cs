@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using BSU.Core;
 
 namespace BSU.CLI
@@ -7,6 +8,7 @@ namespace BSU.CLI
     class Program
     {
         private Core.Core _core;
+        private ViewState _viewState = null;
 
         static int Main(string[] args)
         {
@@ -58,31 +60,67 @@ namespace BSU.CLI
             _core.PrintInternalState();
         }
 
-        [CliCommand("getstate", "Calculate state.")]
-        void GetState(string[] args)
+        [CliCommand("calcstate", "Calculate state.")]
+        void CalcState(string[] args)
         {
-            var state = _core.GetViewState();
+            
+        }
 
-            foreach (var repo in state.Repos)
+        [CliCommand("showstate", "Show state.")]
+        void ShowState(string[] args)
+        {
+            if (_viewState == null)
+            {
+                Console.WriteLine("Non active. Creating...");
+                _viewState = _core.GetViewState();
+            }
+
+            foreach (var repo in _viewState.Repos)
             {
                 Console.WriteLine(repo.Name);
                 foreach (var mod in repo.Mods)
                 {
                     Console.WriteLine("  " + mod.Name);
-                    foreach (var action in mod.Actions)
+                    for (int i = 0; i < mod.Actions.Count; i++)
                     {
+                        var action = mod.Actions[i];
+                        var actionText = "    ";
+                        actionText += action == mod.Selected ? "* " : $"{i+1} ";
                         switch (action)
                         {
                             case UseActionView use:
-                                Console.WriteLine($"    Use: {use.LocalMod.Location}");
+                                actionText += $"Use: {use.LocalMod.Location}";
                                 break;
                             case UpdateActionView update:
-                                Console.WriteLine($"    Update: {update.LocalMod.Location}");
+                                actionText += $"Update: {update.LocalMod.Location}";
                                 break;
+                            case DownloadActionView download:
+                                actionText += $"Download to: {download.Storage.Location}";
+                                break;
+                            default:
+                                throw new ArgumentException("Unknown action type");
                         }
+                        Console.WriteLine(actionText);
                     }
                 }
             }
+        }
+
+        [CliCommand("select", "Select an action.", "repo_name mod_name action_number")]
+        void Select(string[] args)
+        {
+            if (_viewState == null)
+            {
+                throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
+            }
+
+            string repoName = args[0], modName = args[1];
+            var action = int.Parse(args[2]);
+
+            var mod = _viewState.Repos.Single(r => r.Name.Equals(repoName, StringComparison.InvariantCultureIgnoreCase))
+                .Mods.Single(m => m.Name.Equals(modName, StringComparison.InvariantCultureIgnoreCase));
+
+            mod.Selected = mod.Actions[action - 1];
         }
     }
 }

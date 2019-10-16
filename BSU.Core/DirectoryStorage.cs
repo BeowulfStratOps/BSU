@@ -31,6 +31,8 @@ namespace BSU.Core
         public string GetLocation() => _path;
 
         public string GetName() => _name;
+
+        public virtual bool CanWrite() => true;
     }
 
     public class DirectoryMod : ILocalMod
@@ -41,8 +43,6 @@ namespace BSU.Core
         {
             _dir = dir;
         }
-
-        public virtual bool CanWrite() => true;
 
         public DirectoryInfo GetBaseDirectory() => _dir;
 

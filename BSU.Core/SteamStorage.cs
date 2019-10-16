@@ -32,6 +32,8 @@ namespace BSU.Core
         public string GetLocation() => _basePath.FullName;
 
         public string GetName() => _name;
+
+        public bool CanWrite() => false;
     }
 
     public class SteamMod : DirectoryMod
@@ -39,7 +41,5 @@ namespace BSU.Core
         public SteamMod(DirectoryInfo directory) : base(directory)
         {
         }
-
-        public override bool CanWrite() => false;
     }
 }

@@ -56,6 +56,12 @@ namespace BSU.CoreInterface
 
     public interface IStorage
     {
+        /// <summary>
+        /// false for e.g. steam
+        /// </summary>
+        /// <returns></returns>
+        bool CanWrite();
+
         List<ILocalMod> GetMods();
 
         /// <summary>
@@ -73,11 +79,6 @@ namespace BSU.CoreInterface
 
     public interface ILocalMod
     {
-        /// <summary>
-        /// false for e.g. steam
-        /// </summary>
-        /// <returns></returns>
-        bool CanWrite();
         DirectoryInfo GetBaseDirectory();
         string GetDisplayName();
         string GetIdentifier();
