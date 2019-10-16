@@ -21,15 +21,16 @@ namespace BSU.CoreInterface
         string GetLocation();
     }
 
+    public interface IModFileInfo
+    {
+        string GetPath();
+        byte[] GetFileHash();
+    }
+
     public interface IRemoteMod
     {
-        /// <summary>
-        /// ace -> @ace, @ace_3. but not cba for example
-        /// </summary>
-        /// <param name="allLocalMods"></param>
-        /// <returns></returns>
-        List<ILocalMod> GetMatchingMods(List<ILocalMod> allLocalMods);
-        bool IsVersionMatching(ILocalMod localMod);
+        List<IModFileInfo> GetFileList();
+        byte[] DownloadFile(string path);
         string GetDisplayName();
 
         /// <summary>

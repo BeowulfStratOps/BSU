@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using BSU.CoreInterface;
 using Newtonsoft.Json;
 
 namespace BSU.BSO.FileStructures
@@ -20,7 +22,7 @@ namespace BSU.BSO.FileStructures
         }
     }
 
-    public class HashType
+    public class HashType : IModFileInfo
     {
         public string FileName { get; set; }
         public byte[] Hash { get; set; }
@@ -37,5 +39,8 @@ namespace BSU.BSO.FileStructures
         {
             return "Hash: " + FileName;
         }
+
+        public string GetPath() => FileName;
+        public byte[] GetFileHash() => Hash;
     }
 }

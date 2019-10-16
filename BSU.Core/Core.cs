@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BSU.Core.Hashes;
 using BSU.CoreInterface;
 
 namespace BSU.Core
@@ -24,7 +25,21 @@ namespace BSU.Core
 
         private Dictionary<IRemoteMod, ModActions> GetState()
         {
+            // TODO: make this less ugly
+
             var state = new Dictionary<IRemoteMod, ModActions>();
+
+            var localHashes = new Dictionary<ILocalMod, Tuple<MatchHash, VersionHash>>();
+
+            foreach (var storage in _state.GetStorages())
+            {
+                foreach (var localMod in storage.GetMods())
+                {
+                    Console.WriteLine($"Hashing {storage.GetName()}/{localMod.GetIdentifier()}");
+                    localHashes.Add(localMod,
+                        Tuple.Create(MatchHash.FromLocalMod(localMod), VersionHash.FromLocalMod(localMod)));
+                }
+            }
 
             foreach (var repository in _state.GetRepositories())
             {
@@ -32,12 +47,13 @@ namespace BSU.Core
                 foreach (var remoteMod in repository.GetMods())
                 {
                     Console.WriteLine("Checking " + remoteMod.GetIdentifier());
-                    var matching =
-                        remoteMod.GetMatchingMods(_state.GetStorages().SelectMany(s => s.GetMods()).ToList());
+                    var matchHash = MatchHash.FromRemoteMod(remoteMod);
+                    var matching = localHashes.Where(kv => kv.Value.Item1.IsMatch(matchHash)).Select(kv => kv.Key);
                     var modActions = new ModActions();
+                    var versionHash = VersionHash.FromRemoteMod(remoteMod);
                     foreach (var localMod in matching)
                     {
-                        if (remoteMod.IsVersionMatching(localMod))
+                        if (versionHash.Matches(localHashes[localMod].Item2))
                             modActions.Use.Add(localMod);
                         else
                             modActions.Update.Add(localMod);

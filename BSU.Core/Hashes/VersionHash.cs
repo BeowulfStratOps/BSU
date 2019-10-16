@@ -6,7 +6,7 @@ using System.Text;
 using BSU.CoreInterface;
 using System.Security.Cryptography;
 
-namespace BSU.BSO.Hashes
+namespace BSU.Core.Hashes
 {
     class VersionHash
     {
@@ -46,9 +46,9 @@ namespace BSU.BSO.Hashes
             return sha1.ComputeHash(fileStream);
         }
 
-        public static VersionHash FromRemoteMod(BsoRepoMod mod) => new VersionHash
+        public static VersionHash FromRemoteMod(IRemoteMod mod) => new VersionHash
         {
-            Hashes = mod.GetFileList().ToDictionary(h => h.FileName, h => h.Hash)
+            Hashes = mod.GetFileList().ToDictionary(h => h.GetPath(), h => h.GetFileHash())
         };
 
         public bool Matches(VersionHash other)

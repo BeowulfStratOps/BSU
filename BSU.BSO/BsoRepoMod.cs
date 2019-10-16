@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using BSU.Util;
 using BSU.BSO.FileStructures;
-using BSU.BSO.Hashes;
 using BSU.CoreInterface;
 using Newtonsoft.Json;
 
@@ -15,7 +14,7 @@ namespace BSU.BSO
         private readonly string _url, _name;
         private readonly HashFile _hashFile;
 
-        public List<HashType> GetFileList() => _hashFile.Hashes;
+        public List<IModFileInfo> GetFileList() => _hashFile.Hashes.OfType<IModFileInfo>().ToList();
 
         public byte[] DownloadFile(string path)
         {
@@ -31,28 +30,6 @@ namespace BSU.BSO
             using var client = new WebClient();
             var hashFileJson = client.DownloadString(_url + "/hash.json");
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
-        }
-
-        public List<ILocalMod> GetMatchingMods(List<ILocalMod> allLocalMods)
-        {
-            // TODO: use keys as well
-            var remote = MatchHash.FromRemoteMod(this);
-            var result = new List<ILocalMod>();
-
-            foreach (var localMod in allLocalMods)
-            {
-                var local = MatchHash.FromLocalMod(localMod);
-                if (local.IsMatch(remote)) result.Add(localMod);
-            }
-
-            return result;
-        }
-
-        public bool IsVersionMatching(ILocalMod localMod)
-        {
-            var localHash = VersionHash.FromLocalMod(localMod);
-            var remoteHash = VersionHash.FromRemoteMod(this);
-            return localHash.Matches(remoteHash);
         }
 
         public string GetDisplayName()

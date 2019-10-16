@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using BSU.CoreInterface;
 
-namespace BSU.BSO.Hashes
+namespace BSU.Core.Hashes
 {
     class MatchHash
     {
@@ -42,19 +42,19 @@ namespace BSU.BSO.Hashes
                 .ToLowerInvariant(); // TODO: kill yourself
         }
 
-        public static MatchHash FromRemoteMod(BsoRepoMod mod)
+        public static MatchHash FromRemoteMod(IRemoteMod mod)
         {
             var fileList = mod.GetFileList();
             var hash = new MatchHash();
-            var modCppHash = fileList.FirstOrDefault(h => h.FileName.ToLowerInvariant() == "/mod.cpp");
+            var modCppHash = fileList.FirstOrDefault(h => h.GetPath().ToLowerInvariant() == "/mod.cpp");
             if (modCppHash != null)
             {
-                var modCppData = mod.DownloadFile(modCppHash.FileName);
+                var modCppData = mod.DownloadFile(modCppHash.GetPath());
                 var name = Util.Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
                 if (name != null) hash.Name = CleanName(name);
             }
 
-            hash.PboNames = fileList.Select(h => h.FileName.ToLowerInvariant())
+            hash.PboNames = fileList.Select(h => h.GetPath().ToLowerInvariant())
                 .Where(f => Regex.IsMatch(f, "addons/[^/]*.pbo")).ToHashSet();
 
             return hash;
