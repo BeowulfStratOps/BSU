@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 
 namespace BSU.Core.Hashes
 {
-    class VersionHash
+    public class VersionHash
     {
         private Dictionary<string, byte[]> Hashes;
         private readonly byte[] Hash;

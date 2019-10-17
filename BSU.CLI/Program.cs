@@ -2,13 +2,14 @@
 using System.IO;
 using System.Linq;
 using BSU.Core;
+using BSU.Core.State;
 
 namespace BSU.CLI
 {
     class Program
     {
         private Core.Core _core;
-        private ViewState _viewState = null;
+        private State _state = null;
 
         static int Main(string[] args)
         {
@@ -38,6 +39,9 @@ namespace BSU.CLI
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error: {e.GetType().Name}\n{e.Message}");
+#if DEBUG
+                    Console.WriteLine(e.StackTrace);
+#endif
                 }
             }
         }
@@ -63,19 +67,19 @@ namespace BSU.CLI
         [CliCommand("calcstate", "Calculate state.")]
         void CalcState(string[] args)
         {
-            _viewState = _core.GetViewState();
+            _state = _core.GetState();
         }
 
         [CliCommand("showstate", "Show state.")]
         void ShowState(string[] args)
         {
-            if (_viewState == null)
+            if (_state == null)
             {
                 Console.WriteLine("None active. Creating...");
-                _viewState = _core.GetViewState();
+                _state = _core.GetState();
             }
 
-            foreach (var repo in _viewState.Repos)
+            foreach (var repo in _state.Repos)
             {
                 Console.WriteLine(repo.Name);
                 foreach (var mod in repo.Mods)
@@ -96,13 +100,13 @@ namespace BSU.CLI
         [CliCommand("select", "Select an action.", "repo_name mod_name action_number")]
         void Select(string[] args)
         {
-            if (_viewState == null)
+            if (_state == null)
                 throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
 
             string repoName = args[0], modName = args[1];
             var action = int.Parse(args[2]);
 
-            var mod = _viewState.Repos.Single(r => r.Name.Equals(repoName, StringComparison.InvariantCultureIgnoreCase))
+            var mod = _state.Repos.Single(r => r.Name.Equals(repoName, StringComparison.InvariantCultureIgnoreCase))
                 .Mods.Single(m => m.Name.Equals(modName, StringComparison.InvariantCultureIgnoreCase));
 
             mod.Selected = mod.Actions[action - 1];
