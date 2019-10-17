@@ -23,21 +23,20 @@ namespace BSU.Core
         public void AddStorage(string name, DirectoryInfo directory, string type) =>
             _state.AddStorage(name, directory, type);
 
-        private Dictionary<IRemoteMod, ModActions> GetState()
+        private State GetState()
         {
             // TODO: make this less ugly
+            // TODO: make hash-handling less ugly
 
-            var state = new Dictionary<IRemoteMod, ModActions>();
-
-            var localHashes = new Dictionary<ILocalMod, Tuple<MatchHash, VersionHash>>();
+            var state = new State();
 
             foreach (var storage in _state.GetStorages())
             {
                 foreach (var localMod in storage.GetMods())
                 {
                     Console.WriteLine($"Hashing {storage.GetName()}/{localMod.GetIdentifier()}");
-                    localHashes.Add(localMod,
-                        Tuple.Create(MatchHash.FromLocalMod(localMod), VersionHash.FromLocalMod(localMod)));
+                    state.Hashes.GetMatchHash(localMod);
+                    state.Hashes.GetVersionHash(localMod);
                 }
             }
 
@@ -47,19 +46,21 @@ namespace BSU.Core
                 foreach (var remoteMod in repository.GetMods())
                 {
                     Console.WriteLine("Checking " + remoteMod.GetIdentifier());
-                    var matchHash = MatchHash.FromRemoteMod(remoteMod);
-                    var matching = localHashes.Where(kv => kv.Value.Item1.IsMatch(matchHash)).Select(kv => kv.Key);
+                    var matchHash = state.Hashes.GetMatchHash(remoteMod);
+                    var matching = _state.GetStorages().SelectMany(s => s.GetMods())
+                        .Where(m => matchHash.IsMatch(state.Hashes.GetMatchHash(m)));
                     var modActions = new ModActions();
-                    var versionHash = VersionHash.FromRemoteMod(remoteMod);
+                    var versionHash = state.Hashes.GetVersionHash(remoteMod);
                     foreach (var localMod in matching)
                     {
-                        if (versionHash.Matches(localHashes[localMod].Item2))
+                        var test = state.Hashes.GetVersionHash(localMod);
+                        if (versionHash.Matches(state.Hashes.GetVersionHash(localMod)))
                             modActions.Use.Add(localMod);
                         else
                             modActions.Update.Add(localMod);
                     }
 
-                    state[remoteMod] = modActions;
+                    state.Actions[remoteMod] = modActions;
                 }
             }
 

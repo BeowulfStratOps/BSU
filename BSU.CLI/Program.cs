@@ -63,7 +63,7 @@ namespace BSU.CLI
         [CliCommand("calcstate", "Calculate state.")]
         void CalcState(string[] args)
         {
-            
+            _viewState = _core.GetViewState();
         }
 
         [CliCommand("showstate", "Show state.")]
@@ -71,7 +71,7 @@ namespace BSU.CLI
         {
             if (_viewState == null)
             {
-                Console.WriteLine("Non active. Creating...");
+                Console.WriteLine("None active. Creating...");
                 _viewState = _core.GetViewState();
             }
 
@@ -85,21 +85,8 @@ namespace BSU.CLI
                     {
                         var action = mod.Actions[i];
                         var actionText = "    ";
-                        actionText += action == mod.Selected ? "* " : $"{i+1} ";
-                        switch (action)
-                        {
-                            case UseActionView use:
-                                actionText += $"Use: {use.LocalMod.Location}";
-                                break;
-                            case UpdateActionView update:
-                                actionText += $"Update: {update.LocalMod.Location}";
-                                break;
-                            case DownloadActionView download:
-                                actionText += $"Download to: {download.Storage.Location}";
-                                break;
-                            default:
-                                throw new ArgumentException("Unknown action type");
-                        }
+                        actionText += action == mod.Selected ? "* " : $"{i + 1} ";
+                        actionText += action.ToString();
                         Console.WriteLine(actionText);
                     }
                 }
@@ -110,9 +97,7 @@ namespace BSU.CLI
         void Select(string[] args)
         {
             if (_viewState == null)
-            {
                 throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
-            }
 
             string repoName = args[0], modName = args[1];
             var action = int.Parse(args[2]);

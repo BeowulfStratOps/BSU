@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using BSU.Core.Hashes;
 using BSU.CoreInterface;
 
 namespace BSU.Core
@@ -11,7 +12,7 @@ namespace BSU.Core
         public readonly List<RepoView> Repos;
         public readonly List<StorageView> Storages;
 
-        internal ViewState(IReadOnlyList<IRepository> repos, IReadOnlyList<IStorage> storages, Dictionary<IRemoteMod, ModActions> state)
+        internal ViewState(IReadOnlyList<IRepository> repos, IReadOnlyList<IStorage> storages, State state)
         {
             Storages = storages.Select(s => new StorageView(s)).ToList();
             Repos = repos.Select(r => new RepoView(r, state, Storages)).ToList();
@@ -23,9 +24,15 @@ namespace BSU.Core
         public readonly List<RepoModView> Mods;
         public readonly string Name;
 
-        internal RepoView(IRepository repo, Dictionary<IRemoteMod, ModActions> state, List<StorageView> storages)
+        internal RepoView(IRepository repo, State state, List<StorageView> storages)
         {
-            Mods = repo.GetMods().Select(m => new RepoModView(m, state.GetValueOrDefault(m, new ModActions()), storages)).ToList();
+            Mods = new List<RepoModView>();
+            foreach (var remoteMod in repo.GetMods())
+            {
+                var actions = state.Actions.GetValueOrDefault(remoteMod, new ModActions());
+                var modView = new RepoModView(remoteMod, actions, storages, state.Hashes.GetVersionHash(remoteMod));
+                Mods.Add(modView);
+            }
             Name = repo.GetName();
         }
     }
@@ -36,14 +43,14 @@ namespace BSU.Core
         public readonly IReadOnlyList<ModActionView> Actions;
         public ModActionView Selected = null;
 
-        internal RepoModView(IRemoteMod mod, ModActions modActions, List<StorageView> storages)
+        internal RepoModView(IRemoteMod mod, ModActions modActions, List<StorageView> storages, VersionHash version)
         {
             Name = mod.GetIdentifier();
             var actions = new List<ModActionView>();
 
             // TODO: grab already existing storageModView??
             actions.AddRange(modActions.Use.Select(l => new UseActionView(new StorageModView(l))));
-            actions.AddRange(modActions.Update.Select(l => new UpdateActionView(new StorageModView(l))));
+            actions.AddRange(modActions.Update.Select(l => new UpdateActionView(new StorageModView(l), version.GetHashString(), mod.GetDisplayName())));
 
             actions.AddRange(storages.Where(s => s.CanWrite).Select(s => new DownloadActionView(s)));
 
@@ -65,16 +72,23 @@ namespace BSU.Core
         {
             LocalMod = localMod;
         }
+
+        public override string ToString() => "Use " + LocalMod.Location;
     }
 
     public class UpdateActionView : ModActionView
     {
         public readonly StorageModView LocalMod;
+        public readonly string VersionHash, VersionDisplay;
 
-        internal UpdateActionView(StorageModView localMod)
+        internal UpdateActionView(StorageModView localMod, string versionHash, string versionDisplay)
         {
             LocalMod = localMod;
+            VersionHash = versionHash;
+            VersionDisplay = versionDisplay;
         }
+
+        public override string ToString() => $"Update {LocalMod.Location} to {VersionHash} \"{VersionDisplay}\"";
     }
 
     public class DownloadActionView : ModActionView
@@ -85,6 +99,8 @@ namespace BSU.Core
         {
             Storage = storage;
         }
+
+        public override string ToString() => "Download to " + Storage.Location;
     }
 
     public class StorageView

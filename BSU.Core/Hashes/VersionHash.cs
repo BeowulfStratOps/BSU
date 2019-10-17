@@ -10,28 +10,25 @@ namespace BSU.Core.Hashes
 {
     class VersionHash
     {
-        public Dictionary<string, byte[]> Hashes;
+        private Dictionary<string, byte[]> Hashes;
+        private readonly byte[] Hash;
 
-        public static VersionHash FromLocalMod(ILocalMod mod)
+        public VersionHash(ILocalMod mod)
         {
-            var hashes = new Dictionary<string, byte[]>();
+            Hashes = new Dictionary<string, byte[]>();
             var dir = mod.GetBaseDirectory();
             foreach (var file in dir.EnumerateFiles("*", SearchOption.AllDirectories))
             {
                 var relativePath = file.FullName.Replace(dir.FullName, "").Replace("\\", "/");
                 var hash = GetFileHash(file);
-                hashes.Add(relativePath, hash);
+                Hashes.Add(relativePath, hash);
             }
 
-            return new VersionHash
-            {
-                Hashes = hashes
-            };
+            Hash = BuildHash();
         }
 
         private static byte[] GetFileHash(FileInfo file)
         {
-
             using var fileStream = file.OpenRead();
             if ((file.Extension == ".pbo" || file.Extension == ".ebo") && file.Length > 20)
             {
@@ -46,21 +43,31 @@ namespace BSU.Core.Hashes
             return sha1.ComputeHash(fileStream);
         }
 
-        public static VersionHash FromRemoteMod(IRemoteMod mod) => new VersionHash
+        public VersionHash(IRemoteMod mod)
         {
-            Hashes = mod.GetFileList().ToDictionary(h => h.GetPath(), h => h.GetFileHash())
-        };
+            Hashes = mod.GetFileList().ToDictionary(h => h.GetPath(), h => h.GetFileHash());
+            Hash = BuildHash();
+        }
 
         public bool Matches(VersionHash other)
         {
-            if (Hashes.Count != other.Hashes.Count) return false;
-            foreach (var (key, value) in Hashes)
-            {
-                var otherHash = other.Hashes.GetValueOrDefault(key, null);
-                if (otherHash == null) return false;
-                if (!value.SequenceEqual(otherHash)) return false;
-            }
-            return true;
+            return Hash.SequenceEqual(other.Hash);
         }
+
+        private byte[] BuildHash()
+        {
+            var builder = new StringBuilder();
+            foreach (var kv in Hashes.OrderBy(kv => kv.Key))
+            {
+                builder.Append(kv.Key.ToLowerInvariant());
+                builder.Append(ToHexString(kv.Value));
+            }
+            using var sha1 = SHA1.Create();
+            return sha1.ComputeHash(Encoding.UTF8.GetBytes(builder.ToString()));
+        }
+
+        private static string ToHexString(byte[] data) => string.Join("", data.Select(b => $"{b:x2}"));
+
+        public string GetHashString() => ToHexString(Hash);
     }
 }
