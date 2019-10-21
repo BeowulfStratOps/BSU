@@ -14,6 +14,8 @@ namespace BSU.Core.State
 
         private readonly ILocalMod _mod;
 
+        public readonly UpdateTarget UpdateTarget;
+
         internal StorageMod(ILocalMod mod, Storage storage)
         {
             _mod = mod;
@@ -23,6 +25,7 @@ namespace BSU.Core.State
             _matchHash = new MatchHash(mod);
             VersionHash = new VersionHash(mod);
             Location = mod.GetBaseDirectory().FullName;
+            UpdateTarget = storage.State._core.GetUpdateTarget(this);
         }
 
         /*public string Name, DisplayName, Location;

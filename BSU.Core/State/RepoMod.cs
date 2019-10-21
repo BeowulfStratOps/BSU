@@ -36,10 +36,16 @@ namespace BSU.Core.State
 
             foreach (var localMod in localMatches)
             {
-                if (VersionHash.Matches(localMod.VersionHash))
+                if (VersionHash.Matches(localMod.VersionHash) && localMod.UpdateTarget == null)
                     actions.Add(new UseAction(localMod));
                 else
-                    actions.Add(new UpdateAction(localMod, this));
+                {
+                    if (localMod.UpdateTarget != null && localMod.UpdateTarget.Hash == VersionHash.GetHashString())
+                        actions.Add(new AwaitUpdateAction(localMod, this));
+                    else
+                        actions.Add(new UpdateAction(localMod, this));
+
+                }
             }
 
             actions.AddRange(repo.State.Storages.Where(s => s.CanWrite).Select(s => new DownloadAction(s)));

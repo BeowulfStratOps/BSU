@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BSU.Core.Hashes;
+using BSU.Core.State;
 using BSU.CoreInterface;
 
 namespace BSU.Core
@@ -29,10 +30,12 @@ namespace BSU.Core
         /// <returns></returns>
         public State.State GetState()
         {
-            return new State.State(_state.GetRepositories(), _state.GetStorages());
+            return new State.State(_state.GetRepositories(), _state.GetStorages(), this);
         }
 
 
         public void PrintInternalState() => _state.PrintState();
+
+        public UpdateTarget GetUpdateTarget(StorageMod mod) => _state.GetUpdateTarget(mod);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BSU.BSO;
+using BSU.Core.State;
 using BSU.CoreInterface;
 
 namespace BSU.Core
@@ -67,7 +68,7 @@ namespace BSU.Core
                 Name = name,
                 Path = directory.FullName,
                 Type = type,
-                Updating = new Dictionary<string, string>()
+                Updating = new Dictionary<string, UpdateTarget>()
             };
             AddStorageToState(storage);
             _settings.Storages.Add(storage);
@@ -111,6 +112,26 @@ namespace BSU.Core
                     Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()} in {localMod.GetBaseDirectory().FullName}");
                 }
             }
+        }
+
+        public void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay)
+        {
+            _settings.Storages.Single(s => s.Name == mod.Storage.Name).Updating[mod.Name] = new UpdateTarget(targetHash, targetDisplay);
+            _settings.Store();
+        }
+
+        public void RemoveUpdatingTo(StorageMod mod)
+        {
+            _settings.Storages.Single(s => s.Name == mod.Storage.Name).Updating.Remove(mod.Name);
+            _settings.Store();
+        }
+
+        public UpdateTarget GetUpdateTarget(StorageMod mod)
+        {
+            var target = _settings.Storages
+                .SingleOrDefault(s => s.Name == mod.Storage.Name)?.Updating.GetValueOrDefault(mod.Name);
+            if (target == null) return null;
+            return new UpdateTarget(target.Hash, target.Display);
         }
     }
 }

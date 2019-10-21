@@ -51,7 +51,18 @@ namespace BSU.Core
         public string Name;
         public string Type;
         public string Path;
-        public Dictionary<string, string> Updating;
+        public Dictionary<string, UpdateTarget> Updating;
+    }
+
+    public class UpdateTarget
+    {
+        public readonly string Hash, Display;
+
+        public UpdateTarget(string hash, string display)
+        {
+            Display = display;
+            Hash = hash;
+        }
     }
 
     internal class RepoEntry
