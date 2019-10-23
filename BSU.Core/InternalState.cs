@@ -10,9 +10,25 @@ namespace BSU.Core
 {
     class InternalState
     {
-        private readonly Settings _settings;
+        private readonly Dictionary<string, Func<string, string, IRepository>> _repoTypes =
+            new Dictionary<string, Func<string, string, IRepository>>
+            {
+                {"BSO", (name, url) => new BsoRepo(url, name)}
+            };
 
-        public InternalState(Settings settings)
+        private readonly Dictionary<string, Func<string, string, IStorage>> _storageTypes =
+            new Dictionary<string, Func<string, string, IStorage>>
+            {
+                {"STEAM", (name, path) => new SteamStorage(path, name)},
+                {"DIRECTORY", (name, path) => new DirectoryStorage(path, name)}
+            };
+
+        private readonly ISettings _settings;
+
+        internal void AddRepoType(string name, Func<string, string, IRepository> create) => _repoTypes.Add(name, create);
+        internal void AddStorageType(string name, Func<string, string, IStorage> create) => _storageTypes.Add(name, create);
+
+        public InternalState(ISettings settings)
         {
             _settings = settings;
             foreach (var repoEntry in _settings.Repositories)
@@ -49,15 +65,10 @@ namespace BSU.Core
 
         private void AddRepoToState(RepoEntry repo)
         {
-            switch (repo.Type)
-            {
-                case "BSO":
-                    var bsoRepo = new BsoRepo(repo.Url, repo.Name);
-                    _repositories.Add(bsoRepo);
-                    break;
-                default:
-                    throw new NotSupportedException($"Repo type {repo.Type} is not supported.");
-            }
+            if (!_repoTypes.TryGetValue(repo.Type, out var create)) throw new NotSupportedException($"Repo type {repo.Type} is not supported.");
+
+            var repository = create(repo.Name, repo.Url);
+            _repositories.Add(repository);
         }
 
         public void AddStorage(string name, DirectoryInfo directory, string type)
@@ -77,19 +88,10 @@ namespace BSU.Core
 
         private void AddStorageToState(StorageEntry storage)
         {
-            switch (storage.Type)
-            {
-                case "STEAM":
-                    var steamStorage = new SteamStorage(storage.Path, storage.Name);
-                    _storages.Add(steamStorage);
-                    break;
-                case "DIRECTORY":
-                    var dirStorage = new DirectoryStorage(storage.Path, storage.Name);
-                    _storages.Add(dirStorage);
-                    break;
-                default:
-                    throw new NotSupportedException($"Storage type {storage.Type} is not supported.");
-            }
+            if (!_storageTypes.TryGetValue(storage.Type, out var create)) throw new NotSupportedException($"Storage type {storage.Type} is not supported.");
+
+            var storageObj = create(storage.Name, storage.Path);
+            _storages.Add(storageObj);
         }
 
         public void PrintState()
@@ -109,7 +111,7 @@ namespace BSU.Core
                 Console.WriteLine($"  {storage.GetType().Name} {storage.GetName()} {storage.GetLocation()}");
                 foreach (var localMod in storage.GetMods())
                 {
-                    Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()} in {localMod.GetBaseDirectory().FullName}");
+                    Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()} in {storage.GetName()}");
                 }
             }
         }

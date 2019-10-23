@@ -16,7 +16,7 @@ namespace BSU.BSO
 
         public List<IModFileInfo> GetFileList() => _hashFile.Hashes.OfType<IModFileInfo>().ToList();
 
-        public byte[] DownloadFile(string path)
+        public byte[] GetFile(string path)
         {
             using var client = new WebClient();
             return client.DownloadData(_url + path);

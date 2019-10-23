@@ -44,6 +44,8 @@ namespace BSU.Core
             _dir = dir;
         }
 
+        public bool FileExists(string path) => File.Exists(Path.Combine(_dir.FullName, path));
+
         public DirectoryInfo GetBaseDirectory() => _dir;
 
         public string GetDisplayName()
@@ -56,6 +58,15 @@ namespace BSU.Core
 
             return Util.Util.GetDisplayName(modData, keys);
         }
+
+        public Stream GetFile(string path)
+        {
+            if (path.StartsWith('/') || path.StartsWith('\\')) path = path.Substring(1);
+            return File.OpenRead(Path.Combine(_dir.FullName, path));
+        }
+
+        public List<string> GetFileList() => _dir.EnumerateFiles("*", SearchOption.AllDirectories)
+            .Select(fi => fi.FullName.Replace(_dir.FullName, "").Replace('\\', '/')).ToList();
 
         public string GetIdentifier() => _dir.Name;
     }

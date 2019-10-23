@@ -30,7 +30,7 @@ namespace BSU.CoreInterface
     public interface IRemoteMod
     {
         List<IModFileInfo> GetFileList();
-        byte[] DownloadFile(string path);
+        byte[] GetFile(string path);
         string GetDisplayName();
 
         /// <summary>
@@ -47,12 +47,11 @@ namespace BSU.CoreInterface
     {
         long GetBytesToDownload();
         long GetBytesToUpdate();
-        int GetNewFilesCount();
-        int GetDeletedFilesCount();
-        int GetChangedFilesCount();
+        int GetRemainingNewFilesCount();
+        int GetRemainingDeletedFilesCount();
+        int GetRemainingChangedFilesCount();
         void Start();
         bool IsDone();
-        event EventHandler Update;
     }
 
     public interface IStorage
@@ -80,8 +79,10 @@ namespace BSU.CoreInterface
 
     public interface ILocalMod
     {
-        DirectoryInfo GetBaseDirectory();
         string GetDisplayName();
         string GetIdentifier();
+        List<string> GetFileList();
+        Stream GetFile(string path);
+        bool FileExists(string path);
     }
 }

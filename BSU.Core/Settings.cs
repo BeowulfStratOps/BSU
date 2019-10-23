@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace BSU.Core
 {
-    class Settings
+    class Settings : ISettings
     {
         private readonly FileInfo _path;
         private readonly SettingsData _data;
@@ -46,7 +46,7 @@ namespace BSU.Core
         }
     }
 
-    internal class StorageEntry
+    public class StorageEntry
     {
         public string Name;
         public string Type;
@@ -65,7 +65,7 @@ namespace BSU.Core
         }
     }
 
-    internal class RepoEntry
+    public class RepoEntry
     {
         public string Name;
         public string Type;

@@ -12,24 +12,20 @@ namespace BSU.Core.Hashes
     {
         private const float Threshold = 0.8f; // at least 80% pbo names match required
 
+        private static Regex _addonsPbo = new Regex("^addons/.*\\.pbo", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         public string Name;
         public HashSet<string> PboNames;
 
         public MatchHash(ILocalMod mod)
         {
-            var dir = mod.GetBaseDirectory();
-            var modCpp = new FileInfo(Path.Combine(dir.FullName, "mod.cpp"));
-            if (modCpp.Exists)
+            if (mod.FileExists("mod.cpp"))
             {
-                var name = Util.Util.ParseModCpp(File.ReadAllText(modCpp.FullName)).GetValueOrDefault("name");
+                using var reader = new StreamReader(mod.GetFile("mod.cpp"));
+                var name = Util.Util.ParseModCpp(reader.ReadToEnd()).GetValueOrDefault("name");
                 if (name != null) Name = CleanName(name);
             }
-
-            var addonsFolder =
-                new DirectoryInfo(Path.Combine(dir.FullName,
-                    "addons")); // TODO: get some helper functions for this shit..
-            if (!addonsFolder.Exists) throw new FileNotFoundException();
-            PboNames = addonsFolder.EnumerateFiles("*.pbo").Select(fi => fi.Name.ToLowerInvariant()).ToHashSet();
+            PboNames = mod.GetFileList().Where(p => _addonsPbo.IsMatch(p)).ToHashSet();
         }
 
         private static string CleanName(string name)
@@ -37,7 +33,7 @@ namespace BSU.Core.Hashes
             return string.Join("",
                     name.Where(c =>
                         "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(c)))
-                .ToLowerInvariant(); // TODO: kill yourself
+                .ToLowerInvariant(); // TODO: get some holy water
         }
 
         public MatchHash(IRemoteMod mod)
@@ -46,7 +42,7 @@ namespace BSU.Core.Hashes
             var modCppHash = fileList.FirstOrDefault(h => h.GetPath().ToLowerInvariant() == "/mod.cpp");
             if (modCppHash != null)
             {
-                var modCppData = mod.DownloadFile(modCppHash.GetPath());
+                var modCppData = mod.GetFile(modCppHash.GetPath());
                 var name = Util.Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
                 if (name != null) Name = CleanName(name);
             }

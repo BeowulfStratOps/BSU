@@ -12,6 +12,6 @@
             VersionDisplay = remoteMod.DisplayName;
         }
 
-        public override string ToString() => $"Awaiting update of {LocalMod.Location} to {VersionHash} \"{VersionDisplay}\"";
+        public override string ToString() => $"Awaiting update of {LocalMod.Name} to {VersionHash} \"{VersionDisplay}\"";
     }
 }

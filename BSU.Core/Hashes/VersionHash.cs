@@ -16,21 +16,18 @@ namespace BSU.Core.Hashes
         public VersionHash(ILocalMod mod)
         {
             Hashes = new Dictionary<string, byte[]>();
-            var dir = mod.GetBaseDirectory();
-            foreach (var file in dir.EnumerateFiles("*", SearchOption.AllDirectories))
+            foreach (var file in mod.GetFileList())
             {
-                var relativePath = file.FullName.Replace(dir.FullName, "").Replace("\\", "/");
-                var hash = GetFileHash(file);
-                Hashes.Add(relativePath, hash);
+                var hash = GetFileHash(file, mod.GetFile(file));
+                Hashes.Add(file, hash);
             }
 
             Hash = BuildHash();
         }
 
-        private static byte[] GetFileHash(FileInfo file)
+        private static byte[] GetFileHash(string path, Stream fileStream)
         {
-            using var fileStream = file.OpenRead();
-            if ((file.Extension == ".pbo" || file.Extension == ".ebo") && file.Length > 20)
+            if ((path.EndsWith(".pbo") || path.EndsWith(".ebo")) && fileStream.Length > 20 && fileStream.CanSeek)
             {
                 var array = new byte[20];
                 fileStream.Seek(-20L, SeekOrigin.End);

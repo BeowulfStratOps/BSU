@@ -6,25 +6,24 @@ namespace BSU.Core.State
 {
     public class StorageMod
     {
-        public readonly string Name, Location;
+        public readonly string Name;
 
         internal readonly MatchHash _matchHash;
         public readonly VersionHash VersionHash;
         internal readonly Storage Storage;
 
-        private readonly ILocalMod _mod;
+        internal readonly ILocalMod Mod;
 
         public readonly UpdateTarget UpdateTarget;
 
         internal StorageMod(ILocalMod mod, Storage storage)
         {
-            _mod = mod;
+            Mod = mod;
             Storage = storage;
             Name = mod.GetIdentifier();
             Console.WriteLine($"Hashing {storage.Name} / {Name}");
             _matchHash = new MatchHash(mod);
             VersionHash = new VersionHash(mod);
-            Location = mod.GetBaseDirectory().FullName;
             UpdateTarget = storage.State._core.GetUpdateTarget(this);
         }
 

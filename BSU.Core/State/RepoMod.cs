@@ -16,12 +16,12 @@ namespace BSU.Core.State
 
         public readonly VersionHash VersionHash;
 
-        private readonly IRemoteMod _mod;
+        internal readonly IRemoteMod Mod;
 
         internal RepoMod(IRemoteMod mod, Repo repo)
         {
             Repo = repo;
-            _mod = mod;
+            Mod = mod;
 
             DisplayName = mod.GetDisplayName();
 

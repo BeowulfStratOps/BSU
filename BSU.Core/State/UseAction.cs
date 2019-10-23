@@ -9,6 +9,6 @@
             LocalMod = localMod;
         }
 
-        public override string ToString() => "Use " + LocalMod.Location;
+        public override string ToString() => "Use " + LocalMod.Name;
     }
 }

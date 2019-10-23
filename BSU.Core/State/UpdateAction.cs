@@ -3,15 +3,16 @@
     public class UpdateAction : ModAction
     {
         public readonly StorageMod LocalMod;
-        public readonly string VersionHash, VersionDisplay;
+        public readonly UpdateTarget Target;
+        public readonly RepoMod RemoteMod;
 
         internal UpdateAction(StorageMod localMod, RepoMod remoteMod)
         {
             LocalMod = localMod;
-            VersionHash = remoteMod.VersionHash.GetHashString();
-            VersionDisplay = remoteMod.DisplayName;
+            RemoteMod = remoteMod;
+            Target = new UpdateTarget(remoteMod.VersionHash.GetHashString(), remoteMod.DisplayName);
         }
 
-        public override string ToString() => $"Update {LocalMod.Location} to {VersionHash} \"{VersionDisplay}\"";
+        public override string ToString() => $"Update {LocalMod.Storage.Name}/{LocalMod.Name} from {LocalMod.VersionHash.GetHashString()} to {Target.Hash} \"{Target.Display}\"";
     }
 }
