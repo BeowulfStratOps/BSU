@@ -39,16 +39,14 @@ namespace BSU.Core.Hashes
         public MatchHash(IRemoteMod mod)
         {
             var fileList = mod.GetFileList();
-            var modCppHash = fileList.FirstOrDefault(h => h.GetPath().ToLowerInvariant() == "/mod.cpp");
-            if (modCppHash != null)
+            var modCppData = mod.GetFile("/mod.cpp");
+            if (modCppData != null)
             {
-                var modCppData = mod.GetFile(modCppHash.GetPath());
                 var name = Util.Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
                 if (name != null) Name = CleanName(name);
             }
 
-            PboNames = fileList.Select(h => h.GetPath().ToLowerInvariant())
-                .Where(f => Regex.IsMatch(f, "addons/[^/]*.pbo")).ToHashSet();
+            PboNames = fileList.Where(f => Regex.IsMatch(f.ToLowerInvariant(), "addons/[^/]*.pbo")).ToHashSet();
         }
 
         public bool IsMatch(MatchHash other)

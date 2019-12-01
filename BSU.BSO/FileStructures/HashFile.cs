@@ -22,7 +22,7 @@ namespace BSU.BSO.FileStructures
         }
     }
 
-    public class HashType : IModFileInfo
+    public class HashType
     {
         public string FileName { get; set; }
         public byte[] Hash { get; set; }
@@ -39,8 +39,5 @@ namespace BSU.BSO.FileStructures
         {
             return "Hash: " + FileName;
         }
-
-        public string GetPath() => FileName;
-        public byte[] GetFileHash() => Hash;
     }
 }

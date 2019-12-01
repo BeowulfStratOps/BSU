@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using BSU.CoreInterface;
+using BSU.Hashes;
 
 namespace BSU.Core.Tests
 {
@@ -14,8 +16,7 @@ namespace BSU.Core.Tests
         public byte[] GetFile(string path) => Encoding.UTF8.GetBytes(Files[path]);
         public string GetDisplayName() => DisplayName;
 
-        public List<IModFileInfo> GetFileList() =>
-            Files.Select(kv => (IModFileInfo) new MockModFileInfo(kv.Key, kv.Value)).ToList();
+        public List<string> GetFileList() => Files.Keys.ToList();
 
         public string GetIdentifier() => Identifier;
 
@@ -28,9 +29,14 @@ namespace BSU.Core.Tests
         {
             throw new System.NotImplementedException();
         }
+
+        public FileHash GetFileHash(string path)
+        {
+            return new SHA1AndPboHash(new MemoryStream(GetFile(path)), Utils.GetExtension(path));
+        }
     }
 
-    class MockModFileInfo : IModFileInfo
+    class MockModFileInfo
     {
         private readonly string _path;
         private readonly string _content;

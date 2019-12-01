@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using BSU.Util;
 using BSU.CoreInterface;
+using BSU.Hashes;
 
 namespace BSU.Core
 {
@@ -67,6 +68,11 @@ namespace BSU.Core
 
         public List<string> GetFileList() => _dir.EnumerateFiles("*", SearchOption.AllDirectories)
             .Select(fi => fi.FullName.Replace(_dir.FullName, "").Replace('\\', '/')).ToList();
+
+        public FileHash GetFileHash(string path)
+        {
+            return new SHA1AndPboHash(GetFile(path), Utils.GetExtension(path));
+        }
 
         public string GetIdentifier() => _dir.Name;
     }

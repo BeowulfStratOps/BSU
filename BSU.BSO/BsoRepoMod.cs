@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using BSU.Util;
 using BSU.BSO.FileStructures;
 using BSU.CoreInterface;
+using BSU.Hashes;
 using Newtonsoft.Json;
 
 namespace BSU.BSO
@@ -14,7 +14,7 @@ namespace BSU.BSO
         private readonly string _url, _name;
         private readonly HashFile _hashFile;
 
-        public List<IModFileInfo> GetFileList() => _hashFile.Hashes.OfType<IModFileInfo>().ToList();
+        public List<string> GetFileList() => _hashFile.Hashes.Select(h => h.FileName).ToList();
 
         public byte[] GetFile(string path)
         {
@@ -59,6 +59,12 @@ namespace BSU.BSO
         public string GetVersionIdentifier()
         {
             throw new NotImplementedException();
+        }
+
+        public FileHash GetFileHash(string path)
+        {
+            var bytes = _hashFile.Hashes.SingleOrDefault(h => h.FileName == path)?.Hash;
+            return bytes == null ? null : new SHA1AndPboHash(bytes);
         }
     }
 }

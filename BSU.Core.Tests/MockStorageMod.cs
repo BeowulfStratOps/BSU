@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using BSU.CoreInterface;
+using BSU.Hashes;
 
 namespace BSU.Core.Tests
 {
@@ -18,8 +19,15 @@ namespace BSU.Core.Tests
 
         public Stream GetFile(string path) => new MemoryStream(Encoding.UTF8.GetBytes(Files[path]));
 
+        public FileHash GetFileHash(string path)
+        {
+            return new SHA1AndPboHash(GetFile(path), Utils.GetExtension(path));
+        }
+
         public List<string> GetFileList() => Files.Keys.ToList();
 
         public string GetIdentifier() => Identifier;
+
+        
     }
 }

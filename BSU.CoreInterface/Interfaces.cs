@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using BSU.Hashes;
 
 namespace BSU.CoreInterface
 {
@@ -21,15 +22,10 @@ namespace BSU.CoreInterface
         string GetLocation();
     }
 
-    public interface IModFileInfo
-    {
-        string GetPath();
-        byte[] GetFileHash();
-    }
-
     public interface IRemoteMod
     {
-        List<IModFileInfo> GetFileList();
+        List<string> GetFileList();
+        FileHash GetFileHash(string path);
         byte[] GetFile(string path);
         string GetDisplayName();
 
@@ -84,5 +80,6 @@ namespace BSU.CoreInterface
         List<string> GetFileList();
         Stream GetFile(string path);
         bool FileExists(string path);
+        FileHash GetFileHash(string path);
     }
 }
