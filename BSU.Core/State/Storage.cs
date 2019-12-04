@@ -14,7 +14,7 @@ namespace BSU.Core.State
 
         internal Storage(IStorage storage, State state)
         {
-            Name = storage.GetName();
+            Name = storage.GetIdentifier();
             State = state;
             Mods = storage.GetMods().Select(m => new StorageMod(m, this)).ToList();
             Location = storage.GetLocation();

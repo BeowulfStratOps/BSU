@@ -53,13 +53,16 @@ namespace BSU.Core.State
             Actions = actions.AsReadOnly();
             if (actions.Any(a => a is UseAction))
                 Selected = actions[0];
+
 #if DEBUG
-            Selected = actions[0];
-            if (Name == "@ace")
-            {
-                Selected = actions.First(a => a is DownloadAction);
-            }
+            if (Selected == null) Selected = actions.FirstOrDefault(a => a is UpdateAction);
+            if (Selected == null) Selected = actions.FirstOrDefault(a => a is AwaitUpdateAction);
 #endif
+        }
+
+        public ISyncState PrepareUpdate(StorageMod local)
+        {
+            return Mod.PrepareSync(local.Mod);
         }
     }
 }

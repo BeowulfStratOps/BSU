@@ -7,9 +7,10 @@ using BSU.Hashes;
 
 namespace BSU.Core.Tests
 {
-    public class MockStorageMod : ILocalMod
+    internal class MockStorageMod : ILocalMod
     {
         public string Identifier, DisplayName;
+        public MockStorage Storage;
 
         public Dictionary<string, string> Files = new Dictionary<string, string>();
 
@@ -28,6 +29,6 @@ namespace BSU.Core.Tests
 
         public string GetIdentifier() => Identifier;
 
-        
+        public IStorage GetStorage() => Storage;
     }
 }

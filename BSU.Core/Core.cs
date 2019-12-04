@@ -12,6 +12,7 @@ namespace BSU.Core
     {
         private readonly ISettings _settings;
         private readonly InternalState _state;
+        internal readonly SyncManager SyncManager = new SyncManager();
 
         public Core(FileInfo settingsPath)
         {
@@ -42,9 +43,44 @@ namespace BSU.Core
             return new State.State(_state.GetRepositories(), _state.GetStorages(), this);
         }
 
+        internal UpdatePacket PrepareUpdate(Repo repo)
+        {
+            Console.WriteLine("To do:");
+            var todos = repo.Mods.Where(m => !(m.Selected is UseAction)).ToList();
+            foreach (var repoModView in todos)
+            {
+                Console.WriteLine(repoModView.Name + ": " + repoModView.Selected.ToString());
+            }
+
+            // TODO: make sure download folder names don't overlap
+
+            var updatePacket = new UpdatePacket(this);
+
+            // TODO: create download folders and add them to syncstates
+
+            foreach (var updateAction in repo.Mods.Select(m => m.Selected).OfType<UpdateAction>())
+            {
+                var syncState = updateAction.RemoteMod.PrepareUpdate(updateAction.LocalMod);
+                var updateJob = new UpdateJob(updateAction.LocalMod.Mod, updateAction.RemoteMod.Mod, updateAction.Target, syncState);
+                updatePacket.Jobs.Add(updateJob);
+            }
+
+            return updatePacket;
+        }
+
+        internal void DoUpdate(UpdatePacket update)
+        {
+            foreach (var job in update.Jobs)
+            {
+                _state.SetUpdatingTo(job.LocalMod, job.Target.Hash, job.Target.Display);
+                SyncManager.QueueJob(job);
+            }
+        }
 
         public void PrintInternalState() => _state.PrintState();
 
-        public UpdateTarget GetUpdateTarget(StorageMod mod) => _state.GetUpdateTarget(mod);
+        public UpdateTarget GetUpdateTarget(StorageMod mod) => _state.GetUpdateTarget(mod.Mod);
+
+        public List<JobView> GetJobs() => SyncManager.GetAllJobs().Select(j => new JobView(j)).ToList();
     }
 }

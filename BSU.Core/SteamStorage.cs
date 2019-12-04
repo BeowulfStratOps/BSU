@@ -27,18 +27,18 @@ namespace BSU.Core
             }
         }
 
-        public List<ILocalMod> GetMods() => _mods.Select(di => (ILocalMod)new SteamMod(di)).ToList();
+        public List<ILocalMod> GetMods() => _mods.Select(di => (ILocalMod)new SteamMod(di, this)).ToList();
 
         public string GetLocation() => _basePath.FullName;
 
-        public string GetName() => _name;
+        public string GetIdentifier() => _name;
 
         public bool CanWrite() => false;
     }
 
     public class SteamMod : DirectoryMod
     {
-        public SteamMod(DirectoryInfo directory) : base(directory)
+        public SteamMod(DirectoryInfo directory, IStorage parentStorage) : base(directory, parentStorage)
         {
         }
     }

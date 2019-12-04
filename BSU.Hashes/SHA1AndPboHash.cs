@@ -29,6 +29,6 @@ namespace BSU.Hashes
             _hash = hash;
         }
 
-        public byte[] GetBytes() => _hash;
+        public override byte[] GetBytes() => _hash;
     }
 }

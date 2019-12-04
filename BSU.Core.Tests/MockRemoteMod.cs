@@ -34,6 +34,8 @@ namespace BSU.Core.Tests
         {
             return new SHA1AndPboHash(new MemoryStream(GetFile(path)), Utils.GetExtension(path));
         }
+
+        public long GetFileSize(string path) => Files[path].Length;
     }
 
     class MockModFileInfo

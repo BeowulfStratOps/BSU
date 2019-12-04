@@ -49,10 +49,7 @@ namespace BSU.BSO
             return Util.Util.GetDisplayName(modCpp, keys);
         }
 
-        public ISyncState PrepareSync(ILocalMod target)
-        {
-            throw new NotImplementedException();
-        }
+        public ISyncState PrepareSync(ILocalMod target) => new RepoSync(this, target);
 
         public string GetIdentifier() => _name;
 
@@ -66,5 +63,7 @@ namespace BSU.BSO
             var bytes = _hashFile.Hashes.SingleOrDefault(h => h.FileName == path)?.Hash;
             return bytes == null ? null : new SHA1AndPboHash(bytes);
         }
+
+        public long GetFileSize(string path) => _hashFile.Hashes.Single(h => h.FileName == path).FileSize;
     }
 }

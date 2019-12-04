@@ -37,16 +37,28 @@ namespace BSU.CoreInterface
         ISyncState PrepareSync(ILocalMod target);
         string GetIdentifier();
         string GetVersionIdentifier();
+        long GetFileSize(string path);
     }
 
     public interface ISyncState
     {
-        long GetBytesToDownload();
-        long GetBytesToUpdate();
+        long GetRemainingBytesToDownload();
+        long GetRemainingBytesToUpdate();
         int GetRemainingNewFilesCount();
         int GetRemainingDeletedFilesCount();
         int GetRemainingChangedFilesCount();
-        void Start();
+        long GetTotalBytesToDownload();
+        long GetTotalBytesToUpdate();
+        int GetTotalNewFilesCount();
+        int GetTotalDeletedFilesCount();
+        int GetTotalChangedFilesCount();
+        IWorkUnit GetWork();
+        bool IsDone();
+    }
+
+    public interface IWorkUnit
+    {
+        void DoWork();
         bool IsDone();
     }
 
@@ -70,7 +82,7 @@ namespace BSU.CoreInterface
         /// alias. identifier of sorts
         /// </summary>
         /// <returns></returns>
-        string GetName();
+        string GetIdentifier();
     }
 
     public interface ILocalMod
@@ -81,5 +93,6 @@ namespace BSU.CoreInterface
         Stream GetFile(string path);
         bool FileExists(string path);
         FileHash GetFileHash(string path);
+        IStorage GetStorage();
     }
 }

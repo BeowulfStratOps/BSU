@@ -108,30 +108,30 @@ namespace BSU.Core
             Console.WriteLine("Storages:");
             foreach (var storage in _storages)
             {
-                Console.WriteLine($"  {storage.GetType().Name} {storage.GetName()} {storage.GetLocation()}");
+                Console.WriteLine($"  {storage.GetType().Name} {storage.GetIdentifier()} {storage.GetLocation()}");
                 foreach (var localMod in storage.GetMods())
                 {
-                    Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()} in {storage.GetName()}");
+                    Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()} in {storage.GetIdentifier()}");
                 }
             }
         }
 
-        public void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay)
+        public void SetUpdatingTo(ILocalMod mod, string targetHash, string targetDisplay)
         {
-            _settings.Storages.Single(s => s.Name == mod.Storage.Name).Updating[mod.Name] = new UpdateTarget(targetHash, targetDisplay);
+            _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating[mod.GetIdentifier()] = new UpdateTarget(targetHash, targetDisplay);
             _settings.Store();
         }
 
-        public void RemoveUpdatingTo(StorageMod mod)
+        public void RemoveUpdatingTo(ILocalMod mod)
         {
-            _settings.Storages.Single(s => s.Name == mod.Storage.Name).Updating.Remove(mod.Name);
+            _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating.Remove(mod.GetIdentifier());
             _settings.Store();
         }
 
-        public UpdateTarget GetUpdateTarget(StorageMod mod)
+        public UpdateTarget GetUpdateTarget(ILocalMod mod)
         {
             var target = _settings.Storages
-                .SingleOrDefault(s => s.Name == mod.Storage.Name)?.Updating.GetValueOrDefault(mod.Name);
+                .SingleOrDefault(s => s.Name == mod.GetStorage().GetIdentifier())?.Updating.GetValueOrDefault(mod.GetIdentifier());
             if (target == null) return null;
             return new UpdateTarget(target.Hash, target.Display);
         }

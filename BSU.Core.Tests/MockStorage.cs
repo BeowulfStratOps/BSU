@@ -26,6 +26,6 @@ namespace BSU.Core.Tests
 
         public List<ILocalMod> GetMods() => Mods.OfType<ILocalMod>().ToList();
 
-        public string GetName() => name;
+        public string GetIdentifier() => name;
     }
 }

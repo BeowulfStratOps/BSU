@@ -111,5 +111,55 @@ namespace BSU.CLI
 
             mod.Selected = mod.Actions[action - 1];
         }
+
+        [CliCommand("update", "Update for a remote mod.", "repo_name")]
+        void Update(string[] args)
+        {
+            if (_state == null)
+                throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
+
+            var repo = _state.Repos.Single(r =>
+                r.Name.Equals(args[0], StringComparison.InvariantCultureIgnoreCase));
+
+            var packet = repo.PrepareUpdate();
+
+            foreach (var packetJob in packet.GetJobsViews())
+            {
+                Console.WriteLine($"{packetJob.GetLocalDisplayName()} -> {packetJob.GetRemoteDisplayName()}");
+                Console.WriteLine($" Download: {packetJob.GetTotalNewFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToDownload())}");
+                Console.WriteLine($" Update: {packetJob.GetTotalChangedFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToUpdate())}");
+                Console.WriteLine($" Delete: {packetJob.GetTotalDeletedFilesCount()} Files");
+            }
+
+            // TODO: ask if that's ok
+
+            packet.DoUpdate();
+        }
+
+        [CliCommand("jobs", "Shows job states")]
+        void Jobs(string[] args)
+        {
+            if (_state == null)
+                throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
+
+            var jobs = _core.GetJobs();
+
+            foreach (var job in jobs)
+            {
+                Console.WriteLine($"{job.GetLocalDisplayName()} -> {job.GetRemoteDisplayName()}");
+                if (job.IsDone())
+                {
+                    Console.WriteLine(" Done");
+                }
+                else
+                {
+                    Console.WriteLine(
+                        $" Download: {job.GetRemainingNewFilesCount()} Files, {Utils.BytesToHuman(job.GetRemainingBytesToDownload())}");
+                    Console.WriteLine(
+                        $" Update: {job.GetRemainingChangedFilesCount()} Files, {Utils.BytesToHuman(job.GetRemainingBytesToUpdate())}");
+                    Console.WriteLine($" Delete: {job.GetRemainingDeletedFilesCount()} Files");
+                }
+            }
+        }
     }
 }

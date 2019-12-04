@@ -21,7 +21,7 @@ namespace BSU.Core
 
         public virtual List<ILocalMod> GetMods()
         {
-            return GetModFolders().Select(di => (ILocalMod)new DirectoryMod(di)).ToList();
+            return GetModFolders().Select(di => (ILocalMod)new DirectoryMod(di, this)).ToList();
         }
 
         protected List<DirectoryInfo> GetModFolders()
@@ -31,7 +31,7 @@ namespace BSU.Core
 
         public string GetLocation() => _path;
 
-        public string GetName() => _name;
+        public string GetIdentifier() => _name;
 
         public virtual bool CanWrite() => true;
     }
@@ -39,10 +39,12 @@ namespace BSU.Core
     public class DirectoryMod : ILocalMod
     {
         private readonly DirectoryInfo _dir;
+        private readonly IStorage _parentStorage;
 
-        public DirectoryMod(DirectoryInfo dir)
+        public DirectoryMod(DirectoryInfo dir, IStorage parentStorage)
         {
             _dir = dir;
+            _parentStorage = parentStorage;
         }
 
         public bool FileExists(string path) => File.Exists(Path.Combine(_dir.FullName, path));
@@ -75,5 +77,7 @@ namespace BSU.Core
         }
 
         public string GetIdentifier() => _dir.Name;
+
+        public IStorage GetStorage() => _parentStorage;
     }
 }

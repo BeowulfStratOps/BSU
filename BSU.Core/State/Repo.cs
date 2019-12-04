@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using BSU.Core.Hashes;
 using BSU.CoreInterface;
 
 namespace BSU.Core.State
@@ -17,6 +17,14 @@ namespace BSU.Core.State
             State = state;
             Mods = repo.GetMods().Select(m => new RepoMod(m, this)).ToList();
             Name = repo.GetName();
+        }
+
+        public UpdatePacket PrepareUpdate()
+        {
+            if (Mods.Any(m => m.Selected == null))
+                throw new InvalidOperationException("Some mods don't have an action selected.");
+
+            return State._core.PrepareUpdate(this);
         }
     }
 }
