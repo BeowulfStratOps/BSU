@@ -22,5 +22,8 @@ namespace BSU.Core
         {
             _core.DoUpdate(this);
         }
+
+        public bool IsDone() => Jobs.All(j => j.SyncState.IsDone());
+        public bool HasError() => Jobs.All(j => j.SyncState.HasError());
     }
 }

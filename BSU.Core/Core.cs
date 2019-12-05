@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using BSU.Core.Hashes;
 using BSU.Core.State;
+using BSU.Core.Sync;
 using BSU.CoreInterface;
+using UpdateAction = BSU.Core.State.UpdateAction;
 
 namespace BSU.Core
 {
@@ -60,8 +62,16 @@ namespace BSU.Core
 
             foreach (var updateAction in repo.Mods.Select(m => m.Selected).OfType<UpdateAction>())
             {
-                var syncState = updateAction.RemoteMod.PrepareUpdate(updateAction.LocalMod);
+                var syncState = new RepoSync(updateAction.RemoteMod.Mod, updateAction.LocalMod.Mod);
                 var updateJob = new UpdateJob(updateAction.LocalMod.Mod, updateAction.RemoteMod.Mod, updateAction.Target, syncState);
+                updatePacket.Jobs.Add(updateJob);
+            }
+
+            // TODO: check for running jobs??
+            foreach (var awaitAction in repo.Mods.Select(m => m.Selected).OfType<AwaitUpdateAction>())
+            {
+                var syncState = new RepoSync(awaitAction.RemoteMod.Mod, awaitAction.LocalMod.Mod);
+                var updateJob = new UpdateJob(awaitAction.LocalMod.Mod, awaitAction.RemoteMod.Mod, awaitAction.Target, syncState);
                 updatePacket.Jobs.Add(updateJob);
             }
 

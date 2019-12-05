@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using BSU.Core.State;
 using Xunit;
 
@@ -24,9 +25,9 @@ namespace BSU.Core.Tests
         private string GetVersionHash(string version)
         {
             var mod = new MockRemoteMod();
-            mod.Files.Add("Common2", "common2");
-            mod.Files.Add("Common1", "common1");
-            mod.Files.Add("Version", version);
+            mod.SetFile("Common2", "common2");
+            mod.SetFile("Common1", "common1");
+            mod.SetFile("Version", version);
             return new Hashes.VersionHash(mod).GetHashString();
         }
 
@@ -45,18 +46,18 @@ namespace BSU.Core.Tests
         {
             var remoteMod = new MockRemoteMod {Identifier = "remote_test"};
             repo.Mods.Add(remoteMod);
-            remoteMod.Files.Add("Common1", "common1");
-            remoteMod.Files.Add("Common2", "common2");
-            remoteMod.Files.Add("Version", version);
+            remoteMod.SetFile("Common1", "common1");
+            remoteMod.SetFile("Common2", "common2");
+            remoteMod.SetFile("Version", version);
             return remoteMod;
         }
 
         private MockStorageMod AddLocalMod(MockStorage storage, string version)
         {
-            var localMod = new MockStorageMod {Identifier = "local_test"};
-            localMod.Files.Add("Common1", "common1");
-            localMod.Files.Add("Common2", "common2");
-            localMod.Files.Add("Version", version);
+            var localMod = new MockStorageMod {Identifier = "local_test", Storage = storage};
+            localMod.SetFile("Common1", "common1");
+            localMod.SetFile("Common2", "common2");
+            localMod.SetFile("Version", version);
             storage.Mods.Add(localMod);
             return localMod;
         }
@@ -84,7 +85,7 @@ namespace BSU.Core.Tests
             state = core.GetState();
             var awaitAction = state.Repos.Single().Mods.Single().Actions.OfType<AwaitUpdateAction>().SingleOrDefault();
             Assert.NotNull(awaitAction);
-            Assert.Equal(awaitAction.VersionHash, GetVersionHash("my_version"));
+            Assert.Equal(awaitAction.Target.Hash, GetVersionHash("my_version"));
             Assert.NotNull(awaitAction.LocalMod);
             Assert.NotNull(storage.Mods.SingleOrDefault());
         }
@@ -106,13 +107,19 @@ namespace BSU.Core.Tests
 
             var update = state.Repos.Single().PrepareUpdate();
             update.DoUpdate();
+            while (!update.IsDone())
+            {
+                Thread.Sleep(10);
+            }
+
+            Assert.False(update.HasError());
 
             Assert.Equal("local_test", settings.Storages.Single().Updating.Keys.Single());
             Assert.Equal(GetVersionHash("my_version"), settings.Storages.Single().Updating["local_test"].Hash);
             state = core.GetState();
             var awaitAction = state.Repos.Single().Mods.Single().Actions.OfType<AwaitUpdateAction>().SingleOrDefault();
             Assert.NotNull(awaitAction);
-            Assert.Equal(GetVersionHash("my_version"), awaitAction.VersionHash);
+            Assert.Equal(GetVersionHash("my_version"), awaitAction.Target.Hash);
             Assert.NotNull(awaitAction.LocalMod);
             Assert.NotNull(storage.Mods.SingleOrDefault());
         }
@@ -129,7 +136,7 @@ namespace BSU.Core.Tests
 
             var mod = state.Repos.Single().Mods.Single();
             var action = mod.Actions.OfType<AwaitUpdateAction>().Single();
-            Assert.Equal(GetVersionHash("my_version"), action.VersionHash);
+            Assert.Equal(GetVersionHash("my_version"), action.Target.Hash);
             mod.Selected = action;
 
             var update = state.Repos.Single().PrepareUpdate();
@@ -139,7 +146,7 @@ namespace BSU.Core.Tests
             state = core.GetState();
             var useAction = state.Repos.Single().Mods.Single().Actions.OfType<UseAction>().SingleOrDefault();
             Assert.NotNull(useAction);
-            Assert.Equal("my_version", localMod.Files["Version"]);
+            Assert.Equal("my_version", localMod.GetFileContent("Version"));
             Assert.NotNull(storage.Mods.SingleOrDefault());
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -10,10 +11,15 @@ namespace BSU.Core.Tests
 {
     public class MockRemoteMod : IRemoteMod
     {
-        public Dictionary<string, string> Files = new Dictionary<string, string>();
+        public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
         public string Identifier, DisplayName;
 
-        public byte[] GetFile(string path) => Encoding.UTF8.GetBytes(Files[path]);
+        public void SetFile(string key, string data)
+        {
+            Files[key] = Encoding.UTF8.GetBytes(data);
+        }
+
+        public byte[] GetFile(string path) => Files.GetValueOrDefault(path);
         public string GetDisplayName() => DisplayName;
 
         public List<string> GetFileList() => Files.Keys.ToList();
@@ -25,17 +31,22 @@ namespace BSU.Core.Tests
             throw new System.NotImplementedException();
         }
 
-        public ISyncState PrepareSync(ILocalMod target)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public FileHash GetFileHash(string path)
         {
             return new SHA1AndPboHash(new MemoryStream(GetFile(path)), Utils.GetExtension(path));
         }
 
         public long GetFileSize(string path) => Files[path].Length;
+
+        public void DownloadTo(string path, Stream target, Action<long> updateCallback)
+        {
+            (target as MockStream).SetData(path, Files[path]);
+        }
+
+        public void UpdateTo(string path, Stream target, Action<long> updateCallback)
+        {
+            DownloadTo(path, target, updateCallback);
+        }
     }
 
     class MockModFileInfo

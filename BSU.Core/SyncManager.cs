@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using BSU.Core.Sync;
 using BSU.CoreInterface;
 
 namespace BSU.Core
@@ -26,13 +28,23 @@ namespace BSU.Core
 
         public IReadOnlyList<UpdateJob> GetAllJobs() => _allJobs.AsReadOnly();
 
-        private IWorkUnit GetWork()
+        private WorkUnit GetWork()
         {
             lock (_jobsTodo)
             {
                 if (!_jobsTodo.Any()) return null;
                 var job = _jobsTodo.First();
-                var work = job.SyncState.GetWork();
+                WorkUnit work;
+                try
+                {
+                    work = job.SyncState.GetWork();
+                }
+                catch (Exception e)
+                {
+                    job.SyncState.SetError(e);
+                    _jobsTodo.Remove(job);
+                    return null;
+                }
                 if (work != null) return work;
                 _jobsTodo.Remove(job);
                 return null;
@@ -45,7 +57,14 @@ namespace BSU.Core
             {
                 var work = GetWork();
                 if (work == null) break;
-                work.DoWork();
+                try
+                {
+                    work.DoWork();
+                }
+                catch (Exception e)
+                {
+                    work.SetError(e);
+                }
             }
         }
 

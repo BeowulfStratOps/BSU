@@ -38,22 +38,23 @@ namespace BSU.Core.Tests
             var storage = AddStorage(core, "test_storage");
             var localMod = new MockStorageMod
             {
-                Identifier = "test_local_mod"
+                Identifier = "test_local_mod",
+                Storage = storage
             };
             storage.Mods.Add(localMod);
-            remoteMod.Files.Add("Common1", "common1");
-            remoteMod.Files.Add("Common2", "common2");
-            localMod.Files.Add("Common1", "common1");
-            localMod.Files.Add("Common2", "common2");
+            remoteMod.SetFile("Common1", "common1");
+            remoteMod.SetFile("Common2", "common2");
+            localMod.SetFile("Common1", "common1");
+            localMod.SetFile("Common2", "common2");
             return (core, settings, repo, remoteMod, localMod, storage);
         }
 
         private string GetVersionHash(string version)
         {
             var mod = new MockRemoteMod();
-            mod.Files.Add("Common2", "common2");
-            mod.Files.Add("Common1", "common1");
-            mod.Files.Add("Version", version);
+            mod.SetFile("Common2", "common2");
+            mod.SetFile("Common1", "common1");
+            mod.SetFile("Version", version);
             return new Hashes.VersionHash(mod).GetHashString();
         }
 
@@ -70,7 +71,7 @@ namespace BSU.Core.Tests
             if (remoteVer != "")
             {
                 CheckDownload(remoteVer, actions, state.Storages.Single());
-                CheckUse(remoteVer, localVer, actions, state.Storages.Single().Mods.SingleOrDefault());
+                CheckUse(remoteVer, localVer, updatingTo, actions, state.Storages.Single().Mods.SingleOrDefault());
                 CheckUpdate(remoteVer, localVer, updatingTo, actions, state.Storages.Single().Mods.SingleOrDefault(),
                     state.Repos.Single().Mods.Single());
                 CheckAwaitUpdate(remoteVer, localVer, updatingTo, actions, state.Storages.Single().Mods.SingleOrDefault());
@@ -86,9 +87,10 @@ namespace BSU.Core.Tests
             Assert.Equal(download.Storage, storage);
         }
 
-        private void CheckUse(string remoteVer, string localVer, List<ModAction> actions, StorageMod mod)
+        private void CheckUse(string remoteVer, string localVer, string updateTo, List<ModAction> actions, StorageMod mod)
         {
             if (remoteVer != localVer) return;
+            if (updateTo != "" && updateTo != remoteVer) return;
             var use = actions.OfType<UseAction>().SingleOrDefault();
             Assert.NotNull(use);
             actions.Remove(use);
@@ -97,7 +99,7 @@ namespace BSU.Core.Tests
 
         private void CheckUpdate(string remoteVer, string localVer, string updateTo, List<ModAction> actions, StorageMod localMod, RepoMod remoteMod)
         {
-            if (remoteVer == localVer || localVer == "") return;
+            if (remoteVer == localVer && (remoteVer == updateTo || updateTo == "") || localVer == "") return;
             if (remoteVer == updateTo) return;
             var update = actions.OfType<UpdateAction>().SingleOrDefault();
             Assert.NotNull(update);
@@ -114,10 +116,9 @@ namespace BSU.Core.Tests
             var update = actions.OfType<AwaitUpdateAction>().SingleOrDefault();
             Assert.NotNull(update);
             actions.Remove(update);
-            Assert.Equal(update.VersionHash, GetVersionHash(remoteVer));
+            Assert.Equal(update.Target.Hash, GetVersionHash(remoteVer));
             Assert.Equal(update.LocalMod, localMod);
         }
-
 
         private void SetUpdating(string version, MockSettings settings, MockStorage storage, MockStorageMod mod)
         {
@@ -134,7 +135,7 @@ namespace BSU.Core.Tests
                 return;
             }
 
-            mod.Files.Add("Version", version);
+            mod.SetFile("Version", version);
         }
 
         private void SetRemote(string version, MockRepo repo, MockRemoteMod mod)
@@ -145,7 +146,7 @@ namespace BSU.Core.Tests
                 return;
             }
 
-            mod.Files.Add("Version", version);
+            mod.SetFile("Version", version);
         }
     }
 
@@ -157,7 +158,7 @@ namespace BSU.Core.Tests
             {
                 foreach (var localVer in new[] { "", "v1", "v2", "broken" })
                 {
-                    foreach (var updatingTo in new[] { "", "v1", "v2" })
+                    foreach (var updatingTo in new[] {"", "v1", "v2"})
                     {
                         yield return new object[] {remoteVer, localVer, updatingTo};
                     }

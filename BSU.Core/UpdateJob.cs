@@ -1,15 +1,17 @@
-﻿using BSU.CoreInterface;
+﻿using System;
+using BSU.Core.Sync;
+using BSU.CoreInterface;
 
 namespace BSU.Core
 {
     public class UpdateJob
     {
-        public readonly ILocalMod LocalMod;
-        public readonly IRemoteMod RemoteMod;
-        public readonly UpdateTarget Target;
-        public readonly ISyncState SyncState;
+        internal readonly ILocalMod LocalMod;
+        internal readonly IRemoteMod RemoteMod;
+        internal readonly UpdateTarget Target;
+        internal readonly RepoSync SyncState;
 
-        public UpdateJob(ILocalMod localMod, IRemoteMod remoteMod, UpdateTarget target, ISyncState syncState)
+        internal UpdateJob(ILocalMod localMod, IRemoteMod remoteMod, UpdateTarget target, RepoSync syncState)
         {
             LocalMod = localMod;
             RemoteMod = remoteMod;

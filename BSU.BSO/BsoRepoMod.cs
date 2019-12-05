@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using BSU.BSO.FileStructures;
@@ -49,8 +50,6 @@ namespace BSU.BSO
             return Util.Util.GetDisplayName(modCpp, keys);
         }
 
-        public ISyncState PrepareSync(ILocalMod target) => new RepoSync(this, target);
-
         public string GetIdentifier() => _name;
 
         public string GetVersionIdentifier()
@@ -65,5 +64,15 @@ namespace BSU.BSO
         }
 
         public long GetFileSize(string path) => _hashFile.Hashes.Single(h => h.FileName == path).FileSize;
+
+        public void DownloadTo(string path, Stream target, Action<long> updateCallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateTo(string path, Stream target, Action<long> updateCallback)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

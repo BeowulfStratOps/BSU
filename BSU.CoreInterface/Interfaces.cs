@@ -28,38 +28,11 @@ namespace BSU.CoreInterface
         FileHash GetFileHash(string path);
         byte[] GetFile(string path);
         string GetDisplayName();
-
-        /// <summary>
-        /// diff and ready to sync
-        /// </summary>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        ISyncState PrepareSync(ILocalMod target);
         string GetIdentifier();
         string GetVersionIdentifier();
         long GetFileSize(string path);
-    }
-
-    public interface ISyncState
-    {
-        long GetRemainingBytesToDownload();
-        long GetRemainingBytesToUpdate();
-        int GetRemainingNewFilesCount();
-        int GetRemainingDeletedFilesCount();
-        int GetRemainingChangedFilesCount();
-        long GetTotalBytesToDownload();
-        long GetTotalBytesToUpdate();
-        int GetTotalNewFilesCount();
-        int GetTotalDeletedFilesCount();
-        int GetTotalChangedFilesCount();
-        IWorkUnit GetWork();
-        bool IsDone();
-    }
-
-    public interface IWorkUnit
-    {
-        void DoWork();
-        bool IsDone();
+        void DownloadTo(string path, Stream target, Action<long> updateCallback);
+        void UpdateTo(string path, Stream target, Action<long> updateCallback);
     }
 
     public interface IStorage
@@ -94,5 +67,7 @@ namespace BSU.CoreInterface
         bool FileExists(string path);
         FileHash GetFileHash(string path);
         IStorage GetStorage();
+        void DeleteFile(string path);
+        Stream OpenFile(string path, FileAccess access);
     }
 }

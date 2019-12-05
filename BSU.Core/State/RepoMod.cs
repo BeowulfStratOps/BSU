@@ -59,10 +59,5 @@ namespace BSU.Core.State
             if (Selected == null) Selected = actions.FirstOrDefault(a => a is AwaitUpdateAction);
 #endif
         }
-
-        public ISyncState PrepareUpdate(StorageMod local)
-        {
-            return Mod.PrepareSync(local.Mod);
-        }
     }
 }

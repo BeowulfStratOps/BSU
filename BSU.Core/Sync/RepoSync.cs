@@ -4,15 +4,16 @@ using System.Linq;
 using System.Text;
 using BSU.CoreInterface;
 
-namespace BSU.BSO
+namespace BSU.Core.Sync
 {
-    class RepoSync : ISyncState
+    class RepoSync
     {
-        private readonly List<IWorkUnit> _allActions, _actionsTodo;
+        private readonly List<WorkUnit> _allActions, _actionsTodo;
+        public Exception Error { get; private set; } // TODO: check access modifiers
 
-        public RepoSync(BsoRepoMod remote, ILocalMod local)
+        public RepoSync(IRemoteMod remote, ILocalMod local)
         {
-            _allActions = new List<IWorkUnit>();
+            _allActions = new List<WorkUnit>();
             var remoteList = remote.GetFileList();
             var localList = local.GetFileList();
             var localListCopy = new List<string>(localList);
@@ -22,22 +23,22 @@ namespace BSU.BSO
                 {
                     if (!remote.GetFileHash(remoteFile).Equals(local.GetFileHash(remoteFile)))
                     {
-                        _allActions.Add(new UpdateAction(remoteFile, remote.GetFileSize(remoteFile)));
+                        _allActions.Add(new UpdateAction(remote, local, remoteFile, remote.GetFileSize(remoteFile)));
                     }
 
                     localListCopy.Remove(remoteFile);
                 }
                 else
                 {
-                    _allActions.Add(new DownloadAction(remoteFile, remote.GetFileSize(remoteFile)));
+                    _allActions.Add(new DownloadAction(remote, local, remoteFile, remote.GetFileSize(remoteFile)));
                 }
             }
 
             foreach (var localFile in localListCopy)
             {
-                _allActions.Add(new DeleteAction(localFile));
+                _allActions.Add(new DeleteAction(local, localFile));
             }
-            _actionsTodo = new List<IWorkUnit>(_allActions);
+            _actionsTodo = new List<WorkUnit>(_allActions);
         }
 
 
@@ -60,13 +61,24 @@ namespace BSU.BSO
 
         public int GetTotalNewFilesCount() => _allActions.OfType<DownloadAction>().Count();
 
-        public IWorkUnit GetWork()
+        public WorkUnit GetWork()
         {
             var work = _actionsTodo.FirstOrDefault();
             if (work != null) _actionsTodo.Remove(work);
             return work;
         }
 
-        public bool IsDone() => _allActions.All(a => a.IsDone());
+        public bool IsDone() => HasError() || _allActions.All(a => a.IsDone() || a.HasError());
+
+        public void SetError(Exception e)
+        {
+            Error = e;
+        }
+
+        public bool HasError()
+        {
+            if (Error != null) return true;
+            return _allActions.Any(a => a.HasError());
+        }
     }
 }

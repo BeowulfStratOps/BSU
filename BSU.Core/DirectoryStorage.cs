@@ -79,5 +79,15 @@ namespace BSU.Core
         public string GetIdentifier() => _dir.Name;
 
         public IStorage GetStorage() => _parentStorage;
+
+        public void DeleteFile(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Stream OpenFile(string path, FileAccess access)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
