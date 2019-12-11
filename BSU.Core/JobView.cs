@@ -3,10 +3,12 @@
     public class JobView
     {
         private UpdateJob _job;
+        public readonly string TargetHash;
 
         internal JobView(UpdateJob job)
         {
             _job = job;
+            TargetHash = job.Target.Hash;
         }
 
         public string GetLocalDisplayName() => _job.LocalMod.GetDisplayName();

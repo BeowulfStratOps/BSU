@@ -5,9 +5,7 @@ using BSU.CoreInterface;
 
 namespace BSU.Core.Sync
 {
-
-
-    public abstract class WorkUnit
+    internal abstract class WorkUnit
     {
         protected ILocalMod _local;
         protected string _path;

@@ -2,29 +2,29 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using BSU.Core.Hashes;
 using BSU.Core.State;
 using BSU.Core.Sync;
 using BSU.CoreInterface;
 using UpdateAction = BSU.Core.State.UpdateAction;
 
+[assembly: InternalsVisibleTo("BSU.Core.Tests")]
+
 namespace BSU.Core
 {
     public class Core
     {
-        private readonly ISettings _settings;
         private readonly InternalState _state;
         internal readonly SyncManager SyncManager = new SyncManager();
 
         public Core(FileInfo settingsPath)
         {
-            _settings = Settings.Load(settingsPath);
-            _state = new InternalState(_settings);
+            _state = new InternalState(Settings.Load(settingsPath));
         }
 
         public Core(ISettings settings)
         {
-            _settings = settings;
             _state = new InternalState(settings);
         }
 
@@ -42,7 +42,26 @@ namespace BSU.Core
         /// <returns></returns>
         public State.State GetState()
         {
+            CheckUpdateSettings();
+            CheckJobsWithoutUpdate();
             return new State.State(_state.GetRepositories(), _state.GetStorages(), this);
+        }
+
+        private void CheckUpdateSettings()
+        {
+            foreach (var storage in _state.GetStorages())
+            {
+                _state.CleanupUpdatingTo(storage);
+            }
+        }
+
+        private void CheckJobsWithoutUpdate()
+        {
+            foreach (var updateJob in SyncManager.GetAllJobs())
+            {
+                if (_state.GetUpdateTarget(updateJob.LocalMod) == null)
+                    throw new InvalidOperationException("There are hanging jobs. WTF.");
+            }
         }
 
         internal UpdatePacket PrepareUpdate(Repo repo)
@@ -67,14 +86,6 @@ namespace BSU.Core
                 updatePacket.Jobs.Add(updateJob);
             }
 
-            // TODO: check for running jobs??
-            foreach (var awaitAction in repo.Mods.Select(m => m.Selected).OfType<AwaitUpdateAction>())
-            {
-                var syncState = new RepoSync(awaitAction.RemoteMod.Mod, awaitAction.LocalMod.Mod);
-                var updateJob = new UpdateJob(awaitAction.LocalMod.Mod, awaitAction.RemoteMod.Mod, awaitAction.Target, syncState);
-                updatePacket.Jobs.Add(updateJob);
-            }
-
             return updatePacket;
         }
 
@@ -91,6 +102,7 @@ namespace BSU.Core
 
         public UpdateTarget GetUpdateTarget(StorageMod mod) => _state.GetUpdateTarget(mod.Mod);
 
-        public List<JobView> GetJobs() => SyncManager.GetAllJobs().Select(j => new JobView(j)).ToList();
+        public List<JobView> GetAllJobs() => SyncManager.GetAllJobs().Select(j => new JobView(j)).ToList();
+        public List<JobView> GetActiveJobs() => SyncManager.GetActiveJobs().Select(j => new JobView(j)).ToList();
     }
 }

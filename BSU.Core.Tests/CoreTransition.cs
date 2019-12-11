@@ -141,9 +141,16 @@ namespace BSU.Core.Tests
 
             var update = state.Repos.Single().PrepareUpdate();
             update.DoUpdate();
+            while (!update.IsDone())
+            {
+                Thread.Sleep(10);
+            }
+
+            Assert.False(update.HasError());
+
+            state = core.GetState();
 
             Assert.Empty(settings.Storages.Single().Updating);
-            state = core.GetState();
             var useAction = state.Repos.Single().Mods.Single().Actions.OfType<UseAction>().SingleOrDefault();
             Assert.NotNull(useAction);
             Assert.Equal("my_version", localMod.GetFileContent("Version"));

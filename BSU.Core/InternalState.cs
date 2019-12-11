@@ -128,6 +128,16 @@ namespace BSU.Core
             _settings.Store();
         }
 
+        public void CleanupUpdatingTo(IStorage storage)
+        {
+            var updating = _settings.Storages.Single(s => s.Name == storage.GetIdentifier()).Updating;
+            foreach (var modId in updating.Keys.ToList())
+            {
+                if (storage.GetMods().All(m => m.GetIdentifier() != modId))
+                    updating.Remove(modId);
+            }
+        }
+
         public UpdateTarget GetUpdateTarget(ILocalMod mod)
         {
             var target = _settings.Storages

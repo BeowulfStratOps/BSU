@@ -142,7 +142,7 @@ namespace BSU.CLI
             if (_state == null)
                 throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
 
-            var jobs = _core.GetJobs();
+            var jobs = _core.GetAllJobs();
 
             foreach (var job in jobs)
             {

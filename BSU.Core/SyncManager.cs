@@ -27,6 +27,7 @@ namespace BSU.Core
         }
 
         public IReadOnlyList<UpdateJob> GetAllJobs() => _allJobs.AsReadOnly();
+        public IReadOnlyList<UpdateJob> GetActiveJobs() => _allJobs.Where(j => !j.SyncState.IsDone()).ToList().AsReadOnly();
 
         private WorkUnit GetWork()
         {
