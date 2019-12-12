@@ -16,16 +16,20 @@ namespace BSU.Core
     public class Core
     {
         private readonly InternalState _state;
-        internal readonly SyncManager SyncManager = new SyncManager();
+        internal readonly ISyncManager SyncManager;
 
-        public Core(FileInfo settingsPath)
+        internal Core(ISettings settings, ISyncManager syncManager)
         {
-            _state = new InternalState(Settings.Load(settingsPath));
+            SyncManager = syncManager;
+            _state = new InternalState(settings);
         }
 
-        public Core(ISettings settings)
+        public Core(FileInfo settingsPath) : this(Settings.Load(settingsPath), new SyncManager())
         {
-            _state = new InternalState(settings);
+        }
+
+        public Core(ISettings settings) : this(settings, new SyncManager())
+        {
         }
 
         public void AddRepoType(string name, Func<string, string, IRepository> create) => _state.AddRepoType(name, create);
@@ -44,7 +48,9 @@ namespace BSU.Core
         {
             CheckUpdateSettings();
             CheckJobsWithoutUpdate();
-            return new State.State(_state.GetRepositories(), _state.GetStorages(), this);
+            var state = new State.State(_state.GetRepositories(), _state.GetStorages(), this);
+            CheckJobsWithoutRemoteTarget(state);
+            return state;
         }
 
         private void CheckUpdateSettings()
@@ -59,7 +65,19 @@ namespace BSU.Core
         {
             foreach (var updateJob in SyncManager.GetAllJobs())
             {
-                if (_state.GetUpdateTarget(updateJob.LocalMod) == null)
+                var target = _state.GetUpdateTarget(updateJob.LocalMod);
+                if (target == null)
+                    throw new InvalidOperationException("There are hanging jobs. WTF.");
+                if (target.Hash != updateJob.Target.Hash)
+                    throw new InvalidOperationException("There are hanging jobs. WTF.");
+            }
+        }
+
+        private void CheckJobsWithoutRemoteTarget(State.State state)
+        {
+            foreach (var updateJob in SyncManager.GetAllJobs())
+            {
+                if (state.Repos.SelectMany(r => r.Mods).All(m => m.VersionHash.GetHashString() != updateJob.Target.Hash))
                     throw new InvalidOperationException("There are hanging jobs. WTF.");
             }
         }
@@ -94,6 +112,7 @@ namespace BSU.Core
             foreach (var job in update.Jobs)
             {
                 _state.SetUpdatingTo(job.LocalMod, job.Target.Hash, job.Target.Display);
+                // TODO: do some sanity checks. two update jobs must never have the same local mod
                 SyncManager.QueueJob(job);
             }
         }
@@ -104,5 +123,10 @@ namespace BSU.Core
 
         public List<JobView> GetAllJobs() => SyncManager.GetAllJobs().Select(j => new JobView(j)).ToList();
         public List<JobView> GetActiveJobs() => SyncManager.GetActiveJobs().Select(j => new JobView(j)).ToList();
+
+        internal UpdateJob GetActiveJob(ILocalMod mod)
+        {
+            return SyncManager.GetActiveJobs().SingleOrDefault(j => j.LocalMod == mod);
+        }
     }
 }

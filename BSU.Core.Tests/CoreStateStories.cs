@@ -31,7 +31,8 @@ namespace BSU.Core.Tests
         private (Core, MockSettings, MockRepo, MockRemoteMod, MockStorageMod, MockStorage) DoSetup()
         {
             var settings = new MockSettings();
-            var core = new Core(settings);
+            var syncManager = new MockSyncManager();
+            var core = new Core(settings, syncManager);
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
             core.AddStorageType("MOCK", (name, path) => new MockStorage(name, path));
             var repo = AddRepo(core, "test_repo");
@@ -70,17 +71,21 @@ namespace BSU.Core.Tests
             SetLocal(localVer, storage, localMod);
             SetUpdating(updatingTo, settings, storage, localMod);
 
+
+            var shouldFail = job != "" && (updatingTo != job || remoteVer != job || localVer == "");
+
+            if (job != "" && job != remoteVer) job = "";
             if (localVer == "" && updatingTo != "") updatingTo = "";
 
 
-            var shouldFail = updatingTo == "" && job != "";
             State.State state = null;
 
             try
             {
                 state = core.GetState();
+                Assert.False(shouldFail);
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException)
             {
                 if (shouldFail) return;
                 throw;
@@ -117,7 +122,7 @@ namespace BSU.Core.Tests
         private void SetJob(string jobVersion, Core core, ILocalMod local, IRemoteMod remote)
         {
             if (jobVersion == "") return;
-            core.SyncManager.QueueJob(new UpdateJob(local, remote, new UpdateTarget(GetVersionHash(jobVersion), null), new MockRepoSync()));
+            core.SyncManager.QueueJob(new UpdateJob(local, remote, new UpdateTarget(GetVersionHash(jobVersion), null), null));
         }
 
         private void CheckDownload(string remoteVer, List<ModAction> actions, Storage storage)

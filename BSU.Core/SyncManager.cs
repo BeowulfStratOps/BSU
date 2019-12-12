@@ -7,7 +7,7 @@ using BSU.CoreInterface;
 
 namespace BSU.Core
 {
-    internal class SyncManager
+    internal class SyncManager : ISyncManager
     {
         private readonly List<UpdateJob> _jobsTodo = new List<UpdateJob>();
         private readonly List<UpdateJob> _allJobs = new List<UpdateJob>();

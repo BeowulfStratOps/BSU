@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using BSU.Core.Hashes;
 using BSU.CoreInterface;
 
@@ -15,6 +16,7 @@ namespace BSU.Core.State
         internal readonly ILocalMod Mod;
 
         public readonly UpdateTarget UpdateTarget;
+        internal readonly UpdateJob ActiveJob;
 
         internal StorageMod(ILocalMod mod, Storage storage)
         {
@@ -25,6 +27,7 @@ namespace BSU.Core.State
             _matchHash = new MatchHash(mod);
             VersionHash = new VersionHash(mod);
             UpdateTarget = storage.State._core.GetUpdateTarget(this);
+            ActiveJob = storage.State._core.GetActiveJob(mod);
         }
 
         /*public string Name, DisplayName, Location;

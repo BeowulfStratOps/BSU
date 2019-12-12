@@ -40,7 +40,7 @@ namespace BSU.Core.State
                     actions.Add(new UseAction(localMod));
                 else
                 {
-                    if (localMod.UpdateTarget != null && localMod.UpdateTarget.Hash == VersionHash.GetHashString())
+                    if (localMod.ActiveJob != null && localMod.ActiveJob.Target.Hash == VersionHash.GetHashString())
                         actions.Add(new AwaitUpdateAction(localMod, this));
                     else
                         actions.Add(new UpdateAction(localMod, this));
