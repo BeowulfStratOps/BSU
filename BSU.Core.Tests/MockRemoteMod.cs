@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using BSU.CoreInterface;
 using BSU.Hashes;
 
@@ -38,8 +39,14 @@ namespace BSU.Core.Tests
 
         public long GetFileSize(string path) => Files[path].Length;
 
+        public bool BlockUpdate;
+
         public void DownloadTo(string path, Stream target, Action<long> updateCallback)
         {
+            while (BlockUpdate)
+            {
+                Thread.Sleep(10);
+            }
             (target as MockStream).SetData(path, Files[path]);
         }
 

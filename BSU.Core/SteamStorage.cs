@@ -32,6 +32,10 @@ namespace BSU.Core
         public string GetLocation() => _basePath.FullName;
 
         public string GetIdentifier() => _name;
+        public ILocalMod CreateMod(string identifier)
+        {
+            throw new InvalidOperationException();
+        }
 
         public bool CanWrite() => false;
     }

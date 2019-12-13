@@ -32,7 +32,16 @@ namespace BSU.Core.State
 
             var actions = new List<ModAction>();
 
-            var localMatches = repo.State.Storages.SelectMany(s => s.Mods).Where(m => m._matchHash.IsMatch(matchHash));
+            var localMatches = repo.State.Storages.SelectMany(s => s.Mods).Where(m => m._matchHash.IsMatch(matchHash)).ToList();
+
+            var startedUpdates = repo.State.Storages.SelectMany(s => s.Mods)
+                .Where(m => VersionHash.GetHashString().Equals(m.UpdateTarget?.Hash)).ToList();
+
+            foreach (var startedUpdate in startedUpdates)
+            {
+                if (!localMatches.Contains(startedUpdate))
+                    localMatches.Add(startedUpdate);
+            }
 
             foreach (var localMod in localMatches)
             {
@@ -43,12 +52,11 @@ namespace BSU.Core.State
                     if (localMod.ActiveJob != null && localMod.ActiveJob.Target.Hash == VersionHash.GetHashString())
                         actions.Add(new AwaitUpdateAction(localMod, this));
                     else
-                        actions.Add(new UpdateAction(localMod, this));
-
+                        actions.Add(new UpdateAction(localMod, this, startedUpdates.Contains(localMod)));
                 }
             }
 
-            actions.AddRange(repo.State.Storages.Where(s => s.CanWrite).Select(s => new DownloadAction(s)));
+            actions.AddRange(repo.State.Storages.Where(s => s.CanWrite).Select(s => new DownloadAction(s, this)));
 
             Actions = actions.AsReadOnly();
             if (actions.Any(a => a is UseAction))

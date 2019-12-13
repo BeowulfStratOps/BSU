@@ -7,6 +7,7 @@ using BSU.Core.Hashes;
 using BSU.Core.State;
 using BSU.Core.Sync;
 using BSU.CoreInterface;
+using DownloadAction = BSU.Core.State.DownloadAction;
 using UpdateAction = BSU.Core.State.UpdateAction;
 
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
@@ -15,13 +16,13 @@ namespace BSU.Core
 {
     public class Core
     {
-        private readonly InternalState _state;
+        internal readonly InternalState State;
         internal readonly ISyncManager SyncManager;
 
         internal Core(ISettings settings, ISyncManager syncManager)
         {
             SyncManager = syncManager;
-            _state = new InternalState(settings);
+            State = new InternalState(settings);
         }
 
         public Core(FileInfo settingsPath) : this(Settings.Load(settingsPath), new SyncManager())
@@ -32,13 +33,13 @@ namespace BSU.Core
         {
         }
 
-        public void AddRepoType(string name, Func<string, string, IRepository> create) => _state.AddRepoType(name, create);
-        public void AddStorageType(string name, Func<string, string, IStorage> create) => _state.AddStorageType(name, create);
+        public void AddRepoType(string name, Func<string, string, IRepository> create) => State.AddRepoType(name, create);
+        public void AddStorageType(string name, Func<string, string, IStorage> create) => State.AddStorageType(name, create);
 
-        public void AddRepo(string name, string url, string type) => _state.AddRepo(name, url, type);
+        public void AddRepo(string name, string url, string type) => State.AddRepo(name, url, type);
 
         public void AddStorage(string name, DirectoryInfo directory, string type) =>
-            _state.AddStorage(name, directory, type);
+            State.AddStorage(name, directory, type);
 
         /// <summary>
         /// Does all the hard work. Don't spam it.
@@ -47,25 +48,25 @@ namespace BSU.Core
         public State.State GetState()
         {
             CheckUpdateSettings();
+            var state = new State.State(State.GetRepositories(), State.GetStorages(), this);
             CheckJobsWithoutUpdate();
-            var state = new State.State(_state.GetRepositories(), _state.GetStorages(), this);
             CheckJobsWithoutRemoteTarget(state);
             return state;
         }
 
         private void CheckUpdateSettings()
         {
-            foreach (var storage in _state.GetStorages())
+            foreach (var storage in State.GetStorages())
             {
-                _state.CleanupUpdatingTo(storage);
+                State.CleanupUpdatingTo(storage);
             }
         }
 
         private void CheckJobsWithoutUpdate()
         {
-            foreach (var updateJob in SyncManager.GetAllJobs())
+            foreach (var updateJob in SyncManager.GetActiveJobs())
             {
-                var target = _state.GetUpdateTarget(updateJob.LocalMod);
+                var target = State.GetUpdateTarget(updateJob.LocalMod);
                 if (target == null)
                     throw new InvalidOperationException("There are hanging jobs. WTF.");
                 if (target.Hash != updateJob.Target.Hash)
@@ -85,19 +86,28 @@ namespace BSU.Core
         internal UpdatePacket PrepareUpdate(Repo repo)
         {
             Console.WriteLine("To do:");
-            var todos = repo.Mods.Where(m => !(m.Selected is UseAction)).ToList();
+            var todos = repo.Mods.Where(m => m.Selected != null && !(m.Selected is UseAction)).ToList();
             foreach (var repoModView in todos)
             {
                 Console.WriteLine(repoModView.Name + ": " + repoModView.Selected.ToString());
             }
 
+            var actions = todos.Select(m => m.Selected).ToList();
+
             // TODO: make sure download folder names don't overlap
 
             var updatePacket = new UpdatePacket(this);
 
-            // TODO: create download folders and add them to syncstates
+            foreach (var downloadAction in actions.OfType<DownloadAction>())
+            {
+                var localMod = downloadAction.Storage.BackingStorage.CreateMod(downloadAction.FolderName);
+                var syncState = new RepoSync(downloadAction.RemoteMod.Mod, localMod);
+                var updateJob = new UpdateJob(localMod, downloadAction.RemoteMod.Mod, downloadAction.Target, syncState);
+                updatePacket.Jobs.Add(updateJob);
+            }
 
-            foreach (var updateAction in repo.Mods.Select(m => m.Selected).OfType<UpdateAction>())
+
+            foreach (var updateAction in actions.OfType<UpdateAction>())
             {
                 var syncState = new RepoSync(updateAction.RemoteMod.Mod, updateAction.LocalMod.Mod);
                 var updateJob = new UpdateJob(updateAction.LocalMod.Mod, updateAction.RemoteMod.Mod, updateAction.Target, syncState);
@@ -111,15 +121,17 @@ namespace BSU.Core
         {
             foreach (var job in update.Jobs)
             {
-                _state.SetUpdatingTo(job.LocalMod, job.Target.Hash, job.Target.Display);
+                State.SetUpdatingTo(job.LocalMod, job.Target.Hash, job.Target.Display);
                 // TODO: do some sanity checks. two update jobs must never have the same local mod
                 SyncManager.QueueJob(job);
             }
         }
 
-        public void PrintInternalState() => _state.PrintState();
+        public void PrintInternalState() => State.PrintState();
 
-        public UpdateTarget GetUpdateTarget(StorageMod mod) => _state.GetUpdateTarget(mod.Mod);
+        public UpdateTarget GetUpdateTarget(StorageMod mod) => State.GetUpdateTarget(mod.Mod);
+
+        internal void UpdateDone(ILocalMod mod) => State.RemoveUpdatingTo(mod);
 
         public List<JobView> GetAllJobs() => SyncManager.GetAllJobs().Select(j => new JobView(j)).ToList();
         public List<JobView> GetActiveJobs() => SyncManager.GetActiveJobs().Select(j => new JobView(j)).ToList();

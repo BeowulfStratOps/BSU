@@ -19,13 +19,13 @@ namespace BSU.Core.Tests
         private MockRepo AddRepo(Core core, string name)
         {
             core.AddRepo(name, "url/" + name, "MOCK");
-            return MockRepo.Repos[name];
+            return core.State.GetRepositories().Single() as MockRepo;
         }
 
         private MockStorage AddStorage(Core core, string name)
         {
             core.AddStorage(name, new DirectoryInfo("path/" + name), "MOCK");
-            return MockStorage.Storages[name];
+            return core.State.GetStorages().Single() as MockStorage;
         }
 
         private (Core, MockSettings, MockRepo, MockRemoteMod, MockStorageMod, MockStorage) DoSetup()
@@ -72,18 +72,21 @@ namespace BSU.Core.Tests
             SetUpdating(updatingTo, settings, storage, localMod);
 
 
+
+            if (localVer == "" && updatingTo != "") updatingTo = "";
+            if (localVer == updatingTo) updatingTo = "";
+
             var shouldFail = job != "" && (updatingTo != job || remoteVer != job || localVer == "");
 
             if (job != "" && job != remoteVer) job = "";
-            if (localVer == "" && updatingTo != "") updatingTo = "";
 
 
-            State.State state = null;
+            State.State state;
 
             try
             {
                 state = core.GetState();
-                Assert.False(shouldFail);
+                Assert.False(shouldFail, "Should have failed");
             }
             catch (InvalidOperationException)
             {

@@ -13,13 +13,13 @@ namespace BSU.Core.Tests
         private MockRepo AddRepo(Core core, string name)
         {
             core.AddRepo(name, "url/" + name, "MOCK");
-            return MockRepo.Repos[name];
+            return core.State.GetRepositories().Single() as MockRepo;
         }
 
         private MockStorage AddStorage(Core core, string name)
         {
             core.AddStorage(name, new DirectoryInfo("path/" + name), "MOCK");
-            return MockStorage.Storages[name];
+            return core.State.GetStorages().Single() as MockStorage;
         }
 
         private string GetVersionHash(string version)
@@ -71,6 +71,10 @@ namespace BSU.Core.Tests
 
             var state = core.GetState();
 
+            var selectedAction = state.Repos.Single().Mods.Single().Actions.OfType<DownloadAction>().Single();
+            selectedAction.FolderName = "local_mod";
+            state.Repos.Single().Mods.Single().Selected = selectedAction;
+
             var mod = state.Repos.Single().Mods.Single();
             var action = mod.Actions.OfType<DownloadAction>().Single();
             action.FolderName = "test_folder";
@@ -78,27 +82,39 @@ namespace BSU.Core.Tests
 
             var update = state.Repos.Single().PrepareUpdate();
             update.DoUpdate();
+            while (!update.IsDone())
+            {
+                Thread.Sleep(10);
+            }
+
+            Assert.False(update.HasError());
 
             Assert.Equal("test_folder", storage.Mods.Single().Identifier);
             Assert.Equal("test_folder", settings.Storages.Single().Updating.Keys.Single());
             Assert.Equal(GetVersionHash("my_version"), settings.Storages.Single().Updating["test_folder"].Hash);
             state = core.GetState();
+            var useAction = state.Repos.Single().Mods.Single().Actions.OfType<UseAction>().SingleOrDefault();
+            Assert.NotNull(useAction);
             var awaitAction = state.Repos.Single().Mods.Single().Actions.OfType<AwaitUpdateAction>().SingleOrDefault();
-            Assert.NotNull(awaitAction);
-            Assert.Equal(awaitAction.Target.Hash, GetVersionHash("my_version"));
-            Assert.NotNull(awaitAction.LocalMod);
-            Assert.NotNull(storage.Mods.SingleOrDefault());
+            Assert.Null(awaitAction);
+            var updateAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().SingleOrDefault();
+            Assert.Null(updateAction);
         }
 
 
         [Fact]
-        private void Update()
+        private void ContinueUpdate()
         {
             var (settings, core, repo, storage) = CommonSetup();
             AddRemoteMod(repo, "my_version");
             AddLocalMod(storage, "old_version");
+            settings.Storages.Single().Updating["local_test"] = new UpdateTarget(GetVersionHash("my_version"), "my_version");
 
             var state = core.GetState();
+
+            var selectedAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().Single();
+            Assert.True(selectedAction.IsContinuation);
+            state.Repos.Single().Mods.Single().Selected = selectedAction;
 
             var mod = state.Repos.Single().Mods.Single();
             var action = mod.Actions.OfType<UpdateAction>().Single();
@@ -117,30 +133,76 @@ namespace BSU.Core.Tests
             Assert.Equal("local_test", settings.Storages.Single().Updating.Keys.Single());
             Assert.Equal(GetVersionHash("my_version"), settings.Storages.Single().Updating["local_test"].Hash);
             state = core.GetState();
+            var useAction = state.Repos.Single().Mods.Single().Actions.OfType<UseAction>().SingleOrDefault();
+            Assert.NotNull(useAction);
             var awaitAction = state.Repos.Single().Mods.Single().Actions.OfType<AwaitUpdateAction>().SingleOrDefault();
-            Assert.NotNull(awaitAction);
-            Assert.Equal(GetVersionHash("my_version"), awaitAction.Target.Hash);
-            Assert.NotNull(awaitAction.LocalMod);
-            Assert.NotNull(storage.Mods.SingleOrDefault());
+            Assert.Null(awaitAction);
+            var updateAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().SingleOrDefault();
+            Assert.Null(updateAction);
+        }
+
+
+        [Fact]
+        private void Update()
+        {
+            var (settings, core, repo, storage) = CommonSetup();
+            AddRemoteMod(repo, "my_version");
+            AddLocalMod(storage, "old_version");
+
+            var state = core.GetState();
+
+            var selectedAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().Single();
+            state.Repos.Single().Mods.Single().Selected = selectedAction;
+
+            var mod = state.Repos.Single().Mods.Single();
+            var action = mod.Actions.OfType<UpdateAction>().Single();
+            Assert.Equal(GetVersionHash("my_version"), action.Target.Hash);
+            mod.Selected = action;
+
+            var update = state.Repos.Single().PrepareUpdate();
+            update.DoUpdate();
+            while (!update.IsDone())
+            {
+                Thread.Sleep(10);
+            }
+
+            Assert.False(update.HasError());
+
+            Assert.Equal("local_test", settings.Storages.Single().Updating.Keys.Single());
+            Assert.Equal(GetVersionHash("my_version"), settings.Storages.Single().Updating["local_test"].Hash);
+            state = core.GetState();
+            var useAction = state.Repos.Single().Mods.Single().Actions.OfType<UseAction>().SingleOrDefault();
+            Assert.NotNull(useAction);
+            var awaitAction = state.Repos.Single().Mods.Single().Actions.OfType<AwaitUpdateAction>().SingleOrDefault();
+            Assert.Null(awaitAction);
+            var updateAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().SingleOrDefault();
+            Assert.Null(updateAction);
         }
 
         [Fact]
         private void AwaitUpdate()
         {
             var (settings, core, repo, storage) = CommonSetup();
-            AddRemoteMod(repo, "my_version");
+            var remoteMod = AddRemoteMod(repo, "my_version");
+            remoteMod.BlockUpdate = true;
             var localMod = AddLocalMod(storage, "old_version");
-            settings.Storages.Single().Updating["local_test"] = new UpdateTarget(GetVersionHash("my_version"), "my_version");
 
             var state = core.GetState();
+
+            var selectedAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().Single();
+            state.Repos.Single().Mods.Single().Selected = selectedAction;
+
+            var update = state.Repos.Single().PrepareUpdate();
+            update.DoUpdate();
+
+            state = core.GetState();
 
             var mod = state.Repos.Single().Mods.Single();
             var action = mod.Actions.OfType<AwaitUpdateAction>().Single();
             Assert.Equal(GetVersionHash("my_version"), action.Target.Hash);
             mod.Selected = action;
 
-            var update = state.Repos.Single().PrepareUpdate();
-            update.DoUpdate();
+            remoteMod.BlockUpdate = false;
             while (!update.IsDone())
             {
                 Thread.Sleep(10);
@@ -155,6 +217,55 @@ namespace BSU.Core.Tests
             Assert.NotNull(useAction);
             Assert.Equal("my_version", localMod.GetFileContent("Version"));
             Assert.NotNull(storage.Mods.SingleOrDefault());
+            var awaitAction = state.Repos.Single().Mods.Single().Actions.OfType<AwaitUpdateAction>().SingleOrDefault();
+            Assert.Null(awaitAction);
+            var updateAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().SingleOrDefault();
+            Assert.Null(updateAction);
+        }
+
+        [Fact]
+        private void AwaitDownload()
+        {
+            var (settings, core, repo, storage) = CommonSetup();
+            var remoteMod = AddRemoteMod(repo, "my_version");
+            remoteMod.BlockUpdate = true;
+
+            var state = core.GetState();
+
+            var selectedAction = state.Repos.Single().Mods.Single().Actions.OfType<DownloadAction>().Single();
+            selectedAction.FolderName = "local_mod";
+            state.Repos.Single().Mods.Single().Selected = selectedAction;
+
+            var update = state.Repos.Single().PrepareUpdate();
+            update.DoUpdate();
+
+            state = core.GetState();
+
+            var mod = state.Repos.Single().Mods.Single();
+            var action = mod.Actions.OfType<AwaitUpdateAction>().Single();
+            Assert.Equal(GetVersionHash("my_version"), action.Target.Hash);
+            mod.Selected = action;
+
+            remoteMod.BlockUpdate = false;
+            while (!update.IsDone())
+            {
+                Thread.Sleep(10);
+            }
+
+            Assert.False(update.HasError());
+
+            state = core.GetState();
+
+            Assert.Empty(settings.Storages.Single().Updating);
+            var useAction = state.Repos.Single().Mods.Single().Actions.OfType<UseAction>().SingleOrDefault();
+            Assert.NotNull(useAction);
+            var localMod = storage.Mods.Single();
+            Assert.Equal("my_version", localMod.GetFileContent("Version"));
+            Assert.NotNull(storage.Mods.SingleOrDefault());
+            var awaitAction = state.Repos.Single().Mods.Single().Actions.OfType<AwaitUpdateAction>().SingleOrDefault();
+            Assert.Null(awaitAction);
+            var updateAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().SingleOrDefault();
+            Assert.Null(updateAction);
         }
     }
 }

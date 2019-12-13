@@ -56,6 +56,8 @@ namespace BSU.CoreInterface
         /// </summary>
         /// <returns></returns>
         string GetIdentifier();
+
+        ILocalMod CreateMod(string identifier);
     }
 
     public interface ILocalMod

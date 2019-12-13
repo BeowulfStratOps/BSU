@@ -27,6 +27,13 @@ namespace BSU.Core.State
             _matchHash = new MatchHash(mod);
             VersionHash = new VersionHash(mod);
             UpdateTarget = storage.State._core.GetUpdateTarget(this);
+
+            if (VersionHash.GetHashString().Equals(UpdateTarget?.Hash))
+            {
+                storage.State._core.UpdateDone(mod);
+                UpdateTarget = null;
+            }
+
             ActiveJob = storage.State._core.GetActiveJob(mod);
         }
 

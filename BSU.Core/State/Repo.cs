@@ -21,9 +21,6 @@ namespace BSU.Core.State
 
         public UpdatePacket PrepareUpdate()
         {
-            if (Mods.Any(m => m.Selected == null))
-                throw new InvalidOperationException("Some mods don't have an action selected.");
-
             return State._core.PrepareUpdate(this);
         }
     }

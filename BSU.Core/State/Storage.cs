@@ -11,9 +11,11 @@ namespace BSU.Core.State
         public readonly bool CanWrite;
         internal readonly State State;
         public readonly string Name;
+        internal readonly IStorage BackingStorage;
 
         internal Storage(IStorage storage, State state)
         {
+            BackingStorage = storage;
             Name = storage.GetIdentifier();
             State = state;
             Mods = storage.GetMods().Select(m => new StorageMod(m, this)).ToList();
