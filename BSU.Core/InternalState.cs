@@ -48,6 +48,14 @@ namespace BSU.Core
         public IReadOnlyList<IStorage> GetStorages() => _storages.AsReadOnly();
 
 
+        public void RemoveRepo(string name)
+        {
+            var repo = _settings.Repositories.SingleOrDefault(r => r.Name == name);
+            if (repo == null) throw new ArgumentException("Name not found");
+            _settings.Repositories.Remove(repo);
+            _settings.Store();
+        }
+
         public void AddRepo(string name, string url, string type)
         {
             if (_settings.Repositories.Any(r => r.Name == name)) throw new ArgumentException("Name in use");
@@ -83,6 +91,14 @@ namespace BSU.Core
             };
             AddStorageToState(storage);
             _settings.Storages.Add(storage);
+            _settings.Store();
+        }
+
+        public void RemoveStorage(string name)
+        {
+            var storage = _settings.Storages.SingleOrDefault(s => s.Name == name);
+            if (storage == null) throw new ArgumentException("Name not found");
+            _settings.Storages.Remove(storage);
             _settings.Store();
         }
 

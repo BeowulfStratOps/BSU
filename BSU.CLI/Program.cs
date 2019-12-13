@@ -52,10 +52,22 @@ namespace BSU.CLI
             _core.AddRepo(args[1], args[2], args[0]);
         }
 
+        [CliCommand("delrepo", "Removes a repository.", "name")]
+        void DelRepo(string[] args)
+        {
+            _core.RemoveRepo(args[0]);
+        }
+
         [CliCommand("addstorage", "Adds a storage.", "type name path")]
         void AddStorage(string[] args)
         {
             _core.AddStorage(args[1], new DirectoryInfo(args[2]), args[0]);
+        }
+
+        [CliCommand("delstorage", "Removes a repository.", "name")]
+        void DelStorage(string[] args)
+        {
+            _core.RemoveStorage(args[0]);
         }
 
         [CliCommand("printintstate", "Prints the internal state.")]
