@@ -6,7 +6,6 @@ using BSU.CoreInterface;
 
 namespace BSU.Core
 {
-    // TODO: make like 200% sure this never writes!!
     public class SteamStorage : IStorage
     {
         private string _name;

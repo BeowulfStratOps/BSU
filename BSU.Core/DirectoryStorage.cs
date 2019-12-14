@@ -9,6 +9,7 @@ using BSU.Hashes;
 
 namespace BSU.Core
 {
+    // TODO: document that this is (aggressively) using normalized (=lower case) paths!
     public class DirectoryStorage : IStorage
     {
         private readonly string _path, _name;
@@ -34,7 +35,10 @@ namespace BSU.Core
         public string GetIdentifier() => _name;
         public ILocalMod CreateMod(string identifier)
         {
-            throw new NotImplementedException();
+            var dir = new DirectoryInfo(Path.Combine(_path, "@" + identifier));
+            if (dir.Exists) throw new InvalidOperationException("Path exists");
+            dir.Create();
+            return new DirectoryMod(dir, this);
         }
 
         public virtual bool CanWrite() => true;
@@ -51,31 +55,40 @@ namespace BSU.Core
             _parentStorage = parentStorage;
         }
 
-        public bool FileExists(string path) => File.Exists(Path.Combine(_dir.FullName, path));
+        public bool FileExists(string path) => File.Exists(GetFullFilePath(path));
 
         public string GetDisplayName()
         {
-            var modcpp = new FileInfo(Path.Combine(_dir.FullName, "mod.cpp"));
-            var modData = modcpp.Exists ? File.ReadAllText(modcpp.FullName) : null;
+            var modCpp = GetFile("/mod.cpp");
+            string modCppData = null;
+            if (modCpp != null)
+            {
+                using var reader = new StreamReader(modCpp);
+                modCppData = reader.ReadToEnd();
+            }
 
-            var keyDir = new DirectoryInfo(Path.Combine(_dir.FullName, "keys"));
-            var keys = keyDir.Exists ? keyDir.EnumerateFiles("*.bikey").Select(n => n.Name.Replace(".bikey", "")).ToList() : null;
+            var keys = GetFileList().Where(p => Regex.IsMatch(p, "/keys/.*\\.bikey", RegexOptions.IgnoreCase))
+                .Select(p => p.Split('/').Last().Replace(".bikey", "")).ToList();
 
-            return Util.Util.GetDisplayName(modData, keys);
+            return Util.Util.GetDisplayName(modCppData, keys);
         }
 
         public Stream GetFile(string path)
         {
-            if (path.StartsWith('/') || path.StartsWith('\\')) path = path.Substring(1);
-            return File.OpenRead(Path.Combine(_dir.FullName, path));
+            return File.OpenRead(GetFullFilePath(path));
         }
 
-        public List<string> GetFileList() => _dir.EnumerateFiles("*", SearchOption.AllDirectories)
-            .Select(fi => fi.FullName.Replace(_dir.FullName, "").Replace('\\', '/')).ToList();
+        public List<string> GetFileList()
+        {
+            var files = _dir.EnumerateFiles("*", SearchOption.AllDirectories);
+            return files.Select(fi => fi.FullName.Replace(_dir.FullName, "").Replace('\\', '/').ToLowerInvariant()).ToList();
+        }
 
         public FileHash GetFileHash(string path)
         {
-            return new SHA1AndPboHash(GetFile(path), Utils.GetExtension(path));
+            CheckPath(path);
+            var extension = Utils.GetExtension(path).ToLowerInvariant();
+            return new SHA1AndPboHash(GetFile(path), extension);
         }
 
         public string GetIdentifier() => _dir.Name;
@@ -84,14 +97,27 @@ namespace BSU.Core
 
         public void DeleteFile(string path)
         {
-            File.Delete(GetFilePath(path));
+            if (!_parentStorage.CanWrite()) throw new NotSupportedException();
+            File.Delete(GetFullFilePath(path));
         }
 
         public string GetFilePath(string path)
         {
-            // TODO: settle on path format!
-            // TODO: path handling function
+            if (!_parentStorage.CanWrite()) throw new NotSupportedException();
+            return GetFullFilePath(path);
+        }
+
+        private string GetFullFilePath(string path)
+        {
+            CheckPath(path);
             return Path.Combine(_dir.FullName, path.Substring(1));
+        }
+
+        private static void CheckPath(string path)
+        {
+            if (!path.StartsWith('/')) throw new FormatException();
+            if (path.Contains('\\')) throw new FormatException();
+            if (path.ToLowerInvariant() != path) throw new FormatException();
         }
     }
 }

@@ -26,6 +26,8 @@ namespace BSU.Core.Tests
 
         public bool FileExists(string path) => Files.ContainsKey(path);
 
+        public string GetSpecialFilePath(string path) => path;
+
         public string GetDisplayName() => DisplayName;
 
         public Stream GetFile(string path)

@@ -19,9 +19,10 @@ namespace BSU.Core.Hashes
 
         public MatchHash(ILocalMod mod)
         {
-            if (mod.FileExists("mod.cpp"))
+            var modCpp = mod.GetFile("/mod.cpp");
+            if (modCpp != null)
             {
-                using var reader = new StreamReader(mod.GetFile("mod.cpp"));
+                using var reader = new StreamReader(modCpp);
                 var name = Util.Util.ParseModCpp(reader.ReadToEnd()).GetValueOrDefault("name");
                 if (name != null) Name = CleanName(name);
             }
