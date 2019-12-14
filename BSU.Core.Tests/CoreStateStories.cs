@@ -155,6 +155,7 @@ namespace BSU.Core.Tests
             var update = actions.OfType<UpdateAction>().SingleOrDefault();
             Assert.NotNull(update);
             actions.Remove(update);
+            Assert.Equal(update.IsContinuation, updateTo == remoteVer);
             Assert.Equal(update.Target.Hash, GetVersionHash(remoteVer));
             Assert.Equal(update.LocalMod, localMod);
             Assert.Equal(update.RemoteMod, remoteMod);

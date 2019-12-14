@@ -87,11 +87,6 @@ namespace BSU.Core.Tests
             selectedAction.FolderName = "local_mod";
             state.Repos.Single().Mods.Single().Selected = selectedAction;
 
-            var mod = state.Repos.Single().Mods.Single();
-            var action = mod.Actions.OfType<DownloadAction>().Single();
-            action.FolderName = "test_folder";
-            mod.Selected = action;
-
             var update = state.Repos.Single().PrepareUpdate();
             update.DoUpdate();
             while (!update.IsDone())
@@ -101,9 +96,9 @@ namespace BSU.Core.Tests
 
             Assert.False(update.HasError());
 
-            Assert.Equal("test_folder", storage.Mods.Single().Identifier);
-            Assert.Equal("test_folder", settings.Storages.Single().Updating.Keys.Single());
-            Assert.Equal(GetVersionHash("my_version"), settings.Storages.Single().Updating["test_folder"].Hash);
+            Assert.Equal("local_mod", storage.Mods.Single().Identifier);
+            Assert.Equal("local_mod", settings.Storages.Single().Updating.Keys.Single());
+            Assert.Equal(GetVersionHash("my_version"), settings.Storages.Single().Updating["local_mod"].Hash);
             state = core.GetState();
             var useAction = state.Repos.Single().Mods.Single().Actions.OfType<UseAction>().SingleOrDefault();
             Assert.NotNull(useAction);
