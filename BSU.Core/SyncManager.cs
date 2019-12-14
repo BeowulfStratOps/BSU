@@ -21,7 +21,7 @@ namespace BSU.Core
                 _jobsTodo.Add(job);
             }
 
-            if (_scheduler != null) return;
+            if (_scheduler != null && _scheduler.IsAlive) return;
             _scheduler = new Thread(Schedule);
             _scheduler.Start();
         }

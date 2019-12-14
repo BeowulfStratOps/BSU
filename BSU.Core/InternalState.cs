@@ -26,7 +26,9 @@ namespace BSU.Core
         private readonly ISettings _settings;
 
         internal void AddRepoType(string name, Func<string, string, IRepository> create) => _repoTypes.Add(name, create);
+        internal List<string> GetRepoTypes() => _repoTypes.Keys.ToList();
         internal void AddStorageType(string name, Func<string, string, IStorage> create) => _storageTypes.Add(name, create);
+        internal List<string> GetStorageTypes() => _storageTypes.Keys.ToList();
 
         public InternalState(ISettings settings)
         {
@@ -50,9 +52,10 @@ namespace BSU.Core
 
         public void RemoveRepo(string name)
         {
-            var repo = _settings.Repositories.SingleOrDefault(r => r.Name == name);
-            if (repo == null) throw new ArgumentException("Name not found");
-            _settings.Repositories.Remove(repo);
+            var repo = _repositories.Single(r => r.GetName() == name);
+            var repoEntry = _settings.Repositories.Single(r => r.Name == name);
+            _repositories.Remove(repo);
+            _settings.Repositories.Remove(repoEntry);
             _settings.Store();
         }
 
@@ -96,9 +99,10 @@ namespace BSU.Core
 
         public void RemoveStorage(string name)
         {
-            var storage = _settings.Storages.SingleOrDefault(s => s.Name == name);
-            if (storage == null) throw new ArgumentException("Name not found");
-            _settings.Storages.Remove(storage);
+            var storage = _storages.Single(s => s.GetIdentifier() == name);
+            var storageEntry = _settings.Storages.Single(s => s.Name == name);
+            _storages.Remove(storage);
+            _settings.Storages.Remove(storageEntry);
             _settings.Store();
         }
 

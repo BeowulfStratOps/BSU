@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -8,18 +9,30 @@ using Xunit;
 
 namespace BSU.Core.Tests
 {
-    public class CoreTransition
+    public class CoreTransition : IDisposable
     {
+        private DirectoryInfo _tmpDir;
+        public CoreTransition()
+        {
+            _tmpDir = new DirectoryInfo(Path.GetTempPath()).CreateSubdirectory(Guid.NewGuid().ToString());
+        }
+
+        public void Dispose()
+        {
+            _tmpDir.Delete(true);
+        }
+
+
         private MockRepo AddRepo(Core core, string name)
         {
             core.AddRepo(name, "url/" + name, "MOCK");
             return core.State.GetRepositories().Single() as MockRepo;
         }
 
-        private MockStorage AddStorage(Core core, string name)
+        private TmpBackedStorage AddStorage(Core core, string name)
         {
-            core.AddStorage(name, new DirectoryInfo("path/" + name), "MOCK");
-            return core.State.GetStorages().Single() as MockStorage;
+            core.AddStorage(name, new DirectoryInfo("path/" + name), "TMPBACKED");
+            return core.State.GetStorages().Single() as TmpBackedStorage;
         }
 
         private string GetVersionHash(string version)
@@ -31,12 +44,12 @@ namespace BSU.Core.Tests
             return new Hashes.VersionHash(mod).GetHashString();
         }
 
-        private (MockSettings, Core, MockRepo, MockStorage) CommonSetup()
+        private (MockSettings, Core, MockRepo, TmpBackedStorage) CommonSetup()
         {
             var settings = new MockSettings();
             var core = new Core(settings);
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
-            core.AddStorageType("MOCK", (name, path) => new MockStorage(name, path));
+            core.AddStorageType("TMPBACKED", (name, path) => new TmpBackedStorage(name, _tmpDir));
             var repo = AddRepo(core, "test_repo");
             var storage = AddStorage(core, "test_storage");
             return (settings, core, repo, storage);
@@ -52,13 +65,12 @@ namespace BSU.Core.Tests
             return remoteMod;
         }
 
-        private MockStorageMod AddLocalMod(MockStorage storage, string version)
+        private TmpBackedStorageMod AddLocalMod(TmpBackedStorage storage, string version)
         {
-            var localMod = new MockStorageMod {Identifier = "local_test", Storage = storage};
+            var localMod = storage.CreateMod("local_test") as TmpBackedStorageMod;
             localMod.SetFile("Common1", "common1");
             localMod.SetFile("Common2", "common2");
             localMod.SetFile("Version", version);
-            storage.Mods.Add(localMod);
             return localMod;
         }
 

@@ -9,7 +9,7 @@ namespace BSU.Core.Sync
     class RepoSync
     {
         private readonly List<WorkUnit> _allActions, _actionsTodo;
-        public Exception Error { get; private set; } // TODO: check access modifiers
+        private Exception _error;
 
         public RepoSync(IRemoteMod remote, ILocalMod local)
         {
@@ -70,15 +70,18 @@ namespace BSU.Core.Sync
 
         public bool IsDone() => HasError() || _allActions.All(a => a.IsDone() || a.HasError());
 
-        public void SetError(Exception e)
-        {
-            Error = e;
-        }
+        public void SetError(Exception e) => _error = e;
 
         public bool HasError()
         {
-            if (Error != null) return true;
+            if (_error != null) return true;
             return _allActions.Any(a => a.HasError());
+        }
+
+        public Exception GetError()
+        {
+            if (_error != null) return _error;
+            return _allActions.FirstOrDefault(a => a.HasError())?.GetError();
         }
     }
 }

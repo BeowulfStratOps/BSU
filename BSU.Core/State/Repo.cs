@@ -21,7 +21,7 @@ namespace BSU.Core.State
 
         public UpdatePacket PrepareUpdate()
         {
-            return State._core.PrepareUpdate(this);
+            return State.Core.PrepareUpdate(this);
         }
     }
 }

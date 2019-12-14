@@ -23,15 +23,15 @@ namespace BSU.Core.Sync
 
         public override void DoWork()
         {
-            using var target = _local.OpenFile(_path, FileAccess.ReadWrite);
+            var target = _local.GetFilePath(_path);
             _remote.UpdateTo(_path, target, UpdateRemaining);
             _sizeTodo = 0;
             _done = true;
         }
 
-        void UpdateRemaining(long remaining)
+        void UpdateRemaining(long bytesDownloaded)
         {
-            _sizeTodo = remaining;
+            _sizeTodo -= bytesDownloaded;
         }
     }
 }

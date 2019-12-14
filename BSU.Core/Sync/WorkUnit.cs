@@ -17,10 +17,11 @@ namespace BSU.Core.Sync
             _path = path;
         }
 
-        public Exception Error { get; private set; }
+        private Exception _error;
         public abstract void DoWork();
         public bool IsDone() => _done;
-        internal void SetError(Exception e) => Error = e;
-        public bool HasError() => Error != null;
+        internal void SetError(Exception e) => _error = e;
+        public bool HasError() => _error != null;
+        public Exception GetError() => _error;
     }
 }

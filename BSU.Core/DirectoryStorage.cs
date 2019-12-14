@@ -53,8 +53,6 @@ namespace BSU.Core
 
         public bool FileExists(string path) => File.Exists(Path.Combine(_dir.FullName, path));
 
-        public DirectoryInfo GetBaseDirectory() => _dir;
-
         public string GetDisplayName()
         {
             var modcpp = new FileInfo(Path.Combine(_dir.FullName, "mod.cpp"));
@@ -86,12 +84,14 @@ namespace BSU.Core
 
         public void DeleteFile(string path)
         {
-            throw new NotImplementedException();
+            File.Delete(GetFilePath(path));
         }
 
-        public Stream OpenFile(string path, FileAccess access)
+        public string GetFilePath(string path)
         {
-            throw new NotImplementedException();
+            // TODO: settle on path format!
+            // TODO: path handling function
+            return Path.Combine(_dir.FullName, path.Substring(1));
         }
     }
 }

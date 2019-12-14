@@ -26,15 +26,15 @@ namespace BSU.Core.State
             Console.WriteLine($"Hashing {storage.Name} / {Name}");
             _matchHash = new MatchHash(mod);
             VersionHash = new VersionHash(mod);
-            UpdateTarget = storage.State._core.GetUpdateTarget(this);
+            UpdateTarget = storage.State.Core.GetUpdateTarget(this);
 
             if (VersionHash.GetHashString().Equals(UpdateTarget?.Hash))
             {
-                storage.State._core.UpdateDone(mod);
+                storage.State.Core.UpdateDone(mod);
                 UpdateTarget = null;
             }
 
-            ActiveJob = storage.State._core.GetActiveJob(mod);
+            ActiveJob = storage.State.Core.GetActiveJob(mod);
         }
 
         /*public string Name, DisplayName, Location;

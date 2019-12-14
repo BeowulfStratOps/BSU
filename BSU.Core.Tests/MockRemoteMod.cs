@@ -41,18 +41,18 @@ namespace BSU.Core.Tests
 
         public bool BlockUpdate;
 
-        public void DownloadTo(string path, Stream target, Action<long> updateCallback)
+        public void DownloadTo(string path, string filePath, Action<long> updateCallback)
         {
             while (BlockUpdate)
             {
                 Thread.Sleep(10);
             }
-            (target as MockStream).SetData(path, Files[path]);
+            File.WriteAllBytes(filePath, Files[path]);
         }
 
-        public void UpdateTo(string path, Stream target, Action<long> updateCallback)
+        public void UpdateTo(string path, string filePath, Action<long> updateCallback)
         {
-            DownloadTo(path, target, updateCallback);
+            DownloadTo(path, filePath, updateCallback);
         }
     }
 

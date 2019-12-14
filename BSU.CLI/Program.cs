@@ -161,7 +161,8 @@ namespace BSU.CLI
                 Console.WriteLine($"{job.GetLocalDisplayName()} -> {job.GetRemoteDisplayName()}");
                 if (job.IsDone())
                 {
-                    Console.WriteLine(" Done");
+                    var error = job.GetError();
+                    Console.WriteLine(error == null ? " Done" : $" Error: {error}");
                 }
                 else
                 {
@@ -171,6 +172,21 @@ namespace BSU.CLI
                         $" Update: {job.GetRemainingChangedFilesCount()} Files, {Utils.BytesToHuman(job.GetRemainingBytesToUpdate())}");
                     Console.WriteLine($" Delete: {job.GetRemainingDeletedFilesCount()} Files");
                 }
+            }
+        }
+
+        [CliCommand("types", "Shows available repo/storage types")]
+        void Types(string[] args)
+        {
+            Console.WriteLine("Repo Types:");
+            foreach (var repoType in _core.GetRepoTypes())
+            {
+                Console.WriteLine(" " + repoType);   
+            }
+            Console.WriteLine("Storage Types:");
+            foreach (var storageType in _core.GetStorageTypes())
+            {
+                Console.WriteLine(" " + storageType);
             }
         }
     }

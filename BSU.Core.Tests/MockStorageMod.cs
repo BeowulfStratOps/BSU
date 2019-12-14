@@ -44,61 +44,9 @@ namespace BSU.Core.Tests
 
         public IStorage GetStorage() => Storage;
 
-        public Stream OpenFile(string path, FileAccess access)
+        public string GetFilePath(string path)
         {
-            return new MockStream(Files, path);
-        }
-    }
-
-    class MockStream : Stream
-    {
-        private readonly Dictionary<string, byte[]> _dict;
-        private readonly string _path;
-
-        public MockStream(Dictionary<string, byte[]> dict, string path)
-        {
-            _dict = dict;
-            _path = path;
-        }
-
-        public void SetData(string key, byte[] data)
-        {
-            _dict[key] = data;
-        }
-
-        public override void Flush()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override bool CanRead => throw new NotImplementedException();
-        public override bool CanSeek => throw new NotImplementedException();
-        public override bool CanWrite => throw new NotImplementedException();
-        public override long Length => throw new NotImplementedException();
-        public override long Position
-        {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

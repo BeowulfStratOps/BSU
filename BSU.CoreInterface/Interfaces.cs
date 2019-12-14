@@ -31,8 +31,8 @@ namespace BSU.CoreInterface
         string GetIdentifier();
         string GetVersionIdentifier();
         long GetFileSize(string path);
-        void DownloadTo(string path, Stream target, Action<long> updateCallback);
-        void UpdateTo(string path, Stream target, Action<long> updateCallback);
+        void DownloadTo(string path, string filePath, Action<long> updateCallback);
+        void UpdateTo(string path, string filePath, Action<long> updateCallback);
     }
 
     public interface IStorage
@@ -70,6 +70,6 @@ namespace BSU.CoreInterface
         FileHash GetFileHash(string path);
         IStorage GetStorage();
         void DeleteFile(string path);
-        Stream OpenFile(string path, FileAccess access);
+        string GetFilePath(string path);
     }
 }

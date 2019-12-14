@@ -34,7 +34,9 @@ namespace BSU.Core
         }
 
         public void AddRepoType(string name, Func<string, string, IRepository> create) => State.AddRepoType(name, create);
+        public List<string> GetRepoTypes() => State.GetRepoTypes();
         public void AddStorageType(string name, Func<string, string, IStorage> create) => State.AddStorageType(name, create);
+        public List<string> GetStorageTypes() => State.GetStorageTypes();
 
         public void AddRepo(string name, string url, string type) => State.AddRepo(name, url, type);
         public void RemoveRepo(string name) => State.RemoveRepo(name);

@@ -1,4 +1,6 @@
-﻿namespace BSU.Core
+﻿using System;
+
+namespace BSU.Core
 {
     public class JobView
     {
@@ -27,5 +29,6 @@
         public long GetTotalBytesToUpdate() => _job.SyncState.GetTotalBytesToUpdate();
 
         public bool IsDone() => _job.SyncState.IsDone();
+        public Exception GetError() => _job.SyncState.GetError();
     }
 }

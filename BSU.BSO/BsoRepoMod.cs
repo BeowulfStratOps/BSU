@@ -65,14 +65,18 @@ namespace BSU.BSO
 
         public long GetFileSize(string path) => _hashFile.Hashes.Single(h => h.FileName == path).FileSize;
 
-        public void DownloadTo(string path, Stream target, Action<long> updateCallback)
+        public void DownloadTo(string path, string filePath, Action<long> updateCallback)
         {
-            throw new NotImplementedException();
+            var url = _url + path; // check for existence first?
+
+            using var client = new WebClient();
+            client.DownloadProgressChanged += (sender, args) => updateCallback(args.BytesReceived);
+            client.DownloadFile(url, filePath);
         }
 
-        public void UpdateTo(string path, Stream target, Action<long> updateCallback)
+        public void UpdateTo(string path, string filePath, Action<long> updateCallback)
         {
-            throw new NotImplementedException();
+            DownloadTo(path, filePath, updateCallback);
         }
     }
 }
