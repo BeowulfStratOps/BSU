@@ -26,7 +26,7 @@ namespace BSU.BSO.FileStructures
         public Guid ServerGuid { get; set; }
         [JsonProperty]
         public List<ModFolder> ModFolders { get; set; }
-        internal ServerFile(string serverName, string serverAddress, int servePort, string password, List<ModFolder> modFolders,DateTime lastUpdate, DateTime creationDate, Guid serverGuid, List<Uri> syncUris)
+        public ServerFile(string serverName, string serverAddress, int servePort, string password, List<ModFolder> modFolders,DateTime lastUpdate, DateTime creationDate, Guid serverGuid, List<Uri> syncUris)
         {
             ServerAddress = serverAddress;
             ServerName = serverName;
@@ -38,7 +38,7 @@ namespace BSU.BSO.FileStructures
             SyncUris = syncUris;
             LastUpdateDate = lastUpdate;
         }
-        internal ServerFile()
+        public ServerFile()
         {
 
         }

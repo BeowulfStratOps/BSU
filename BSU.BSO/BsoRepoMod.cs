@@ -59,8 +59,8 @@ namespace BSU.BSO
 
         public FileHash GetFileHash(string path)
         {
-            var bytes = _hashFile.Hashes.SingleOrDefault(h => h.FileName == path)?.Hash;
-            return bytes == null ? null : new SHA1AndPboHash(bytes);
+            var entry = _hashFile.Hashes.SingleOrDefault(h => h.FileName == path);
+            return entry == null ? null : new SHA1AndPboHash(entry.Hash, entry.FileSize);
         }
 
         public long GetFileSize(string path) => _hashFile.Hashes.Single(h => h.FileName == path).FileSize;
