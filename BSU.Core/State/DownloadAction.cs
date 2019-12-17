@@ -4,14 +4,12 @@
     {
         public readonly Storage Storage;
         public readonly RepoMod RemoteMod;
-        public readonly UpdateTarget Target;
         public string FolderName;
 
-        internal DownloadAction(Storage storage, RepoMod remoteMod)
+        internal DownloadAction(Storage storage, RepoMod remoteMod, UpdateTarget updateTarget) : base(updateTarget)
         {
             Storage = storage;
             RemoteMod = remoteMod;
-            Target = new UpdateTarget(remoteMod.VersionHash.GetHashString(), remoteMod.DisplayName);
         }
 
         public override string ToString() => "Download to " + Storage.Location;

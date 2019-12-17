@@ -1,20 +1,19 @@
 ﻿namespace BSU.Core.State
 {
-    public class UpdateAction : ModAction
+    public class UpdateAction : ModAction, IHasLocalMod
     {
         public bool IsContinuation { get; }
         public readonly StorageMod LocalMod;
-        public readonly UpdateTarget Target;
         public readonly RepoMod RemoteMod;
 
-        internal UpdateAction(StorageMod localMod, RepoMod remoteMod, bool IsContinuation)
+        internal UpdateAction(StorageMod localMod, RepoMod remoteMod, bool isContinuation, UpdateTarget updateTarget) : base(updateTarget)
         {
-            this.IsContinuation = IsContinuation;
+            IsContinuation = isContinuation;
             LocalMod = localMod;
             RemoteMod = remoteMod;
-            Target = new UpdateTarget(remoteMod.VersionHash.GetHashString(), remoteMod.DisplayName);
         }
 
-        public override string ToString() => $"Update {LocalMod.Storage.Name}/{LocalMod.Name} from {LocalMod.VersionHash.GetHashString()} to {Target.Hash} \"{Target.Display}\"";
+        public override string ToString() => $"Update {LocalMod.Storage.Name}/{LocalMod.Name} from {LocalMod.VersionHash.GetHashString()} to {UpdateTarget.Hash} \"{UpdateTarget.Display}\"";
+        public StorageMod GetLocalMod() => LocalMod;
     }
 }

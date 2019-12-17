@@ -125,7 +125,7 @@ namespace BSU.Core.Tests
 
             var mod = state.Repos.Single().Mods.Single();
             var action = mod.Actions.OfType<UpdateAction>().Single();
-            Assert.Equal(GetVersionHash("my_version"), action.Target.Hash);
+            Assert.Equal(GetVersionHash("my_version"), action.UpdateTarget.Hash);
             mod.Selected = action;
 
             var update = state.Repos.Single().PrepareUpdate();
@@ -163,7 +163,7 @@ namespace BSU.Core.Tests
 
             var mod = state.Repos.Single().Mods.Single();
             var action = mod.Actions.OfType<UpdateAction>().Single();
-            Assert.Equal(GetVersionHash("my_version"), action.Target.Hash);
+            Assert.Equal(GetVersionHash("my_version"), action.UpdateTarget.Hash);
             mod.Selected = action;
 
             var update = state.Repos.Single().PrepareUpdate();
@@ -206,7 +206,7 @@ namespace BSU.Core.Tests
 
             var mod = state.Repos.Single().Mods.Single();
             var action = mod.Actions.OfType<AwaitUpdateAction>().Single();
-            Assert.Equal(GetVersionHash("my_version"), action.Target.Hash);
+            Assert.Equal(GetVersionHash("my_version"), action.UpdateTarget.Hash);
             mod.Selected = action;
 
             remoteMod.BlockUpdate = false;
@@ -250,7 +250,7 @@ namespace BSU.Core.Tests
 
             var mod = state.Repos.Single().Mods.Single();
             var action = mod.Actions.OfType<AwaitUpdateAction>().Single();
-            Assert.Equal(GetVersionHash("my_version"), action.Target.Hash);
+            Assert.Equal(GetVersionHash("my_version"), action.UpdateTarget.Hash);
             mod.Selected = action;
 
             remoteMod.BlockUpdate = false;

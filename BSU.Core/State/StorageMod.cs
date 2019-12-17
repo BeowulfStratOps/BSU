@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
 using BSU.CoreInterface;
@@ -17,6 +18,7 @@ namespace BSU.Core.State
 
         public readonly UpdateTarget UpdateTarget;
         internal readonly UpdateJob ActiveJob;
+        private List<ModAction> _relatedActions = new List<ModAction>();
 
         internal StorageMod(ILocalMod mod, Storage storage)
         {
@@ -37,12 +39,7 @@ namespace BSU.Core.State
             ActiveJob = storage.State.Core.GetActiveJob(mod);
         }
 
-        /*public string Name, DisplayName, Location;
-        public StorageView Parent;
-        public List<RepoModView> UsedBy;
-
-        // can't be broken and updating.
-        public bool IsBroken;
-        public RepoModView UpdatingTo;*/
+        public IReadOnlyList<ModAction> GetRelatedActions() => _relatedActions.AsReadOnly();
+        internal void AddRelatedAction(ModAction action) => _relatedActions.Add(action);
     }
 }

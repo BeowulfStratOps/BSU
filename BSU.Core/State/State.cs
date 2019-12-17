@@ -15,6 +15,10 @@ namespace BSU.Core.State
             Core = core;
             Storages = storages.Select(s => new Storage(s, this)).ToList();
             Repos = repos.Select(r => new Repo(r, this)).ToList();
+            foreach (var repo in Repos)
+            {
+                repo.CollectConflicts();
+            }
         }
     }
 }

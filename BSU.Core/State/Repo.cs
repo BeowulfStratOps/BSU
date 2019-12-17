@@ -19,6 +19,14 @@ namespace BSU.Core.State
             Name = repo.GetName();
         }
 
+        internal void CollectConflicts()
+        {
+            foreach (var mod in Mods)
+            {
+                mod.CollectConflicts();
+            }
+        }
+
         public UpdatePacket PrepareUpdate()
         {
             return State.Core.PrepareUpdate(this);

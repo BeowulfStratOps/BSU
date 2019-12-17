@@ -10,7 +10,12 @@ using BSU.Hashes;
 
 namespace BSU.Core.Tests
 {
-    public class MockRemoteMod : IRemoteMod
+    public interface IMockedFiles
+    {
+        void SetFile(string key, string data);
+    }
+
+    public class MockRemoteMod : IRemoteMod, IMockedFiles
     {
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
         public string Identifier, DisplayName;

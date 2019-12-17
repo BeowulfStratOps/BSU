@@ -104,6 +104,14 @@ namespace BSU.CLI
                         actionText += action == mod.Selected ? "* " : $"{i + 1} ";
                         actionText += action.ToString();
                         Console.WriteLine(actionText);
+                        if (action.GetConflicts().Any())
+                        {
+                            Console.WriteLine("      Conflicts");
+                            foreach (var conflict in action.GetConflicts())
+                            {
+                                Console.WriteLine("        " + conflict);
+                            }
+                        }
                     }
                 }
             }

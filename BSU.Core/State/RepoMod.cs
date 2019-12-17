@@ -43,29 +43,45 @@ namespace BSU.Core.State
                     localMatches.Add(startedUpdate);
             }
 
+            var target = new UpdateTarget(VersionHash.GetHashString(), DisplayName);
+
             foreach (var localMod in localMatches)
             {
+                ModAction action;
                 if (VersionHash.Matches(localMod.VersionHash) && localMod.UpdateTarget == null)
-                    actions.Add(new UseAction(localMod));
+                    action = new UseAction(localMod, target);
                 else
                 {
+                    if (!localMod.Storage.CanWrite) continue;
                     if (localMod.ActiveJob != null && localMod.ActiveJob.Target.Hash == VersionHash.GetHashString())
-                        actions.Add(new AwaitUpdateAction(localMod, this));
+                        action = new AwaitUpdateAction(localMod, this, target);
                     else
-                        actions.Add(new UpdateAction(localMod, this, startedUpdates.Contains(localMod)));
+                        action = new UpdateAction(localMod, this, startedUpdates.Contains(localMod), target);
                 }
+
+                actions.Add(action);
+                localMod.AddRelatedAction(action);
             }
 
-            actions.AddRange(repo.State.Storages.Where(s => s.CanWrite).Select(s => new DownloadAction(s, this)));
+            actions.AddRange(repo.State.Storages.Where(s => s.CanWrite).Select(s => new DownloadAction(s, this, target)));
 
             Actions = actions.AsReadOnly();
+
             if (actions.Any(a => a is UseAction))
                 Selected = actions[0];
+        }
 
-#if DEBUG
-            if (Selected == null) Selected = actions.FirstOrDefault(a => a is UpdateAction);
-            if (Selected == null) Selected = actions.FirstOrDefault(a => a is AwaitUpdateAction);
-#endif
+        internal void CollectConflicts()
+        {
+            foreach (var action in Actions)
+            {
+                if (action is UseAction) continue;
+                if (!(action is IHasLocalMod localModAction)) continue;
+                foreach (var other in localModAction.GetLocalMod().GetRelatedActions())
+                {
+                    if (action.UpdateTarget.Hash != other.UpdateTarget.Hash) action.AddConflict(other);
+                }
+            }
         }
     }
 }

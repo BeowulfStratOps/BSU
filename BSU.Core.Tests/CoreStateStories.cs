@@ -156,7 +156,7 @@ namespace BSU.Core.Tests
             Assert.NotNull(update);
             actions.Remove(update);
             Assert.Equal(update.IsContinuation, updateTo == remoteVer);
-            Assert.Equal(update.Target.Hash, GetVersionHash(remoteVer));
+            Assert.Equal(update.UpdateTarget.Hash, GetVersionHash(remoteVer));
             Assert.Equal(update.LocalMod, localMod);
             Assert.Equal(update.RemoteMod, remoteMod);
         }
@@ -167,7 +167,7 @@ namespace BSU.Core.Tests
             var update = actions.OfType<AwaitUpdateAction>().SingleOrDefault();
             Assert.NotNull(update);
             actions.Remove(update);
-            Assert.Equal(update.Target.Hash, GetVersionHash(remoteVer));
+            Assert.Equal(update.UpdateTarget.Hash, GetVersionHash(remoteVer));
             Assert.Equal(update.LocalMod, localMod);
         }
 

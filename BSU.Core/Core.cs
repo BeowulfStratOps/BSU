@@ -106,7 +106,7 @@ namespace BSU.Core
             {
                 var localMod = downloadAction.Storage.BackingStorage.CreateMod(downloadAction.FolderName);
                 var syncState = new RepoSync(downloadAction.RemoteMod.Mod, localMod);
-                var updateJob = new UpdateJob(localMod, downloadAction.RemoteMod.Mod, downloadAction.Target, syncState);
+                var updateJob = new UpdateJob(localMod, downloadAction.RemoteMod.Mod, downloadAction.UpdateTarget, syncState);
                 updatePacket.Jobs.Add(updateJob);
             }
 
@@ -114,7 +114,7 @@ namespace BSU.Core
             foreach (var updateAction in actions.OfType<UpdateAction>())
             {
                 var syncState = new RepoSync(updateAction.RemoteMod.Mod, updateAction.LocalMod.Mod);
-                var updateJob = new UpdateJob(updateAction.LocalMod.Mod, updateAction.RemoteMod.Mod, updateAction.Target, syncState);
+                var updateJob = new UpdateJob(updateAction.LocalMod.Mod, updateAction.RemoteMod.Mod, updateAction.UpdateTarget, syncState);
                 updatePacket.Jobs.Add(updateJob);
             }
 
