@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.Core.Tests", "BSU.Core.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.Hashes", "BSU.Hashes\BSU.Hashes.csproj", "{BEA7F43F-C06E-47FE-97F8-B08F3A3AD41B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSU.Server", "BSU.Server\BSU.Server.csproj", "{1ADB9208-9B73-4843-8F24-F68402569A05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.Server", "BSU.Server\BSU.Server.csproj", "{1ADB9208-9B73-4843-8F24-F68402569A05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealTest", "RealTest\RealTest.csproj", "{BF70D16A-B864-444C-9D23-FA5E77514551}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{1ADB9208-9B73-4843-8F24-F68402569A05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1ADB9208-9B73-4843-8F24-F68402569A05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1ADB9208-9B73-4843-8F24-F68402569A05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF70D16A-B864-444C-9D23-FA5E77514551}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF70D16A-B864-444C-9D23-FA5E77514551}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF70D16A-B864-444C-9D23-FA5E77514551}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF70D16A-B864-444C-9D23-FA5E77514551}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

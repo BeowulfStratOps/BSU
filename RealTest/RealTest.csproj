@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BSU.Core\BSU.Core.csproj" />
+    <ProjectReference Include="..\BSU.Server\BSU.Server.csproj" />
+  </ItemGroup>
+
+</Project>

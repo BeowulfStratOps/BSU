@@ -9,9 +9,9 @@ using Newtonsoft.Json;
 
 namespace BSU.Server
 {
-    class Program
+    public class Program
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             if (args.Length != 1)
             {
@@ -140,7 +140,7 @@ namespace BSU.Server
                     done++;
                     continue;
                 }
-                var hash = new SHA1AndPboHash(file.OpenRead(), file.Extension);
+                var hash = new SHA1AndPboHash(file.OpenRead(), file.Extension.Replace(".", "").ToLowerInvariant());
                 var relPath = file.FullName.Replace(modDirectory.FullName, "").Replace('\\', '/');
                 hashes[relPath] = hash;
                 done++;
