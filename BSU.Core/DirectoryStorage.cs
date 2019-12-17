@@ -115,9 +115,9 @@ namespace BSU.Core
 
         private static void CheckPath(string path)
         {
-            if (!path.StartsWith('/')) throw new FormatException();
-            if (path.Contains('\\')) throw new FormatException();
-            if (path.ToLowerInvariant() != path) throw new FormatException();
+            if (!path.StartsWith('/')) throw new FormatException(path);
+            if (path.Contains('\\')) throw new FormatException(path);
+            if (path.ToLowerInvariant() != path) throw new FormatException(path);
         }
     }
 }

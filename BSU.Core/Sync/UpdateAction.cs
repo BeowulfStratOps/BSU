@@ -23,7 +23,7 @@ namespace BSU.Core.Sync
 
         public override void DoWork()
         {
-            var target = _local.GetFilePath(_path);
+            var target = _local.GetFilePath(_path.ToLowerInvariant());
             _remote.UpdateTo(_path, target, UpdateRemaining);
             _sizeTodo = 0;
             _done = true;

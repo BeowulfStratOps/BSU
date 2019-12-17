@@ -89,12 +89,7 @@ namespace BSU.Core
 
         internal UpdatePacket PrepareUpdate(Repo repo)
         {
-            Console.WriteLine("To do:");
             var todos = repo.Mods.Where(m => m.Selected != null && !(m.Selected is UseAction)).ToList();
-            foreach (var repoModView in todos)
-            {
-                Console.WriteLine(repoModView.Name + ": " + repoModView.Selected.ToString());
-            }
 
             var actions = todos.Select(m => m.Selected).ToList();
 

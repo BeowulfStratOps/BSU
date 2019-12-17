@@ -151,7 +151,12 @@ namespace BSU.CLI
                 Console.WriteLine($" Delete: {packetJob.GetTotalDeletedFilesCount()} Files");
             }
 
-            // TODO: ask if that's ok
+            Console.Write("Proceed? (y/Y = yes. Anything else = no): ");
+            if (Console.ReadLine().ToLowerInvariant() != "y")
+            {
+                Console.WriteLine("Aborting");
+                return;
+            }
 
             packet.DoUpdate();
         }
