@@ -12,7 +12,7 @@ namespace BSU.Core.Hashes
     {
         private const float Threshold = 0.8f; // at least 80% pbo names match required
 
-        private static Regex _addonsPbo = new Regex("^addons/.*\\.pbo", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex _addonsPboRegex = new Regex("^/addons/.*\\.pbo", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public string Name;
         public HashSet<string> PboNames;
@@ -23,10 +23,11 @@ namespace BSU.Core.Hashes
             if (modCpp != null)
             {
                 using var reader = new StreamReader(modCpp);
-                var name = Util.Util.ParseModCpp(reader.ReadToEnd()).GetValueOrDefault("name");
+                var entries = Util.Util.ParseModCpp(reader.ReadToEnd());
+                var name = entries.GetValueOrDefault("name");
                 if (name != null) Name = CleanName(name);
             }
-            PboNames = mod.GetFileList().Where(p => _addonsPbo.IsMatch(p)).ToHashSet();
+            PboNames = mod.GetFileList().Where(p => _addonsPboRegex.IsMatch(p)).ToHashSet();
         }
 
         private static string CleanName(string name)
@@ -39,7 +40,6 @@ namespace BSU.Core.Hashes
 
         public MatchHash(IRemoteMod mod)
         {
-            var fileList = mod.GetFileList();
             var modCppData = mod.GetFile("/mod.cpp");
             if (modCppData != null)
             {
@@ -47,11 +47,13 @@ namespace BSU.Core.Hashes
                 if (name != null) Name = CleanName(name);
             }
 
-            PboNames = fileList.Where(f => Regex.IsMatch(f.ToLowerInvariant(), "addons/[^/]*.pbo")).ToHashSet();
+            PboNames = mod.GetFileList().Where(f => _addonsPboRegex.IsMatch(f)).ToHashSet();
         }
 
         public bool IsMatch(MatchHash other)
         {
+            // TODO: improve this by A LOT. fuzzy name matching. maybe do some learning on existent mods/updates?
+            // TODO: figure out how to handle false positives / false negatives as user
             if (Name != null && other.Name != null) return Name == other.Name;
 
             var all = new HashSet<string>(PboNames);

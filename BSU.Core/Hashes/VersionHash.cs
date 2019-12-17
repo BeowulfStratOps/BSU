@@ -31,6 +31,7 @@ namespace BSU.Core.Hashes
             Hash = BuildHash();
         }
 
+        // TODO: name: Matches vs IsMatch (as in MatchHash)
         public bool Matches(VersionHash other)
         {
             return Hash.SequenceEqual(other.Hash);
