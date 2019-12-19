@@ -37,7 +37,7 @@ namespace BSU.Core.Storage
             var keys = GetFileList().Where(p => Regex.IsMatch(p, "/keys/.*\\.bikey", RegexOptions.IgnoreCase))
                 .Select(p => p.Split('/').Last().Replace(".bikey", "")).ToList();
 
-            return _displayName = Util.Util.GetDisplayName(modCppData, keys);
+            return _displayName = Util.GetDisplayName(modCppData, keys);
         }
 
         public Stream GetFile(string path)
@@ -53,7 +53,7 @@ namespace BSU.Core.Storage
 
         public FileHash GetFileHash(string path)
         {
-            CoreCommon.Util.CheckPath(path);
+            Util.CheckPath(path);
             var extension = Utils.GetExtension(path).ToLowerInvariant();
             return new SHA1AndPboHash(GetFile(path), extension);
         }
@@ -76,7 +76,7 @@ namespace BSU.Core.Storage
 
         private string GetFullFilePath(string path)
         {
-            CoreCommon.Util.CheckPath(path);
+            Util.CheckPath(path);
             return Path.Combine(_dir.FullName, path.Substring(1));
         }
     }

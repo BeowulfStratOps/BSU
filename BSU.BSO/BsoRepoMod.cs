@@ -56,7 +56,7 @@ namespace BSU.BSO
 
             keys = keys.Any() ? keys : null;
 
-            return _displayName = Util.Util.GetDisplayName(modCpp, keys);
+            return _displayName = Util.GetDisplayName(modCpp, keys);
         }
 
         public string GetIdentifier() => _name;
