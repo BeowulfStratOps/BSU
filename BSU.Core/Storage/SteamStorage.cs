@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
-namespace BSU.Core
+namespace BSU.Core.Storage
 {
     public class SteamStorage : IStorage
     {
@@ -34,16 +34,9 @@ namespace BSU.Core
         public string GetIdentifier() => _name;
         public ILocalMod CreateMod(string identifier)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Storage not writable");
         }
 
         public bool CanWrite() => false;
-    }
-
-    public class SteamMod : DirectoryMod
-    {
-        public SteamMod(DirectoryInfo directory, IStorage parentStorage) : base(directory, parentStorage)
-        {
-        }
     }
 }

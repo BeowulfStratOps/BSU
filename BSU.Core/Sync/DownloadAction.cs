@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using System.Threading;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
 {

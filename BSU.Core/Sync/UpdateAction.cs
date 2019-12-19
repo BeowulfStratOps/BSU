@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using System.Threading;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 using Microsoft.VisualBasic.CompilerServices;
 
 namespace BSU.Core.Sync

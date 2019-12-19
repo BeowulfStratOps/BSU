@@ -142,8 +142,8 @@ namespace BSU.Core.Tests
 
         private static bool Check(Dictionary<string, string> files1, Dictionary<string, string> files2)
         {
-            var res1 = CreateLocal(files1).Matches(CreateRemote(files2));
-            var res2 = CreateRemote(files1).Matches(CreateLocal(files2));
+            var res1 = CreateLocal(files1).IsMatch(CreateRemote(files2));
+            var res2 = CreateRemote(files1).IsMatch(CreateLocal(files2));
             Assert.Equal(res1, res2);
             return res1;
         }

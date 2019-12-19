@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core.State
 {
@@ -10,7 +10,7 @@ namespace BSU.Core.State
         public readonly List<Repo> Repos;
         public readonly List<Storage> Storages;
         internal readonly Core Core;
-        public bool IsValid { get; internal set; }
+        public bool IsValid { get; private set; }
 
         public event Action Invalidated;
 

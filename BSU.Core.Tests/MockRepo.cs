@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Tests
 {

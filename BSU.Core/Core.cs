@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using BSU.Core.Hashes;
 using BSU.Core.State;
 using BSU.Core.Sync;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 using DownloadAction = BSU.Core.State.DownloadAction;
 using UpdateAction = BSU.Core.State.UpdateAction;
 

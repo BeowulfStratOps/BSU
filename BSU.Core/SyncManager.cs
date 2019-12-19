@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using BSU.Core.Sync;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core
 {
@@ -81,6 +81,8 @@ namespace BSU.Core
                 threads.Add(thread);
                 thread.Start();
             }
+
+            // TODO: thread count might get stuck on a lower number
 
             while (threads.Any())
             {

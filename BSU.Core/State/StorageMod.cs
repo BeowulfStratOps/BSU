@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core.State
 {
@@ -10,7 +10,7 @@ namespace BSU.Core.State
     {
         public readonly string Name;
 
-        internal readonly MatchHash _matchHash;
+        internal readonly MatchHash MatchHash;
         public readonly VersionHash VersionHash;
         internal readonly Storage Storage;
 
@@ -18,7 +18,7 @@ namespace BSU.Core.State
 
         public readonly UpdateTarget UpdateTarget;
         internal readonly UpdateJob ActiveJob;
-        private List<ModAction> _relatedActions = new List<ModAction>();
+        public readonly List<ModAction> RelatedActions = new List<ModAction>();
 
         internal StorageMod(ILocalMod mod, Storage storage)
         {
@@ -26,7 +26,7 @@ namespace BSU.Core.State
             Storage = storage;
             Name = mod.GetIdentifier();
             Console.WriteLine($"Hashing {storage.Name} / {Name}");
-            _matchHash = new MatchHash(mod);
+            MatchHash = new MatchHash(mod);
             VersionHash = new VersionHash(mod);
             UpdateTarget = storage.State.Core.GetUpdateTarget(this);
 
@@ -39,7 +39,7 @@ namespace BSU.Core.State
             ActiveJob = storage.State.Core.GetActiveJob(mod);
         }
 
-        public IReadOnlyList<ModAction> GetRelatedActions() => _relatedActions.AsReadOnly();
-        internal void AddRelatedAction(ModAction action) => _relatedActions.Add(action);
+        public IReadOnlyList<ModAction> GetRelatedActions() => RelatedActions.AsReadOnly();
+        internal void AddRelatedAction(ModAction action) => RelatedActions.Add(action);
     }
 }

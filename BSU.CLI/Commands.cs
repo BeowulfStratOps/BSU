@@ -9,7 +9,7 @@ namespace BSU.CLI
     [AttributeUsage(AttributeTargets.Method)]
     internal class CliCommand : Attribute
     {
-        public string Name, Description, Usage;
+        public readonly string Name, Description, Usage;
         public CliCommand(string name, string description, string usage=null)
         {
             Name = name;
@@ -18,9 +18,9 @@ namespace BSU.CLI
         }
     }
 
-    class Commands
+    internal class Commands
     {
-        private Dictionary<string, Command> _commands = new Dictionary<string, Command>();
+        private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
         public Commands(object actionsClass)
         {
             var methods = actionsClass.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance);
@@ -72,10 +72,10 @@ namespace BSU.CLI
             }
         }
 
-        class Command
+        private class Command
         {
-            public string Name, Description, Usage;
-            public Action<string[]> Func;
+            public readonly string Name, Description, Usage;
+            public readonly Action<string[]> Func;
 
             public Command(string name, string description, string usage, Action<string[]> func)
             {

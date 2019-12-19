@@ -9,9 +9,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BSU.CoreCommon\BSU.CoreCommon.csproj" />
     <ProjectReference Include="..\BSU.Util\BSU.Util.csproj" />
     <ProjectReference Include="..\BSU.BSO\BSU.BSO.csproj" />
-    <ProjectReference Include="..\BSU.CoreInterface\BSU.CoreInterface.csproj" />
   </ItemGroup>
 
 </Project>

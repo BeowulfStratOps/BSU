@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core.State
 {
@@ -18,6 +18,7 @@ namespace BSU.Core.State
 
         internal readonly IRemoteMod Mod;
 
+        // TODO: find a better place for that
         internal RepoMod(IRemoteMod mod, Repo repo)
         {
             Repo = repo;
@@ -32,7 +33,7 @@ namespace BSU.Core.State
 
             var actions = new List<ModAction>();
 
-            var localMatches = repo.State.Storages.SelectMany(s => s.Mods).Where(m => m._matchHash.IsMatch(matchHash)).ToList();
+            var localMatches = repo.State.Storages.SelectMany(s => s.Mods).Where(m => m.MatchHash.IsMatch(matchHash)).ToList();
 
             var startedUpdates = repo.State.Storages.SelectMany(s => s.Mods)
                 .Where(m => VersionHash.GetHashString().Equals(m.UpdateTarget?.Hash)).ToList();
@@ -48,7 +49,7 @@ namespace BSU.Core.State
             foreach (var localMod in localMatches)
             {
                 ModAction action;
-                if (VersionHash.Matches(localMod.VersionHash) && localMod.UpdateTarget == null)
+                if (VersionHash.IsMatch(localMod.VersionHash) && localMod.UpdateTarget == null)
                     action = new UseAction(localMod, target);
                 else
                 {

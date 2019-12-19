@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Hashes
 {
@@ -12,10 +12,11 @@ namespace BSU.Core.Hashes
     {
         private const float Threshold = 0.8f; // at least 80% pbo names match required
 
-        private static Regex _addonsPboRegex = new Regex("^/addons/.*\\.pbo", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex AddonsPboRegex =
+            new Regex("^/addons/.*\\.pbo", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        public string Name;
-        public HashSet<string> PboNames;
+        private readonly string _name;
+        private readonly HashSet<string> _pboNames;
 
         public MatchHash(ILocalMod mod)
         {
@@ -25,9 +26,9 @@ namespace BSU.Core.Hashes
                 using var reader = new StreamReader(modCpp);
                 var entries = Util.Util.ParseModCpp(reader.ReadToEnd());
                 var name = entries.GetValueOrDefault("name");
-                if (name != null) Name = CleanName(name);
+                if (name != null) _name = CleanName(name);
             }
-            PboNames = mod.GetFileList().Where(p => _addonsPboRegex.IsMatch(p)).ToHashSet();
+            _pboNames = mod.GetFileList().Where(p => AddonsPboRegex.IsMatch(p)).ToHashSet();
         }
 
         private static string CleanName(string name)
@@ -44,23 +45,27 @@ namespace BSU.Core.Hashes
             if (modCppData != null)
             {
                 var name = Util.Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
-                if (name != null) Name = CleanName(name);
+                if (name != null) _name = CleanName(name);
             }
 
-            PboNames = mod.GetFileList().Where(f => _addonsPboRegex.IsMatch(f)).ToHashSet();
+            _pboNames = mod.GetFileList().Where(f => AddonsPboRegex.IsMatch(f)).ToHashSet();
         }
 
         public bool IsMatch(MatchHash other)
         {
-            // TODO: improve this by A LOT. fuzzy name matching. maybe do some learning on existent mods/updates?
+            // TODO: improve this by A LOT
+            // TODO: include folder name
+            // TODO: include key names
+            // TODO: do fuzzy name matching
+            // TODO: do some ~machine learning~ statistics on existing mods
             // TODO: figure out how to handle false positives / false negatives as user
-            if (Name != null && other.Name != null) return Name == other.Name;
+            if (_name != null && other._name != null) return _name == other._name;
 
-            var all = new HashSet<string>(PboNames);
-            foreach (var pbo in other.PboNames) all.Add(pbo);
+            var all = new HashSet<string>(_pboNames);
+            foreach (var pbo in other._pboNames) all.Add(pbo);
 
-            if (PboNames.Count / (float) all.Count < Threshold) return false;
-            if (other.PboNames.Count / (float)all.Count < Threshold) return false;
+            if (_pboNames.Count / (float) all.Count < Threshold) return false;
+            if (other._pboNames.Count / (float)all.Count < Threshold) return false;
             return true;
         }
     }

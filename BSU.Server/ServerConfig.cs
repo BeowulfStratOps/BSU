@@ -9,8 +9,6 @@ namespace BSU.Server
 {
     class ServerConfig
     {
-        internal ServerConfig() { }
-
         public string SourcePath, TargetPath, ModList, ServerFileName;
         public ServerFile Server;
 

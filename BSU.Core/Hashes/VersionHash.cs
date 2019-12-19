@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 using System.Security.Cryptography;
 using BSU.Hashes;
 
@@ -11,44 +11,42 @@ namespace BSU.Core.Hashes
 {
     public class VersionHash
     {
-        private Dictionary<string, FileHash> Hashes;
-        private readonly byte[] Hash;
+        private readonly byte[] _hash;
 
         public VersionHash(ILocalMod mod)
         {
-            Hashes = new Dictionary<string, FileHash>();
+            var hashes = new Dictionary<string, FileHash>();
             foreach (var file in mod.GetFileList())
             {
-                Hashes.Add(file, new SHA1AndPboHash(mod.GetFile(file), Utils.GetExtension(file)));
+                hashes.Add(file, new SHA1AndPboHash(mod.GetFile(file), Utils.GetExtension(file)));
             }
 
-            Hash = BuildHash();
+            _hash = BuildHash(hashes);
         }
 
         public VersionHash(IRemoteMod mod)
         {
-            Hashes = mod.GetFileList().ToDictionary(h => h, mod.GetFileHash);
-            Hash = BuildHash();
+            _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
         }
 
-        // TODO: name: Matches vs IsMatch (as in MatchHash)
-        public bool Matches(VersionHash other)
+        public bool IsMatch(VersionHash other)
         {
-            return Hash.SequenceEqual(other.Hash);
+            return _hash.SequenceEqual(other._hash);
         }
 
-        private byte[] BuildHash()
+        // TODO: using a dictionary doesn't make any sense. Just cba to rewrite the ordering right now.
+        private static byte[] BuildHash(Dictionary<string, FileHash> hashes)
         {
             var builder = new StringBuilder();
-            foreach (var kv in Hashes.OrderBy(kv => kv.Key))
+            foreach (var (key, value) in hashes.OrderBy(kv => kv.Key))
             {
-                builder.Append(kv.Key.ToLowerInvariant());
-                builder.Append(Utils.ToHexString(kv.Value.GetBytes()));
+                builder.Append(key.ToLowerInvariant());
+                builder.Append(Utils.ToHexString(value.GetBytes()));
             }
             using var sha1 = SHA1.Create();
             return sha1.ComputeHash(Encoding.UTF8.GetBytes(builder.ToString()));
         }
 
-        public string GetHashString() => Utils.ToHexString(Hash);
+        public string GetHashString() => Utils.ToHexString(_hash);
     }
 }

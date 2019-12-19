@@ -1,27 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using BSU.BSO.FileStructures;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 using BSU.Hashes;
 using Newtonsoft.Json;
 
 namespace BSU.BSO
 {
-    class BsoRepoMod : IRemoteMod
+    // TODO: document it's using lower case paths only!
+    internal  class BsoRepoMod : IRemoteMod
     {
         private readonly string _url, _name;
         private readonly HashFile _hashFile;
+        private string _displayName;
 
-        public List<string> GetFileList() => _hashFile.Hashes.Select(h => h.FileName).ToList();
+        public List<string> GetFileList() => _hashFile.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
 
         public byte[] GetFile(string path)
         {
             using var client = new WebClient();
-            return client.DownloadData(_url + path);
+            return client.DownloadData(_url + GetRealPath(path));
         }
+
+        private string GetRealPath(string path) => GetFileEntry(path).FileName;
+
+        private HashType GetFileEntry(string path) => _hashFile.Hashes.Single(h => h.FileName.ToLowerInvariant() == path);
 
         public BsoRepoMod(string url, string name)
         {
@@ -35,39 +40,38 @@ namespace BSU.BSO
 
         public string GetDisplayName()
         {
+            if (_displayName != null) return _displayName;
+
             string modCpp = null;
-            if (_hashFile.Hashes.Any(h => h.FileName == "/mod.cpp"))
+            var path = GetRealPath("/mod.cpp");
+            if (_hashFile.Hashes.Any(h => h.FileName == path))
             {
                 using var client = new WebClient();
-                modCpp = client.DownloadString(_url + "/mod.cpp");
+                modCpp = client.DownloadString(_url + path);
             }
 
+            // TODO: make case insensitive
             var keys = _hashFile.Hashes.Where(h => h.FileName.EndsWith(".bikey"))
                 .Select(h => h.FileName.Split('/')[^1].Replace(".bikey", "")).ToList();
 
             keys = keys.Any() ? keys : null;
 
-            return Util.Util.GetDisplayName(modCpp, keys);
+            return _displayName = Util.Util.GetDisplayName(modCpp, keys);
         }
 
         public string GetIdentifier() => _name;
 
-        public string GetVersionIdentifier()
-        {
-            throw new NotImplementedException();
-        }
-
         public FileHash GetFileHash(string path)
         {
-            var entry = _hashFile.Hashes.SingleOrDefault(h => h.FileName == path);
+            var entry = GetFileEntry(path);
             return entry == null ? null : new SHA1AndPboHash(entry.Hash, entry.FileSize);
         }
 
-        public long GetFileSize(string path) => _hashFile.Hashes.Single(h => h.FileName == path).FileSize;
+        public long GetFileSize(string path) => GetFileEntry(path).FileSize;
 
         public void DownloadTo(string path, string filePath, Action<long> updateCallback)
         {
-            var url = _url + path; // check for existence first?
+            var url = _url + GetRealPath(path);
 
             using var client = new WebClient();
             client.DownloadProgressChanged += (sender, args) => updateCallback(args.BytesReceived);

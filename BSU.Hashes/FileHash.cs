@@ -7,6 +7,7 @@ namespace BSU.Hashes
     {
         // TODO: replace SHA1 with MurmurHash?
         public abstract byte[] GetBytes();
+        public abstract long GetFileLength();
 
         public override bool Equals(object obj)
         {

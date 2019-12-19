@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using BSU.CoreInterface;
+using BSU.Core.State;
+using BSU.CoreCommon;
 
 namespace BSU.Core
 {

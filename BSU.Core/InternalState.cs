@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BSU.BSO;
-using BSU.Core.State;
-using BSU.CoreInterface;
+using BSU.Core.Storage;
+using BSU.CoreCommon;
 
 namespace BSU.Core
 {

@@ -46,7 +46,7 @@ namespace BSU.Server
             return 0;
         }
 
-        static void DoMod(DirectoryInfo source, DirectoryInfo target)
+        private static void DoMod(DirectoryInfo source, DirectoryInfo target)
         {
             Console.WriteLine($"Working on mod {source.Name}");
             var sourceHashes = GetQuickHashes(source);
@@ -56,21 +56,21 @@ namespace BSU.Server
             ApplyActions(actions, source, target);
             // TODO: sync-hash files with missing sync files
             var modHashFile = new HashFile(source.Name,
-                sourceHashes.Select(kv => new HashType(kv.Key, kv.Value.GetBytes(), kv.Value.Length))
+                sourceHashes.Select(kv => new HashType(kv.Key, kv.Value.GetBytes(), kv.Value.GetFileLength()))
                     .ToList());
             File.WriteAllText(Path.Combine(target.FullName, "hash.json"), JsonConvert.SerializeObject(modHashFile));
         }
 
-        static void ApplyActions(Dictionary<string, FileAction> actions, DirectoryInfo sourceMod,
+        private static void ApplyActions(Dictionary<string, FileAction> actions, DirectoryInfo sourceMod,
             DirectoryInfo targetMod)
         {
             var total = actions.Count;
             var done = 0;
-            foreach (var fileAction in actions)
+            foreach (var (fileName, fileAction) in actions)
             {
-                var sourcePath = Path.Combine(sourceMod.FullName, fileAction.Key.Substring(1));
-                var targetPath = Path.Combine(targetMod.FullName, fileAction.Key.Substring(1));
-                if (fileAction.Value == FileAction.Update || fileAction.Value == FileAction.New)
+                var sourcePath = Path.Combine(sourceMod.FullName, fileName.Substring(1));
+                var targetPath = Path.Combine(targetMod.FullName, fileName.Substring(1));
+                if (fileAction == FileAction.Update || fileAction == FileAction.New)
                 {
                     new FileInfo(targetPath).Directory.Create();
                     File.Copy(sourcePath, targetPath, true);
@@ -86,7 +86,7 @@ namespace BSU.Server
             if (total > 0) Console.WriteLine();
         }
 
-        static Dictionary<string, FileAction> GetActions(Dictionary<string, SHA1AndPboHash> source,
+        private static Dictionary<string, FileAction> GetActions(Dictionary<string, SHA1AndPboHash> source,
             Dictionary<string, SHA1AndPboHash> target)
         {
             var actions = new Dictionary<string, FileAction>();
@@ -111,7 +111,7 @@ namespace BSU.Server
             return actions;
         }
 
-        enum FileAction
+        private enum FileAction
         {
             New,
             Update,
@@ -125,7 +125,7 @@ namespace BSU.Server
             return result;
         }
 
-        static Dictionary<string, SHA1AndPboHash> GetQuickHashes(DirectoryInfo modDirectory)
+        private static Dictionary<string, SHA1AndPboHash> GetQuickHashes(DirectoryInfo modDirectory)
         {
             var hashes = new Dictionary<string, SHA1AndPboHash>();
             var files = modDirectory.EnumerateFiles("*", SearchOption.AllDirectories).ToList();

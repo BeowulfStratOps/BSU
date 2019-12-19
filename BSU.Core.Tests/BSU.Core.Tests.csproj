@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BSU.CoreInterface\BSU.CoreInterface.csproj" />
+    <ProjectReference Include="..\BSU.CoreCommon\BSU.CoreCommon.csproj" />
     <ProjectReference Include="..\BSU.Core\BSU.Core.csproj" />
   </ItemGroup>
 

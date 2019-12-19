@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace BSU.Core
+namespace BSU.Core.State
 {
     public class JobView
     {
-        private UpdateJob _job;
+        private readonly UpdateJob _job;
         public readonly string TargetHash;
 
         public delegate void JobEndedDelegate(bool success);

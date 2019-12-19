@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 using BSU.Hashes;
 
 namespace BSU.Core.Tests

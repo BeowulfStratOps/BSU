@@ -9,7 +9,7 @@ namespace BSU.Hashes
     public class SHA1AndPboHash : FileHash
     {
         private readonly byte[] _hash;
-        public readonly long Length;
+        private readonly long _length;
 
         public SHA1AndPboHash(Stream file, string extension)
         {
@@ -25,7 +25,7 @@ namespace BSU.Hashes
 
                 using var sha1 = SHA1.Create();
                 _hash = sha1.ComputeHash(file);
-                Length = file.Length;
+                _length = file.Length;
             }
         }
 
@@ -35,5 +35,7 @@ namespace BSU.Hashes
         }
 
         public override byte[] GetBytes() => _hash;
+
+        public override long GetFileLength() => _length;
     }
 }

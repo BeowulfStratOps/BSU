@@ -16,7 +16,7 @@ namespace BSU.CLI
             return new Program().Main();
         }
 
-        int Main()
+        private int Main()
         {
             Console.WriteLine("Loading...");
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
@@ -112,13 +112,11 @@ namespace BSU.CLI
                         actionText += action == mod.Selected ? "* " : $"{i + 1} ";
                         actionText += action.ToString();
                         Console.WriteLine(actionText);
-                        if (action.GetConflicts().Any())
+                        if (!action.GetConflicts().Any()) continue;
+                        Console.WriteLine("      Conflicts");
+                        foreach (var conflict in action.GetConflicts())
                         {
-                            Console.WriteLine("      Conflicts");
-                            foreach (var conflict in action.GetConflicts())
-                            {
-                                Console.WriteLine("        " + conflict);
-                            }
+                            Console.WriteLine("        " + conflict);
                         }
                     }
                 }

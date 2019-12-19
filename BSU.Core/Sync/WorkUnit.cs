@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
 {

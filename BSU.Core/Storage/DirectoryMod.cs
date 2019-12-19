@@ -3,51 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using BSU.Util;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 using BSU.Hashes;
 
-namespace BSU.Core
+namespace BSU.Core.Storage
 {
-    // TODO: document that this is (aggressively) using normalized (=lower case) paths!
-    public class DirectoryStorage : IStorage
-    {
-        private readonly string _path, _name;
-
-        public DirectoryStorage(string path, string name)
-        {
-            _path = path;
-            _name = name;
-        }
-
-        public virtual List<ILocalMod> GetMods()
-        {
-            return GetModFolders().Select(di => (ILocalMod)new DirectoryMod(di, this)).ToList();
-        }
-
-        protected List<DirectoryInfo> GetModFolders()
-        {
-            return new DirectoryInfo(_path).EnumerateDirectories("@*").ToList();
-        }
-
-        public string GetLocation() => _path;
-
-        public string GetIdentifier() => _name;
-        public ILocalMod CreateMod(string identifier)
-        {
-            var dir = new DirectoryInfo(Path.Combine(_path, "@" + identifier));
-            if (dir.Exists) throw new InvalidOperationException("Path exists");
-            dir.Create();
-            return new DirectoryMod(dir, this);
-        }
-
-        public virtual bool CanWrite() => true;
-    }
-
     public class DirectoryMod : ILocalMod
     {
         private readonly DirectoryInfo _dir;
         private readonly IStorage _parentStorage;
+        private string _displayName;
 
         public DirectoryMod(DirectoryInfo dir, IStorage parentStorage)
         {
@@ -59,6 +24,8 @@ namespace BSU.Core
 
         public string GetDisplayName()
         {
+            if (_displayName != null) return _displayName;
+
             var modCpp = GetFile("/mod.cpp");
             string modCppData = null;
             if (modCpp != null)
@@ -70,7 +37,7 @@ namespace BSU.Core
             var keys = GetFileList().Where(p => Regex.IsMatch(p, "/keys/.*\\.bikey", RegexOptions.IgnoreCase))
                 .Select(p => p.Split('/').Last().Replace(".bikey", "")).ToList();
 
-            return Util.Util.GetDisplayName(modCppData, keys);
+            return _displayName = Util.Util.GetDisplayName(modCppData, keys);
         }
 
         public Stream GetFile(string path)
@@ -86,7 +53,7 @@ namespace BSU.Core
 
         public FileHash GetFileHash(string path)
         {
-            CheckPath(path);
+            CoreCommon.Util.CheckPath(path);
             var extension = Utils.GetExtension(path).ToLowerInvariant();
             return new SHA1AndPboHash(GetFile(path), extension);
         }
@@ -109,15 +76,8 @@ namespace BSU.Core
 
         private string GetFullFilePath(string path)
         {
-            CheckPath(path);
+            CoreCommon.Util.CheckPath(path);
             return Path.Combine(_dir.FullName, path.Substring(1));
-        }
-
-        private static void CheckPath(string path)
-        {
-            if (!path.StartsWith('/')) throw new FormatException(path);
-            if (path.Contains('\\')) throw new FormatException(path);
-            if (path.ToLowerInvariant() != path) throw new FormatException(path);
         }
     }
 }

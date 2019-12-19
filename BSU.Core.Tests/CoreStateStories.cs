@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BSU.Core.State;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 using Xunit;
 
 namespace BSU.Core.Tests
@@ -128,7 +128,7 @@ namespace BSU.Core.Tests
             core.SyncManager.QueueJob(new UpdateJob(local, remote, new UpdateTarget(GetVersionHash(jobVersion), null), null));
         }
 
-        private void CheckDownload(string remoteVer, List<ModAction> actions, Storage storage)
+        private void CheckDownload(string remoteVer, List<ModAction> actions, State.Storage storage)
         {
             var download = actions.OfType<DownloadAction>().SingleOrDefault();
             Assert.NotNull(download);

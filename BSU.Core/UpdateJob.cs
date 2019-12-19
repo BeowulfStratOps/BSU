@@ -1,6 +1,6 @@
 ﻿using System;
 using BSU.Core.Sync;
-using BSU.CoreInterface;
+using BSU.CoreCommon;
 
 namespace BSU.Core
 {

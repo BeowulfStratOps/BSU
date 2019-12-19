@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace BSU.Util
+namespace BSU.CoreCommon
 {
     public static class Util
     {
@@ -33,6 +33,13 @@ namespace BSU.Util
             data = data.Replace("\r", "");
             var matches = Regex.Matches(data, "^([a-zA-Z_]+)\\s*=\\s*\"([^\"]*)\";$", RegexOptions.Multiline);
             return matches.ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+        }
+
+        public static void CheckPath(string path)
+        {
+            if (!path.StartsWith('/')) throw new FormatException(path);
+            if (path.Contains('\\')) throw new FormatException(path);
+            if (path.ToLowerInvariant() != path) throw new FormatException(path);
         }
     }
 }
