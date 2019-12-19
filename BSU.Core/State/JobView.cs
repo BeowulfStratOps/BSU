@@ -2,6 +2,7 @@
 
 namespace BSU.Core.State
 {
+    // TODO: is this class actually necessary at all??
     public class JobView
     {
         private readonly UpdateJob _job;
@@ -13,7 +14,7 @@ namespace BSU.Core.State
         internal JobView(UpdateJob job)
         {
             _job = job;
-            job.JobEnded += success => JobEnded?.Invoke(success);
+            job.SyncState.SyncEnded += success => JobEnded?.Invoke(success);
             TargetHash = job.Target.Hash;
         }
 
@@ -34,5 +35,8 @@ namespace BSU.Core.State
 
         public bool IsDone() => _job.SyncState.IsDone();
         public Exception GetError() => _job.SyncState.GetError();
+
+        public void Abort() => _job.SyncState.Abort();
+        public bool Aborted => _job.SyncState.Aborted;
     }
 }

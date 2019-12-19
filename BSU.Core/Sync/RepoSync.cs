@@ -63,6 +63,7 @@ namespace BSU.Core.Sync
 
         public WorkUnit GetWork()
         {
+            if (Aborted) return null;
             var work = _actionsTodo.FirstOrDefault();
             if (work != null) _actionsTodo.Remove(work);
             return work;
@@ -70,7 +71,7 @@ namespace BSU.Core.Sync
 
         public bool IsDone() => HasError() || _allActions.All(a => a.IsDone() || a.HasError());
 
-        public void SetError(Exception e) => _error = e;
+        internal void SetError(Exception e) => _error = e;
 
         public bool HasError()
         {
@@ -83,5 +84,14 @@ namespace BSU.Core.Sync
             if (_error != null) return _error;
             return _allActions.FirstOrDefault(a => a.HasError())?.GetError();
         }
+
+        public bool Aborted { get; private set; }
+        public void Abort() => Aborted = true;
+
+
+        public delegate void SyncEndedDelegate(bool success);
+        public event SyncEndedDelegate SyncEnded;
+
+        internal void SignalSyncEnded() => SyncEnded?.Invoke(!HasError());
     }
 }
