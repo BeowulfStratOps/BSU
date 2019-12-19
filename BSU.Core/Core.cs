@@ -139,5 +139,8 @@ namespace BSU.Core
         {
             return SyncManager.GetActiveJobs().SingleOrDefault(j => j.LocalMod == mod);
         }
+
+        internal event Action StateInvalidated;
+        internal void InvalidateState() => StateInvalidated?.Invoke();
     }
 }

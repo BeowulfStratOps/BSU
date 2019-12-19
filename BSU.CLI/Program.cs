@@ -80,6 +80,12 @@ namespace BSU.CLI
         void CalcState(string[] args)
         {
             _state = _core.GetState();
+            _state.Invalidated += StateOnInvalidated;
+        }
+
+        private void StateOnInvalidated()
+        {
+            Console.WriteLine("State invalidated.");
         }
 
         [CliCommand("showstate", "Show state.")]
@@ -90,6 +96,8 @@ namespace BSU.CLI
                 Console.WriteLine("None active. Creating...");
                 _state = _core.GetState();
             }
+
+            if (!_state.IsValid) Console.WriteLine("State got invalidated!");
 
             foreach (var repo in _state.Repos)
             {
@@ -194,7 +202,7 @@ namespace BSU.CLI
             Console.WriteLine("Repo Types:");
             foreach (var repoType in _core.GetRepoTypes())
             {
-                Console.WriteLine(" " + repoType);   
+                Console.WriteLine(" " + repoType);
             }
             Console.WriteLine("Storage Types:");
             foreach (var storageType in _core.GetStorageTypes())

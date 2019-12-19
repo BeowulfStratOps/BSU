@@ -11,6 +11,10 @@ namespace BSU.Core
         internal readonly UpdateTarget Target;
         internal readonly RepoSync SyncState;
 
+        public delegate void JobEndedDelegate(bool success);
+        public event JobEndedDelegate JobEnded;
+        internal void SignalJobEnd(bool success) => JobEnded?.Invoke(success);
+
         internal UpdateJob(ILocalMod localMod, IRemoteMod remoteMod, UpdateTarget target, RepoSync syncState)
         {
             LocalMod = localMod;

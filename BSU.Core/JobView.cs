@@ -7,15 +7,19 @@ namespace BSU.Core
         private UpdateJob _job;
         public readonly string TargetHash;
 
+        public delegate void JobEndedDelegate(bool success);
+        public event JobEndedDelegate JobEnded;
+
         internal JobView(UpdateJob job)
         {
             _job = job;
+            job.JobEnded += success => JobEnded?.Invoke(success);
             TargetHash = job.Target.Hash;
         }
 
         public string GetLocalDisplayName() => _job.LocalMod.GetDisplayName();
         public string GetRemoteDisplayName() => _job.RemoteMod.GetDisplayName();
-        
+
         public int GetRemainingNewFilesCount() => _job.SyncState.GetRemainingNewFilesCount();
         public int GetRemainingChangedFilesCount() => _job.SyncState.GetRemainingChangedFilesCount();
         public int GetRemainingDeletedFilesCount() => _job.SyncState.GetRemainingDeletedFilesCount();

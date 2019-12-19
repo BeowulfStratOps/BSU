@@ -44,10 +44,12 @@ namespace BSU.Core
                 {
                     job.SyncState.SetError(e);
                     _jobsTodo.Remove(job);
+                    job.SignalJobEnd(false);
                     return null;
                 }
                 if (work != null) return work;
                 _jobsTodo.Remove(job);
+                job.SignalJobEnd(!job.SyncState.HasError());
                 return null;
             }
         }
