@@ -44,12 +44,11 @@ namespace BSU.Core
                 {
                     job.SyncState.SetError(e);
                     _jobsTodo.Remove(job);
-                    job.SignalJobEnd(false);
+                    job.SyncState.CheckDone();
                     return null;
                 }
                 if (work != null) return work;
                 _jobsTodo.Remove(job);
-                job.SignalJobEnd(!job.SyncState.HasError());
                 return null;
             }
         }
@@ -62,7 +61,7 @@ namespace BSU.Core
                 if (work == null) break;
                 try
                 {
-                    work.DoWork();
+                    work.Work();
                 }
                 catch (Exception e)
                 {

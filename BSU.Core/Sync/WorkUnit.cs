@@ -7,20 +7,36 @@ namespace BSU.Core.Sync
 {
     internal abstract class WorkUnit
     {
-        protected ILocalMod _local;
-        protected string _path;
-        protected bool _done;
+        protected readonly ILocalMod Local;
+        protected readonly string Path;
+        private readonly RepoSync _sync;
+        private bool _done;
 
-        public WorkUnit(ILocalMod local, string path)
+        protected WorkUnit(ILocalMod local, string path, RepoSync sync)
         {
-            _local = local;
-            _path = path;
+            Local = local;
+            Path = path;
+            _sync = sync;
         }
 
         private Exception _error;
-        public abstract void DoWork();
+
+        public void Work()
+        {
+            DoWork();
+            _done = true;
+            _sync.CheckDone();
+        }
+
+        protected abstract void DoWork();
         public bool IsDone() => _done;
-        internal void SetError(Exception e) => _error = e;
+
+        internal void SetError(Exception e)
+        {
+            _error = e;
+            _sync.CheckDone();
+        }
+
         public bool HasError() => _error != null;
         public Exception GetError() => _error;
     }

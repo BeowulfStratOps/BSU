@@ -6,6 +6,7 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
 {
+    // TODO: think about thread safety real hard
     class RepoSync
     {
         private readonly List<WorkUnit> _allActions, _actionsTodo;
@@ -23,20 +24,20 @@ namespace BSU.Core.Sync
                 {
                     if (!remote.GetFileHash(remoteFile).Equals(local.GetFileHash(remoteFile)))
                     {
-                        _allActions.Add(new UpdateAction(remote, local, remoteFile, remote.GetFileSize(remoteFile)));
+                        _allActions.Add(new UpdateAction(remote, local, remoteFile, remote.GetFileSize(remoteFile), this));
                     }
 
                     localListCopy.Remove(remoteFile);
                 }
                 else
                 {
-                    _allActions.Add(new DownloadAction(remote, local, remoteFile, remote.GetFileSize(remoteFile)));
+                    _allActions.Add(new DownloadAction(remote, local, remoteFile, remote.GetFileSize(remoteFile), this));
                 }
             }
 
             foreach (var localFile in localListCopy)
             {
-                _allActions.Add(new DeleteAction(local, localFile));
+                _allActions.Add(new DeleteAction(local, localFile, this));
             }
             _actionsTodo = new List<WorkUnit>(_allActions);
         }
@@ -92,6 +93,10 @@ namespace BSU.Core.Sync
         public delegate void SyncEndedDelegate(bool success);
         public event SyncEndedDelegate SyncEnded;
 
-        internal void SignalSyncEnded() => SyncEnded?.Invoke(!HasError());
+        internal void CheckDone()
+        {
+            if (!IsDone()) return;
+            SyncEnded?.Invoke(!HasError());
+        }
     }
 }

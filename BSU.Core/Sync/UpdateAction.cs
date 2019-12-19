@@ -11,7 +11,7 @@ namespace BSU.Core.Sync
         private readonly long _sizeTotal;
         private long _sizeTodo;
 
-        public UpdateAction(IRemoteMod remote, ILocalMod local, string path, long sizeTotal) : base(local, path)
+        public UpdateAction(IRemoteMod remote, ILocalMod local, string path, long sizeTotal, RepoSync sync) : base(local, path, sync)
         {
             _remote = remote;
             _sizeTotal = sizeTotal;
@@ -21,12 +21,11 @@ namespace BSU.Core.Sync
         public long GetBytesTotal() => _sizeTotal;
         public long GetBytesRemaining() => _sizeTodo;
 
-        public override void DoWork()
+        protected override void DoWork()
         {
-            var target = _local.GetFilePath(_path.ToLowerInvariant());
-            _remote.UpdateTo(_path, target, UpdateRemaining);
+            var target = Local.GetFilePath(Path.ToLowerInvariant());
+            _remote.UpdateTo(Path, target, UpdateRemaining);
             _sizeTodo = 0;
-            _done = true;
         }
 
         void UpdateRemaining(long bytesDownloaded)
