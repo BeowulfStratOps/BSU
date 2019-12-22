@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.State
 {
     public class Repo
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public readonly List<RepositoryMod> Mods;
         public readonly string Name;
 
@@ -14,6 +17,7 @@ namespace BSU.Core.State
 
         internal Repo(IRepository repo, State state)
         {
+            Logger.Debug("Creating new repo state for {0}", repo.GetLocation());
             State = state;
             Mods = repo.GetMods().Select(m => new RepositoryMod(m, this)).ToList();
             Name = repo.GetName();

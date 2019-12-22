@@ -4,17 +4,22 @@ using System.Linq;
 using System.Threading;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core
 {
     internal class SyncManager : ISyncManager
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly List<UpdateJob> _jobsTodo = new List<UpdateJob>();
         private readonly List<UpdateJob> _allJobs = new List<UpdateJob>();
         private Thread _scheduler;
 
         public void QueueJob(UpdateJob job)
         {
+            Logger.Debug("Queueing job {0} -> {1}", job.StorageMod.GetIdentifier(), job.RepositoryMod.GetIdentifier());
+
             _allJobs.Add(job);
             lock (_jobsTodo)
             {
@@ -22,6 +27,7 @@ namespace BSU.Core
             }
 
             if (_scheduler != null && _scheduler.IsAlive) return;
+            Logger.Debug("Starting scheduler thread");
             _scheduler = new Thread(Schedule);
             _scheduler.Start();
         }
@@ -33,21 +39,35 @@ namespace BSU.Core
         {
             lock (_jobsTodo)
             {
-                if (!_jobsTodo.Any()) return null;
+                Logger.Trace("Getting work");
+                if (!_jobsTodo.Any())
+                {
+                    Logger.Trace("No jobs");
+                    return null;
+                }
                 var job = _jobsTodo.First();
+                Logger.Trace("Checking job {0} -> {1}", job.StorageMod.GetIdentifier(), job.RepositoryMod.GetIdentifier());
                 WorkUnit work;
                 try
                 {
+                    Logger.Trace("Getting work from job");
                     work = job.SyncState.GetWork();
                 }
                 catch (Exception e)
                 {
+                    Logger.Error(e);
                     job.SyncState.SetError(e);
                     _jobsTodo.Remove(job);
                     job.SyncState.CheckDone();
                     return null;
                 }
-                if (work != null) return work;
+
+                if (work != null)
+                {
+                    Logger.Trace("Got work: {0}", work);
+                    return work;
+                }
+                Logger.Trace("No work. De-queueing job");
                 _jobsTodo.Remove(job);
                 return null;
             }
@@ -65,6 +85,7 @@ namespace BSU.Core
                 }
                 catch (Exception e)
                 {
+                    Logger.Error(e);
                     work.SetError(e);
                 }
             }
@@ -91,6 +112,7 @@ namespace BSU.Core
                     if (!thread.IsAlive) threads.Remove(thread);
                 }
             }
+            Logger.Debug("Scheduler thread ending");
         }
     }
 }

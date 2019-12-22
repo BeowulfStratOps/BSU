@@ -3,11 +3,15 @@ using System.IO;
 using System.Linq;
 using BSU.Core;
 using BSU.Core.State;
+using NLog;
+using NLog.Fluent;
 
 namespace BSU.CLI
 {
     class Program
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private Core.Core _core;
         private State _state = null;
 
@@ -32,12 +36,14 @@ namespace BSU.CLI
                 Console.Write("> ");
                 var command = Console.ReadLine();
                 if (command == "exit") return 0;
+                Logger.Info("Issued command {0}", command);
                 try
                 {
                     commands.Process(command);
                 }
                 catch (Exception e)
                 {
+                    Logger.Error(e);
                     Console.WriteLine($"Error: {e.GetType().Name}\n{e.Message}");
 #if DEBUG
                     Console.WriteLine(e.StackTrace);

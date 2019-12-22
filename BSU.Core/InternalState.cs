@@ -5,11 +5,15 @@ using System.Linq;
 using BSU.BSO;
 using BSU.Core.Storage;
 using BSU.CoreCommon;
+using NLog;
+using NLog.Fluent;
 
 namespace BSU.Core
 {
     class InternalState
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly Dictionary<string, Func<string, string, IRepository>> _repoTypes =
             new Dictionary<string, Func<string, string, IRepository>>
             {
@@ -32,6 +36,7 @@ namespace BSU.Core
 
         public InternalState(ISettings settings)
         {
+            Logger.Info("Creating neew internal state");
             _settings = settings;
             foreach (var repoEntry in _settings.Repositories)
             {
@@ -52,6 +57,7 @@ namespace BSU.Core
 
         public void RemoveRepo(string name)
         {
+            Logger.Debug("Removing repo {0}", name);
             var repo = _repositories.Single(r => r.GetName() == name);
             var repoEntry = _settings.Repositories.Single(r => r.Name == name);
             _repositories.Remove(repo);
@@ -80,11 +86,13 @@ namespace BSU.Core
 
             try
             {
+                Logger.Debug("Adding repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
                 var repository = create(repo.Name, repo.Url);
                 _repositories.Add(repository);
             }
             catch (Exception e)
             {
+                Logger.Error(e);
                 _repositories.Add(new ErrorRepo(repo.Name, repo.Url, e.Message));
             }
         }
@@ -106,6 +114,7 @@ namespace BSU.Core
 
         public void RemoveStorage(string name)
         {
+            Logger.Debug("Removing storage {0}", name);
             var storage = _storages.Single(s => s.GetIdentifier() == name);
             var storageEntry = _settings.Storages.Single(s => s.Name == name);
             _storages.Remove(storage);
@@ -119,11 +128,13 @@ namespace BSU.Core
 
             try
             {
+                Logger.Debug("Adding storage {0} / {1} / {2}", storage.Name, storage.Type, storage.Path);
                 var storageObj = create(storage.Name, storage.Path);
                 _storages.Add(storageObj);
             }
             catch (Exception e)
             {
+                Logger.Error(e);
                 _storages.Add(new ErrorStorage(storage.Name, storage.Path, e.Message));
             }
         }
@@ -152,12 +163,15 @@ namespace BSU.Core
 
         public void SetUpdatingTo(IStorageMod mod, string targetHash, string targetDisplay)
         {
+            Logger.Debug("Set updating: {0} / {1} to {2} : {3}", mod.GetStorage().GetIdentifier(), mod.GetIdentifier(),
+                targetHash, targetDisplay);
             _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating[mod.GetIdentifier()] = new UpdateTarget(targetHash, targetDisplay);
             _settings.Store();
         }
 
         public void RemoveUpdatingTo(IStorageMod mod)
         {
+            Logger.Debug("Remove updating: {0} / {1}", mod.GetStorage().GetIdentifier(), mod.GetIdentifier());
             _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating.Remove(mod.GetIdentifier());
             _settings.Store();
         }
@@ -168,7 +182,10 @@ namespace BSU.Core
             foreach (var modId in updating.Keys.ToList())
             {
                 if (storage.GetMods().All(m => m.GetIdentifier() != modId))
+                {
                     updating.Remove(modId);
+                    Logger.Debug("Cleaing up udpating for {0} / {1}", storage.GetIdentifier(), modId);
+                }
             }
         }
 

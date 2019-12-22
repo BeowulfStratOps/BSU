@@ -7,6 +7,7 @@ using BSU.Core.Hashes;
 using BSU.Core.State;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
+using NLog;
 using DownloadAction = BSU.Core.State.DownloadAction;
 using UpdateAction = BSU.Core.State.UpdateAction;
 
@@ -16,11 +17,14 @@ namespace BSU.Core
 {
     public class Core
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         internal readonly InternalState State;
         internal readonly ISyncManager SyncManager;
 
         internal Core(ISettings settings, ISyncManager syncManager)
         {
+            Logger.Info("Creating new core instance");
             SyncManager = syncManager;
             State = new InternalState(settings);
         }
@@ -89,6 +93,7 @@ namespace BSU.Core
 
         internal UpdatePacket PrepareUpdate(Repo repo)
         {
+            Logger.Debug("Preparing update");
             var todos = repo.Mods.Where(m => m.Selected != null && !(m.Selected is UseAction)).ToList();
 
             var actions = todos.Select(m => m.Selected).ToList();
@@ -116,6 +121,7 @@ namespace BSU.Core
 
         internal void DoUpdate(UpdatePacket update)
         {
+            Logger.Debug("Doing update");
             foreach (var job in update.Jobs)
             {
                 State.SetUpdatingTo(job.StorageMod, job.Target.Hash, job.Target.Display);

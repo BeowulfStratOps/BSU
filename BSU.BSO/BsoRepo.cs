@@ -5,11 +5,15 @@ using System.Net;
 using BSU.BSO.FileStructures;
 using BSU.CoreCommon;
 using Newtonsoft.Json;
+using NLog;
+using NLog.Fluent;
 
 namespace BSU.BSO
 {
     public class BsoRepo : IRepository
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly string _url, _name;
         private readonly List<IRepositoryMod> _mods;
 
@@ -19,6 +23,7 @@ namespace BSU.BSO
             _name = name;
 
             using var client = new WebClient();
+            Logger.Debug("Downloading server file from {0}", _url);
             var serverFileJson = client.DownloadString(_url);
             var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
 

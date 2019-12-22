@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Storage
 {
     // TODO: document that this is (aggressively) using normalized (=lower case) paths!
     public class DirectoryStorage : IStorage
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly string _path, _name;
 
         public DirectoryStorage(string path, string name)
@@ -33,6 +36,7 @@ namespace BSU.Core.Storage
         public string GetIdentifier() => _name;
         public IStorageMod CreateMod(string identifier)
         {
+            Logger.Debug("Creating mod {0}", identifier);
             var dir = new DirectoryInfo(Path.Combine(_path, "@" + identifier));
             if (dir.Exists) throw new InvalidOperationException("Path exists");
             dir.Create();

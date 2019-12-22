@@ -6,15 +6,19 @@ using System.Text;
 using BSU.CoreCommon;
 using System.Security.Cryptography;
 using BSU.Hashes;
+using NLog;
 
 namespace BSU.Core.Hashes
 {
     public class VersionHash
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly byte[] _hash;
 
         public VersionHash(IStorageMod mod)
         {
+            Logger.Debug("Building version hash from storage mod {0} / {1}", mod.GetStorage().GetIdentifier(), mod.GetIdentifier());
             var hashes = new Dictionary<string, FileHash>();
             foreach (var file in mod.GetFileList())
             {
@@ -26,6 +30,7 @@ namespace BSU.Core.Hashes
 
         public VersionHash(IRepositoryMod mod)
         {
+            Logger.Debug("Building version hash from storage mod {0}}", mod.GetIdentifier());
             _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
         }
 

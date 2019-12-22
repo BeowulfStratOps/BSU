@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Sync
 {
     class RepoSync
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly List<WorkUnit> _allActions, _actionsTodo;
         private Exception _error;
 
         public RepoSync(IRepositoryMod repository, IStorageMod storage)
         {
+            Logger.Debug("Building sync actions");
+
             _allActions = new List<WorkUnit>();
             var repositoryList = repository.GetFileList();
             var storageList = storage.GetFileList();
@@ -39,6 +44,9 @@ namespace BSU.Core.Sync
                 _allActions.Add(new DeleteAction(storage, storageModFile, this));
             }
             _actionsTodo = new List<WorkUnit>(_allActions);
+            Logger.Debug("Download actions: {0}", _actionsTodo.OfType<DownloadAction>().Count());
+            Logger.Debug("Update actions: {0}", _actionsTodo.OfType<UpdateAction>().Count());
+            Logger.Debug("Delete actions: {0}", _actionsTodo.OfType<DeleteAction>().Count());
         }
 
 
@@ -95,6 +103,7 @@ namespace BSU.Core.Sync
         internal void CheckDone()
         {
             if (!IsDone()) return;
+            Logger.Debug("Sync done");
             SyncEnded?.Invoke(!HasError());
         }
     }

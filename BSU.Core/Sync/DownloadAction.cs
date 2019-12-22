@@ -1,11 +1,14 @@
 ﻿using System.IO;
 using System.Threading;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Sync
 {
     internal class DownloadAction : WorkUnit
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly IRepositoryMod _repository;
         private readonly long _sizeTotal;
         private long _sizeTodo;
@@ -22,6 +25,7 @@ namespace BSU.Core.Sync
 
         protected override void DoWork()
         {
+            Logger.Trace("Downloading {0}", Path);
             var target = Storage.GetFilePath(Path.ToLowerInvariant());
             var di = new FileInfo(target).Directory;
             if (!di.Exists) di.Create();

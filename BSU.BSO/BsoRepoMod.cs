@@ -6,12 +6,16 @@ using BSU.BSO.FileStructures;
 using BSU.CoreCommon;
 using BSU.Hashes;
 using Newtonsoft.Json;
+using NLog;
+using NLog.Fluent;
 
 namespace BSU.BSO
 {
     // TODO: document it's using lower case paths only!
     internal  class BsoRepoMod : IRepositoryMod
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly string _url, _name;
         private readonly HashFile _hashFile;
         private string _displayName;
@@ -21,7 +25,10 @@ namespace BSU.BSO
         public byte[] GetFile(string path)
         {
             using var client = new WebClient();
-            return client.DownloadData(_url + GetRealPath(path));
+            Logger.Debug("Downloading content file from {0} / {1}", _url, path);
+            var data = client.DownloadData(_url + GetRealPath(path));
+            Logger.Debug("Finsihed downloading content file from {0} / {1}", _url, path);
+            return data;
         }
 
         private string GetRealPath(string path) => GetFileEntry(path).FileName;
@@ -34,7 +41,9 @@ namespace BSU.BSO
             _name = name;
 
             using var client = new WebClient();
+            Logger.Debug("Downloading hash file from {0}", _url);
             var hashFileJson = client.DownloadString(_url + "/hash.json");
+            Logger.Debug("Finished downloading hash file from {0}", _url);
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
         }
 
@@ -47,6 +56,7 @@ namespace BSU.BSO
             if (_hashFile.Hashes.Any(h => h.FileName == path))
             {
                 using var client = new WebClient();
+                Logger.Debug("Downloading mod.cpp from {0}", _url);
                 modCpp = client.DownloadString(_url + path);
             }
 
@@ -74,8 +84,10 @@ namespace BSU.BSO
             var url = _url + GetRealPath(path);
 
             using var client = new WebClient();
+            Logger.Debug("Downloading content {0} / {1}", _url, path);
             client.DownloadProgressChanged += (sender, args) => updateCallback(args.BytesReceived);
             client.DownloadFile(url, filePath);
+            Logger.Debug("Finished downloading content {0} / {1}", _url, path);
         }
 
         public void UpdateTo(string path, string filePath, Action<long> updateCallback)

@@ -5,11 +5,14 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using BSU.CoreCommon;
 using BSU.Hashes;
+using NLog;
 
 namespace BSU.Core.Storage
 {
     public class DirectoryMod : IStorageMod
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly DirectoryInfo _dir;
         private readonly IStorage _parentStorage;
         private string _displayName;
@@ -44,6 +47,7 @@ namespace BSU.Core.Storage
         {
             try
             {
+                Logger.Trace("Reading file {0}", path);
                 return File.OpenRead(GetFullFilePath(path));
             }
             catch (FileNotFoundException)
@@ -71,6 +75,7 @@ namespace BSU.Core.Storage
 
         public void DeleteFile(string path)
         {
+            Logger.Trace("Deleting file {0}", path);
             if (!_parentStorage.CanWrite()) throw new NotSupportedException();
             File.Delete(GetFullFilePath(path));
         }

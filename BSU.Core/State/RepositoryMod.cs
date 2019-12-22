@@ -2,11 +2,15 @@
 using System.Linq;
 using BSU.Core.Hashes;
 using BSU.CoreCommon;
+using NLog;
+using NLog.Fluent;
 
 namespace BSU.Core.State
 {
     public class RepositoryMod
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public readonly string Name;
         public readonly IReadOnlyList<ModAction> Actions;
         public ModAction Selected = null;
@@ -21,6 +25,8 @@ namespace BSU.Core.State
         // TODO: find a better place for that
         internal RepositoryMod(IRepositoryMod mod, Repo repo)
         {
+            Logger.Debug("Creating new state for repo mod {0}", mod.GetIdentifier());
+
             Repo = repo;
             Mod = mod;
 
@@ -48,6 +54,7 @@ namespace BSU.Core.State
 
             foreach (var storageMod in storageModMatches)
             {
+                Logger.Debug("Checking local match {0} / {1}", storageMod.Storage.Name, storageMod.Name);
                 ModAction action;
                 if (VersionHash.IsMatch(storageMod.VersionHash) && storageMod.UpdateTarget == null)
                     action = new UseAction(storageMod, target);
@@ -60,6 +67,8 @@ namespace BSU.Core.State
                         action = new UpdateAction(storageMod, this, startedUpdates.Contains(storageMod), target);
                 }
 
+                Logger.Debug("Created action: {0}", action);
+
                 actions.Add(action);
                 storageMod.AddRelatedAction(action);
             }
@@ -69,22 +78,35 @@ namespace BSU.Core.State
             Actions = actions.AsReadOnly();
 
             if (actions.Any(a => a is UseAction))
+            {
                 Selected = actions[0];
+                Logger.Debug("Auto-selecting {0}", Selected);
+            }
 
             var continuation = actions.FirstOrDefault(a => a is UpdateAction update && update.IsContinuation);
             if (continuation != null)
+            {
                 Selected = continuation;
+                Logger.Debug("Auto-selecting {0}", Selected);
+            }
         }
 
         internal void CollectConflicts()
         {
+            Logger.Debug("Collecting Conflicts in {0}", Name);
             foreach (var action in Actions)
             {
+                Logger.Debug("Checking {0}", action);
                 if (action is UseAction) continue;
                 if (!(action is IHasStorageMod storageModAction)) continue;
                 foreach (var other in storageModAction.GetStorageMod().GetRelatedActions())
                 {
-                    if (action.UpdateTarget.Hash != other.UpdateTarget.Hash) action.AddConflict(other);
+                    Logger.Debug("Checking against {0}", other);
+                    if (action.UpdateTarget.Hash != other.UpdateTarget.Hash)
+                    {
+                        action.AddConflict(other);
+                        Logger.Debug("Added conflict {0} <-> {1}", action, other);
+                    }
                 }
             }
         }
