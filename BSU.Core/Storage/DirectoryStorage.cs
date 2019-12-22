@@ -15,6 +15,7 @@ namespace BSU.Core.Storage
         {
             _path = path;
             _name = name;
+            if (!new DirectoryInfo(path).Exists) throw new DirectoryNotFoundException();
         }
 
         public virtual List<IStorageMod> GetMods()

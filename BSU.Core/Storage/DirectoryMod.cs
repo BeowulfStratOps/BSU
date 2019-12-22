@@ -42,7 +42,14 @@ namespace BSU.Core.Storage
 
         public Stream GetFile(string path)
         {
-            return File.OpenRead(GetFullFilePath(path));
+            try
+            {
+                return File.OpenRead(GetFullFilePath(path));
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
         }
 
         public List<string> GetFileList()

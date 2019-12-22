@@ -78,8 +78,15 @@ namespace BSU.Core
         {
             if (!_repoTypes.TryGetValue(repo.Type, out var create)) throw new NotSupportedException($"Repo type {repo.Type} is not supported.");
 
-            var repository = create(repo.Name, repo.Url);
-            _repositories.Add(repository);
+            try
+            {
+                var repository = create(repo.Name, repo.Url);
+                _repositories.Add(repository);
+            }
+            catch (Exception e)
+            {
+                _repositories.Add(new ErrorRepo(repo.Name, repo.Url, e.Message));
+            }
         }
 
         public void AddStorage(string name, DirectoryInfo directory, string type)
@@ -110,8 +117,15 @@ namespace BSU.Core
         {
             if (!_storageTypes.TryGetValue(storage.Type, out var create)) throw new NotSupportedException($"Storage type {storage.Type} is not supported.");
 
-            var storageObj = create(storage.Name, storage.Path);
-            _storages.Add(storageObj);
+            try
+            {
+                var storageObj = create(storage.Name, storage.Path);
+                _storages.Add(storageObj);
+            }
+            catch (Exception e)
+            {
+                _storages.Add(new ErrorStorage(storage.Name, storage.Path, e.Message));
+            }
         }
 
         public void PrintState()

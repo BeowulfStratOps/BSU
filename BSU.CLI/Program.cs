@@ -135,6 +135,17 @@ namespace BSU.CLI
             var mod = _state.Repos.Single(r => r.Name.Equals(repoName, StringComparison.InvariantCultureIgnoreCase))
                 .Mods.Single(m => m.Name.Equals(modName, StringComparison.InvariantCultureIgnoreCase));
 
+            var selected = mod.Actions[action - 1];
+
+            if (selected is DownloadAction downloadAction)
+            {
+                while (string.IsNullOrWhiteSpace(downloadAction.FolderName))
+                {
+                    Console.Write("Enter new folder name: ");
+                    downloadAction.FolderName = Console.ReadLine();
+                }
+            }
+
             mod.Selected = mod.Actions[action - 1];
         }
 
@@ -155,6 +166,12 @@ namespace BSU.CLI
                 Console.WriteLine($" Download: {packetJob.GetTotalNewFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToDownload())}");
                 Console.WriteLine($" Update: {packetJob.GetTotalChangedFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToUpdate())}");
                 Console.WriteLine($" Delete: {packetJob.GetTotalDeletedFilesCount()} Files");
+            }
+
+            if (!packet.GetJobsViews().Any())
+            {
+                Console.WriteLine("Nothing to do.");
+                return;
             }
 
             Console.Write("Proceed? (y/Y = yes. Anything else = no): ");

@@ -23,6 +23,8 @@ namespace BSU.Core.Sync
         protected override void DoWork()
         {
             var target = Storage.GetFilePath(Path.ToLowerInvariant());
+            var di = new FileInfo(target).Directory;
+            if (!di.Exists) di.Create();
             _repository.DownloadTo(Path, target, UpdateRemaining);
             _sizeTodo = 0;
         }
