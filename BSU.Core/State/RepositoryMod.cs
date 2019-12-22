@@ -70,6 +70,10 @@ namespace BSU.Core.State
 
             if (actions.Any(a => a is UseAction))
                 Selected = actions[0];
+
+            var continuation = actions.FirstOrDefault(a => a is UpdateAction update && update.IsContinuation);
+            if (continuation != null)
+                Selected = continuation;
         }
 
         internal void CollectConflicts()

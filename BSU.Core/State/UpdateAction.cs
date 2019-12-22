@@ -13,7 +13,12 @@
             RepositoryMod = repositoryMod;
         }
 
-        public override string ToString() => $"Update {StorageMod.Storage.Name}/{StorageMod.Name} from {StorageMod.VersionHash.GetHashString()} to {UpdateTarget.Hash} \"{UpdateTarget.Display}\"";
+        public override string ToString()
+        {
+            var action = IsContinuation ? "Continue update" : "Update";
+            return $"{action} {StorageMod.Storage.Name}/{StorageMod.Name} from {StorageMod.VersionHash.GetHashString()} to {UpdateTarget.Hash} \"{UpdateTarget.Display}\"";
+        }
+
         public StorageMod GetStorageMod() => StorageMod;
     }
 }
