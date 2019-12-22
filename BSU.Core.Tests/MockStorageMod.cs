@@ -8,7 +8,7 @@ using BSU.Hashes;
 
 namespace BSU.Core.Tests
 {
-    internal class MockStorageMod : ILocalMod, IMockedFiles
+    internal class MockStorageMod : IStorageMod, IMockedFiles
     {
         public string Identifier, DisplayName;
         public MockStorage Storage;

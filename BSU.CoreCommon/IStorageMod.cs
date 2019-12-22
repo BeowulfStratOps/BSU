@@ -4,7 +4,7 @@ using BSU.Hashes;
 
 namespace BSU.CoreCommon
 {
-    public interface ILocalMod
+    public interface IStorageMod
     {
         string GetDisplayName();
         string GetIdentifier();

@@ -6,14 +6,14 @@ namespace BSU.Core.Sync
 {
     internal class DeleteAction : WorkUnit
     {
-        public DeleteAction(ILocalMod local, string path, RepoSync sync) : base(local, path, sync)
+        public DeleteAction(IStorageMod storage, string path, RepoSync sync) : base(storage, path, sync)
         {
 
         }
 
         protected override void DoWork()
         {
-            Local.DeleteFile(Path);
+            Storage.DeleteFile(Path);
         }
     }
 }

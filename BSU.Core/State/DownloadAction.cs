@@ -3,13 +3,13 @@
     public class DownloadAction : ModAction
     {
         public readonly Storage Storage;
-        public readonly RepoMod RemoteMod;
+        public readonly RepositoryMod RepositoryMod;
         public string FolderName;
 
-        internal DownloadAction(Storage storage, RepoMod remoteMod, UpdateTarget updateTarget) : base(updateTarget)
+        internal DownloadAction(Storage storage, RepositoryMod repositoryMod, UpdateTarget updateTarget) : base(updateTarget)
         {
             Storage = storage;
-            RemoteMod = remoteMod;
+            RepositoryMod = repositoryMod;
         }
 
         public override string ToString() => "Download to " + Storage.Location;

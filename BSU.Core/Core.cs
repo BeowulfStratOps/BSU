@@ -54,7 +54,7 @@ namespace BSU.Core
             CheckUpdateSettings();
             var state = new State.State(State.GetRepositories(), State.GetStorages(), this);
             CheckJobsWithoutUpdate();
-            CheckJobsWithoutRemoteTarget(state);
+            CheckJobsWithoutRepositoryTarget(state);
             return state;
         }
 
@@ -70,7 +70,7 @@ namespace BSU.Core
         {
             foreach (var updateJob in SyncManager.GetActiveJobs())
             {
-                var target = State.GetUpdateTarget(updateJob.LocalMod);
+                var target = State.GetUpdateTarget(updateJob.StorageMod);
                 if (target == null)
                     throw new InvalidOperationException("There are hanging jobs. WTF.");
                 if (target.Hash != updateJob.Target.Hash)
@@ -78,7 +78,7 @@ namespace BSU.Core
             }
         }
 
-        private void CheckJobsWithoutRemoteTarget(State.State state)
+        private void CheckJobsWithoutRepositoryTarget(State.State state)
         {
             foreach (var updateJob in SyncManager.GetAllJobs())
             {
@@ -99,17 +99,17 @@ namespace BSU.Core
 
             foreach (var downloadAction in actions.OfType<DownloadAction>())
             {
-                var localMod = downloadAction.Storage.BackingStorage.CreateMod(downloadAction.FolderName);
-                var syncState = new RepoSync(downloadAction.RemoteMod.Mod, localMod);
-                var updateJob = new UpdateJob(localMod, downloadAction.RemoteMod.Mod, downloadAction.UpdateTarget, syncState);
+                var storageMod = downloadAction.Storage.BackingStorage.CreateMod(downloadAction.FolderName);
+                var syncState = new RepoSync(downloadAction.RepositoryMod.Mod, storageMod);
+                var updateJob = new UpdateJob(storageMod, downloadAction.RepositoryMod.Mod, downloadAction.UpdateTarget, syncState);
                 updatePacket.Jobs.Add(updateJob);
             }
 
 
             foreach (var updateAction in actions.OfType<UpdateAction>())
             {
-                var syncState = new RepoSync(updateAction.RemoteMod.Mod, updateAction.LocalMod.Mod);
-                var updateJob = new UpdateJob(updateAction.LocalMod.Mod, updateAction.RemoteMod.Mod, updateAction.UpdateTarget, syncState);
+                var syncState = new RepoSync(updateAction.RepositoryMod.Mod, updateAction.StorageMod.Mod);
+                var updateJob = new UpdateJob(updateAction.StorageMod.Mod, updateAction.RepositoryMod.Mod, updateAction.UpdateTarget, syncState);
                 updatePacket.Jobs.Add(updateJob);
             }
 
@@ -120,8 +120,8 @@ namespace BSU.Core
         {
             foreach (var job in update.Jobs)
             {
-                State.SetUpdatingTo(job.LocalMod, job.Target.Hash, job.Target.Display);
-                // TODO: do some sanity checks. two update jobs must never have the same local mod
+                State.SetUpdatingTo(job.StorageMod, job.Target.Hash, job.Target.Display);
+                // TODO: do some sanity checks. two update jobs must never have the same storage mod
                 SyncManager.QueueJob(job);
             }
         }
@@ -130,14 +130,14 @@ namespace BSU.Core
 
         public UpdateTarget GetUpdateTarget(StorageMod mod) => State.GetUpdateTarget(mod.Mod);
 
-        internal void UpdateDone(ILocalMod mod) => State.RemoveUpdatingTo(mod);
+        internal void UpdateDone(IStorageMod mod) => State.RemoveUpdatingTo(mod);
 
         public List<JobView> GetAllJobs() => SyncManager.GetAllJobs().Select(j => new JobView(j)).ToList();
         public List<JobView> GetActiveJobs() => SyncManager.GetActiveJobs().Select(j => new JobView(j)).ToList();
 
-        internal UpdateJob GetActiveJob(ILocalMod mod)
+        internal UpdateJob GetActiveJob(IStorageMod mod)
         {
-            return SyncManager.GetActiveJobs().SingleOrDefault(j => j.LocalMod == mod);
+            return SyncManager.GetActiveJobs().SingleOrDefault(j => j.StorageMod == mod);
         }
 
         internal event Action StateInvalidated;

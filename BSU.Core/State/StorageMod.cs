@@ -14,13 +14,13 @@ namespace BSU.Core.State
         public readonly VersionHash VersionHash;
         internal readonly Storage Storage;
 
-        internal readonly ILocalMod Mod;
+        internal readonly IStorageMod Mod;
 
         public readonly UpdateTarget UpdateTarget;
         internal readonly UpdateJob ActiveJob;
         public readonly List<ModAction> RelatedActions = new List<ModAction>();
 
-        internal StorageMod(ILocalMod mod, Storage storage)
+        internal StorageMod(IStorageMod mod, Storage storage)
         {
             Mod = mod;
             Storage = storage;

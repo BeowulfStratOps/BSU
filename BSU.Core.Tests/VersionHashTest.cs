@@ -126,24 +126,24 @@ namespace BSU.Core.Tests
             }
         }
 
-        private static VersionHash CreateLocal(Dictionary<string, string> files)
+        private static VersionHash CreateStorageMod(Dictionary<string, string> files)
         {
-            var local = new MockStorageMod();
-            AddFiles(local, files);
-            return new VersionHash(local);
+            var storageMod = new MockStorageMod();
+            AddFiles(storageMod, files);
+            return new VersionHash(storageMod);
         }
 
-        private static VersionHash CreateRemote(Dictionary<string, string> files)
+        private static VersionHash CreateRepositoryMod(Dictionary<string, string> files)
         {
-            var remote = new MockRemoteMod();
-            AddFiles(remote, files);
-            return new VersionHash(remote);
+            var repoMod = new MockRepositoryMod();
+            AddFiles(repoMod, files);
+            return new VersionHash(repoMod);
         }
 
         private static bool Check(Dictionary<string, string> files1, Dictionary<string, string> files2)
         {
-            var res1 = CreateLocal(files1).IsMatch(CreateRemote(files2));
-            var res2 = CreateRemote(files1).IsMatch(CreateLocal(files2));
+            var res1 = CreateStorageMod(files1).IsMatch(CreateRepositoryMod(files2));
+            var res2 = CreateRepositoryMod(files1).IsMatch(CreateStorageMod(files2));
             Assert.Equal(res1, res2);
             return res1;
         }

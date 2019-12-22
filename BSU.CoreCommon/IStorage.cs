@@ -10,7 +10,7 @@ namespace BSU.CoreCommon
         /// <returns></returns>
         bool CanWrite();
 
-        List<ILocalMod> GetMods();
+        List<IStorageMod> GetMods();
 
         /// <summary>
         /// path or smth
@@ -24,6 +24,6 @@ namespace BSU.CoreCommon
         /// <returns></returns>
         string GetIdentifier();
 
-        ILocalMod CreateMod(string identifier);
+        IStorageMod CreateMod(string identifier);
     }
 }

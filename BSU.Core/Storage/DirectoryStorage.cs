@@ -17,9 +17,9 @@ namespace BSU.Core.Storage
             _name = name;
         }
 
-        public virtual List<ILocalMod> GetMods()
+        public virtual List<IStorageMod> GetMods()
         {
-            return GetModFolders().Select(di => (ILocalMod)new DirectoryMod(di, this)).ToList();
+            return GetModFolders().Select(di => (IStorageMod)new DirectoryMod(di, this)).ToList();
         }
 
         private List<DirectoryInfo> GetModFolders()
@@ -30,7 +30,7 @@ namespace BSU.Core.Storage
         public string GetLocation() => _path;
 
         public string GetIdentifier() => _name;
-        public ILocalMod CreateMod(string identifier)
+        public IStorageMod CreateMod(string identifier)
         {
             var dir = new DirectoryInfo(Path.Combine(_path, "@" + identifier));
             if (dir.Exists) throw new InvalidOperationException("Path exists");

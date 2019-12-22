@@ -22,10 +22,10 @@ namespace BSU.Core.Tests
 
         public string GetLocation() => path;
 
-        public List<ILocalMod> GetMods() => Mods.OfType<ILocalMod>().ToList();
+        public List<IStorageMod> GetMods() => Mods.OfType<IStorageMod>().ToList();
 
         public string GetIdentifier() => name;
-        public ILocalMod CreateMod(string identifier)
+        public IStorageMod CreateMod(string identifier)
         {
             if (identifier == null) throw new ArgumentNullException();
             var newMod = new MockStorageMod { Identifier = identifier, Storage = this };

@@ -17,8 +17,8 @@ namespace BSU.Core.State
         }
     }
 
-    public interface IHasLocalMod
+    public interface IHasStorageMod
     {
-        StorageMod GetLocalMod();
+        StorageMod GetStorageMod();
     }
 }

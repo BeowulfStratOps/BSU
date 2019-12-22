@@ -13,7 +13,7 @@ namespace BSU.Core.Hashes
     {
         private readonly byte[] _hash;
 
-        public VersionHash(ILocalMod mod)
+        public VersionHash(IStorageMod mod)
         {
             var hashes = new Dictionary<string, FileHash>();
             foreach (var file in mod.GetFileList())
@@ -24,7 +24,7 @@ namespace BSU.Core.Hashes
             _hash = BuildHash(hashes);
         }
 
-        public VersionHash(IRemoteMod mod)
+        public VersionHash(IRepositoryMod mod)
         {
             _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
         }

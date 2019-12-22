@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 namespace BSU.BSO
 {
     // TODO: document it's using lower case paths only!
-    internal  class BsoRepoMod : IRemoteMod
+    internal  class BsoRepoMod : IRepositoryMod
     {
         private readonly string _url, _name;
         private readonly HashFile _hashFile;

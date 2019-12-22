@@ -18,7 +18,7 @@ namespace BSU.Core.Hashes
         private readonly string _name;
         private readonly HashSet<string> _pboNames;
 
-        public MatchHash(ILocalMod mod)
+        public MatchHash(IStorageMod mod)
         {
             var modCpp = mod.GetFile("/mod.cpp");
             if (modCpp != null)
@@ -39,7 +39,7 @@ namespace BSU.Core.Hashes
                 .ToLowerInvariant(); // TODO: get some holy water
         }
 
-        public MatchHash(IRemoteMod mod)
+        public MatchHash(IRepositoryMod mod)
         {
             var modCppData = mod.GetFile("/mod.cpp");
             if (modCppData != null)

@@ -6,13 +6,13 @@ namespace BSU.Core.Sync
 {
     internal class DownloadAction : WorkUnit
     {
-        private readonly IRemoteMod _remote;
+        private readonly IRepositoryMod _repository;
         private readonly long _sizeTotal;
         private long _sizeTodo;
 
-        public DownloadAction(IRemoteMod remote, ILocalMod local, string path, long sizeTotal, RepoSync sync) : base(local, path, sync)
+        public DownloadAction(IRepositoryMod repository, IStorageMod storage, string path, long sizeTotal, RepoSync sync) : base(storage, path, sync)
         {
-            _remote = remote;
+            _repository = repository;
             _sizeTotal = sizeTotal;
             _sizeTodo = sizeTotal;
         }
@@ -22,8 +22,8 @@ namespace BSU.Core.Sync
 
         protected override void DoWork()
         {
-            var target = Local.GetFilePath(Path.ToLowerInvariant());
-            _remote.DownloadTo(Path, target, UpdateRemaining);
+            var target = Storage.GetFilePath(Path.ToLowerInvariant());
+            _repository.DownloadTo(Path, target, UpdateRemaining);
             _sizeTodo = 0;
         }
 

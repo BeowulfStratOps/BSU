@@ -6,19 +6,15 @@ namespace BSU.Core
 {
     public class UpdateJob
     {
-        internal readonly ILocalMod LocalMod;
-        internal readonly IRemoteMod RemoteMod;
+        internal readonly IStorageMod StorageMod;
+        internal readonly IRepositoryMod RepositoryMod;
         internal readonly UpdateTarget Target;
         internal readonly RepoSync SyncState;
 
-        public delegate void JobEndedDelegate(bool success);
-        public event JobEndedDelegate JobEnded;
-        internal void SignalJobEnd(bool success) => JobEnded?.Invoke(success);
-
-        internal UpdateJob(ILocalMod localMod, IRemoteMod remoteMod, UpdateTarget target, RepoSync syncState)
+        internal UpdateJob(IStorageMod storageMod, IRepositoryMod repositoryMod, UpdateTarget target, RepoSync syncState)
         {
-            LocalMod = localMod;
-            RemoteMod = remoteMod;
+            StorageMod = storageMod;
+            RepositoryMod = repositoryMod;
             Target = target;
             SyncState = syncState;
         }

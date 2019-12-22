@@ -4,7 +4,7 @@ namespace BSU.CoreCommon
 {
     public interface IRepository
     {
-        List<IRemoteMod> GetMods();
+        List<IRepositoryMod> GetMods();
 
         /// <summary>
         /// alias. identifier of sorts.

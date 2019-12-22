@@ -42,13 +42,13 @@ namespace BSU.Core.Tests
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
             core.AddRepo("test_repo", "url/test_repo", "MOCK");
             var repo = core.State.GetRepositories().Single() as MockRepo;
-            var remoteMod = new MockRemoteMod { Identifier = "remote_test" };
-            repo.Mods.Add(remoteMod);
+            var repoMod = new MockRepositoryMod { Identifier = "repo_test" };
+            repo.Mods.Add(repoMod);
             core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
 
             foreach (var fileName in GetFileList().Keys)
             {
-                remoteMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
+                repoMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
             }
 
             var state = core.GetState();
@@ -82,8 +82,8 @@ namespace BSU.Core.Tests
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
             core.AddRepo("test_repo", "url/test_repo", "MOCK");
             var repo = core.State.GetRepositories().Single() as MockRepo;
-            var remoteMod = new MockRemoteMod { Identifier = "remote_test" };
-            repo.Mods.Add(remoteMod);
+            var repoMod = new MockRepositoryMod { Identifier = "repo_test" };
+            repo.Mods.Add(repoMod);
             core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
 
             var mod = Directory.CreateDirectory(Path.Combine(_tmpDir.FullName, "@my_mod"));
@@ -94,7 +94,7 @@ namespace BSU.Core.Tests
 
             foreach (var fileName in GetFileList().Keys)
             {
-                remoteMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
+                repoMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
             }
 
             var state = core.GetState();
@@ -126,8 +126,8 @@ namespace BSU.Core.Tests
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
             core.AddRepo("test_repo", "url/test_repo", "MOCK");
             var repo = core.State.GetRepositories().Single() as MockRepo;
-            var remoteMod = new MockRemoteMod { Identifier = "remote_test" };
-            repo.Mods.Add(remoteMod);
+            var repoMod = new MockRepositoryMod { Identifier = "repo_test" };
+            repo.Mods.Add(repoMod);
             core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
 
             var mod = Directory.CreateDirectory(Path.Combine(_tmpDir.FullName, "@my_mod"));
@@ -138,7 +138,7 @@ namespace BSU.Core.Tests
 
             foreach (var fileName in GetFileList().Keys)
             {
-                remoteMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
+                repoMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
             }
 
             var state = core.GetState();

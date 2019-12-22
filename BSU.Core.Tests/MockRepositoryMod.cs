@@ -15,7 +15,7 @@ namespace BSU.Core.Tests
         void SetFile(string key, string data);
     }
 
-    public class MockRemoteMod : IRemoteMod, IMockedFiles
+    public class MockRepositoryMod : IRepositoryMod, IMockedFiles
     {
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
         public string Identifier, DisplayName;

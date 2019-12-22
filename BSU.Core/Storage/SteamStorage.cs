@@ -27,12 +27,12 @@ namespace BSU.Core.Storage
             }
         }
 
-        public List<ILocalMod> GetMods() => _mods.Select(di => (ILocalMod)new SteamMod(di, this)).ToList();
+        public List<IStorageMod> GetMods() => _mods.Select(di => (IStorageMod)new SteamMod(di, this)).ToList();
 
         public string GetLocation() => _basePath.FullName;
 
         public string GetIdentifier() => _name;
-        public ILocalMod CreateMod(string identifier)
+        public IStorageMod CreateMod(string identifier)
         {
             throw new InvalidOperationException("Storage not writable");
         }

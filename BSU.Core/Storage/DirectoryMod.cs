@@ -8,7 +8,7 @@ using BSU.Hashes;
 
 namespace BSU.Core.Storage
 {
-    public class DirectoryMod : ILocalMod
+    public class DirectoryMod : IStorageMod
     {
         private readonly DirectoryInfo _dir;
         private readonly IStorage _parentStorage;

@@ -1,18 +1,18 @@
 ﻿namespace BSU.Core.State
 {
-    public class AwaitUpdateAction : ModAction, IHasLocalMod
+    public class AwaitUpdateAction : ModAction, IHasStorageMod
     {
-        public readonly StorageMod LocalMod;
-        public readonly RepoMod RemoteMod;
+        public readonly StorageMod StorageMod;
+        public readonly RepositoryMod RepositoryMod;
 
-        internal AwaitUpdateAction(StorageMod localMod, RepoMod remoteMod, UpdateTarget updateTarget) : base(updateTarget)
+        internal AwaitUpdateAction(StorageMod storageMod, RepositoryMod repositoryMod, UpdateTarget updateTarget) : base(updateTarget)
         {
-            LocalMod = localMod;
-            RemoteMod = remoteMod;
+            StorageMod = storageMod;
+            RepositoryMod = repositoryMod;
         }
 
-        public override string ToString() => $"Awaiting update of {LocalMod.Name} to {UpdateTarget.Hash} \"{UpdateTarget.Display}\"";
+        public override string ToString() => $"Awaiting update of {StorageMod.Name} to {UpdateTarget.Hash} \"{UpdateTarget.Display}\"";
 
-        public StorageMod GetLocalMod() => LocalMod;
+        public StorageMod GetStorageMod() => StorageMod;
     }
 }

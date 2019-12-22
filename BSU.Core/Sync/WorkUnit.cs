@@ -7,14 +7,14 @@ namespace BSU.Core.Sync
 {
     internal abstract class WorkUnit
     {
-        protected readonly ILocalMod Local;
+        protected readonly IStorageMod Storage;
         protected readonly string Path;
         private readonly RepoSync _sync;
         private bool _done;
 
-        protected WorkUnit(ILocalMod local, string path, RepoSync sync)
+        protected WorkUnit(IStorageMod storage, string path, RepoSync sync)
         {
-            Local = local;
+            Storage = storage;
             Path = path;
             _sync = sync;
         }

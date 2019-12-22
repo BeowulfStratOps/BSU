@@ -7,13 +7,13 @@ namespace BSU.Core.Sync
 {
     internal class UpdateAction : WorkUnit
     {
-        private readonly IRemoteMod _remote;
+        private readonly IRepositoryMod _repository;
         private readonly long _sizeTotal;
         private long _sizeTodo;
 
-        public UpdateAction(IRemoteMod remote, ILocalMod local, string path, long sizeTotal, RepoSync sync) : base(local, path, sync)
+        public UpdateAction(IRepositoryMod repository, IStorageMod storage, string path, long sizeTotal, RepoSync sync) : base(storage, path, sync)
         {
-            _remote = remote;
+            _repository = repository;
             _sizeTotal = sizeTotal;
             _sizeTodo = sizeTotal;
         }
@@ -23,8 +23,8 @@ namespace BSU.Core.Sync
 
         protected override void DoWork()
         {
-            var target = Local.GetFilePath(Path.ToLowerInvariant());
-            _remote.UpdateTo(Path, target, UpdateRemaining);
+            var target = Storage.GetFilePath(Path.ToLowerInvariant());
+            _repository.UpdateTo(Path, target, UpdateRemaining);
             _sizeTodo = 0;
         }
 

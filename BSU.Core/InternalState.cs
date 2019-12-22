@@ -120,29 +120,29 @@ namespace BSU.Core
             foreach (var repository in _repositories)
             {
                 Console.WriteLine($"  {repository.GetType().Name} {repository.GetName()} {repository.GetLocation()}");
-                foreach (var localMod in repository.GetMods())
+                foreach (var repoMod in repository.GetMods())
                 {
-                    Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()}");
+                    Console.WriteLine($"    {repoMod.GetIdentifier()} | {repoMod.GetDisplayName()}");
                 }
             }
             Console.WriteLine("Storages:");
             foreach (var storage in _storages)
             {
                 Console.WriteLine($"  {storage.GetType().Name} {storage.GetIdentifier()} {storage.GetLocation()}");
-                foreach (var localMod in storage.GetMods())
+                foreach (var storageMod in storage.GetMods())
                 {
-                    Console.WriteLine($"    {localMod.GetIdentifier()} | {localMod.GetDisplayName()} in {storage.GetIdentifier()}");
+                    Console.WriteLine($"    {storageMod.GetIdentifier()} | {storageMod.GetDisplayName()} in {storage.GetIdentifier()}");
                 }
             }
         }
 
-        public void SetUpdatingTo(ILocalMod mod, string targetHash, string targetDisplay)
+        public void SetUpdatingTo(IStorageMod mod, string targetHash, string targetDisplay)
         {
             _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating[mod.GetIdentifier()] = new UpdateTarget(targetHash, targetDisplay);
             _settings.Store();
         }
 
-        public void RemoveUpdatingTo(ILocalMod mod)
+        public void RemoveUpdatingTo(IStorageMod mod)
         {
             _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating.Remove(mod.GetIdentifier());
             _settings.Store();
@@ -158,7 +158,7 @@ namespace BSU.Core
             }
         }
 
-        public UpdateTarget GetUpdateTarget(ILocalMod mod)
+        public UpdateTarget GetUpdateTarget(IStorageMod mod)
         {
             var target = _settings.Storages
                 .SingleOrDefault(s => s.Name == mod.GetStorage().GetIdentifier())?.Updating.GetValueOrDefault(mod.GetIdentifier());

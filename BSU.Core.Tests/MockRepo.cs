@@ -9,7 +9,7 @@ namespace BSU.Core.Tests
         private string name;
         private string url;
 
-        public List<MockRemoteMod> Mods = new List<MockRemoteMod>();
+        public List<MockRepositoryMod> Mods = new List<MockRepositoryMod>();
 
         public MockRepo(string name, string url)
         {
@@ -19,7 +19,7 @@ namespace BSU.Core.Tests
 
         public string GetLocation() => url;
 
-        public List<IRemoteMod> GetMods() => Mods.OfType<IRemoteMod>().ToList();
+        public List<IRepositoryMod> GetMods() => Mods.OfType<IRepositoryMod>().ToList();
 
         public string GetName() => name;
     }

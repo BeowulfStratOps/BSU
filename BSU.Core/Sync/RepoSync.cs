@@ -12,32 +12,32 @@ namespace BSU.Core.Sync
         private readonly List<WorkUnit> _allActions, _actionsTodo;
         private Exception _error;
 
-        public RepoSync(IRemoteMod remote, ILocalMod local)
+        public RepoSync(IRepositoryMod repository, IStorageMod storage)
         {
             _allActions = new List<WorkUnit>();
-            var remoteList = remote.GetFileList();
-            var localList = local.GetFileList();
-            var localListCopy = new List<string>(localList);
-            foreach (var remoteFile in remoteList)
+            var repositoryList = repository.GetFileList();
+            var storageList = storage.GetFileList();
+            var storageListCopy = new List<string>(storageList);
+            foreach (var repoFile in repositoryList)
             {
-                if (localList.Contains(remoteFile))
+                if (storageList.Contains(repoFile))
                 {
-                    if (!remote.GetFileHash(remoteFile).Equals(local.GetFileHash(remoteFile)))
+                    if (!repository.GetFileHash(repoFile).Equals(storage.GetFileHash(repoFile)))
                     {
-                        _allActions.Add(new UpdateAction(remote, local, remoteFile, remote.GetFileSize(remoteFile), this));
+                        _allActions.Add(new UpdateAction(repository, storage, repoFile, repository.GetFileSize(repoFile), this));
                     }
 
-                    localListCopy.Remove(remoteFile);
+                    storageListCopy.Remove(repoFile);
                 }
                 else
                 {
-                    _allActions.Add(new DownloadAction(remote, local, remoteFile, remote.GetFileSize(remoteFile), this));
+                    _allActions.Add(new DownloadAction(repository, storage, repoFile, repository.GetFileSize(repoFile), this));
                 }
             }
 
-            foreach (var localFile in localListCopy)
+            foreach (var storageModFile in storageListCopy)
             {
-                _allActions.Add(new DeleteAction(local, localFile, this));
+                _allActions.Add(new DeleteAction(storage, storageModFile, this));
             }
             _actionsTodo = new List<WorkUnit>(_allActions);
         }

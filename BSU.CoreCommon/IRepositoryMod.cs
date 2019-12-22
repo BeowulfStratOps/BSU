@@ -4,7 +4,7 @@ using BSU.Hashes;
 
 namespace BSU.CoreCommon
 {
-    public interface IRemoteMod
+    public interface IRepositoryMod
     {
         List<string> GetFileList();
         FileHash GetFileHash(string path);

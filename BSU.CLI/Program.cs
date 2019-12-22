@@ -138,7 +138,7 @@ namespace BSU.CLI
             mod.Selected = mod.Actions[action - 1];
         }
 
-        [CliCommand("update", "Update for a remote mod.", "repo_name")]
+        [CliCommand("update", "Update for a repository mod.", "repo_name")]
         void Update(string[] args)
         {
             if (_state == null)
@@ -151,7 +151,7 @@ namespace BSU.CLI
 
             foreach (var packetJob in packet.GetJobsViews())
             {
-                Console.WriteLine($"{packetJob.GetLocalDisplayName()} -> {packetJob.GetRemoteDisplayName()}");
+                Console.WriteLine($"{packetJob.GetStorageModDisplayName()} -> {packetJob.GetRepositoryModDisplayName()}");
                 Console.WriteLine($" Download: {packetJob.GetTotalNewFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToDownload())}");
                 Console.WriteLine($" Update: {packetJob.GetTotalChangedFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToUpdate())}");
                 Console.WriteLine($" Delete: {packetJob.GetTotalDeletedFilesCount()} Files");
@@ -177,7 +177,7 @@ namespace BSU.CLI
 
             foreach (var job in jobs)
             {
-                Console.WriteLine($"{job.GetLocalDisplayName()} -> {job.GetRemoteDisplayName()}");
+                Console.WriteLine($"{job.GetStorageModDisplayName()} -> {job.GetRepositoryModDisplayName()}");
                 if (job.IsDone())
                 {
                     var error = job.GetError();

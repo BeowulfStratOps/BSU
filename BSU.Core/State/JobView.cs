@@ -18,8 +18,8 @@ namespace BSU.Core.State
             TargetHash = job.Target.Hash;
         }
 
-        public string GetLocalDisplayName() => _job.LocalMod.GetDisplayName();
-        public string GetRemoteDisplayName() => _job.RemoteMod.GetDisplayName();
+        public string GetStorageModDisplayName() => _job.StorageMod.GetDisplayName();
+        public string GetRepositoryModDisplayName() => _job.RepositoryMod.GetDisplayName();
 
         public int GetRemainingNewFilesCount() => _job.SyncState.GetRemainingNewFilesCount();
         public int GetRemainingChangedFilesCount() => _job.SyncState.GetRemainingChangedFilesCount();

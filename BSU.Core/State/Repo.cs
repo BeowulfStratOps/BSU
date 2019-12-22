@@ -7,7 +7,7 @@ namespace BSU.Core.State
 {
     public class Repo
     {
-        public readonly List<RepoMod> Mods;
+        public readonly List<RepositoryMod> Mods;
         public readonly string Name;
 
         internal readonly State State;
@@ -15,7 +15,7 @@ namespace BSU.Core.State
         internal Repo(IRepository repo, State state)
         {
             State = state;
-            Mods = repo.GetMods().Select(m => new RepoMod(m, this)).ToList();
+            Mods = repo.GetMods().Select(m => new RepositoryMod(m, this)).ToList();
             Name = repo.GetName();
         }
 

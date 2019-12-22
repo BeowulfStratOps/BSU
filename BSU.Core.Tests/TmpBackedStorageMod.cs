@@ -8,7 +8,7 @@ using BSU.Hashes;
 
 namespace BSU.Core.Tests
 {
-    internal class TmpBackedStorageMod : ILocalMod
+    internal class TmpBackedStorageMod : IStorageMod
     {
         public readonly string Identifier, DisplayName;
         public TmpBackedStorage Storage;

@@ -42,42 +42,42 @@ namespace BSU.Core.Tests
         [Fact]
         private void True1()
         {
-            Assert.True(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gg", 
+            Assert.True(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gg",
                 new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/abc.pbo" }, "gg"));
         }
 
         [Fact]
         private void True2()
         {
-            Assert.True(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gg", 
+            Assert.True(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gg",
                 new[] { "/addons/qwe_f.pbo", "/addons/asdf_f.pbo", "/addons/abc.pbo" }, "gg"));
         }
 
         [Fact]
         private void False3()
         {
-            Assert.False(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, null, 
+            Assert.False(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, null,
                 new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/abc.pbo" }, null));
         }
 
         [Fact]
         private void False0()
         {
-            Assert.False(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gl", 
+            Assert.False(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gl",
                 new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "hf"));
         }
 
         [Fact]
         private void False1()
         {
-            Assert.False(Check(new[] { "/addons/qwe1.pbo", "/addons/asdf1.pbo", "/addons/xyz.pbo" }, null, 
+            Assert.False(Check(new[] { "/addons/qwe1.pbo", "/addons/asdf1.pbo", "/addons/xyz.pbo" }, null,
                 new[] { "/addons/qwe2.pbo", "/addons/asdf2.pbo", "/addons/abc.pbo" }, null));
         }
 
         [Fact]
         private void False2()
         {
-            Assert.False(Check(new[] { "/addons/qwe.pbo.bisign", "/addons/asdf.pbo.bisign", "/addons/xyz.pbo" }, null, 
+            Assert.False(Check(new[] { "/addons/qwe.pbo.bisign", "/addons/asdf.pbo.bisign", "/addons/xyz.pbo" }, null,
                 new[] { "/addons/qwe.pbo.bisign", "/addons/asdf.pbo.bisign", "/addons/abc.pbo" }, null));
         }
 
@@ -92,24 +92,24 @@ namespace BSU.Core.Tests
             if (name != null) mod.SetFile("/mod.cpp", "name=\"" + name.Replace("\"", "\\\"") + "\";");
         }
 
-        private static MatchHash CreateLocal(string[] names, string name)
+        private static MatchHash CreateStorageMod(string[] names, string name)
         {
-            var local = new MockStorageMod();
-            AddFiles(local, names, name);
-            return new MatchHash(local);
+            var storageMod = new MockStorageMod();
+            AddFiles(storageMod, names, name);
+            return new MatchHash(storageMod);
         }
 
-        private static MatchHash CreateRemote(string[] names, string name)
+        private static MatchHash CreateRepoMod(string[] names, string name)
         {
-            var remote = new MockRemoteMod();
-            AddFiles(remote, names, name);
-            return new MatchHash(remote);
+            var repoMod = new MockRepositoryMod();
+            AddFiles(repoMod, names, name);
+            return new MatchHash(repoMod);
         }
 
         private static bool Check(string[] fileNames1, string modName1, string[] fileNames2, string modName2)
         {
-            var res1 = CreateLocal(fileNames1, modName1).IsMatch(CreateRemote(fileNames2, modName2));
-            var res2 = CreateRemote(fileNames1, modName1).IsMatch(CreateLocal(fileNames2, modName2));
+            var res1 = CreateStorageMod(fileNames1, modName1).IsMatch(CreateRepoMod(fileNames2, modName2));
+            var res2 = CreateRepoMod(fileNames1, modName1).IsMatch(CreateStorageMod(fileNames2, modName2));
             Assert.Equal(res1, res2);
             return res1;
         }
