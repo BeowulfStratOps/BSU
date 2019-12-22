@@ -33,5 +33,7 @@ namespace BSU.Core.Tests
             Mods.Add(newMod);
             return newMod;
         }
+
+        public Uid GetUid() => new Uid();
     }
 }

@@ -25,7 +25,7 @@ namespace BSU.Core.Sync
 
         protected override void DoWork()
         {
-            Logger.Trace("Downloading {0}", Path);
+            Logger.Trace("{0}, {1} Downloading {2}", _repository.GetUid(), _repository.GetUid(), Path);
             var target = Storage.GetFilePath(Path.ToLowerInvariant());
             var di = new FileInfo(target).Directory;
             if (!di.Exists) di.Create();

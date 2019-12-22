@@ -15,9 +15,11 @@ namespace BSU.Core.State
 
         internal readonly State State;
 
+        internal readonly Uid Uid = new Uid();
+
         internal Repo(IRepository repo, State state)
         {
-            Logger.Debug("Creating new repo state for {0}", repo.GetLocation());
+            Logger.Debug("Creating new repo state for {0} -> {1}", repo.GetUid(), Uid);
             State = state;
             Mods = repo.GetMods().Select(m => new RepositoryMod(m, this)).ToList();
             Name = repo.GetName();

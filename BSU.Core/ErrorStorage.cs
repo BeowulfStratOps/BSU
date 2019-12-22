@@ -26,5 +26,9 @@ namespace BSU.Core
         public string GetIdentifier() => _storageName;
 
         public IStorageMod CreateMod(string identifier) => throw new NotSupportedException();
+        public Uid GetUid()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

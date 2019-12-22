@@ -23,7 +23,7 @@ namespace BSU.Core.Hashes
 
         public MatchHash(IStorageMod mod)
         {
-            Logger.Debug("Building match hash for storage mod {0} {1}", mod.GetStorage().GetIdentifier(), mod.GetIdentifier());
+            Logger.Debug("Building match hash for storage mod {0}", mod.GetUid());
             var modCpp = mod.GetFile("/mod.cpp");
             if (modCpp != null)
             {
@@ -50,7 +50,7 @@ namespace BSU.Core.Hashes
 
         public MatchHash(IRepositoryMod mod)
         {
-            Logger.Debug("Building match hash for repo mod {0}", mod.GetIdentifier());
+            Logger.Debug("Building match hash for repo mod {0}", mod.GetUid());
             var modCppData = mod.GetFile("/mod.cpp");
             if (modCppData != null)
             {

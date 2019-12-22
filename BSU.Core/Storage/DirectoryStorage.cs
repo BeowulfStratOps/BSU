@@ -13,6 +13,9 @@ namespace BSU.Core.Storage
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _path, _name;
+        private readonly Uid _uid = new Uid();
+
+        public Uid GetUid() => _uid;
 
         public DirectoryStorage(string path, string name)
         {

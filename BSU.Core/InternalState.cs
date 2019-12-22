@@ -88,6 +88,7 @@ namespace BSU.Core
             {
                 Logger.Debug("Adding repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
                 var repository = create(repo.Name, repo.Url);
+                Logger.Debug("Created repo {0}", repository.GetUid());
                 _repositories.Add(repository);
             }
             catch (Exception e)
@@ -130,6 +131,7 @@ namespace BSU.Core
             {
                 Logger.Debug("Adding storage {0} / {1} / {2}", storage.Name, storage.Type, storage.Path);
                 var storageObj = create(storage.Name, storage.Path);
+                Logger.Debug("Created storage {0}", storageObj.GetUid());
                 _storages.Add(storageObj);
             }
             catch (Exception e)
@@ -163,15 +165,14 @@ namespace BSU.Core
 
         public void SetUpdatingTo(IStorageMod mod, string targetHash, string targetDisplay)
         {
-            Logger.Debug("Set updating: {0} / {1} to {2} : {3}", mod.GetStorage().GetIdentifier(), mod.GetIdentifier(),
-                targetHash, targetDisplay);
+            Logger.Debug("Set updating: {0} to {1} : {2}", mod.GetUid(), targetHash, targetDisplay);
             _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating[mod.GetIdentifier()] = new UpdateTarget(targetHash, targetDisplay);
             _settings.Store();
         }
 
         public void RemoveUpdatingTo(IStorageMod mod)
         {
-            Logger.Debug("Remove updating: {0} / {1}", mod.GetStorage().GetIdentifier(), mod.GetIdentifier());
+            Logger.Debug("Remove updating: {0}", mod.GetUid());
             _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating.Remove(mod.GetIdentifier());
             _settings.Store();
         }

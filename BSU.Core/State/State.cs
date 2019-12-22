@@ -16,11 +16,13 @@ namespace BSU.Core.State
         internal readonly Core Core;
         public bool IsValid { get; private set; }
 
+        internal readonly Uid Uid = new Uid();
+
         public event Action Invalidated;
 
         internal State(IEnumerable<IRepository> repos, IEnumerable<IStorage> storages, Core core)
         {
-            Logger.Debug("Creating new state");
+            Logger.Debug("Creating new state {0}", Uid);
             Core = core;
             core.StateInvalidated += InvalidateState; // TODO: does that mess with GC?
             Logger.Debug("Creating storage states");
@@ -29,7 +31,7 @@ namespace BSU.Core.State
             Repos = repos.Select(r => new Repo(r, this)).ToList();
             foreach (var repo in Repos)
             {
-                Logger.Debug("Collecting conflicts in repo {0}", repo.Name);
+                Logger.Debug("Collecting conflicts in repo {0}", repo.Uid);
                 repo.CollectConflicts();
             }
         }

@@ -26,12 +26,14 @@ namespace BSU.Core.Tests
         private MockRepo AddRepo(Core core, string name)
         {
             core.AddRepo(name, "url/" + name, "MOCK");
+            Assert.IsType<MockRepo>(core.State.GetRepositories().Single());
             return core.State.GetRepositories().Single() as MockRepo;
         }
 
         private TmpBackedStorage AddStorage(Core core, string name)
         {
             core.AddStorage(name, new DirectoryInfo("path/" + name), "TMPBACKED");
+            Assert.IsType<TmpBackedStorage>(core.State.GetStorages().Single());
             return core.State.GetStorages().Single() as TmpBackedStorage;
         }
 

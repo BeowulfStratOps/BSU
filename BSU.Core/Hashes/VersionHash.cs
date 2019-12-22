@@ -18,7 +18,7 @@ namespace BSU.Core.Hashes
 
         public VersionHash(IStorageMod mod)
         {
-            Logger.Debug("Building version hash from storage mod {0} / {1}", mod.GetStorage().GetIdentifier(), mod.GetIdentifier());
+            Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
             var hashes = new Dictionary<string, FileHash>();
             foreach (var file in mod.GetFileList())
             {
@@ -30,7 +30,7 @@ namespace BSU.Core.Hashes
 
         public VersionHash(IRepositoryMod mod)
         {
-            Logger.Debug("Building version hash from storage mod {0}}", mod.GetIdentifier());
+            Logger.Debug("Building version hash from storage mod {0}}", mod.GetUid());
             _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
         }
 

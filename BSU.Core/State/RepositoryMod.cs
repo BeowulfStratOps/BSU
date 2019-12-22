@@ -22,10 +22,12 @@ namespace BSU.Core.State
 
         internal readonly IRepositoryMod Mod;
 
+        internal readonly Uid Uid = new Uid();
+
         // TODO: find a better place for that
         internal RepositoryMod(IRepositoryMod mod, Repo repo)
         {
-            Logger.Debug("Creating new state for repo mod {0}", mod.GetIdentifier());
+            Logger.Debug("Creating new state for repo mod {0} -> {1}", mod.GetUid(), Uid);
 
             Repo = repo;
             Mod = mod;
@@ -54,7 +56,7 @@ namespace BSU.Core.State
 
             foreach (var storageMod in storageModMatches)
             {
-                Logger.Debug("Checking local match {0} / {1}", storageMod.Storage.Name, storageMod.Name);
+                Logger.Debug("Checking local match {0}", storageMod.Uid);
                 ModAction action;
                 if (VersionHash.IsMatch(storageMod.VersionHash) && storageMod.UpdateTarget == null)
                     action = new UseAction(storageMod, target);

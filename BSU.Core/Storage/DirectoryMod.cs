@@ -17,6 +17,10 @@ namespace BSU.Core.Storage
         private readonly IStorage _parentStorage;
         private string _displayName;
 
+        private readonly Uid _uid = new Uid();
+
+        public Uid GetUid() => _uid;
+
         public DirectoryMod(DirectoryInfo dir, IStorage parentStorage)
         {
             _dir = dir;

@@ -20,14 +20,16 @@ namespace BSU.BSO
         private readonly HashFile _hashFile;
         private string _displayName;
 
+        private readonly Uid _uid = new Uid();
+
         public List<string> GetFileList() => _hashFile.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
 
         public byte[] GetFile(string path)
         {
             using var client = new WebClient();
-            Logger.Debug("Downloading content file from {0} / {1}", _url, path);
+            Logger.Debug("{0} Downloading content file from {1} / {2}", _uid, _url, path);
             var data = client.DownloadData(_url + GetRealPath(path));
-            Logger.Debug("Finsihed downloading content file from {0} / {1}", _url, path);
+            Logger.Debug("{0} Finsihed downloading content file from {1} / {2}", _uid, _url, path);
             return data;
         }
 
@@ -41,9 +43,9 @@ namespace BSU.BSO
             _name = name;
 
             using var client = new WebClient();
-            Logger.Debug("Downloading hash file from {0}", _url);
+            Logger.Debug("{0} Downloading hash file from {1}", _uid, _url);
             var hashFileJson = client.DownloadString(_url + "/hash.json");
-            Logger.Debug("Finished downloading hash file from {0}", _url);
+            Logger.Debug("{0} Finished downloading hash file from {1}", _uid, _url);
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
         }
 
@@ -56,7 +58,7 @@ namespace BSU.BSO
             if (_hashFile.Hashes.Any(h => h.FileName == path))
             {
                 using var client = new WebClient();
-                Logger.Debug("Downloading mod.cpp from {0}", _url);
+                Logger.Debug("{0} Downloading mod.cpp from {1}", _uid, _url);
                 modCpp = client.DownloadString(_url + path);
             }
 
@@ -84,15 +86,17 @@ namespace BSU.BSO
             var url = _url + GetRealPath(path);
 
             using var client = new WebClient();
-            Logger.Debug("Downloading content {0} / {1}", _url, path);
+            Logger.Debug("{0} Downloading content {1} / {2}", _uid, _url, path);
             client.DownloadProgressChanged += (sender, args) => updateCallback(args.BytesReceived);
             client.DownloadFile(url, filePath);
-            Logger.Debug("Finished downloading content {0} / {1}", _url, path);
+            Logger.Debug("{0} Finished downloading content {1} / {2}", _uid, _url, path);
         }
 
         public void UpdateTo(string path, string filePath, Action<long> updateCallback)
         {
             DownloadTo(path, filePath, updateCallback);
         }
+
+        public Uid GetUid() => _uid;
     }
 }

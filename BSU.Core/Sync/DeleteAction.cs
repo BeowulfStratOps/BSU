@@ -16,7 +16,7 @@ namespace BSU.Core.Sync
 
         protected override void DoWork()
         {
-            Logger.Trace("Deleting {0}",  Path);
+            Logger.Trace("{0} Deleting {1}",  Storage.GetUid(), Path);
             Storage.DeleteFile(Path);
         }
     }

@@ -32,11 +32,6 @@ namespace BSU.Core.Tests
 
         public string GetIdentifier() => Identifier;
 
-        public string GetVersionIdentifier()
-        {
-            throw new System.NotImplementedException();
-        }
-
         public FileHash GetFileHash(string path)
         {
             return new SHA1AndPboHash(new MemoryStream(GetFile(path)), Utils.GetExtension(path));
@@ -59,25 +54,7 @@ namespace BSU.Core.Tests
         {
             DownloadTo(path, filePath, updateCallback);
         }
-    }
 
-    class MockModFileInfo
-    {
-        private readonly string _path;
-        private readonly string _content;
-
-        public MockModFileInfo(string path, string content)
-        {
-            _path = path;
-            _content = content;
-        }
-
-        public byte[] GetFileHash()
-        {
-            using var sha1 = SHA1.Create();
-            return sha1.ComputeHash(Encoding.UTF8.GetBytes(_content));
-        }
-
-        public string GetPath() => _path;
+        public Uid GetUid() => new Uid();
     }
 }

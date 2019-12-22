@@ -23,9 +23,11 @@ namespace BSU.Core.State
         internal readonly UpdateJob ActiveJob;
         public readonly List<ModAction> RelatedActions = new List<ModAction>();
 
+        internal readonly Uid Uid = new Uid();
+
         internal StorageMod(IStorageMod mod, Storage storage)
         {
-            Logger.Debug("Creating state for storage mod {0} / {1}", mod.GetStorage().GetIdentifier(), mod.GetIdentifier());
+            Logger.Debug("Creating state for storage mod {0} -> {1}", mod.GetUid(), Uid);
             Mod = mod;
             Storage = storage;
             Name = mod.GetIdentifier();
@@ -36,7 +38,7 @@ namespace BSU.Core.State
 
             if (VersionHash.GetHashString().Equals(UpdateTarget?.Hash))
             {
-                Logger.Info("Storage Mod {0} / {1} has met its update target.", mod.GetStorage().GetIdentifier(), mod.GetIdentifier());
+                Logger.Info("Storage Mod {0} has met its update target.", mod.GetUid());
                 storage.State.Core.UpdateDone(mod);
                 UpdateTarget = null;
             }

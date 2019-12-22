@@ -14,5 +14,6 @@ namespace BSU.CoreCommon
         long GetFileSize(string path);
         void DownloadTo(string path, string filePath, Action<long> updateCallback);
         void UpdateTo(string path, string filePath, Action<long> updateCallback);
+        Uid GetUid();
     }
 }

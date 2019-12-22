@@ -50,5 +50,7 @@ namespace BSU.Core.Tests
         {
             throw new NotSupportedException();
         }
+
+        public Uid GetUid() => new Uid();
     }
 }

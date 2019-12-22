@@ -21,5 +21,9 @@ namespace BSU.Core
         public string GetName() => _name;
 
         public string GetLocation() => _url;
+        public Uid GetUid()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

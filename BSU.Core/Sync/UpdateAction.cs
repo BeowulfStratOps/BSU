@@ -27,7 +27,7 @@ namespace BSU.Core.Sync
 
         protected override void DoWork()
         {
-            Logger.Trace("Updating {0}", Path);
+            Logger.Trace("{0}, {1} Updating {2}", Storage.GetUid(), _repository.GetUid(), Path);
             var target = Storage.GetFilePath(Path.ToLowerInvariant());
             _repository.UpdateTo(Path, target, UpdateRemaining);
             _sizeTodo = 0;

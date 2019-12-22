@@ -13,6 +13,8 @@ namespace BSU.Core.State
         public readonly string Name;
         internal readonly IStorage BackingStorage;
 
+        internal readonly Uid Uid = new Uid();
+
         internal Storage(IStorage storage, State state)
         {
             BackingStorage = storage;

@@ -18,6 +18,7 @@ namespace BSU.Core.Tests
         }
 
         public string GetLocation() => url;
+        public Uid GetUid() => new Uid();
 
         public List<IRepositoryMod> GetMods() => Mods.OfType<IRepositoryMod>().ToList();
 

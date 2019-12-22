@@ -18,7 +18,7 @@ namespace BSU.Core
 
         public void QueueJob(UpdateJob job)
         {
-            Logger.Debug("Queueing job {0} -> {1}", job.StorageMod.GetIdentifier(), job.RepositoryMod.GetIdentifier());
+            Logger.Debug("Queueing job {0} -> {1}", job.StorageMod.GetUid(), job.RepositoryMod.GetUid());
 
             _allJobs.Add(job);
             lock (_jobsTodo)
@@ -46,7 +46,7 @@ namespace BSU.Core
                     return null;
                 }
                 var job = _jobsTodo.First();
-                Logger.Trace("Checking job {0} -> {1}", job.StorageMod.GetIdentifier(), job.RepositoryMod.GetIdentifier());
+                Logger.Trace("Checking job {0} -> {1}", job.StorageMod.GetUid(), job.RepositoryMod.GetUid());
                 WorkUnit work;
                 try
                 {

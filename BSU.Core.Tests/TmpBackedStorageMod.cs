@@ -60,5 +60,6 @@ namespace BSU.Core.Tests
         public IStorage GetStorage() => Storage;
 
         public string GetFilePath(string path) => GetFileInfo(path).FullName;
+        public Uid GetUid() => new Uid();
     }
 }

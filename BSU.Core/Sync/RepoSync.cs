@@ -14,9 +14,11 @@ namespace BSU.Core.Sync
         private readonly List<WorkUnit> _allActions, _actionsTodo;
         private Exception _error;
 
+        internal readonly Uid Uid = new Uid();
+
         public RepoSync(IRepositoryMod repository, IStorageMod storage)
         {
-            Logger.Debug("Building sync actions");
+            Logger.Debug("Building sync actions {0} to {1}: {2}", storage.GetUid(), repository.GetUid(), Uid);
 
             _allActions = new List<WorkUnit>();
             var repositoryList = repository.GetFileList();

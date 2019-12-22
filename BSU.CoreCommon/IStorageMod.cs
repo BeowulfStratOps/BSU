@@ -14,5 +14,6 @@ namespace BSU.CoreCommon
         IStorage GetStorage();
         void DeleteFile(string path);
         string GetFilePath(string path);
+        Uid GetUid();
     }
 }

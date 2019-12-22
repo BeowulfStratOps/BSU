@@ -17,13 +17,15 @@ namespace BSU.BSO
         private readonly string _url, _name;
         private readonly List<IRepositoryMod> _mods;
 
+        private readonly Uid _uid = new Uid();
+
         public BsoRepo(string url, string name)
         {
             _url = url;
             _name = name;
 
             using var client = new WebClient();
-            Logger.Debug("Downloading server file from {0}", _url);
+            Logger.Debug("{0] Downloading server file from {1}", _uid, _url);
             var serverFileJson = client.DownloadString(_url);
             var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
 
@@ -41,5 +43,6 @@ namespace BSU.BSO
         public string GetName() => _name;
 
         public string GetLocation() => _url;
+        public Uid GetUid() => _uid;
     }
 }

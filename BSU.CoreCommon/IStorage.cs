@@ -25,5 +25,6 @@ namespace BSU.CoreCommon
         string GetIdentifier();
 
         IStorageMod CreateMod(string identifier);
+        Uid GetUid();
     }
 }
