@@ -6,7 +6,6 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
 {
-    // TODO: think about thread safety real hard
     class RepoSync
     {
         private readonly List<WorkUnit> _allActions, _actionsTodo;

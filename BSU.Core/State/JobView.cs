@@ -2,7 +2,6 @@
 
 namespace BSU.Core.State
 {
-    // TODO: is this class actually necessary at all??
     public class JobView
     {
         private readonly UpdateJob _job;

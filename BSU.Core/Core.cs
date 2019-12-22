@@ -93,8 +93,6 @@ namespace BSU.Core
 
             var actions = todos.Select(m => m.Selected).ToList();
 
-            // TODO: make sure download folder names don't overlap
-
             var updatePacket = new UpdatePacket(this);
 
             foreach (var downloadAction in actions.OfType<DownloadAction>())
