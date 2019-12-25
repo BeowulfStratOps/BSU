@@ -16,4 +16,10 @@
     <ProjectReference Include="..\BSU.Hashes\BSU.Hashes.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="nlog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

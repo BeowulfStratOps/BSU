@@ -51,7 +51,7 @@ namespace BSU.Core.Storage
         {
             try
             {
-                Logger.Trace("Reading file {0}", path);
+                Logger.Trace("{0} Reading file {1}", _uid, path);
                 return File.OpenRead(GetFullFilePath(path));
             }
             catch (FileNotFoundException)

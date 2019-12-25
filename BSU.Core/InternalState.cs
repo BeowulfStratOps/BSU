@@ -36,7 +36,7 @@ namespace BSU.Core
 
         public InternalState(ISettings settings)
         {
-            Logger.Info("Creating neew internal state");
+            Logger.Info("Creating new internal state");
             _settings = settings;
             foreach (var repoEntry in _settings.Repositories)
             {

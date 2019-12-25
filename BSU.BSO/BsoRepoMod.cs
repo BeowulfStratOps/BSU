@@ -27,9 +27,9 @@ namespace BSU.BSO
         public byte[] GetFile(string path)
         {
             using var client = new WebClient();
-            Logger.Debug("{0} Downloading content file from {1} / {2}", _uid, _url, path);
+            Logger.Debug("{0} Downloading file from {1} / {2}", _uid, _url, path);
             var data = client.DownloadData(_url + GetRealPath(path));
-            Logger.Debug("{0} Finsihed downloading content file from {1} / {2}", _uid, _url, path);
+            Logger.Debug("{0} Finsihed downloading {1} / {2}", _uid, _url, path);
             return data;
         }
 
@@ -45,7 +45,7 @@ namespace BSU.BSO
             using var client = new WebClient();
             Logger.Debug("{0} Downloading hash file from {1}", _uid, _url);
             var hashFileJson = client.DownloadString(_url + "/hash.json");
-            Logger.Debug("{0} Finished downloading hash file from {1}", _uid, _url);
+            Logger.Debug("{0} Finished downloading hash file", _uid);
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
         }
 
