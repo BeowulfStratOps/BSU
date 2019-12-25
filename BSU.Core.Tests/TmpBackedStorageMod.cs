@@ -10,7 +10,7 @@ namespace BSU.Core.Tests
 {
     internal class TmpBackedStorageMod : IStorageMod
     {
-        public readonly string Identifier, DisplayName;
+        public readonly string Identifier;
         public TmpBackedStorage Storage;
         private readonly DirectoryInfo _baseTmp;
 
@@ -37,7 +37,7 @@ namespace BSU.Core.Tests
 
         public bool FileExists(string path) => GetFileInfo(path).Exists;
 
-        public string GetDisplayName() => DisplayName;
+        public string GetDisplayName() => throw new NotImplementedException();
 
         public Stream GetFile(string path)
         {

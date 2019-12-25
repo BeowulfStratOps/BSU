@@ -10,7 +10,7 @@ namespace BSU.Core.Tests
 {
     internal class MockStorageMod : IStorageMod, IMockedFiles
     {
-        public string Identifier, DisplayName;
+        public string Identifier;
         public MockStorage Storage;
 
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
@@ -28,7 +28,7 @@ namespace BSU.Core.Tests
 
         public string GetSpecialFilePath(string path) => path;
 
-        public string GetDisplayName() => DisplayName;
+        public string GetDisplayName() => throw new NotImplementedException();
 
         public Stream GetFile(string path)
         {

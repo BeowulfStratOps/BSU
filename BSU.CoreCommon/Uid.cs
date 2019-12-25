@@ -5,7 +5,7 @@
         private static int _next = 1;
         private static readonly object Lock = new object();
 
-        public int Id { get; private set; }
+        private int Id { get; }
 
         public Uid()
         {

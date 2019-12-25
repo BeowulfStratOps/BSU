@@ -34,17 +34,37 @@ namespace BSU.Core
         internal void AddStorageType(string name, Func<string, string, IStorage> create) => _storageTypes.Add(name, create);
         internal List<string> GetStorageTypes() => _storageTypes.Keys.ToList();
 
+        private readonly List<Tuple<RepoEntry, Exception>> _repoErrors = new List<Tuple<RepoEntry, Exception>>();
+        private readonly List<Tuple<StorageEntry, Exception>> _storageErrors = new List<Tuple<StorageEntry, Exception>>();
+        // TODO: expose those to user
+        public IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors() => _repoErrors.AsReadOnly();
+        public IReadOnlyList<Tuple<StorageEntry, Exception>> GetStorageErrors() => _storageErrors.AsReadOnly();
+
         public InternalState(ISettings settings)
         {
             Logger.Info("Creating new internal state");
             _settings = settings;
             foreach (var repoEntry in _settings.Repositories)
             {
-                AddRepoToState(repoEntry);
+                try
+                {
+                    AddRepoToState(repoEntry);
+                }
+                catch (Exception e)
+                {
+                    _repoErrors.Add(Tuple.Create(repoEntry, e));
+                }
             }
             foreach (var storageEntry in _settings.Storages)
             {
-                AddStorageToState(storageEntry);
+                try
+                {
+                    AddStorageToState(storageEntry);
+                }
+                catch (Exception e)
+                {
+                    _storageErrors.Add(Tuple.Create(storageEntry, e));
+                }
             }
         }
 
@@ -80,22 +100,14 @@ namespace BSU.Core
         }
 
 
-        private void AddRepoToState(RepoEntry repo)
+        private void AddRepoToState(RepoEntry repo, bool tolerateErrors = false)
         {
             if (!_repoTypes.TryGetValue(repo.Type, out var create)) throw new NotSupportedException($"Repo type {repo.Type} is not supported.");
 
-            try
-            {
-                Logger.Debug("Adding repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
-                var repository = create(repo.Name, repo.Url);
-                Logger.Debug("Created repo {0}", repository.GetUid());
-                _repositories.Add(repository);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-                _repositories.Add(new ErrorRepo(repo.Name, repo.Url, e.Message));
-            }
+            Logger.Debug("Adding repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
+            var repository = create(repo.Name, repo.Url);
+            Logger.Debug("Created repo {0}", repository.GetUid());
+            _repositories.Add(repository);
         }
 
         public void AddStorage(string name, DirectoryInfo directory, string type)
@@ -127,18 +139,10 @@ namespace BSU.Core
         {
             if (!_storageTypes.TryGetValue(storage.Type, out var create)) throw new NotSupportedException($"Storage type {storage.Type} is not supported.");
 
-            try
-            {
-                Logger.Debug("Adding storage {0} / {1} / {2}", storage.Name, storage.Type, storage.Path);
-                var storageObj = create(storage.Name, storage.Path);
-                Logger.Debug("Created storage {0}", storageObj.GetUid());
-                _storages.Add(storageObj);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-                _storages.Add(new ErrorStorage(storage.Name, storage.Path, e.Message));
-            }
+            Logger.Debug("Adding storage {0} / {1} / {2}", storage.Name, storage.Type, storage.Path);
+            var storageObj = create(storage.Name, storage.Path);
+            Logger.Debug("Created storage {0}", storageObj.GetUid());
+            _storages.Add(storageObj);
         }
 
         public void PrintState()
