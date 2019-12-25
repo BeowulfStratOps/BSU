@@ -24,10 +24,6 @@ namespace BSU.Core.Tests
 
         public void DeleteFile(string path) => Files.Remove(path);
 
-        public bool FileExists(string path) => Files.ContainsKey(path);
-
-        public string GetSpecialFilePath(string path) => path;
-
         public string GetDisplayName() => throw new NotImplementedException();
 
         public Stream GetFile(string path)

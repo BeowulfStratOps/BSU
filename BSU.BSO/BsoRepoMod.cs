@@ -33,9 +33,9 @@ namespace BSU.BSO
             return data;
         }
 
-        private string GetRealPath(string path) => GetFileEntry(path).FileName;
+        private string GetRealPath(string path) => GetFileEntry(path)?.FileName;
 
-        private HashType GetFileEntry(string path) => _hashFile.Hashes.Single(h => h.FileName.ToLowerInvariant() == path);
+        private HashType GetFileEntry(string path) => _hashFile.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
         public BsoRepoMod(string url, string name)
         {
@@ -54,12 +54,12 @@ namespace BSU.BSO
             if (_displayName != null) return _displayName;
 
             string modCpp = null;
-            var path = GetRealPath("/mod.cpp");
-            if (_hashFile.Hashes.Any(h => h.FileName == path))
+            var modCppEntry = GetFileEntry("/mod.cpp");
+            if (modCppEntry != null)
             {
                 using var client = new WebClient();
                 Logger.Debug("{0} Downloading mod.cpp from {1}", _uid, _url);
-                modCpp = client.DownloadString(_url + path);
+                modCpp = client.DownloadString(_url + modCppEntry.FileName);
             }
 
             // TODO: make case insensitive

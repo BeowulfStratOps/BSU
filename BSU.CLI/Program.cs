@@ -36,7 +36,11 @@ namespace BSU.CLI
                 Console.Write("> ");
                 var command = Console.ReadLine();
                 Logger.Info("Issued command {0}", command);
-                if (command == "exit") return 0;
+                if (command == "exit")
+                {
+                    _core.Shutdown();
+                    return 0;
+                }
                 try
                 {
                     commands.Process(command);

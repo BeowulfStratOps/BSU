@@ -126,6 +126,7 @@ namespace BSU.Core
             {
                 State.SetUpdatingTo(job.StorageMod, job.Target.Hash, job.Target.Display);
                 // TODO: do some sanity checks. two update jobs must never have the same storage mod
+                job.SyncState.SyncEnded += s => { InvalidateState(); };
                 SyncManager.QueueJob(job);
             }
         }
@@ -142,6 +143,12 @@ namespace BSU.Core
         internal UpdateJob GetActiveJob(IStorageMod mod)
         {
             return SyncManager.GetActiveJobs().SingleOrDefault(j => j.StorageMod == mod);
+        }
+
+        public void Shutdown()
+        {
+            // stop all threads
+            throw new NotImplementedException();
         }
 
         internal event Action StateInvalidated;
