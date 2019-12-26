@@ -12,6 +12,7 @@ using DownloadAction = BSU.Core.State.DownloadAction;
 using UpdateAction = BSU.Core.State.UpdateAction;
 
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
+[assembly: InternalsVisibleTo("RealTest")]
 
 namespace BSU.Core
 {
