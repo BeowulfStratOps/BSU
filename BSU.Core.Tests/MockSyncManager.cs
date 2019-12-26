@@ -11,6 +11,10 @@ namespace BSU.Core.Tests
             _jobs.Add(job);
         }
 
+        public void Shutdown()
+        {
+        }
+
         public IReadOnlyList<UpdateJob> GetActiveJobs() => _jobs.AsReadOnly();
         public IReadOnlyList<UpdateJob> GetAllJobs() => _jobs.AsReadOnly();
     }

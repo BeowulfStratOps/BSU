@@ -33,6 +33,11 @@ namespace BSU.Core.Tests
             return newMod;
         }
 
+        public void RemoveMod(string identifier)
+        {
+            Mods.RemoveAll(m => m.Identifier == identifier);
+        }
+
         public Uid GetUid() => new Uid();
     }
 }

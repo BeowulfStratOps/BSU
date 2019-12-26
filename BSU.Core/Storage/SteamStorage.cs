@@ -15,7 +15,7 @@ namespace BSU.Core.Storage
         private Uid _uid = new Uid();
 
         public Uid GetUid() => _uid;
-        
+
         public SteamStorage(string path, string name)
         {
             // C:\Program Files (x86)\Steam\steamapps\workshop\content\107410
@@ -38,6 +38,11 @@ namespace BSU.Core.Storage
 
         public string GetIdentifier() => _name;
         public IStorageMod CreateMod(string identifier)
+        {
+            throw new InvalidOperationException("Storage not writable");
+        }
+
+        public void RemoveMod(string identifier)
         {
             throw new InvalidOperationException("Storage not writable");
         }

@@ -34,6 +34,12 @@ namespace BSU.Core.Tests
             return newMod;
         }
 
+        public void RemoveMod(string identifier)
+        {
+            Mods.RemoveAll(m => m.Identifier == identifier);
+            // TODO: remove folder?
+        }
+
         public Uid GetUid() => new Uid();
     }
 }

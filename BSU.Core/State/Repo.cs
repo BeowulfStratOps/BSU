@@ -35,7 +35,7 @@ namespace BSU.Core.State
 
         public UpdatePacket PrepareUpdate()
         {
-            return State.Core.PrepareUpdate(this);
+            return State.Core.PrepareUpdate(this, State);
         }
     }
 }

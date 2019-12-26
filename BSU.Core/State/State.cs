@@ -14,7 +14,7 @@ namespace BSU.Core.State
         public readonly List<Repo> Repos;
         public readonly List<Storage> Storages;
         internal readonly Core Core;
-        public bool IsValid { get; private set; }
+        public bool IsValid { get; private set; } = true;
 
         internal readonly Uid Uid = new Uid();
 

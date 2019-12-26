@@ -91,18 +91,19 @@ namespace BSU.Core
             }
         }
 
-        internal UpdatePacket PrepareUpdate(Repo repo)
+        internal UpdatePacket PrepareUpdate(Repo repo, State.State state)
         {
             Logger.Debug("Preparing update");
             var todos = repo.Mods.Where(m => m.Selected != null && !(m.Selected is UseAction)).ToList();
 
             var actions = todos.Select(m => m.Selected).ToList();
 
-            var updatePacket = new UpdatePacket(this);
+            var updatePacket = new UpdatePacket(this, state);
 
             foreach (var downloadAction in actions.OfType<DownloadAction>())
             {
                 var storageMod = downloadAction.Storage.BackingStorage.CreateMod(downloadAction.FolderName);
+                updatePacket.Rollback.Add(() => downloadAction.Storage.BackingStorage.RemoveMod(downloadAction.FolderName));
                 var syncState = new RepoSync(downloadAction.RepositoryMod.Mod, storageMod);
                 var updateJob = new UpdateJob(storageMod, downloadAction.RepositoryMod.Mod, downloadAction.UpdateTarget, syncState);
                 updatePacket.Jobs.Add(updateJob);
@@ -122,6 +123,7 @@ namespace BSU.Core
         internal void DoUpdate(UpdatePacket update)
         {
             Logger.Debug("Doing update");
+            InvalidateState();
             foreach (var job in update.Jobs)
             {
                 State.SetUpdatingTo(job.StorageMod, job.Target.Hash, job.Target.Display);

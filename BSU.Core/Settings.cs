@@ -6,7 +6,7 @@ using NLog;
 
 namespace BSU.Core
 {
-    class Settings : ISettings
+    internal class Settings : ISettings
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -21,6 +21,7 @@ namespace BSU.Core
 
         public static Settings Load(FileInfo path)
         {
+            path.Refresh();
             Logger.Debug("Loading settings from {0}", path.FullName);
             if (!path.Exists) return new Settings(path, new SettingsData());
             var json = File.ReadAllText(path.FullName);

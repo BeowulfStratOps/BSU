@@ -46,6 +46,13 @@ namespace BSU.Core.Storage
             return new DirectoryMod(dir, this);
         }
 
+        public void RemoveMod(string identifier)
+        {
+            var dir = new DirectoryInfo(Path.Combine(_path, "@" + identifier));
+            if (!dir.Exists) throw new InvalidOperationException("Path doesn't exist");
+            dir.Delete(true);
+        }
+
         public virtual bool CanWrite() => true;
     }
 }
