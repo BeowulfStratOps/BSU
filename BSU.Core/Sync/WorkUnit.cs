@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
@@ -10,6 +11,7 @@ namespace BSU.Core.Sync
         protected readonly IStorageMod Storage;
         protected readonly string Path;
         private readonly RepoSync _sync;
+        private readonly CancellationToken _token;
         private bool _done;
 
         protected WorkUnit(IStorageMod storage, string path, RepoSync sync)
@@ -17,18 +19,19 @@ namespace BSU.Core.Sync
             Storage = storage;
             Path = path;
             _sync = sync;
+            _token = sync.GetCancellationToken();
         }
 
         private Exception _error;
 
         public void Work()
         {
-            DoWork();
+            DoWork(_token);
             _done = true;
             _sync.CheckDone();
         }
 
-        protected abstract void DoWork();
+        protected abstract void DoWork(CancellationToken token);
         public bool IsDone() => _done;
 
         internal void SetError(Exception e)

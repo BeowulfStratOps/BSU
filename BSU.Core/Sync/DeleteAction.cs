@@ -14,7 +14,7 @@ namespace BSU.Core.Sync
 
         }
 
-        protected override void DoWork()
+        protected override void DoWork(CancellationToken token)
         {
             Logger.Trace("{0} Deleting {1}",  Storage.GetUid(), Path);
             Storage.DeleteFile(Path);

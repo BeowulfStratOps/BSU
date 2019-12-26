@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using BSU.Hashes;
 
 namespace BSU.CoreCommon
@@ -12,8 +13,8 @@ namespace BSU.CoreCommon
         string GetDisplayName();
         string GetIdentifier();
         long GetFileSize(string path);
-        void DownloadTo(string path, string filePath, Action<long> updateCallback);
-        void UpdateTo(string path, string filePath, Action<long> updateCallback);
+        void DownloadTo(string path, string filePath, Action<long> updateCallback, CancellationToken token);
+        void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token);
         Uid GetUid();
     }
 }

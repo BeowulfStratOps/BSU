@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using BSU.CoreCommon;
 using NLog;
 
@@ -15,6 +16,10 @@ namespace BSU.Core.Sync
         private Exception _error;
 
         internal readonly Uid Uid = new Uid();
+
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        public CancellationToken GetCancellationToken() => _cancellationTokenSource.Token;
 
         public RepoSync(IRepositoryMod repository, IStorageMod storage)
         {
@@ -73,13 +78,13 @@ namespace BSU.Core.Sync
 
         public WorkUnit GetWork()
         {
-            if (Aborted) return null;
+            if (_cancellationTokenSource.IsCancellationRequested) return null;
             var work = _actionsTodo.FirstOrDefault();
             if (work != null) _actionsTodo.Remove(work);
             return work;
         }
 
-        public bool IsDone() => HasError() || _allActions.All(a => a.IsDone() || a.HasError());
+        public bool IsDone() => _cancellationTokenSource.IsCancellationRequested || HasError() || _allActions.All(a => a.IsDone() || a.HasError()); // TODO: wait for job to be fully canceled OR split IsDone into more meaningful parts
 
         internal void SetError(Exception e) => _error = e;
 
@@ -95,8 +100,7 @@ namespace BSU.Core.Sync
             return _allActions.FirstOrDefault(a => a.HasError())?.GetError();
         }
 
-        public bool Aborted { get; private set; }
-        public void Abort() => Aborted = true;
+        public void Abort() => _cancellationTokenSource.Cancel();
 
 
         public delegate void SyncEndedDelegate(bool success);

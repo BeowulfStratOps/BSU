@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using BSU.BSO.FileStructures;
 using BSU.CoreCommon;
 using BSU.Hashes;
@@ -81,7 +82,7 @@ namespace BSU.BSO
 
         public long GetFileSize(string path) => GetFileEntry(path).FileSize;
 
-        public void DownloadTo(string path, string filePath, Action<long> updateCallback)
+        public void DownloadTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
         {
             var url = _url + GetRealPath(path);
 
@@ -89,12 +90,13 @@ namespace BSU.BSO
             Logger.Debug("{0} Downloading content {1} / {2}", _uid, _url, path);
             client.DownloadProgressChanged += (sender, args) => updateCallback(args.BytesReceived);
             client.DownloadFile(url, filePath);
+            token.Register(client.CancelAsync);
             Logger.Debug("{0} Finished downloading content {1} / {2}", _uid, _url, path);
         }
 
-        public void UpdateTo(string path, string filePath, Action<long> updateCallback)
+        public void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
         {
-            DownloadTo(path, filePath, updateCallback);
+            DownloadTo(path, filePath, updateCallback, token);
         }
 
         public Uid GetUid() => _uid;

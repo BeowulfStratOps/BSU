@@ -7,5 +7,6 @@ namespace BSU.Core
         IReadOnlyList<UpdateJob> GetAllJobs();
         IReadOnlyList<UpdateJob> GetActiveJobs();
         void QueueJob(UpdateJob job);
+        void Shutdown();
     }
 }

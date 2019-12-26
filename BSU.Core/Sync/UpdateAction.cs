@@ -25,11 +25,11 @@ namespace BSU.Core.Sync
         public long GetBytesTotal() => _sizeTotal;
         public long GetBytesRemaining() => _sizeTodo;
 
-        protected override void DoWork()
+        protected override void DoWork(CancellationToken token)
         {
             Logger.Trace("{0}, {1} Updating {2}", Storage.GetUid(), _repository.GetUid(), Path);
             var target = Storage.GetFilePath(Path.ToLowerInvariant());
-            _repository.UpdateTo(Path, target, UpdateRemaining);
+            _repository.UpdateTo(Path, target, UpdateRemaining, token);
             _sizeTodo = 0;
         }
 

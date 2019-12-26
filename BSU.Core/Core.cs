@@ -147,8 +147,7 @@ namespace BSU.Core
 
         public void Shutdown()
         {
-            // stop all threads
-            throw new NotImplementedException();
+            SyncManager.Shutdown();
         }
 
         internal event Action StateInvalidated;

@@ -14,11 +14,14 @@ namespace BSU.Core
 
         private readonly List<UpdateJob> _jobsTodo = new List<UpdateJob>();
         private readonly List<UpdateJob> _allJobs = new List<UpdateJob>();
+        private bool _shutdown;
         private Thread _scheduler;
 
         public void QueueJob(UpdateJob job)
         {
             Logger.Debug("Queueing job {0} -> {1}", job.StorageMod.GetUid(), job.RepositoryMod.GetUid());
+
+            if (_shutdown) throw new InvalidOperationException("SyncManager is shutting down! Come back tomorrow.");
 
             _allJobs.Add(job);
             lock (_jobsTodo)
@@ -113,6 +116,20 @@ namespace BSU.Core
                 }
             }
             Logger.Debug("Scheduler thread ending");
+        }
+
+        public void Shutdown()
+        {
+            if (_scheduler == null || !_scheduler.IsAlive) return;
+            _shutdown = true;
+            lock (_jobsTodo)
+            {
+                foreach (var job in _jobsTodo)
+                {
+                    job.SyncState.Abort();
+                }
+            }
+            _scheduler.Join();
         }
     }
 }

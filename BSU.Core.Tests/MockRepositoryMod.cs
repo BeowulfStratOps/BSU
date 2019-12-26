@@ -41,7 +41,7 @@ namespace BSU.Core.Tests
 
         public bool BlockUpdate;
 
-        public void DownloadTo(string path, string filePath, Action<long> updateCallback)
+        public void DownloadTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
         {
             while (BlockUpdate)
             {
@@ -50,9 +50,9 @@ namespace BSU.Core.Tests
             File.WriteAllBytes(filePath, Files[path]);
         }
 
-        public void UpdateTo(string path, string filePath, Action<long> updateCallback)
+        public void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
         {
-            DownloadTo(path, filePath, updateCallback);
+            DownloadTo(path, filePath, updateCallback, token);
         }
 
         public Uid GetUid() => new Uid();
