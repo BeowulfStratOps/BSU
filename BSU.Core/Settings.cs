@@ -52,7 +52,7 @@ namespace BSU.Core
         }
     }
 
-    public class StorageEntry
+    internal class StorageEntry
     {
         public string Name;
         public string Type;
@@ -60,18 +60,7 @@ namespace BSU.Core
         public Dictionary<string, UpdateTarget> Updating;
     }
 
-    public class UpdateTarget
-    {
-        public readonly string Hash, Display;
-
-        internal UpdateTarget(string hash, string display)
-        {
-            Display = display;
-            Hash = hash;
-        }
-    }
-
-    public class RepoEntry
+    internal class RepoEntry
     {
         public string Name;
         public string Type;
