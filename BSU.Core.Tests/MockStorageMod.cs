@@ -12,27 +12,39 @@ namespace BSU.Core.Tests
     {
         public string Identifier;
         public MockStorage Storage;
+        public bool Locked = false;
 
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
 
         public void SetFile(string key, string data)
         {
+            if (Locked) throw new IOException("File in use");
             Files[key] = Encoding.UTF8.GetBytes(data);
         }
 
-        public string GetFileContent(string key) => Encoding.UTF8.GetString(Files[key]);
+        public string GetFileContent(string key)
+        {
+            if (Locked) throw new IOException("File in use");
+            return Encoding.UTF8.GetString(Files[key]);
+        }
 
-        public void DeleteFile(string path) => Files.Remove(path);
+        public void DeleteFile(string path)
+        {
+            if (Locked) throw new IOException("File in use");
+            Files.Remove(path);
+        }
 
         public string GetDisplayName() => throw new NotImplementedException();
 
         public Stream GetFile(string path)
         {
+            if (Locked) throw new IOException("File in use");
             return Files.ContainsKey(path) ? new MemoryStream(Files[path]) : null;
         }
 
         public FileHash GetFileHash(string path)
         {
+            if (Locked) throw new IOException("File in use");
             return new SHA1AndPboHash(GetFile(path), Utils.GetExtension(path));
         }
 
@@ -44,7 +56,8 @@ namespace BSU.Core.Tests
 
         public string GetFilePath(string path)
         {
-            throw new NotSupportedException();
+            if (Locked) throw new IOException("File in use");
+            return "";
         }
 
         public Uid GetUid() => new Uid();

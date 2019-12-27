@@ -39,15 +39,17 @@ namespace BSU.Core.Tests
 
         public long GetFileSize(string path) => Files[path].Length;
 
-        public bool BlockUpdate;
+        public int SleepMs = 0;
+        public bool NoOp = false;
 
         public void DownloadTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
         {
-            while (BlockUpdate)
+            for (int i = 0; i < SleepMs; i++)
             {
-                Thread.Sleep(10);
+                if (token.IsCancellationRequested) return;
+                Thread.Sleep(1);
             }
-            File.WriteAllBytes(filePath, Files[path]);
+            if (!NoOp) File.WriteAllBytes(filePath, Files[path]);
         }
 
         public void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)

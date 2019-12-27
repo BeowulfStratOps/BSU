@@ -24,7 +24,7 @@ namespace BSU.Core.State
         {
             Logger.Debug("Creating new state {0}", Uid);
             Core = core;
-            core.StateInvalidated += InvalidateState; // TODO: does that mess with GC?
+            core.StateInvalidated += InvalidateState; // TODO: this messes with GC
             Logger.Debug("Creating storage states");
             Storages = storages.Select(s => new Storage(s, this)).ToList();
             Logger.Debug("Creating repository states");
