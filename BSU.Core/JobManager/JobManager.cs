@@ -34,8 +34,8 @@ namespace BSU.Core.JobManager
             _scheduler.Start();
         }
 
-        public IReadOnlyList<TJobType> GetAllJobs() => _allJobs.AsReadOnly();
-        public IReadOnlyList<TJobType> GetActiveJobs() => _allJobs.Where(j => !j.IsDone()).ToList().AsReadOnly();
+        public IEnumerable<TJobType> GetAllJobs() => _allJobs.AsReadOnly();
+        public IEnumerable<TJobType> GetActiveJobs() => _allJobs.Where(j => !j.IsDone());
 
         private WorkUnit GetWork()
         {

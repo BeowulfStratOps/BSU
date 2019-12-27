@@ -64,7 +64,7 @@ namespace BSU.Core
     {
         public readonly string Hash, Display;
 
-        public UpdateTarget(string hash, string display)
+        internal UpdateTarget(string hash, string display)
         {
             Display = display;
             Hash = hash;

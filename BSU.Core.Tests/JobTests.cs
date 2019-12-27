@@ -135,5 +135,35 @@ namespace BSU.Core.Tests
 
             state = _core.GetState(); // would fail if it couldn't read file
         }
+
+        [Fact]
+        public void DeleteRepoWithJobTest()
+        {
+            var state = _core.GetState();
+            var stateRemoteMod = state.Repos.Single().Mods.Single();
+            stateRemoteMod.Selected = stateRemoteMod.Actions.OfType<UpdateAction>().Single();
+
+            _repoMod.NoOp = true;
+            _repoMod.SleepMs = 50;
+
+            state.Repos.Single().PrepareUpdate().DoUpdate();
+
+            Assert.Throws<InvalidOperationException>(() => { state.Repos.Single().Remove(); });
+        }
+
+        [Fact]
+        public void DeleteStorageWithJobTest()
+        {
+            var state = _core.GetState();
+            var stateRemoteMod = state.Repos.Single().Mods.Single();
+            stateRemoteMod.Selected = stateRemoteMod.Actions.OfType<UpdateAction>().Single();
+
+            _repoMod.NoOp = true;
+            _repoMod.SleepMs = 50;
+
+            state.Repos.Single().PrepareUpdate().DoUpdate();
+
+            Assert.Throws<InvalidOperationException>(() => { state.Storages.Single().Remove(); });
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace BSU.Core.Tests
         {
         }
 
-        public IReadOnlyList<RepoSync> GetActiveJobs() => _jobs.AsReadOnly();
-        public IReadOnlyList<RepoSync> GetAllJobs() => _jobs.AsReadOnly();
+        public IEnumerable<RepoSync> GetActiveJobs() => _jobs.AsReadOnly();
+        public IEnumerable<RepoSync> GetAllJobs() => _jobs.AsReadOnly();
     }
 }

@@ -11,8 +11,8 @@ namespace BSU.Core.State
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public readonly List<Repo> Repos;
-        public readonly List<Storage> Storages;
+        public readonly IReadOnlyList<Repository> Repos;
+        public readonly IReadOnlyList<Storage> Storages;
         internal readonly Core Core;
         public bool IsValid { get; private set; } = true;
 
@@ -26,9 +26,9 @@ namespace BSU.Core.State
             Core = core;
             core.StateInvalidated += InvalidateState; // TODO: this messes with GC
             Logger.Debug("Creating storage states");
-            Storages = storages.Select(s => new Storage(s, this)).ToList();
+            Storages = storages.Select(s => new Storage(s, this)).ToList().AsReadOnly();
             Logger.Debug("Creating repository states");
-            Repos = repos.Select(r => new Repo(r, this)).ToList();
+            Repos = repos.Select(r => new Repository(r, this)).ToList().AsReadOnly();
             foreach (var repo in Repos)
             {
                 Logger.Debug("Collecting conflicts in repo {0}", repo.Uid);
@@ -36,7 +36,7 @@ namespace BSU.Core.State
             }
         }
 
-        private void InvalidateState()
+        internal void InvalidateState()
         {
             IsValid = false;
             Invalidated?.Invoke();

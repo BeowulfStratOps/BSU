@@ -9,9 +9,9 @@ namespace BSU.Core.State
 
         internal void AddConflict(ModAction action) => _conflicts.Add(action);
 
-        public IReadOnlyList<ModAction> GetConflicts() => _conflicts.AsReadOnly();
+        public IEnumerable<ModAction> GetConflicts() => _conflicts.AsReadOnly();
 
-        public ModAction(UpdateTarget updateTarget)
+        protected ModAction(UpdateTarget updateTarget)
         {
             UpdateTarget = updateTarget;
         }

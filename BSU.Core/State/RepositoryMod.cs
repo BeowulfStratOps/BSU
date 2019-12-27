@@ -16,7 +16,7 @@ namespace BSU.Core.State
         public ModAction Selected = null;
         public readonly string DisplayName;
 
-        internal readonly Repo Repo;
+        internal readonly Repository Repo;
 
         public readonly VersionHash VersionHash;
 
@@ -25,7 +25,7 @@ namespace BSU.Core.State
         internal readonly Uid Uid = new Uid();
 
         // TODO: find a better place for that
-        internal RepositoryMod(IRepositoryMod mod, Repo repo)
+        internal RepositoryMod(IRepositoryMod mod, Repository repo)
         {
             Logger.Debug("Creating new state for repo mod {0} -> {1}", mod.GetUid(), Uid);
 

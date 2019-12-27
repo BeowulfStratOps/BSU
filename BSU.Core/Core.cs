@@ -40,13 +40,30 @@ namespace BSU.Core
         }
 
         public void AddRepoType(string name, Func<string, string, IRepository> create) => State.AddRepoType(name, create);
-        public List<string> GetRepoTypes() => State.GetRepoTypes();
+        public IEnumerable<string> GetRepoTypes() => State.GetRepoTypes();
         public void AddStorageType(string name, Func<string, string, IStorage> create) => State.AddStorageType(name, create);
-        public List<string> GetStorageTypes() => State.GetStorageTypes();
+        public IEnumerable<string> GetStorageTypes() => State.GetStorageTypes();
 
         public void AddRepo(string name, string url, string type) => State.AddRepo(name, url, type);
-        public void RemoveRepo(string name) => State.RemoveRepo(name);
-        public void RemoveStorage(string name) => State.RemoveStorage(name);
+        internal void RemoveRepo(Repository repo)
+        {
+            if (repo.BackingRepository.GetMods().Any(mod => GetActiveJobs(mod).Any()))
+            {
+                throw new InvalidOperationException("Can't remove repository while it has jobs running!");
+            }
+
+            State.RemoveRepo(repo.BackingRepository);
+        }
+
+        public void RemoveStorage(State.Storage storage)
+        {
+            if (storage.BackingStorage.GetMods().Any(mod => GetActiveJob(mod) != null))
+            {
+                throw new InvalidOperationException("Can't remove storage while it has jobs running!");
+            }
+
+            State.RemoveStorage(storage.BackingStorage);
+        }
 
         public void AddStorage(string name, DirectoryInfo directory, string type) =>
             State.AddStorage(name, directory, type);
@@ -93,7 +110,7 @@ namespace BSU.Core
             }
         }
 
-        internal UpdatePacket PrepareUpdate(Repo repo, State.State state)
+        internal UpdatePacket PrepareUpdate(Repository repo, State.State state)
         {
             Logger.Debug("Preparing update");
             var todos = repo.Mods.Where(m => m.Selected != null && !(m.Selected is UseAction)).ToList();
@@ -140,12 +157,17 @@ namespace BSU.Core
 
         internal void UpdateDone(IStorageMod mod) => State.RemoveUpdatingTo(mod);
 
-        public List<IJobFacade> GetAllJobs() => SyncManager.GetAllJobs().Select(j => (IJobFacade)j).ToList();
-        public List<IJobFacade> GetActiveJobs() => SyncManager.GetActiveJobs().Select(j => (IJobFacade)j).ToList();
+        public IEnumerable<IJobFacade> GetAllJobs() => SyncManager.GetAllJobs();
+        public IEnumerable<IJobFacade> GetActiveJobs() => SyncManager.GetActiveJobs();
 
         internal RepoSync GetActiveJob(IStorageMod mod)
         {
             return SyncManager.GetActiveJobs().SingleOrDefault(j => j.StorageMod == mod);
+        }
+
+        internal IEnumerable<RepoSync> GetActiveJobs(IRepositoryMod mod)
+        {
+            return SyncManager.GetActiveJobs().Where(j => j.RepositoryMod == mod);
         }
 
         public void Shutdown()

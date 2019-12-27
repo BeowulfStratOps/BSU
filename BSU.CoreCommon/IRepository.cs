@@ -10,7 +10,7 @@ namespace BSU.CoreCommon
         /// alias. identifier of sorts.
         /// </summary>
         /// <returns></returns>
-        string GetName();
+        string GetIdentifier();
 
         /// <summary>
         /// Url or smth

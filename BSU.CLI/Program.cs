@@ -65,7 +65,8 @@ namespace BSU.CLI
         [CliCommand("delrepo", "Removes a repository.", "name")]
         void DelRepo(string[] args)
         {
-            _core.RemoveRepo(args[0]);
+            CheckState();
+            _state.Repos.Single(r => r.Name == args[0]).Remove();
         }
 
         [CliCommand("addstorage", "Adds a storage.", "type name path")]
@@ -77,7 +78,8 @@ namespace BSU.CLI
         [CliCommand("delstorage", "Removes a repository.", "name")]
         void DelStorage(string[] args)
         {
-            _core.RemoveStorage(args[0]);
+            CheckState();
+            _state.Storages.Single(s => s.Name == args[0]).Remove();
         }
 
         [CliCommand("printintstate", "Prints the internal state.")]
@@ -98,8 +100,7 @@ namespace BSU.CLI
             Console.WriteLine("State invalidated.");
         }
 
-        [CliCommand("showstate", "Show state.")]
-        void ShowState(string[] args)
+        private void CheckState()
         {
             if (_state == null)
             {
@@ -108,6 +109,12 @@ namespace BSU.CLI
             }
 
             if (!_state.IsValid) Console.WriteLine("State got invalidated!");
+        }
+
+        [CliCommand("showstate", "Show state.")]
+        void ShowState(string[] args)
+        {
+            CheckState();
 
             foreach (var repo in _state.Repos)
             {
@@ -136,8 +143,7 @@ namespace BSU.CLI
         [CliCommand("select", "Select an action.", "repo_name mod_name action_number")]
         void Select(string[] args)
         {
-            if (_state == null)
-                throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
+            CheckState();
 
             string repoName = args[0], modName = args[1];
             var action = int.Parse(args[2]);
@@ -162,8 +168,7 @@ namespace BSU.CLI
         [CliCommand("update", "Update for a repository mod.", "repo_name")]
         void Update(string[] args)
         {
-            if (_state == null)
-                throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
+            CheckState();
 
             var repo = _state.Repos.Single(r =>
                 r.Name.Equals(args[0], StringComparison.InvariantCultureIgnoreCase));
@@ -197,8 +202,7 @@ namespace BSU.CLI
         [CliCommand("jobs", "Shows job states")]
         void Jobs(string[] args)
         {
-            if (_state == null)
-                throw new InvalidOperationException("No active state. use calcstate (or showstate) to create one.");
+            CheckState();
 
             var jobs = _core.GetAllJobs();
 

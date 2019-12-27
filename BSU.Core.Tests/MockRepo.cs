@@ -22,6 +22,6 @@ namespace BSU.Core.Tests
 
         public List<IRepositoryMod> GetMods() => Mods.OfType<IRepositoryMod>().ToList();
 
-        public string GetName() => name;
+        public string GetIdentifier() => name;
     }
 }

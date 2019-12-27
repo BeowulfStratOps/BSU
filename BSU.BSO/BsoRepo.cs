@@ -40,7 +40,7 @@ namespace BSU.BSO
             return _mods;
         }
 
-        public string GetName() => _name;
+        public string GetIdentifier() => _name;
 
         public string GetLocation() => _url;
         public Uid GetUid() => _uid;

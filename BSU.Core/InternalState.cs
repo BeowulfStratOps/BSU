@@ -30,9 +30,9 @@ namespace BSU.Core
         private readonly ISettings _settings;
 
         internal void AddRepoType(string name, Func<string, string, IRepository> create) => _repoTypes.Add(name, create);
-        internal List<string> GetRepoTypes() => _repoTypes.Keys.ToList();
+        internal IEnumerable<string> GetRepoTypes() => _repoTypes.Keys.ToList();
         internal void AddStorageType(string name, Func<string, string, IStorage> create) => _storageTypes.Add(name, create);
-        internal List<string> GetStorageTypes() => _storageTypes.Keys.ToList();
+        internal IEnumerable<string> GetStorageTypes() => _storageTypes.Keys.ToList();
 
         private readonly List<Tuple<RepoEntry, Exception>> _repoErrors = new List<Tuple<RepoEntry, Exception>>();
         private readonly List<Tuple<StorageEntry, Exception>> _storageErrors = new List<Tuple<StorageEntry, Exception>>();
@@ -75,11 +75,10 @@ namespace BSU.Core
         public IReadOnlyList<IStorage> GetStorages() => _storages.AsReadOnly();
 
 
-        public void RemoveRepo(string name)
+        public void RemoveRepo(IRepository repo)
         {
-            Logger.Debug("Removing repo {0}", name);
-            var repo = _repositories.Single(r => r.GetName() == name);
-            var repoEntry = _settings.Repositories.Single(r => r.Name == name);
+            Logger.Debug("Removing repo {0}", repo.GetUid());
+            var repoEntry = _settings.Repositories.Single(r => r.Name == repo.GetIdentifier());
             _repositories.Remove(repo);
             _settings.Repositories.Remove(repoEntry);
             _settings.Store();
@@ -100,7 +99,7 @@ namespace BSU.Core
         }
 
 
-        private void AddRepoToState(RepoEntry repo, bool tolerateErrors = false)
+        private void AddRepoToState(RepoEntry repo)
         {
             if (!_repoTypes.TryGetValue(repo.Type, out var create)) throw new NotSupportedException($"Repo type {repo.Type} is not supported.");
 
@@ -125,11 +124,10 @@ namespace BSU.Core
             _settings.Store();
         }
 
-        public void RemoveStorage(string name)
+        public void RemoveStorage(IStorage storage)
         {
-            Logger.Debug("Removing storage {0}", name);
-            var storage = _storages.Single(s => s.GetIdentifier() == name);
-            var storageEntry = _settings.Storages.Single(s => s.Name == name);
+            Logger.Debug("Removing storage {0}", storage.GetUid());
+            var storageEntry = _settings.Storages.Single(s => s.Name == storage.GetIdentifier());
             _storages.Remove(storage);
             _settings.Storages.Remove(storageEntry);
             _settings.Store();
@@ -150,7 +148,7 @@ namespace BSU.Core
             Console.WriteLine("Repos:");
             foreach (var repository in _repositories)
             {
-                Console.WriteLine($"  {repository.GetType().Name} {repository.GetName()} {repository.GetLocation()}");
+                Console.WriteLine($"  {repository.GetType().Name} {repository.GetIdentifier()} {repository.GetLocation()}");
                 foreach (var repoMod in repository.GetMods())
                 {
                     Console.WriteLine($"    {repoMod.GetIdentifier()} | {repoMod.GetDisplayName()}");

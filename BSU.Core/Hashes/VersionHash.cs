@@ -16,7 +16,7 @@ namespace BSU.Core.Hashes
 
         private readonly byte[] _hash;
 
-        public VersionHash(IStorageMod mod)
+        internal VersionHash(IStorageMod mod)
         {
             Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
             var hashes = new Dictionary<string, FileHash>();
@@ -28,7 +28,7 @@ namespace BSU.Core.Hashes
             _hash = BuildHash(hashes);
         }
 
-        public VersionHash(IRepositoryMod mod)
+        internal VersionHash(IRepositoryMod mod)
         {
             Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
             _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));

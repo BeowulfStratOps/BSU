@@ -15,6 +15,13 @@ namespace BSU.Core.State
 
         internal readonly Uid Uid = new Uid();
 
+
+        public void Remove()
+        {
+            State.Core.RemoveStorage(this);
+            State.InvalidateState();
+        }
+
         internal Storage(IStorage storage, State state)
         {
             BackingStorage = storage;

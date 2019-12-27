@@ -70,7 +70,8 @@ namespace BSU.Core.Storage
         {
             Util.CheckPath(path);
             var extension = Utils.GetExtension(path).ToLowerInvariant();
-            return new SHA1AndPboHash(GetFile(path), extension);
+            var file = GetFile(path);
+            return file == null ? null : new SHA1AndPboHash(file, extension);
         }
 
         public string GetIdentifier() => _dir.Name;
