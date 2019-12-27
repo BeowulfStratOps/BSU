@@ -6,7 +6,8 @@
         public readonly RepositoryMod RepositoryMod;
         public string FolderName;
 
-        internal DownloadAction(Storage storage, RepositoryMod repositoryMod, UpdateTarget updateTarget) : base(updateTarget)
+        internal DownloadAction(Storage storage, RepositoryMod repositoryMod, UpdateTarget updateTarget) : base(
+            updateTarget)
         {
             Storage = storage;
             RepositoryMod = repositoryMod;

@@ -1,14 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using BSU.Core.State;
 using BSU.Core.Sync;
-using BSU.CoreCommon;
 using Xunit;
-using DownloadAction = BSU.Core.State.DownloadAction;
 using UpdateAction = BSU.Core.State.UpdateAction;
 
 namespace BSU.Core.Tests
@@ -73,7 +68,10 @@ namespace BSU.Core.Tests
             state.Repos.Single().PrepareUpdate().DoUpdate();
             Assert.False(state.IsValid);
 
-            while (_core.GetActiveJobs().Any()) { Thread.Sleep(1); }
+            while (_core.GetActiveJobs().Any())
+            {
+                Thread.Sleep(1);
+            }
 
             Assert.False(state.IsValid);
         }
@@ -113,7 +111,7 @@ namespace BSU.Core.Tests
 
             Thread.Sleep(10);
             Assert.Empty(_core.GetActiveJobs());
-            var syncState = _core.GetAllJobs().Single()as RepoSync;
+            var syncState = _core.GetAllJobs().Single() as RepoSync;
             Assert.False(syncState.HasError());
             Assert.True(syncState.IsDone());
         }

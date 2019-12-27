@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using BSU.CoreCommon;
@@ -49,6 +48,7 @@ namespace BSU.Core.Tests
                 if (token.IsCancellationRequested) return;
                 Thread.Sleep(1);
             }
+
             if (!NoOp) File.WriteAllBytes(filePath, Files[path]);
         }
 

@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using BSU.BSO.FileStructures;
-using BSU.Hashes;
 using IniParser;
 using IniParser.Model;
 

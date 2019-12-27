@@ -17,6 +17,7 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <returns></returns>
         string GetLocation();
+
         Uid GetUid();
     }
 }

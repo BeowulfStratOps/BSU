@@ -10,7 +10,6 @@ namespace BSU.Core.Tests
 
         public void Store()
         {
-            
         }
     }
 }

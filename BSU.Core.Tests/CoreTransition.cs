@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -12,6 +10,7 @@ namespace BSU.Core.Tests
     public class CoreTransition : IDisposable
     {
         private DirectoryInfo _tmpDir;
+
         public CoreTransition()
         {
             _tmpDir = new DirectoryInfo(Path.GetTempPath()).CreateSubdirectory(Guid.NewGuid().ToString());
@@ -117,7 +116,8 @@ namespace BSU.Core.Tests
             var (settings, core, repo, storage) = CommonSetup();
             AddRepositoryMod(repo, "my_version");
             AddStorageMod(storage, "old_version");
-            settings.Storages.Single().Updating["storage_test"] = new UpdateTarget(GetVersionHash("my_version"), "my_version");
+            settings.Storages.Single().Updating["storage_test"] =
+                new UpdateTarget(GetVersionHash("my_version"), "my_version");
 
             var state = core.GetState();
 

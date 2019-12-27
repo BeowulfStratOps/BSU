@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using BSU.Core;
 using BSU.Core.State;
 using NLog;
-using NLog.Fluent;
 
 namespace BSU.CLI
 {
@@ -41,6 +39,7 @@ namespace BSU.CLI
                     _core.Shutdown();
                     return 0;
                 }
+
                 try
                 {
                     commands.Process(command);
@@ -177,9 +176,12 @@ namespace BSU.CLI
 
             foreach (var packetJob in packet.GetJobsViews())
             {
-                Console.WriteLine($"{packetJob.GetStorageModDisplayName()} -> {packetJob.GetRepositoryModDisplayName()}");
-                Console.WriteLine($" Download: {packetJob.GetTotalNewFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToDownload())}");
-                Console.WriteLine($" Update: {packetJob.GetTotalChangedFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToUpdate())}");
+                Console.WriteLine(
+                    $"{packetJob.GetStorageModDisplayName()} -> {packetJob.GetRepositoryModDisplayName()}");
+                Console.WriteLine(
+                    $" Download: {packetJob.GetTotalNewFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToDownload())}");
+                Console.WriteLine(
+                    $" Update: {packetJob.GetTotalChangedFilesCount()} Files, {Utils.BytesToHuman(packetJob.GetTotalBytesToUpdate())}");
                 Console.WriteLine($" Delete: {packetJob.GetTotalDeletedFilesCount()} Files");
             }
 
@@ -233,6 +235,7 @@ namespace BSU.CLI
             {
                 Console.WriteLine(" " + repoType);
             }
+
             Console.WriteLine("Storage Types:");
             foreach (var storageType in _core.GetStorageTypes())
             {

@@ -9,6 +9,7 @@ namespace BSU.Core
         string GetTargetHash();
 
         public delegate void JobEndedDelegate(bool success);
+
         event JobEndedDelegate JobEnded;
 
         public string GetStorageModDisplayName();

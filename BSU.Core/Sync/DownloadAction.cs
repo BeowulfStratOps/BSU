@@ -13,7 +13,8 @@ namespace BSU.Core.Sync
         private readonly long _sizeTotal;
         private long _sizeTodo;
 
-        public DownloadAction(IRepositoryMod repository, IStorageMod storage, string path, long sizeTotal, RepoSync sync) : base(storage, path, sync)
+        public DownloadAction(IRepositoryMod repository, IStorageMod storage, string path, long sizeTotal,
+            RepoSync sync) : base(storage, path, sync)
         {
             _repository = repository;
             _sizeTotal = sizeTotal;

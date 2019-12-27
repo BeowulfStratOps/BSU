@@ -25,10 +25,11 @@ namespace BSU.Core.Tests
         public List<IStorageMod> GetMods() => Mods.OfType<IStorageMod>().ToList();
 
         public string GetIdentifier() => name;
+
         public IStorageMod CreateMod(string identifier)
         {
             if (identifier == null) throw new ArgumentNullException();
-            var newMod = new MockStorageMod { Identifier = identifier, Storage = this };
+            var newMod = new MockStorageMod {Identifier = identifier, Storage = this};
             Mods.Add(newMod);
             return newMod;
         }

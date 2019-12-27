@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +12,7 @@ namespace BSU.Core.Tests
     public class DirectoryStorageTests : IDisposable
     {
         private DirectoryInfo _tmpDir;
+
         public DirectoryStorageTests()
         {
             _tmpDir = new DirectoryInfo(Path.GetTempPath()).CreateSubdirectory(Guid.NewGuid().ToString());
@@ -27,10 +27,10 @@ namespace BSU.Core.Tests
         {
             return new Dictionary<string, string>
             {
-                {"1.pbo", "42" },
-                {"2.pbo", "<put shakespear quote here>" },
-                {"3.pbo", "This statement is false." },
-                {"mod.cpp", "name=\"ey yo\"" }
+                {"1.pbo", "42"},
+                {"2.pbo", "<put shakespear quote here>"},
+                {"3.pbo", "This statement is false."},
+                {"mod.cpp", "name=\"ey yo\""}
             };
         }
 
@@ -42,7 +42,7 @@ namespace BSU.Core.Tests
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
             core.AddRepo("test_repo", "url/test_repo", "MOCK");
             var repo = core.State.GetRepositories().Single() as MockRepo;
-            var repoMod = new MockRepositoryMod { Identifier = "repo_test" };
+            var repoMod = new MockRepositoryMod {Identifier = "repo_test"};
             repo.Mods.Add(repoMod);
             core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
 
@@ -69,7 +69,8 @@ namespace BSU.Core.Tests
             Assert.False(File.Exists(Path.Combine(_tmpDir.FullName, "@downloaded", "x.dll")));
             foreach (var fileName in GetFileList().Keys)
             {
-                Assert.Equal(GetFileList()[fileName], File.ReadAllText(Path.Combine(_tmpDir.FullName, "@downloaded", fileName)));
+                Assert.Equal(GetFileList()[fileName],
+                    File.ReadAllText(Path.Combine(_tmpDir.FullName, "@downloaded", fileName)));
             }
         }
 
@@ -82,7 +83,7 @@ namespace BSU.Core.Tests
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
             core.AddRepo("test_repo", "url/test_repo", "MOCK");
             var repo = core.State.GetRepositories().Single() as MockRepo;
-            var repoMod = new MockRepositoryMod { Identifier = "repo_test" };
+            var repoMod = new MockRepositoryMod {Identifier = "repo_test"};
             repo.Mods.Add(repoMod);
             core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
 
@@ -126,7 +127,7 @@ namespace BSU.Core.Tests
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
             core.AddRepo("test_repo", "url/test_repo", "MOCK");
             var repo = core.State.GetRepositories().Single() as MockRepo;
-            var repoMod = new MockRepositoryMod { Identifier = "repo_test" };
+            var repoMod = new MockRepositoryMod {Identifier = "repo_test"};
             repo.Mods.Add(repoMod);
             core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
 

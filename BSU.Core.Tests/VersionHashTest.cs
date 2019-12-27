@@ -1,13 +1,4 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using BSU.Core.State;
 using BSU.Core.Hashes;
 using Xunit;
 
@@ -79,12 +70,12 @@ namespace BSU.Core.Tests
             Assert.True(Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
-                    {"qwer.dll", "www" }
+                    {"qwer.dll", "www"}
                 },
                 new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
-                    {"qwer.dll", "www" }
+                    {"qwer.dll", "www"}
                 }));
         }
 
@@ -94,12 +85,12 @@ namespace BSU.Core.Tests
             Assert.False(Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
-                    {"qwer.dll", "www" }
+                    {"qwer.dll", "www"}
                 },
                 new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
-                    {"qwer.dll", "xyz" }
+                    {"qwer.dll", "xyz"}
                 }));
         }
 
@@ -109,12 +100,12 @@ namespace BSU.Core.Tests
             Assert.False(Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
-                    {"qwer.dll", "xyz" }
+                    {"qwer.dll", "xyz"}
                 },
                 new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
-                    {"asdf.dll", "xyz" }
+                    {"asdf.dll", "xyz"}
                 }));
         }
 

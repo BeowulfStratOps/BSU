@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using BSU.CoreCommon;
 using Newtonsoft.Json;
 
 namespace BSU.BSO.FileStructures
@@ -8,13 +6,13 @@ namespace BSU.BSO.FileStructures
     [JsonObject(MemberSerialization.OptIn)]
     public class HashFile
     {
-        [JsonProperty]
-        public string FolderName { get; set; }
-        [JsonProperty]
-        public List<HashType> Hashes { get; set; }
+        [JsonProperty] public string FolderName { get; set; }
+        [JsonProperty] public List<HashType> Hashes { get; set; }
+
         public HashFile()
         {
         }
+
         public HashFile(string folderName, List<HashType> hashes)
         {
             Hashes = hashes;

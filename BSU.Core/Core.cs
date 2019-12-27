@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.State;
 using BSU.Core.Sync;
@@ -39,12 +38,18 @@ namespace BSU.Core
         {
         }
 
-        public void AddRepoType(string name, Func<string, string, IRepository> create) => State.AddRepoType(name, create);
+        public void AddRepoType(string name, Func<string, string, IRepository> create) =>
+            State.AddRepoType(name, create);
+
         public IEnumerable<string> GetRepoTypes() => State.GetRepoTypes();
-        public void AddStorageType(string name, Func<string, string, IStorage> create) => State.AddStorageType(name, create);
+
+        public void AddStorageType(string name, Func<string, string, IStorage> create) =>
+            State.AddStorageType(name, create);
+
         public IEnumerable<string> GetStorageTypes() => State.GetStorageTypes();
 
         public void AddRepo(string name, string url, string type) => State.AddRepo(name, url, type);
+
         internal void RemoveRepo(Repository repo)
         {
             if (repo.BackingRepository.GetMods().Any(mod => GetActiveJobs(mod).Any()))
@@ -105,7 +110,8 @@ namespace BSU.Core
         {
             foreach (var updateJob in SyncManager.GetAllJobs())
             {
-                if (state.Repos.SelectMany(r => r.Mods).All(m => m.VersionHash.GetHashString() != updateJob.Target.Hash))
+                if (state.Repos.SelectMany(r => r.Mods)
+                    .All(m => m.VersionHash.GetHashString() != updateJob.Target.Hash))
                     throw new InvalidOperationException("There are hanging jobs. WTF.");
             }
         }
@@ -122,7 +128,8 @@ namespace BSU.Core
             foreach (var downloadAction in actions.OfType<DownloadAction>())
             {
                 var storageMod = downloadAction.Storage.BackingStorage.CreateMod(downloadAction.FolderName);
-                updatePacket.Rollback.Add(() => downloadAction.Storage.BackingStorage.RemoveMod(downloadAction.FolderName));
+                updatePacket.Rollback.Add(() =>
+                    downloadAction.Storage.BackingStorage.RemoveMod(downloadAction.FolderName));
                 var syncState = new RepoSync(downloadAction.RepositoryMod.Mod, storageMod, downloadAction.UpdateTarget);
                 updatePacket.Jobs.Add(syncState);
             }
@@ -130,7 +137,8 @@ namespace BSU.Core
 
             foreach (var updateAction in actions.OfType<UpdateAction>())
             {
-                var syncState = new RepoSync(updateAction.RepositoryMod.Mod, updateAction.StorageMod.Mod, updateAction.UpdateTarget);
+                var syncState = new RepoSync(updateAction.RepositoryMod.Mod, updateAction.StorageMod.Mod,
+                    updateAction.UpdateTarget);
                 updatePacket.Jobs.Add(syncState);
             }
 

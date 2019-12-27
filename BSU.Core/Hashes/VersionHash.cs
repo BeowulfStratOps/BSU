@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using BSU.CoreCommon;
-using System.Security.Cryptography;
 using BSU.Hashes;
 using NLog;
 
@@ -48,6 +46,7 @@ namespace BSU.Core.Hashes
                 builder.Append(key.ToLowerInvariant());
                 builder.Append(Utils.ToHexString(value.GetBytes()));
             }
+
             using var sha1 = SHA1.Create();
             return sha1.ComputeHash(Encoding.UTF8.GetBytes(builder.ToString()));
         }

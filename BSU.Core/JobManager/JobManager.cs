@@ -47,6 +47,7 @@ namespace BSU.Core.JobManager
                     Logger.Trace("No jobs");
                     return null;
                 }
+
                 var job = _jobsTodo.First();
                 Logger.Trace("Checking job {0}", job.GetUid());
                 WorkUnit work;
@@ -69,6 +70,7 @@ namespace BSU.Core.JobManager
                     Logger.Trace("Got work: {0}", work);
                     return work;
                 }
+
                 Logger.Trace("No work. De-queueing job");
                 _jobsTodo.Remove(job);
                 return null;
@@ -114,6 +116,7 @@ namespace BSU.Core.JobManager
                     if (!thread.IsAlive) threads.Remove(thread);
                 }
             }
+
             Logger.Debug("Scheduler thread ending");
         }
 
@@ -128,6 +131,7 @@ namespace BSU.Core.JobManager
                     job.Abort();
                 }
             }
+
             _scheduler.Join();
         }
     }

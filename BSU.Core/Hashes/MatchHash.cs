@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,6 +33,7 @@ namespace BSU.Core.Hashes
                 // File is in use. nothing we can do for now
                 // TODO: cache to the rescue!
             }
+
             if (modCpp != null)
             {
                 using var reader = new StreamReader(modCpp);
@@ -45,6 +45,7 @@ namespace BSU.Core.Hashes
                     Logger.Trace("Found name {0}", _name);
                 }
             }
+
             _pboNames = mod.GetFileList().Where(p => AddonsPboRegex.IsMatch(p)).ToHashSet();
             Logger.Trace("Found {0} pbo files", _pboNames.Count);
         }
@@ -86,7 +87,7 @@ namespace BSU.Core.Hashes
             foreach (var pbo in other._pboNames) all.Add(pbo);
 
             if (_pboNames.Count / (float) all.Count < Threshold) return false;
-            if (other._pboNames.Count / (float)all.Count < Threshold) return false;
+            if (other._pboNames.Count / (float) all.Count < Threshold) return false;
             return true;
         }
     }

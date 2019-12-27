@@ -16,7 +16,6 @@ namespace BSU.Core.Tests
     {
         public CoreStateStories()
         {
-
         }
 
         private MockRepo AddRepo(Core core, string name)
@@ -90,6 +89,7 @@ namespace BSU.Core.Tests
                 if (shouldFail) return;
                 throw;
             }
+
             if (storageModVer == updatingTo && job == "") updatingTo = "";
 
             CheckSettings(settings, updatingTo);
@@ -98,11 +98,14 @@ namespace BSU.Core.Tests
             if (repoModVer != "")
             {
                 CheckDownload(repoModVer, actions, state.Storages.Single());
-                CheckUse(repoModVer, storageModVer, updatingTo, job, actions, state.Storages.Single().Mods.SingleOrDefault());
-                CheckUpdate(repoModVer, storageModVer, updatingTo, job, actions, state.Storages.Single().Mods.SingleOrDefault(),
+                CheckUse(repoModVer, storageModVer, updatingTo, job, actions,
+                    state.Storages.Single().Mods.SingleOrDefault());
+                CheckUpdate(repoModVer, storageModVer, updatingTo, job, actions,
+                    state.Storages.Single().Mods.SingleOrDefault(),
                     state.Repos.Single().Mods.Single());
                 CheckAwaitUpdate(repoModVer, job, actions, state.Storages.Single().Mods.SingleOrDefault());
             }
+
             Assert.Empty(actions);
         }
 
@@ -135,7 +138,8 @@ namespace BSU.Core.Tests
             Assert.Equal(download.Storage, storage);
         }
 
-        private void CheckUse(string repoModVer, string storageModVer, string updateTo, string job, List<ModAction> actions, StorageMod mod)
+        private void CheckUse(string repoModVer, string storageModVer, string updateTo, string job,
+            List<ModAction> actions, StorageMod mod)
         {
             if (repoModVer != storageModVer) return;
             if (updateTo != "") return;
@@ -146,7 +150,8 @@ namespace BSU.Core.Tests
             Assert.Equal(use.StorageMod, mod);
         }
 
-        private void CheckUpdate(string repoModVer, string storageModVer, string updateTo, string job, List<ModAction> actions, StorageMod storageMod, RepositoryMod repoMod)
+        private void CheckUpdate(string repoModVer, string storageModVer, string updateTo, string job,
+            List<ModAction> actions, StorageMod storageMod, RepositoryMod repoMod)
         {
             if (storageModVer == "") return;
             if (job != "") return;
@@ -205,15 +210,15 @@ namespace BSU.Core.Tests
     {
         public IEnumerator<object[]> GetEnumerator()
         {
-            foreach (var repoModVer in new[] { "", "v1", "v2" })
+            foreach (var repoModVer in new[] {"", "v1", "v2"})
             {
-                foreach (var storageModVer in new[] { "", "v1", "v2", "broken" })
+                foreach (var storageModVer in new[] {"", "v1", "v2", "broken"})
                 {
                     foreach (var updatingTo in new[] {"", "v1", "v2"})
                     {
-                        foreach (var job in new[] { "", "v1", "v2" })
+                        foreach (var job in new[] {"", "v1", "v2"})
                         {
-                            yield return new object[] { repoModVer, storageModVer, updatingTo, job };
+                            yield return new object[] {repoModVer, storageModVer, updatingTo, job};
                         }
                     }
                 }

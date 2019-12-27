@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BSU.BSO.FileStructures;
@@ -18,6 +17,7 @@ namespace BSU.Server
                 Console.WriteLine("Usage: ./BSUServer <path to ini file>");
                 return 2;
             }
+
             var server = ServerConfig.Load(args[0]);
 
             if (!new DirectoryInfo(server.TargetPath).Exists)
@@ -41,7 +41,8 @@ namespace BSU.Server
                 server.Server.ModFolders.Add(new ModFolder(sourceDir.Name));
             }
 
-            File.WriteAllText(Path.Combine(server.TargetPath, server.ServerFileName), JsonConvert.SerializeObject(server.Server));
+            File.WriteAllText(Path.Combine(server.TargetPath, server.ServerFileName),
+                JsonConvert.SerializeObject(server.Server));
 
             return 0;
         }
@@ -83,6 +84,7 @@ namespace BSU.Server
                 done++;
                 Console.Write($"\r Applying changes {done} / {total}");
             }
+
             if (total > 0) Console.WriteLine();
         }
 
@@ -140,12 +142,14 @@ namespace BSU.Server
                     done++;
                     continue;
                 }
+
                 var hash = new SHA1AndPboHash(file.OpenRead(), file.Extension.Replace(".", "").ToLowerInvariant());
                 var relPath = file.FullName.Replace(modDirectory.FullName, "").Replace('\\', '/');
                 hashes[relPath] = hash;
                 done++;
                 Console.Write($"\r Hashing {done} / {total}");
             }
+
             if (total > 0) Console.WriteLine();
 
             return hashes;

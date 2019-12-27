@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using BSU.Core.State;
-using BSU.CoreCommon;
-using NLog;
 
 namespace BSU.Core
 {
@@ -27,7 +23,7 @@ namespace BSU.Core
         public void DoUpdate()
         {
             if (!_state.IsValid || _aborted) throw new InvalidOperationException("State is invalid!");
-                _core.DoUpdate(this);
+            _core.DoUpdate(this);
         }
 
         private void Abort()

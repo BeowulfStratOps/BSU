@@ -31,7 +31,8 @@ namespace BSU.Core.Tests
             File.WriteAllBytes(GetFileInfo(key).FullName, Encoding.UTF8.GetBytes(data));
         }
 
-        public string GetFileContent(string key) => Encoding.UTF8.GetString(File.ReadAllBytes(GetFileInfo(key).FullName));
+        public string GetFileContent(string key) =>
+            Encoding.UTF8.GetString(File.ReadAllBytes(GetFileInfo(key).FullName));
 
         public void DeleteFile(string path) => GetFileInfo(path).Delete();
 

@@ -1,13 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using BSU.Core.State;
 using BSU.Core.Hashes;
 using Xunit;
 
@@ -30,55 +21,55 @@ namespace BSU.Core.Tests
         [Fact]
         private void Simple3()
         {
-            Assert.True(Check(new[]{"/addons/qwe.pbo"}, null, new[] { "/addons/qwe.pbo" }, null));
+            Assert.True(Check(new[] {"/addons/qwe.pbo"}, null, new[] {"/addons/qwe.pbo"}, null));
         }
 
         [Fact]
         private void Simple4()
         {
-            Assert.True(Check(new[] { "/addons/qwe.pbo" }, "qw123", new[] { "/addons/qwe.pbo" }, "qw123"));
+            Assert.True(Check(new[] {"/addons/qwe.pbo"}, "qw123", new[] {"/addons/qwe.pbo"}, "qw123"));
         }
 
         [Fact]
         private void True1()
         {
-            Assert.True(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gg",
-                new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/abc.pbo" }, "gg"));
+            Assert.True(Check(new[] {"/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo"}, "gg",
+                new[] {"/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/abc.pbo"}, "gg"));
         }
 
         [Fact]
         private void True2()
         {
-            Assert.True(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gg",
-                new[] { "/addons/qwe_f.pbo", "/addons/asdf_f.pbo", "/addons/abc.pbo" }, "gg"));
+            Assert.True(Check(new[] {"/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo"}, "gg",
+                new[] {"/addons/qwe_f.pbo", "/addons/asdf_f.pbo", "/addons/abc.pbo"}, "gg"));
         }
 
         [Fact]
         private void False3()
         {
-            Assert.False(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, null,
-                new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/abc.pbo" }, null));
+            Assert.False(Check(new[] {"/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo"}, null,
+                new[] {"/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/abc.pbo"}, null));
         }
 
         [Fact]
         private void False0()
         {
-            Assert.False(Check(new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "gl",
-                new[] { "/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo" }, "hf"));
+            Assert.False(Check(new[] {"/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo"}, "gl",
+                new[] {"/addons/qwe.pbo", "/addons/asdf.pbo", "/addons/xyz.pbo"}, "hf"));
         }
 
         [Fact]
         private void False1()
         {
-            Assert.False(Check(new[] { "/addons/qwe1.pbo", "/addons/asdf1.pbo", "/addons/xyz.pbo" }, null,
-                new[] { "/addons/qwe2.pbo", "/addons/asdf2.pbo", "/addons/abc.pbo" }, null));
+            Assert.False(Check(new[] {"/addons/qwe1.pbo", "/addons/asdf1.pbo", "/addons/xyz.pbo"}, null,
+                new[] {"/addons/qwe2.pbo", "/addons/asdf2.pbo", "/addons/abc.pbo"}, null));
         }
 
         [Fact]
         private void False2()
         {
-            Assert.False(Check(new[] { "/addons/qwe.pbo.bisign", "/addons/asdf.pbo.bisign", "/addons/xyz.pbo" }, null,
-                new[] { "/addons/qwe.pbo.bisign", "/addons/asdf.pbo.bisign", "/addons/abc.pbo" }, null));
+            Assert.False(Check(new[] {"/addons/qwe.pbo.bisign", "/addons/asdf.pbo.bisign", "/addons/xyz.pbo"}, null,
+                new[] {"/addons/qwe.pbo.bisign", "/addons/asdf.pbo.bisign", "/addons/abc.pbo"}, null));
         }
 
         // TODO: test keys
@@ -89,6 +80,7 @@ namespace BSU.Core.Tests
             {
                 mod.SetFile(fileName, "");
             }
+
             if (name != null) mod.SetFile("/mod.cpp", "name=\"" + name.Replace("\"", "\\\"") + "\";");
         }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using BSU.CoreCommon;
 using NLog;
 
@@ -11,12 +10,11 @@ namespace BSU.Core.Sync
 
         public DeleteAction(IStorageMod storage, string path, RepoSync sync) : base(storage, path, sync)
         {
-
         }
 
         protected override void DoWork(CancellationToken token)
         {
-            Logger.Trace("{0} Deleting {1}",  Storage.GetUid(), Path);
+            Logger.Trace("{0} Deleting {1}", Storage.GetUid(), Path);
             Storage.DeleteFile(Path);
         }
     }

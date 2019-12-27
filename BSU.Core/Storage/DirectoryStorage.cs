@@ -26,7 +26,7 @@ namespace BSU.Core.Storage
 
         public virtual List<IStorageMod> GetMods()
         {
-            return GetModFolders().Select(di => (IStorageMod)new DirectoryMod(di, this)).ToList();
+            return GetModFolders().Select(di => (IStorageMod) new DirectoryMod(di, this)).ToList();
         }
 
         private List<DirectoryInfo> GetModFolders()
@@ -37,6 +37,7 @@ namespace BSU.Core.Storage
         public string GetLocation() => _path;
 
         public string GetIdentifier() => _name;
+
         public IStorageMod CreateMod(string identifier)
         {
             Logger.Debug("Creating mod {0}", identifier);

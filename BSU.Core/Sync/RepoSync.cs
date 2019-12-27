@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using BSU.Core.JobManager;
 using BSU.CoreCommon;
@@ -46,14 +45,16 @@ namespace BSU.Core.Sync
                 {
                     if (!repository.GetFileHash(repoFile).Equals(storage.GetFileHash(repoFile)))
                     {
-                        _allActions.Add(new UpdateAction(repository, storage, repoFile, repository.GetFileSize(repoFile), this));
+                        _allActions.Add(new UpdateAction(repository, storage, repoFile,
+                            repository.GetFileSize(repoFile), this));
                     }
 
                     storageListCopy.Remove(repoFile);
                 }
                 else
                 {
-                    _allActions.Add(new DownloadAction(repository, storage, repoFile, repository.GetFileSize(repoFile), this));
+                    _allActions.Add(new DownloadAction(repository, storage, repoFile, repository.GetFileSize(repoFile),
+                        this));
                 }
             }
 
@@ -61,6 +62,7 @@ namespace BSU.Core.Sync
             {
                 _allActions.Add(new DeleteAction(storage, storageModFile, this));
             }
+
             _actionsTodo = new List<WorkUnit>(_allActions);
             Logger.Debug("Download actions: {0}", _actionsTodo.OfType<DownloadAction>().Count());
             Logger.Debug("Update actions: {0}", _actionsTodo.OfType<UpdateAction>().Count());
@@ -68,7 +70,8 @@ namespace BSU.Core.Sync
         }
 
 
-        public long GetRemainingBytesToDownload() => _allActions.OfType<DownloadAction>().Sum(a => a.GetBytesRemaining());
+        public long GetRemainingBytesToDownload() =>
+            _allActions.OfType<DownloadAction>().Sum(a => a.GetBytesRemaining());
 
         public long GetRemainingBytesToUpdate() => _allActions.OfType<UpdateAction>().Sum(a => a.GetBytesRemaining());
 
@@ -99,7 +102,12 @@ namespace BSU.Core.Sync
             return work;
         }
 
-        public bool IsDone() => _cancellationTokenSource.IsCancellationRequested || HasError() || _allActions.All(a => a.IsDone() || a.HasError()); // TODO: wait for job to be fully canceled OR split IsDone into more meaningful parts
+        public bool IsDone() =>
+            _cancellationTokenSource.IsCancellationRequested || HasError() ||
+            _allActions.All(a =>
+                a.IsDone() ||
+                a.HasError()); // TODO: wait for job to be fully canceled OR split IsDone into more meaningful parts
+
         public string GetTargetHash() => Target.Hash;
 
         public event IJobFacade.JobEndedDelegate JobEnded;

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using BSU.BSO.FileStructures;
 using BSU.CoreCommon;
 using Newtonsoft.Json;
 using NLog;
-using NLog.Fluent;
 
 namespace BSU.BSO
 {
@@ -32,7 +30,8 @@ namespace BSU.BSO
             var parts = _url.Split('/');
             parts[^1] = "";
             var baseUrl = string.Join('/', parts);
-            _mods = serverFile.ModFolders.Select(m => (IRepositoryMod)new BsoRepoMod(baseUrl + m.ModName, m.ModName)).ToList();
+            _mods = serverFile.ModFolders.Select(m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName, m.ModName))
+                .ToList();
         }
 
         public List<IRepositoryMod> GetMods()

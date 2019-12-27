@@ -8,12 +8,11 @@ using BSU.CoreCommon;
 using BSU.Hashes;
 using Newtonsoft.Json;
 using NLog;
-using NLog.Fluent;
 
 namespace BSU.BSO
 {
     // TODO: document it's using lower case paths only!
-    internal  class BsoRepoMod : IRepositoryMod
+    internal class BsoRepoMod : IRepositoryMod
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -36,7 +35,8 @@ namespace BSU.BSO
 
         private string GetRealPath(string path) => GetFileEntry(path)?.FileName;
 
-        private HashType GetFileEntry(string path) => _hashFile.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
+        private HashType GetFileEntry(string path) =>
+            _hashFile.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
         public BsoRepoMod(string url, string name)
         {

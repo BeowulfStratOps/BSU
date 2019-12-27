@@ -1,9 +1,6 @@
-﻿using System.IO;
-using System.Threading;
+﻿using System.Threading;
 using BSU.CoreCommon;
-using Microsoft.VisualBasic.CompilerServices;
 using NLog;
-using NLog.Fluent;
 
 namespace BSU.Core.Sync
 {
@@ -15,7 +12,8 @@ namespace BSU.Core.Sync
         private readonly long _sizeTotal;
         private long _sizeTodo;
 
-        public UpdateAction(IRepositoryMod repository, IStorageMod storage, string path, long sizeTotal, RepoSync sync) : base(storage, path, sync)
+        public UpdateAction(IRepositoryMod repository, IStorageMod storage, string path, long sizeTotal, RepoSync sync)
+            : base(storage, path, sync)
         {
             _repository = repository;
             _sizeTotal = sizeTotal;

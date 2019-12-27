@@ -6,7 +6,6 @@ using BSU.BSO;
 using BSU.Core.Storage;
 using BSU.CoreCommon;
 using NLog;
-using NLog.Fluent;
 
 namespace BSU.Core
 {
@@ -29,13 +28,21 @@ namespace BSU.Core
 
         private readonly ISettings _settings;
 
-        internal void AddRepoType(string name, Func<string, string, IRepository> create) => _repoTypes.Add(name, create);
+        internal void AddRepoType(string name, Func<string, string, IRepository> create) =>
+            _repoTypes.Add(name, create);
+
         internal IEnumerable<string> GetRepoTypes() => _repoTypes.Keys.ToList();
-        internal void AddStorageType(string name, Func<string, string, IStorage> create) => _storageTypes.Add(name, create);
+
+        internal void AddStorageType(string name, Func<string, string, IStorage> create) =>
+            _storageTypes.Add(name, create);
+
         internal IEnumerable<string> GetStorageTypes() => _storageTypes.Keys.ToList();
 
         private readonly List<Tuple<RepoEntry, Exception>> _repoErrors = new List<Tuple<RepoEntry, Exception>>();
-        private readonly List<Tuple<StorageEntry, Exception>> _storageErrors = new List<Tuple<StorageEntry, Exception>>();
+
+        private readonly List<Tuple<StorageEntry, Exception>> _storageErrors =
+            new List<Tuple<StorageEntry, Exception>>();
+
         // TODO: expose those to user
         public IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors() => _repoErrors.AsReadOnly();
         public IReadOnlyList<Tuple<StorageEntry, Exception>> GetStorageErrors() => _storageErrors.AsReadOnly();
@@ -55,6 +62,7 @@ namespace BSU.Core
                     _repoErrors.Add(Tuple.Create(repoEntry, e));
                 }
             }
+
             foreach (var storageEntry in _settings.Storages)
             {
                 try
@@ -101,7 +109,8 @@ namespace BSU.Core
 
         private void AddRepoToState(RepoEntry repo)
         {
-            if (!_repoTypes.TryGetValue(repo.Type, out var create)) throw new NotSupportedException($"Repo type {repo.Type} is not supported.");
+            if (!_repoTypes.TryGetValue(repo.Type, out var create))
+                throw new NotSupportedException($"Repo type {repo.Type} is not supported.");
 
             Logger.Debug("Adding repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
             var repository = create(repo.Name, repo.Url);
@@ -135,7 +144,8 @@ namespace BSU.Core
 
         private void AddStorageToState(StorageEntry storage)
         {
-            if (!_storageTypes.TryGetValue(storage.Type, out var create)) throw new NotSupportedException($"Storage type {storage.Type} is not supported.");
+            if (!_storageTypes.TryGetValue(storage.Type, out var create))
+                throw new NotSupportedException($"Storage type {storage.Type} is not supported.");
 
             Logger.Debug("Adding storage {0} / {1} / {2}", storage.Name, storage.Type, storage.Path);
             var storageObj = create(storage.Name, storage.Path);
@@ -148,19 +158,22 @@ namespace BSU.Core
             Console.WriteLine("Repos:");
             foreach (var repository in _repositories)
             {
-                Console.WriteLine($"  {repository.GetType().Name} {repository.GetIdentifier()} {repository.GetLocation()}");
+                Console.WriteLine(
+                    $"  {repository.GetType().Name} {repository.GetIdentifier()} {repository.GetLocation()}");
                 foreach (var repoMod in repository.GetMods())
                 {
                     Console.WriteLine($"    {repoMod.GetIdentifier()} | {repoMod.GetDisplayName()}");
                 }
             }
+
             Console.WriteLine("Storages:");
             foreach (var storage in _storages)
             {
                 Console.WriteLine($"  {storage.GetType().Name} {storage.GetIdentifier()} {storage.GetLocation()}");
                 foreach (var storageMod in storage.GetMods())
                 {
-                    Console.WriteLine($"    {storageMod.GetIdentifier()} | {storageMod.GetDisplayName()} in {storage.GetIdentifier()}");
+                    Console.WriteLine(
+                        $"    {storageMod.GetIdentifier()} | {storageMod.GetDisplayName()} in {storage.GetIdentifier()}");
                 }
             }
         }
@@ -168,14 +181,16 @@ namespace BSU.Core
         public void SetUpdatingTo(IStorageMod mod, string targetHash, string targetDisplay)
         {
             Logger.Debug("Set updating: {0} to {1} : {2}", mod.GetUid(), targetHash, targetDisplay);
-            _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating[mod.GetIdentifier()] = new UpdateTarget(targetHash, targetDisplay);
+            _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating[mod.GetIdentifier()] =
+                new UpdateTarget(targetHash, targetDisplay);
             _settings.Store();
         }
 
         public void RemoveUpdatingTo(IStorageMod mod)
         {
             Logger.Debug("Remove updating: {0}", mod.GetUid());
-            _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating.Remove(mod.GetIdentifier());
+            _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating
+                .Remove(mod.GetIdentifier());
             _settings.Store();
         }
 
@@ -195,7 +210,8 @@ namespace BSU.Core
         public UpdateTarget GetUpdateTarget(IStorageMod mod)
         {
             var target = _settings.Storages
-                .SingleOrDefault(s => s.Name == mod.GetStorage().GetIdentifier())?.Updating.GetValueOrDefault(mod.GetIdentifier());
+                .SingleOrDefault(s => s.Name == mod.GetStorage().GetIdentifier())?.Updating
+                .GetValueOrDefault(mod.GetIdentifier());
             if (target == null) return null;
             return new UpdateTarget(target.Hash, target.Display);
         }

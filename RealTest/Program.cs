@@ -5,7 +5,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading;
 using BSU.Core;
 using BSU.Core.Sync;
@@ -34,9 +33,9 @@ namespace RealTest
             core.AddRepo("ww2", "http://127.0.0.1/bsu_real_test/server/repo2.json", "BSO");
             core.AddRepo("joint", "http://127.0.0.1/bsu_real_test/server/repo2.json", "BSO");
             var storage = Path.Combine(baseDir.FullName, "storage");
-            core.AddStorage("main", new DirectoryInfo(Path.Combine(storage,"main")), "DIRECTORY");
-            core.AddStorage("ww2", new DirectoryInfo(Path.Combine(storage,"ww2")), "DIRECTORY");
-            core.AddStorage("steam", new DirectoryInfo(Path.Combine(storage,"steam")), "STEAM");
+            core.AddStorage("main", new DirectoryInfo(Path.Combine(storage, "main")), "DIRECTORY");
+            core.AddStorage("ww2", new DirectoryInfo(Path.Combine(storage, "ww2")), "DIRECTORY");
+            core.AddStorage("steam", new DirectoryInfo(Path.Combine(storage, "steam")), "STEAM");
 
             var state = core.GetState();
 
@@ -154,7 +153,7 @@ namespace RealTest
             var field = job.GetType().GetField("_actionsTodo", BindingFlags.Instance | BindingFlags.NonPublic);
             var value = field.GetValue(job);
             var jobs = value as List<WorkUnit>;
-            for (int i = 0; i < 120*5; i++)
+            for (int i = 0; i < 120 * 5; i++)
             {
                 jobs.Insert(0, new WaitJob(job.StorageMod, "/", job));
             }
@@ -221,13 +220,20 @@ namespace RealTest
 
         private static void SetupSource(DirectoryInfo sourceDir, string cachePath)
         {
-            DownloadUnpack(sourceDir.CreateSubdirectory("cba_v1"), "https://github.com/CBATeam/CBA_A3/releases/download/v3.13.0.191116/CBA_A3_v3.13.0.zip", cachePath);
-            DownloadUnpack(sourceDir.CreateSubdirectory("cba_v2"), "https://github.com/CBATeam/CBA_A3/releases/download/v3.9.1.181229/CBA_A3_v3.9.1.zip", cachePath);
-            DownloadUnpack(sourceDir.CreateSubdirectory("ace_v1"), "https://github.com/acemod/ACE3/releases/download/v3.12.3/ace3_3.12.3.zip", cachePath);
-            DownloadUnpack(sourceDir.CreateSubdirectory("ace_v2"), "https://github.com/acemod/ACE3/releases/download/v3.13.0-rc1/ace3_3.13.0-rc1.zip", cachePath);
-            DownloadUnpack(sourceDir.CreateSubdirectory("acre2_v1"), "https://github.com/IDI-Systems/acre2/releases/download/v2.7.2.1022/acre2_2.7.2.1022.zip", cachePath);
-            DownloadUnpack(sourceDir.CreateSubdirectory("acre2_v2"), "https://github.com/IDI-Systems/acre2/releases/download/v2.5.1.980/acre2_2.5.1.980.zip", cachePath);
-            DownloadUnpack(sourceDir.CreateSubdirectory("acex_v1"), "https://github.com/acemod/ACEX/releases/download/v3.5.0-rc1/acex_3.5.0-rc1.zip", cachePath);
+            DownloadUnpack(sourceDir.CreateSubdirectory("cba_v1"),
+                "https://github.com/CBATeam/CBA_A3/releases/download/v3.13.0.191116/CBA_A3_v3.13.0.zip", cachePath);
+            DownloadUnpack(sourceDir.CreateSubdirectory("cba_v2"),
+                "https://github.com/CBATeam/CBA_A3/releases/download/v3.9.1.181229/CBA_A3_v3.9.1.zip", cachePath);
+            DownloadUnpack(sourceDir.CreateSubdirectory("ace_v1"),
+                "https://github.com/acemod/ACE3/releases/download/v3.12.3/ace3_3.12.3.zip", cachePath);
+            DownloadUnpack(sourceDir.CreateSubdirectory("ace_v2"),
+                "https://github.com/acemod/ACE3/releases/download/v3.13.0-rc1/ace3_3.13.0-rc1.zip", cachePath);
+            DownloadUnpack(sourceDir.CreateSubdirectory("acre2_v1"),
+                "https://github.com/IDI-Systems/acre2/releases/download/v2.7.2.1022/acre2_2.7.2.1022.zip", cachePath);
+            DownloadUnpack(sourceDir.CreateSubdirectory("acre2_v2"),
+                "https://github.com/IDI-Systems/acre2/releases/download/v2.5.1.980/acre2_2.5.1.980.zip", cachePath);
+            DownloadUnpack(sourceDir.CreateSubdirectory("acex_v1"),
+                "https://github.com/acemod/ACEX/releases/download/v3.5.0-rc1/acex_3.5.0-rc1.zip", cachePath);
         }
 
         private static void DownloadUnpack(DirectoryInfo dir, string uri, string cachePath)
@@ -245,6 +251,7 @@ namespace RealTest
                 data = client.DownloadData(uri);
                 File.WriteAllBytes(cacheFile, data);
             }
+
             Console.WriteLine("Unpacking " + uri);
             using var stream = new MemoryStream(data);
             using var zip = new ZipArchive(stream, ZipArchiveMode.Read);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BSU.CoreCommon;
 using NLog;
-using NLog.Fluent;
 
 namespace BSU.Core.State
 {

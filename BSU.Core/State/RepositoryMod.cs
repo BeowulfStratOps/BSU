@@ -3,7 +3,6 @@ using System.Linq;
 using BSU.Core.Hashes;
 using BSU.CoreCommon;
 using NLog;
-using NLog.Fluent;
 
 namespace BSU.Core.State
 {
@@ -41,7 +40,8 @@ namespace BSU.Core.State
 
             var actions = new List<ModAction>();
 
-            var storageModMatches = repo.State.Storages.SelectMany(s => s.Mods).Where(m => m.MatchHash.IsMatch(matchHash)).ToList();
+            var storageModMatches = repo.State.Storages.SelectMany(s => s.Mods)
+                .Where(m => m.MatchHash.IsMatch(matchHash)).ToList();
 
             var startedUpdates = repo.State.Storages.SelectMany(s => s.Mods)
                 .Where(m => VersionHash.GetHashString().Equals(m.UpdateTarget?.Hash)).ToList();
@@ -83,7 +83,8 @@ namespace BSU.Core.State
                 storageMod.AddRelatedAction(action);
             }
 
-            actions.AddRange(repo.State.Storages.Where(s => s.CanWrite).Select(s => new DownloadAction(s, this, target)));
+            actions.AddRange(
+                repo.State.Storages.Where(s => s.CanWrite).Select(s => new DownloadAction(s, this, target)));
 
             Actions = actions.AsReadOnly();
 

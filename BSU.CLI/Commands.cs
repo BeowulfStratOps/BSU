@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace BSU.CLI
 {
@@ -10,7 +9,8 @@ namespace BSU.CLI
     internal class CliCommand : Attribute
     {
         public readonly string Name, Description, Usage;
-        public CliCommand(string name, string description, string usage=null)
+
+        public CliCommand(string name, string description, string usage = null)
         {
             Name = name;
             Description = description;
@@ -21,6 +21,7 @@ namespace BSU.CLI
     internal class Commands
     {
         private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
+
         public Commands(object actionsClass)
         {
             var methods = actionsClass.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance);

@@ -63,7 +63,8 @@ namespace BSU.Core.Storage
         public List<string> GetFileList()
         {
             var files = _dir.EnumerateFiles("*", SearchOption.AllDirectories);
-            return files.Select(fi => fi.FullName.Replace(_dir.FullName, "").Replace('\\', '/').ToLowerInvariant()).ToList();
+            return files.Select(fi => fi.FullName.Replace(_dir.FullName, "").Replace('\\', '/').ToLowerInvariant())
+                .ToList();
         }
 
         public FileHash GetFileHash(string path)

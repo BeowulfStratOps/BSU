@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BSU.Core.Hashes;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
@@ -42,6 +41,7 @@ namespace BSU.Core.State
                 Logger.Debug("Active job is {0}", ActiveJob);
                 return;
             }
+
             VersionHash = new VersionHash(mod);
 
             if (!VersionHash.GetHashString().Equals(UpdateTarget?.Hash)) return;
