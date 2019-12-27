@@ -15,13 +15,13 @@ namespace BSU.Core.State
         internal readonly Core Core;
         public bool IsValid { get; private set; } = true;
 
-        internal readonly Uid Uid = new Uid();
+        private readonly Uid _uid = new Uid();
 
         public event Action Invalidated;
 
         internal State(IEnumerable<IRepository> repos, IEnumerable<IStorage> storages, Core core)
         {
-            Logger.Debug("Creating new state {0}", Uid);
+            Logger.Debug("Creating new state {0}", _uid);
             Core = core;
             core.StateInvalidated += InvalidateState; // TODO: this messes with GC
             Logger.Debug("Creating storage states");

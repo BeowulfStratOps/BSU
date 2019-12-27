@@ -26,11 +26,11 @@ namespace BSU.BSO.FileStructures
         public byte[] Hash { get; set; }
         public long FileSize { get; set; }
 
-        public HashType(string fileName, byte[] hash, long filesize)
+        public HashType(string fileName, byte[] hash, long fileSize)
         {
             FileName = fileName;
             Hash = hash;
-            FileSize = filesize;
+            FileSize = fileSize;
         }
 
         public override string ToString()

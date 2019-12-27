@@ -8,7 +8,7 @@ using IniParser.Model;
 
 namespace BSU.Server
 {
-    class ServerConfig
+    internal class ServerConfig
     {
         public string SourcePath, TargetPath, ModList, ServerFileName;
         public ServerFile Server;
@@ -45,7 +45,7 @@ namespace BSU.Server
         }
     }
 
-    static class IniHelper
+    internal static class IniHelper
     {
         public static string GetData(this IniData data, string section, string key)
         {

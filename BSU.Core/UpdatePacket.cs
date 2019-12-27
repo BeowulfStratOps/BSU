@@ -10,7 +10,7 @@ namespace BSU.Core
         private readonly State.State _state;
         internal readonly List<IJobFacade> Jobs = new List<IJobFacade>();
         internal readonly List<Action> Rollback = new List<Action>();
-        private bool _aborted = false;
+        private bool _aborted;
 
         public UpdatePacket(Core core, State.State state)
         {
@@ -18,7 +18,7 @@ namespace BSU.Core
             _state = state;
         }
 
-        public IReadOnlyList<IJobFacade> GetJobsViews() => new List<IJobFacade>(Jobs).AsReadOnly();
+        public IEnumerable<IJobFacade> GetJobsViews() => new List<IJobFacade>(Jobs).AsReadOnly();
 
         public void DoUpdate()
         {

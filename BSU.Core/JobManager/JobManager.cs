@@ -9,6 +9,7 @@ namespace BSU.Core.JobManager
 {
     internal class JobManager<TJobType> : IJobManager<TJobType> where TJobType : IJob
     {
+        // ReSharper disable once StaticMemberInGenericType
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly List<TJobType> _jobsTodo = new List<TJobType>();

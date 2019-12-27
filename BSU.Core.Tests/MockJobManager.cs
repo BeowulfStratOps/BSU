@@ -4,7 +4,7 @@ using BSU.Core.Sync;
 
 namespace BSU.Core.Tests
 {
-    internal class MockSyncManager : IJobManager<RepoSync>
+    internal class MockJobManager : IJobManager<RepoSync>
     {
         private readonly List<RepoSync> _jobs = new List<RepoSync>();
 

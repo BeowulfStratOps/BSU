@@ -21,7 +21,7 @@ namespace BSU.Core.State
 
         public readonly UpdateTarget UpdateTarget;
         internal readonly RepoSync ActiveJob;
-        public readonly List<ModAction> RelatedActions = new List<ModAction>();
+        private readonly List<ModAction> _relatedActions = new List<ModAction>();
 
         internal readonly Uid Uid = new Uid();
 
@@ -50,7 +50,7 @@ namespace BSU.Core.State
             UpdateTarget = null;
         }
 
-        public IReadOnlyList<ModAction> GetRelatedActions() => RelatedActions.AsReadOnly();
-        internal void AddRelatedAction(ModAction action) => RelatedActions.Add(action);
+        public IReadOnlyList<ModAction> GetRelatedActions() => _relatedActions.AsReadOnly();
+        internal void AddRelatedAction(ModAction action) => _relatedActions.Add(action);
     }
 }

@@ -9,7 +9,7 @@ using NLog;
 
 namespace BSU.Core
 {
-    class InternalState
+    internal class InternalState
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -199,11 +199,9 @@ namespace BSU.Core
             var updating = _settings.Storages.Single(s => s.Name == storage.GetIdentifier()).Updating;
             foreach (var modId in updating.Keys.ToList())
             {
-                if (storage.GetMods().All(m => m.GetIdentifier() != modId))
-                {
-                    updating.Remove(modId);
-                    Logger.Debug("Cleaing up udpating for {0} / {1}", storage.GetIdentifier(), modId);
-                }
+                if (storage.GetMods().Any(m => m.GetIdentifier() == modId)) continue;
+                updating.Remove(modId);
+                Logger.Debug("Cleaing up udpating for {0} / {1}", storage.GetIdentifier(), modId);
             }
         }
 
@@ -212,8 +210,7 @@ namespace BSU.Core
             var target = _settings.Storages
                 .SingleOrDefault(s => s.Name == mod.GetStorage().GetIdentifier())?.Updating
                 .GetValueOrDefault(mod.GetIdentifier());
-            if (target == null) return null;
-            return new UpdateTarget(target.Hash, target.Display);
+            return target == null ? null : new UpdateTarget(target.Hash, target.Display);
         }
     }
 }

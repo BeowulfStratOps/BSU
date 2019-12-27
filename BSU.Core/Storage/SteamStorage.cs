@@ -8,11 +8,11 @@ namespace BSU.Core.Storage
 {
     public class SteamStorage : IStorage
     {
-        private string _name;
-        private DirectoryInfo _basePath;
-        private List<DirectoryInfo> _mods;
+        private readonly string _name;
+        private readonly DirectoryInfo _basePath;
+        private readonly List<DirectoryInfo> _mods;
 
-        private Uid _uid = new Uid();
+        private readonly Uid _uid = new Uid();
 
         public Uid GetUid() => _uid;
 

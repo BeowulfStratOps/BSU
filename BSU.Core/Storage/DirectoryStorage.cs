@@ -24,12 +24,12 @@ namespace BSU.Core.Storage
             if (!new DirectoryInfo(path).Exists) throw new DirectoryNotFoundException();
         }
 
-        public virtual List<IStorageMod> GetMods()
+        public List<IStorageMod> GetMods()
         {
             return GetModFolders().Select(di => (IStorageMod) new DirectoryMod(di, this)).ToList();
         }
 
-        private List<DirectoryInfo> GetModFolders()
+        private IEnumerable<DirectoryInfo> GetModFolders()
         {
             return new DirectoryInfo(_path).EnumerateDirectories("@*").ToList();
         }

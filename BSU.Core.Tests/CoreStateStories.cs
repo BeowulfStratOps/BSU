@@ -33,7 +33,7 @@ namespace BSU.Core.Tests
         private (Core, MockSettings, MockRepo, MockRepositoryMod, MockStorageMod, MockStorage) DoSetup()
         {
             var settings = new MockSettings();
-            var syncManager = new MockSyncManager();
+            var syncManager = new MockJobManager();
             var core = new Core(settings, syncManager);
             core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
             core.AddStorageType("MOCK", (name, path) => new MockStorage(name, path));
@@ -126,7 +126,7 @@ namespace BSU.Core.Tests
         private void SetJob(string jobVersion, Core core, IStorageMod storage, IRepositoryMod repository)
         {
             if (jobVersion == "") return;
-            core.SyncManager.QueueJob(new RepoSync(repository, storage,
+            core.JobManager.QueueJob(new RepoSync(repository, storage,
                 new UpdateTarget(GetVersionHash(jobVersion), null)));
         }
 

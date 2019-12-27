@@ -29,10 +29,11 @@ namespace BSU.Hashes
         public SHA1AndPboHash(byte[] hash, long length)
         {
             _hash = hash;
+            _length = length;
         }
 
         public override byte[] GetBytes() => _hash;
 
-        public override long GetFileLength() => _length;
+        public virtual long GetFileLength() => _length;
     }
 }

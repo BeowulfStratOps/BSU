@@ -11,7 +11,7 @@ namespace BSU.CLI
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private Core.Core _core;
-        private State _state = null;
+        private State _state;
 
         static int Main(string[] args)
         {

@@ -21,12 +21,12 @@ namespace BSU.Core
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         internal readonly InternalState State;
-        internal readonly IJobManager<RepoSync> SyncManager;
+        internal readonly IJobManager<RepoSync> JobManager;
 
-        internal Core(ISettings settings, IJobManager<RepoSync> syncManager)
+        internal Core(ISettings settings, IJobManager<RepoSync> jobManager)
         {
             Logger.Info("Creating new core instance");
-            SyncManager = syncManager;
+            JobManager = jobManager;
             State = new InternalState(settings);
         }
 
@@ -34,7 +34,7 @@ namespace BSU.Core
         {
         }
 
-        public Core(ISettings settings) : this(settings, new JobManager<RepoSync>())
+        internal Core(ISettings settings) : this(settings, new JobManager<RepoSync>())
         {
         }
 
@@ -96,7 +96,7 @@ namespace BSU.Core
 
         private void CheckJobsWithoutUpdate()
         {
-            foreach (var updateJob in SyncManager.GetActiveJobs())
+            foreach (var updateJob in JobManager.GetActiveJobs())
             {
                 var target = State.GetUpdateTarget(updateJob.StorageMod);
                 if (target == null)
@@ -108,7 +108,7 @@ namespace BSU.Core
 
         private void CheckJobsWithoutRepositoryTarget(State.State state)
         {
-            foreach (var updateJob in SyncManager.GetAllJobs())
+            foreach (var updateJob in JobManager.GetAllJobs())
             {
                 if (state.Repos.SelectMany(r => r.Mods)
                     .All(m => m.VersionHash.GetHashString() != updateJob.Target.Hash))
@@ -155,7 +155,7 @@ namespace BSU.Core
                 State.SetUpdatingTo(sync.StorageMod, sync.Target.Hash, sync.Target.Display);
                 // TODO: do some sanity checks. two update jobs must never have the same storage mod
                 job.JobEnded += s => { InvalidateState(); };
-                SyncManager.QueueJob(sync);
+                JobManager.QueueJob(sync);
             }
         }
 
@@ -165,25 +165,25 @@ namespace BSU.Core
 
         internal void UpdateDone(IStorageMod mod) => State.RemoveUpdatingTo(mod);
 
-        public IEnumerable<IJobFacade> GetAllJobs() => SyncManager.GetAllJobs();
-        public IEnumerable<IJobFacade> GetActiveJobs() => SyncManager.GetActiveJobs();
+        public IEnumerable<IJobFacade> GetAllJobs() => JobManager.GetAllJobs();
+        public IEnumerable<IJobFacade> GetActiveJobs() => JobManager.GetActiveJobs();
 
         internal RepoSync GetActiveJob(IStorageMod mod)
         {
-            return SyncManager.GetActiveJobs().SingleOrDefault(j => j.StorageMod == mod);
+            return JobManager.GetActiveJobs().SingleOrDefault(j => j.StorageMod == mod);
         }
 
         internal IEnumerable<RepoSync> GetActiveJobs(IRepositoryMod mod)
         {
-            return SyncManager.GetActiveJobs().Where(j => j.RepositoryMod == mod);
+            return JobManager.GetActiveJobs().Where(j => j.RepositoryMod == mod);
         }
 
         public void Shutdown()
         {
-            SyncManager.Shutdown();
+            JobManager.Shutdown();
         }
 
         internal event Action StateInvalidated;
-        internal void InvalidateState() => StateInvalidated?.Invoke();
+        private void InvalidateState() => StateInvalidated?.Invoke();
     }
 }

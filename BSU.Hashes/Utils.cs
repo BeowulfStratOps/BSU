@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace BSU.Hashes
 {
@@ -9,6 +10,6 @@ namespace BSU.Hashes
             return path.Split('.').Last();
         }
 
-        public static string ToHexString(byte[] data) => string.Join("", data.Select(b => $"{b:x2}"));
+        public static string ToHexString(IEnumerable<byte> data) => string.Join("", data.Select(b => $"{b:x2}"));
     }
 }

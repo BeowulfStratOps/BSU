@@ -2,7 +2,7 @@
 
 namespace BSU.Core
 {
-    public interface ISettings
+    internal interface ISettings
     {
         void Store();
         List<RepoEntry> Repositories { get; }

@@ -15,7 +15,7 @@ namespace BSU.Core.Sync
         private readonly List<WorkUnit> _allActions, _actionsTodo;
         private Exception _error;
 
-        internal readonly Uid Uid = new Uid();
+        private readonly Uid _uid = new Uid();
 
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -23,7 +23,7 @@ namespace BSU.Core.Sync
         internal readonly IRepositoryMod RepositoryMod;
         internal readonly UpdateTarget Target;
 
-        public Uid GetUid() => Uid;
+        public Uid GetUid() => _uid;
 
         public CancellationToken GetCancellationToken() => _cancellationTokenSource.Token;
 
@@ -33,7 +33,7 @@ namespace BSU.Core.Sync
             Target = target;
             RepositoryMod = repository;
 
-            Logger.Debug("Building sync actions {0} to {1}: {2}", storage.GetUid(), repository.GetUid(), Uid);
+            Logger.Debug("Building sync actions {0} to {1}: {2}", storage.GetUid(), repository.GetUid(), _uid);
 
             _allActions = new List<WorkUnit>();
             var repositoryList = repository.GetFileList();

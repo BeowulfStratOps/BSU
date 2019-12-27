@@ -12,7 +12,7 @@ namespace BSU.Core.State
 
         public readonly string Name;
         public readonly IReadOnlyList<ModAction> Actions;
-        public ModAction Selected = null;
+        public ModAction Selected;
         public readonly string DisplayName;
 
         internal readonly Repository Repo;
@@ -21,12 +21,12 @@ namespace BSU.Core.State
 
         internal readonly IRepositoryMod Mod;
 
-        internal readonly Uid Uid = new Uid();
+        private readonly Uid _uid = new Uid();
 
         // TODO: find a better place for that
         internal RepositoryMod(IRepositoryMod mod, Repository repo)
         {
-            Logger.Debug("Creating new state for repo mod {0} -> {1}", mod.GetUid(), Uid);
+            Logger.Debug("Creating new state for repo mod {0} -> {1}", mod.GetUid(), _uid);
 
             Repo = repo;
             Mod = mod;
@@ -113,11 +113,9 @@ namespace BSU.Core.State
                 foreach (var other in storageModAction.GetStorageMod().GetRelatedActions())
                 {
                     Logger.Debug("Checking against {0}", other);
-                    if (action.UpdateTarget.Hash != other.UpdateTarget.Hash)
-                    {
-                        action.AddConflict(other);
-                        Logger.Debug("Added conflict {0} <-> {1}", action, other);
-                    }
+                    if (action.UpdateTarget.Hash == other.UpdateTarget.Hash) continue;
+                    action.AddConflict(other);
+                    Logger.Debug("Added conflict {0} <-> {1}", action, other);
                 }
             }
         }

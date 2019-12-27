@@ -27,8 +27,6 @@ namespace BSU.Core.Storage
             _parentStorage = parentStorage;
         }
 
-        public bool FileExists(string path) => File.Exists(GetFullFilePath(path));
-
         public string GetDisplayName()
         {
             if (_displayName != null) return _displayName;
