@@ -33,18 +33,20 @@ namespace BSU.Core.State
             Name = mod.GetIdentifier();
             Console.WriteLine($"Hashing {storage.Name} / {Name}");
             MatchHash = new MatchHash(mod);
-            VersionHash = new VersionHash(mod);
             UpdateTarget = storage.State.Core.GetUpdateTarget(this);
 
-            if (VersionHash.GetHashString().Equals(UpdateTarget?.Hash))
-            {
-                Logger.Info("Storage Mod {0} has met its update target.", mod.GetUid());
-                storage.State.Core.UpdateDone(mod);
-                UpdateTarget = null;
-            }
-
             ActiveJob = storage.State.Core.GetActiveJob(mod);
-            Logger.Debug("Active job is {0}", ActiveJob);
+            if (ActiveJob != null)
+            {
+                Logger.Debug("Active job is {0}", ActiveJob);
+                return;
+            }
+            VersionHash = new VersionHash(mod);
+
+            if (!VersionHash.GetHashString().Equals(UpdateTarget?.Hash)) return;
+            Logger.Info("Storage Mod {0} has met its update target.", mod.GetUid());
+            storage.State.Core.UpdateDone(mod);
+            UpdateTarget = null;
         }
 
         public IReadOnlyList<ModAction> GetRelatedActions() => RelatedActions.AsReadOnly();

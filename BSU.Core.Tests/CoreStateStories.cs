@@ -74,15 +74,9 @@ namespace BSU.Core.Tests
             SetStorageMod(storageModVer, storage, storageMod);
             SetUpdating(updatingTo, settings, storage, storageMod);
 
-
-
             if (storageModVer == "" && updatingTo != "") updatingTo = "";
-            if (storageModVer == updatingTo) updatingTo = "";
 
             var shouldFail = job != "" && (updatingTo != job || repoModVer != job || storageModVer == "");
-
-            if (job != "" && job != repoModVer) job = "";
-
 
             State.State state;
 
@@ -96,6 +90,7 @@ namespace BSU.Core.Tests
                 if (shouldFail) return;
                 throw;
             }
+            if (storageModVer == updatingTo && job == "") updatingTo = "";
 
             CheckSettings(settings, updatingTo);
             CheckJob(core, job);
@@ -167,6 +162,7 @@ namespace BSU.Core.Tests
         private void CheckAwaitUpdate(string repoModVer, string job, List<ModAction> actions, StorageMod storageMod)
         {
             if (job == "") return;
+            if (repoModVer != job) return;
             var update = actions.OfType<AwaitUpdateAction>().SingleOrDefault();
             Assert.NotNull(update);
             actions.Remove(update);

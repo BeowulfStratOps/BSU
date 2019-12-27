@@ -24,7 +24,16 @@ namespace BSU.Core.Hashes
         public MatchHash(IStorageMod mod)
         {
             Logger.Debug("Building match hash for storage mod {0}", mod.GetUid());
-            var modCpp = mod.GetFile("/mod.cpp");
+            Stream modCpp = null;
+            try
+            {
+                modCpp = mod.GetFile("/mod.cpp");
+            }
+            catch (IOException)
+            {
+                // File is in use. nothing we can do for now
+                // TODO: cache to the rescue!
+            }
             if (modCpp != null)
             {
                 using var reader = new StreamReader(modCpp);

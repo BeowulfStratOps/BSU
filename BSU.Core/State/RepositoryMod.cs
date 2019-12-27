@@ -57,16 +57,24 @@ namespace BSU.Core.State
             foreach (var storageMod in storageModMatches)
             {
                 Logger.Debug("Checking local match {0}", storageMod.Uid);
-                ModAction action;
-                if (VersionHash.IsMatch(storageMod.VersionHash) && storageMod.UpdateTarget == null)
-                    action = new UseAction(storageMod, target);
+                ModAction action = null;
+
+                if (storageMod.ActiveJob == null)
+                {
+                    if (VersionHash.IsMatch(storageMod.VersionHash) && storageMod.UpdateTarget == null)
+                        action = new UseAction(storageMod, target);
+                    else
+                    {
+                        if (!storageMod.Storage.CanWrite) continue;
+                        action = new UpdateAction(storageMod, this, startedUpdates.Contains(storageMod), target);
+                    }
+                }
                 else
                 {
-                    if (!storageMod.Storage.CanWrite) continue;
-                    if (storageMod.ActiveJob != null && storageMod.ActiveJob.Target.Hash == VersionHash.GetHashString())
+                    if (storageMod.ActiveJob.Target.Hash == VersionHash.GetHashString())
                         action = new AwaitUpdateAction(storageMod, this, target);
                     else
-                        action = new UpdateAction(storageMod, this, startedUpdates.Contains(storageMod), target);
+                        continue;
                 }
 
                 Logger.Debug("Created action: {0}", action);

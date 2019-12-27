@@ -193,7 +193,7 @@ namespace BSU.Core.Tests
         {
             var (settings, core, repo, storage) = CommonSetup();
             var repoMod = AddRepositoryMod(repo, "my_version");
-            repoMod.BlockUpdate = true;
+            repoMod.SleepMs = 10000;
             var storageMod = AddStorageMod(storage, "old_version");
 
             var state = core.GetState();
@@ -211,7 +211,7 @@ namespace BSU.Core.Tests
             Assert.Equal(GetVersionHash("my_version"), action.UpdateTarget.Hash);
             mod.Selected = action;
 
-            repoMod.BlockUpdate = false;
+            repoMod.SleepMs = 0;
             while (!update.IsDone())
             {
                 Thread.Sleep(10);
@@ -237,7 +237,7 @@ namespace BSU.Core.Tests
         {
             var (settings, core, repo, storage) = CommonSetup();
             var repoMod = AddRepositoryMod(repo, "my_version");
-            repoMod.BlockUpdate = true;
+            repoMod.SleepMs = 10000;
 
             var state = core.GetState();
 
@@ -255,7 +255,7 @@ namespace BSU.Core.Tests
             Assert.Equal(GetVersionHash("my_version"), action.UpdateTarget.Hash);
             mod.Selected = action;
 
-            repoMod.BlockUpdate = false;
+            repoMod.SleepMs = 0;
             while (!update.IsDone())
             {
                 Thread.Sleep(10);
