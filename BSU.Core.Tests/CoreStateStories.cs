@@ -117,13 +117,14 @@ namespace BSU.Core.Tests
         {
             var job = core.GetAllJobs().SingleOrDefault();
             if (jobVer == "") Assert.Null(job);
-            else Assert.Equal(GetVersionHash(jobVer), job.TargetHash);
+            else Assert.Equal(GetVersionHash(jobVer), job.GetTargetHash());
         }
 
         private void SetJob(string jobVersion, Core core, IStorageMod storage, IRepositoryMod repository)
         {
             if (jobVersion == "") return;
-            core.SyncManager.QueueJob(new UpdateJob(storage, repository, new UpdateTarget(GetVersionHash(jobVersion), null), new RepoSync(repository, storage)));
+            core.SyncManager.QueueJob(new RepoSync(repository, storage,
+                new UpdateTarget(GetVersionHash(jobVersion), null)));
         }
 
         private void CheckDownload(string repoModVer, List<ModAction> actions, State.Storage storage)

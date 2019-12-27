@@ -1,12 +1,14 @@
 using System.Collections.Generic;
+using BSU.Core.JobManager;
+using BSU.Core.Sync;
 
 namespace BSU.Core.Tests
 {
-    internal class MockSyncManager : ISyncManager
+    internal class MockSyncManager : IJobManager<RepoSync>
     {
-        private readonly List<UpdateJob> _jobs = new List<UpdateJob>();
+        private readonly List<RepoSync> _jobs = new List<RepoSync>();
 
-        public void QueueJob(UpdateJob job)
+        public void QueueJob(RepoSync job)
         {
             _jobs.Add(job);
         }
@@ -15,7 +17,7 @@ namespace BSU.Core.Tests
         {
         }
 
-        public IReadOnlyList<UpdateJob> GetActiveJobs() => _jobs.AsReadOnly();
-        public IReadOnlyList<UpdateJob> GetAllJobs() => _jobs.AsReadOnly();
+        public IReadOnlyList<RepoSync> GetActiveJobs() => _jobs.AsReadOnly();
+        public IReadOnlyList<RepoSync> GetAllJobs() => _jobs.AsReadOnly();
     }
 }

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using BSU.Core.JobManager;
 using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.Sync
 {
-    class RepoSync
+    internal class RepoSync : IJob, IJobFacade
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -19,10 +20,20 @@ namespace BSU.Core.Sync
 
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
+        internal readonly IStorageMod StorageMod;
+        internal readonly IRepositoryMod RepositoryMod;
+        internal readonly UpdateTarget Target;
+
+        public Uid GetUid() => Uid;
+
         public CancellationToken GetCancellationToken() => _cancellationTokenSource.Token;
 
-        public RepoSync(IRepositoryMod repository, IStorageMod storage)
+        public RepoSync(IRepositoryMod repository, IStorageMod storage, UpdateTarget target)
         {
+            StorageMod = storage;
+            Target = target;
+            RepositoryMod = repository;
+
             Logger.Debug("Building sync actions {0} to {1}: {2}", storage.GetUid(), repository.GetUid(), Uid);
 
             _allActions = new List<WorkUnit>();
@@ -65,6 +76,10 @@ namespace BSU.Core.Sync
 
         public int GetRemainingDeletedFilesCount() => _allActions.OfType<DeleteAction>().Count(a => !a.IsDone());
 
+        public string GetStorageModDisplayName() => StorageMod.GetDisplayName();
+
+        public string GetRepositoryModDisplayName() => RepositoryMod.GetDisplayName();
+
         public int GetRemainingNewFilesCount() => _allActions.OfType<DownloadAction>().Count(a => !a.IsDone());
         public long GetTotalBytesToDownload() => _allActions.OfType<DownloadAction>().Sum(a => a.GetBytesTotal());
 
@@ -85,8 +100,11 @@ namespace BSU.Core.Sync
         }
 
         public bool IsDone() => _cancellationTokenSource.IsCancellationRequested || HasError() || _allActions.All(a => a.IsDone() || a.HasError()); // TODO: wait for job to be fully canceled OR split IsDone into more meaningful parts
+        public string GetTargetHash() => Target.Hash;
 
-        internal void SetError(Exception e) => _error = e;
+        public event IJobFacade.JobEndedDelegate JobEnded;
+
+        public void SetError(Exception e) => _error = e;
 
         public bool HasError()
         {
@@ -103,14 +121,11 @@ namespace BSU.Core.Sync
         public void Abort() => _cancellationTokenSource.Cancel();
 
 
-        public delegate void SyncEndedDelegate(bool success);
-        public event SyncEndedDelegate SyncEnded;
-
-        internal void CheckDone()
+        public void CheckDone()
         {
             if (!IsDone()) return;
             Logger.Debug("Sync done");
-            SyncEnded?.Invoke(!HasError());
+            JobEnded?.Invoke(!HasError());
         }
     }
 }

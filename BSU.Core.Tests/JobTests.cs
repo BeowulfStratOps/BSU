@@ -113,7 +113,7 @@ namespace BSU.Core.Tests
 
             Thread.Sleep(10);
             Assert.Empty(_core.GetActiveJobs());
-            var syncState = _core.GetAllJobs().Single().Job.SyncState;
+            var syncState = _core.GetAllJobs().Single()as RepoSync;
             Assert.False(syncState.HasError());
             Assert.True(syncState.IsDone());
         }

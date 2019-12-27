@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
+using BSU.Core.Sync;
 using BSU.CoreCommon;
 using NLog;
 
@@ -20,7 +21,7 @@ namespace BSU.Core.State
         internal readonly IStorageMod Mod;
 
         public readonly UpdateTarget UpdateTarget;
-        internal readonly UpdateJob ActiveJob;
+        internal readonly RepoSync ActiveJob;
         public readonly List<ModAction> RelatedActions = new List<ModAction>();
 
         internal readonly Uid Uid = new Uid();

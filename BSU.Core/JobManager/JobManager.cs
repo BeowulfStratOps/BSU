@@ -3,25 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using BSU.Core.Sync;
-using BSU.CoreCommon;
 using NLog;
 
-namespace BSU.Core
+namespace BSU.Core.JobManager
 {
-    internal class SyncManager : ISyncManager
+    internal class JobManager<TJobType> : IJobManager<TJobType> where TJobType : IJob
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly List<UpdateJob> _jobsTodo = new List<UpdateJob>();
-        private readonly List<UpdateJob> _allJobs = new List<UpdateJob>();
+        private readonly List<TJobType> _jobsTodo = new List<TJobType>();
+        private readonly List<TJobType> _allJobs = new List<TJobType>();
         private bool _shutdown;
         private Thread _scheduler;
 
-        public void QueueJob(UpdateJob job)
+        public void QueueJob(TJobType job)
         {
-            Logger.Debug("Queueing job {0} -> {1}", job.StorageMod.GetUid(), job.RepositoryMod.GetUid());
+            Logger.Debug("Queueing job {0}", job.GetUid());
 
-            if (_shutdown) throw new InvalidOperationException("SyncManager is shutting down! Come back tomorrow.");
+            if (_shutdown) throw new InvalidOperationException("JobManager is shutting down! Come back tomorrow.");
 
             _allJobs.Add(job);
             lock (_jobsTodo)
@@ -35,8 +34,8 @@ namespace BSU.Core
             _scheduler.Start();
         }
 
-        public IReadOnlyList<UpdateJob> GetAllJobs() => _allJobs.AsReadOnly();
-        public IReadOnlyList<UpdateJob> GetActiveJobs() => _allJobs.Where(j => !j.SyncState.IsDone()).ToList().AsReadOnly();
+        public IReadOnlyList<TJobType> GetAllJobs() => _allJobs.AsReadOnly();
+        public IReadOnlyList<TJobType> GetActiveJobs() => _allJobs.Where(j => !j.IsDone()).ToList().AsReadOnly();
 
         private WorkUnit GetWork()
         {
@@ -49,19 +48,19 @@ namespace BSU.Core
                     return null;
                 }
                 var job = _jobsTodo.First();
-                Logger.Trace("Checking job {0} -> {1}", job.StorageMod.GetUid(), job.RepositoryMod.GetUid());
+                Logger.Trace("Checking job {0}", job.GetUid());
                 WorkUnit work;
                 try
                 {
                     Logger.Trace("Getting work from job");
-                    work = job.SyncState.GetWork();
+                    work = job.GetWork();
                 }
                 catch (Exception e)
                 {
                     Logger.Error(e);
-                    job.SyncState.SetError(e);
+                    job.SetError(e);
                     _jobsTodo.Remove(job);
-                    job.SyncState.CheckDone();
+                    job.CheckDone();
                     return null;
                 }
 
@@ -126,7 +125,7 @@ namespace BSU.Core
             {
                 foreach (var job in _jobsTodo)
                 {
-                    job.SyncState.Abort();
+                    job.Abort();
                 }
             }
             _scheduler.Join();

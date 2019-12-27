@@ -68,7 +68,7 @@ namespace RealTest
             state.Repos.Single(r => r.Name == "joint").PrepareUpdate().DoUpdate();
             Assert(!state.IsValid);
 
-            var oldJob = core.GetActiveJobs().Single().Job;
+            var oldJob = core.GetActiveJobs().Single() as RepoSync;
             StallJob(oldJob);
 
             try
@@ -148,21 +148,21 @@ namespace RealTest
             Assert(settings.Storages.All(s => !s.Updating.Any()));
         }
 
-        private static void StallJob(UpdateJob job)
+        private static void StallJob(RepoSync job)
         {
-            var field = job.SyncState.GetType().GetField("_actionsTodo", BindingFlags.Instance | BindingFlags.NonPublic);
-            var value = field.GetValue(job.SyncState);
+            var field = job.GetType().GetField("_actionsTodo", BindingFlags.Instance | BindingFlags.NonPublic);
+            var value = field.GetValue(job);
             var jobs = value as List<WorkUnit>;
             for (int i = 0; i < 120*5; i++)
             {
-                jobs.Insert(0, new WaitJob(job.StorageMod, "/", job.SyncState));
+                jobs.Insert(0, new WaitJob(job.StorageMod, "/", job));
             }
         }
 
-        private static void ResumeJob(UpdateJob job)
+        private static void ResumeJob(RepoSync job)
         {
-            var field = job.SyncState.GetType().GetField("_actionsTodo", BindingFlags.Instance | BindingFlags.NonPublic);
-            var value = field.GetValue(job.SyncState);
+            var field = job.GetType().GetField("_actionsTodo", BindingFlags.Instance | BindingFlags.NonPublic);
+            var value = field.GetValue(job);
             var jobs = value as List<WorkUnit>;
             while (jobs.OfType<WaitJob>().Any())
             {

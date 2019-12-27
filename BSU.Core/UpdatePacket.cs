@@ -13,7 +13,7 @@ namespace BSU.Core
     {
         private readonly Core _core;
         private readonly State.State _state;
-        internal readonly List<UpdateJob> Jobs = new List<UpdateJob>();
+        internal readonly List<IJobFacade> Jobs = new List<IJobFacade>();
         internal readonly List<Action> Rollback = new List<Action>();
 
         public UpdatePacket(Core core, State.State state)
@@ -22,7 +22,7 @@ namespace BSU.Core
             _state = state;
         }
 
-        public List<JobView> GetJobsViews() => Jobs.Select(j => new JobView(j)).ToList();
+        public IReadOnlyList<IJobFacade> GetJobsViews() => new List<IJobFacade>(Jobs).AsReadOnly();
 
         public void DoUpdate()
         {
@@ -40,14 +40,14 @@ namespace BSU.Core
 
         public void Abort()
         {
-            // TODO: inalidate object
+            // TODO: invalidate object
             foreach (var action in Rollback)
             {
                 action();
             }
         }
 
-        public bool IsDone() => Jobs.All(j => j.SyncState.IsDone());
-        public bool HasError() => Jobs.All(j => j.SyncState.HasError());
+        public bool IsDone() => Jobs.All(j => j.IsDone());
+        public bool HasError() => Jobs.All(j => j.HasError());
     }
 }

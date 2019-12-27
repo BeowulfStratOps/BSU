@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using BSU.Core.Hashes;
+using BSU.Core.JobManager;
 using BSU.Core.State;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
@@ -21,20 +22,20 @@ namespace BSU.Core
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         internal readonly InternalState State;
-        internal readonly ISyncManager SyncManager;
+        internal readonly IJobManager<RepoSync> SyncManager;
 
-        internal Core(ISettings settings, ISyncManager syncManager)
+        internal Core(ISettings settings, IJobManager<RepoSync> syncManager)
         {
             Logger.Info("Creating new core instance");
             SyncManager = syncManager;
             State = new InternalState(settings);
         }
 
-        public Core(FileInfo settingsPath) : this(Settings.Load(settingsPath), new SyncManager())
+        public Core(FileInfo settingsPath) : this(Settings.Load(settingsPath), new JobManager<RepoSync>())
         {
         }
 
-        public Core(ISettings settings) : this(settings, new SyncManager())
+        public Core(ISettings settings) : this(settings, new JobManager<RepoSync>())
         {
         }
 
@@ -105,17 +106,15 @@ namespace BSU.Core
             {
                 var storageMod = downloadAction.Storage.BackingStorage.CreateMod(downloadAction.FolderName);
                 updatePacket.Rollback.Add(() => downloadAction.Storage.BackingStorage.RemoveMod(downloadAction.FolderName));
-                var syncState = new RepoSync(downloadAction.RepositoryMod.Mod, storageMod);
-                var updateJob = new UpdateJob(storageMod, downloadAction.RepositoryMod.Mod, downloadAction.UpdateTarget, syncState);
-                updatePacket.Jobs.Add(updateJob);
+                var syncState = new RepoSync(downloadAction.RepositoryMod.Mod, storageMod, downloadAction.UpdateTarget);
+                updatePacket.Jobs.Add(syncState);
             }
 
 
             foreach (var updateAction in actions.OfType<UpdateAction>())
             {
-                var syncState = new RepoSync(updateAction.RepositoryMod.Mod, updateAction.StorageMod.Mod);
-                var updateJob = new UpdateJob(updateAction.StorageMod.Mod, updateAction.RepositoryMod.Mod, updateAction.UpdateTarget, syncState);
-                updatePacket.Jobs.Add(updateJob);
+                var syncState = new RepoSync(updateAction.RepositoryMod.Mod, updateAction.StorageMod.Mod, updateAction.UpdateTarget);
+                updatePacket.Jobs.Add(syncState);
             }
 
             return updatePacket;
@@ -127,10 +126,11 @@ namespace BSU.Core
             InvalidateState();
             foreach (var job in update.Jobs)
             {
-                State.SetUpdatingTo(job.StorageMod, job.Target.Hash, job.Target.Display);
+                if (!(job is RepoSync sync)) throw new InvalidCastException("WTF..");
+                State.SetUpdatingTo(sync.StorageMod, sync.Target.Hash, sync.Target.Display);
                 // TODO: do some sanity checks. two update jobs must never have the same storage mod
-                job.SyncState.SyncEnded += s => { InvalidateState(); };
-                SyncManager.QueueJob(job);
+                job.JobEnded += s => { InvalidateState(); };
+                SyncManager.QueueJob(sync);
             }
         }
 
@@ -140,10 +140,10 @@ namespace BSU.Core
 
         internal void UpdateDone(IStorageMod mod) => State.RemoveUpdatingTo(mod);
 
-        public List<JobView> GetAllJobs() => SyncManager.GetAllJobs().Select(j => new JobView(j)).ToList();
-        public List<JobView> GetActiveJobs() => SyncManager.GetActiveJobs().Select(j => new JobView(j)).ToList();
+        public List<IJobFacade> GetAllJobs() => SyncManager.GetAllJobs().Select(j => (IJobFacade)j).ToList();
+        public List<IJobFacade> GetActiveJobs() => SyncManager.GetActiveJobs().Select(j => (IJobFacade)j).ToList();
 
-        internal UpdateJob GetActiveJob(IStorageMod mod)
+        internal RepoSync GetActiveJob(IStorageMod mod)
         {
             return SyncManager.GetActiveJobs().SingleOrDefault(j => j.StorageMod == mod);
         }
