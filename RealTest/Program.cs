@@ -73,7 +73,8 @@ namespace RealTest
 
             try
             {
-                state.Repos.Single(r => r.Name == "ww2").PrepareUpdate().DoUpdate();
+                using var prep = state.Repos.Single(r => r.Name == "ww2").PrepareUpdate();
+                prep.DoUpdate();
                 Assert(false);
             }
             catch (InvalidOperationException)

@@ -168,7 +168,7 @@ namespace BSU.CLI
             var repo = _state.Repos.Single(r =>
                 r.Name.Equals(args[0], StringComparison.InvariantCultureIgnoreCase));
 
-            var packet = repo.PrepareUpdate();
+            using var packet = repo.PrepareUpdate();
 
             foreach (var packetJob in packet.GetJobsViews())
             {

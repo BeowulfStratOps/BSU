@@ -8,13 +8,13 @@ using NLog;
 
 namespace BSU.Core
 {
-    // TODO: make disposable?
-    public class UpdatePacket
+    public class UpdatePacket : IDisposable
     {
         private readonly Core _core;
         private readonly State.State _state;
         internal readonly List<IJobFacade> Jobs = new List<IJobFacade>();
         internal readonly List<Action> Rollback = new List<Action>();
+        private bool _aborted = false;
 
         public UpdatePacket(Core core, State.State state)
         {
@@ -26,21 +26,14 @@ namespace BSU.Core
 
         public void DoUpdate()
         {
-            try
-            {
-                if (!_state.IsValid) throw new InvalidOperationException("State is invalid!");
+            if (!_state.IsValid || _aborted) throw new InvalidOperationException("State is invalid!");
                 _core.DoUpdate(this);
-            }
-            catch (Exception)
-            {
-                Abort();
-                throw;
-            }
         }
 
-        public void Abort()
+        private void Abort()
         {
-            // TODO: invalidate object
+            if (_aborted) return;
+            _aborted = true;
             foreach (var action in Rollback)
             {
                 action();
@@ -49,5 +42,10 @@ namespace BSU.Core
 
         public bool IsDone() => Jobs.All(j => j.IsDone());
         public bool HasError() => Jobs.All(j => j.HasError());
+
+        public void Dispose()
+        {
+            Abort();
+        }
     }
 }
