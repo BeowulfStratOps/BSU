@@ -6,6 +6,10 @@ using NLog;
 
 namespace BSU.Core.State
 {
+    /// <summary>
+    /// A time slice state of all repositories and storages the core is currently aware of. Any changes to data,
+    /// or actions that imply change, will invalidate this instance.
+    /// </summary>
     public class State
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

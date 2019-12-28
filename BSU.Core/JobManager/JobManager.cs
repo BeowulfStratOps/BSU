@@ -7,6 +7,10 @@ using NLog;
 
 namespace BSU.Core.JobManager
 {
+    /// <summary>
+    /// Schedules and does work in a multi-threaded main-thread independent manner
+    /// </summary>
+    /// <typeparam name="TJobType"></typeparam>
     internal class JobManager<TJobType> : IJobManager<TJobType> where TJobType : IJob
     {
         // ReSharper disable once StaticMemberInGenericType
@@ -17,6 +21,11 @@ namespace BSU.Core.JobManager
         private bool _shutdown;
         private Thread _scheduler;
 
+        /// <summary>
+        /// Queue a job. Starts execution immediately
+        /// </summary>
+        /// <param name="job"></param>
+        /// <exception cref="InvalidOperationException">Thrown if the manager is shutting down.</exception>
         public void QueueJob(TJobType job)
         {
             Logger.Debug("Queueing job {0}", job.GetUid());
@@ -35,7 +44,16 @@ namespace BSU.Core.JobManager
             _scheduler.Start();
         }
 
+        /// <summary>
+        /// Returns all jobs ever queued.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<TJobType> GetAllJobs() => _allJobs.AsReadOnly();
+
+        /// <summary>
+        /// Return all jobs currently running or queued.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<TJobType> GetActiveJobs() => _allJobs.Where(j => !j.IsDone());
 
         private WorkUnit GetWork()
@@ -62,7 +80,7 @@ namespace BSU.Core.JobManager
                     Logger.Error(e);
                     job.SetError(e);
                     _jobsTodo.Remove(job);
-                    job.CheckDone();
+                    job.CheckDone(); // TODO: use better work-unit tracking!
                     return null;
                 }
 
@@ -121,6 +139,9 @@ namespace BSU.Core.JobManager
             Logger.Debug("Scheduler thread ending");
         }
 
+        /// <summary>
+        /// Shutdown all threads. Does not wait.
+        /// </summary>
         public void Shutdown()
         {
             if (_scheduler == null || !_scheduler.IsAlive) return;
@@ -132,8 +153,6 @@ namespace BSU.Core.JobManager
                     job.Abort();
                 }
             }
-
-            _scheduler.Join();
         }
     }
 }

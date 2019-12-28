@@ -6,6 +6,9 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.Storage
 {
+    /// <summary>
+    /// Steam workshop folder. Read only.
+    /// </summary>
     public class SteamStorage : IStorage
     {
         private readonly string _name;

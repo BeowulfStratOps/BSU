@@ -2,12 +2,19 @@
 
 namespace BSU.CoreCommon
 {
+    /// <summary>
+    /// Repository of mods. Likely on a remote server.
+    /// </summary>
     public interface IRepository
     {
+        /// <summary>
+        /// List of mods the repository contains..
+        /// </summary>
+        /// <returns></returns>
         List<IRepositoryMod> GetMods();
 
         /// <summary>
-        /// alias. identifier of sorts.
+        /// Unique identifier within the application.
         /// </summary>
         /// <returns></returns>
         string GetIdentifier();

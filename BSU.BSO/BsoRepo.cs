@@ -8,6 +8,9 @@ using NLog;
 
 namespace BSU.BSO
 {
+    /// <summary>
+    /// Internal representation of a repository in BSO format.
+    /// </summary>
     public class BsoRepo : IRepository
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

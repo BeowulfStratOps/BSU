@@ -7,6 +7,9 @@ using NLog;
 
 namespace BSU.Core.Storage
 {
+    /// <summary>
+    /// Represents a directory on the local file system, containing mod folders.
+    /// </summary>
     // TODO: document that this is (aggressively) using normalized (=lower case) paths!
     public class DirectoryStorage : IStorage
     {

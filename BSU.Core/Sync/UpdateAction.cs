@@ -4,6 +4,9 @@ using NLog;
 
 namespace BSU.Core.Sync
 {
+    /// <summary>
+    /// WorkUnit: Updates a single file from a remote location. Refers to the RepositoryMod for the actual operation.
+    /// </summary>
     internal class UpdateAction : WorkUnit
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

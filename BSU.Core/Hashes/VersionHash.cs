@@ -8,6 +8,9 @@ using NLog;
 
 namespace BSU.Core.Hashes
 {
+    /// <summary>
+    /// Hash to determine whether two file-sets match exactly.
+    /// </summary>
     public class VersionHash
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -32,11 +35,21 @@ namespace BSU.Core.Hashes
             _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
         }
 
+        /// <summary>
+        /// Determines whether two VersionHash match exactly.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool IsMatch(VersionHash other)
         {
             return _hash.SequenceEqual(other._hash);
         }
 
+        /// <summary>
+        /// Builds a single hash sum over all the files and their respective hashes.
+        /// </summary>
+        /// <param name="hashes"></param>
+        /// <returns></returns>
         // TODO: using a dictionary doesn't make any sense. Just cba to rewrite the ordering right now.
         private static byte[] BuildHash(Dictionary<string, FileHash> hashes)
         {

@@ -36,7 +36,7 @@ namespace BSU.CLI
                 Logger.Info("Issued command {0}", command);
                 if (command == "exit")
                 {
-                    _core.Shutdown();
+                    _core.Dispose();
                     return 0;
                 }
 
@@ -174,7 +174,7 @@ namespace BSU.CLI
 
             using var packet = repo.PrepareUpdate();
 
-            foreach (var packetJob in packet.GetJobsViews())
+            foreach (var packetJob in packet.GetJobs())
             {
                 Console.WriteLine(
                     $"{packetJob.GetStorageModDisplayName()} -> {packetJob.GetRepositoryModDisplayName()}");
@@ -185,7 +185,7 @@ namespace BSU.CLI
                 Console.WriteLine($" Delete: {packetJob.GetTotalDeletedFilesCount()} Files");
             }
 
-            if (!packet.GetJobsViews().Any())
+            if (!packet.GetJobs().Any())
             {
                 Console.WriteLine("Nothing to do.");
                 return;

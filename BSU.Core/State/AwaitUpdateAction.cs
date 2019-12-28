@@ -1,5 +1,8 @@
 ﻿namespace BSU.Core.State
 {
+    /// <summary>
+    /// Represents the choice of waiting for a currently running job to finish.
+    /// </summary>
     public class AwaitUpdateAction : ModAction, IHasStorageMod
     {
         public readonly StorageMod StorageMod;

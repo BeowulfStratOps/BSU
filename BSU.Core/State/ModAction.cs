@@ -2,6 +2,9 @@
 
 namespace BSU.Core.State
 {
+    /// <summary>
+    /// Base class for mod action choices.
+    /// </summary>
     public abstract class ModAction
     {
         public readonly UpdateTarget UpdateTarget;
@@ -17,6 +20,9 @@ namespace BSU.Core.State
         }
     }
 
+    /// <summary>
+    /// Convenience interface.
+    /// </summary>
     public interface IHasStorageMod
     {
         StorageMod GetStorageMod();

@@ -5,6 +5,9 @@ using NLog;
 
 namespace BSU.Core.State
 {
+    /// <summary>
+    /// Represents a repository as part of a <see cref="BSU.Core.State.State"/>.
+    /// </summary>
     public class Repository
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -18,6 +21,9 @@ namespace BSU.Core.State
 
         internal readonly Uid Uid = new Uid();
 
+        /// <summary>
+        /// Remove this repository. Invalidates the state.
+        /// </summary>
         public void Remove()
         {
             State.Core.RemoveRepo(this);
@@ -41,6 +47,10 @@ namespace BSU.Core.State
             }
         }
 
+        /// <summary>
+        /// Prepare an update from the currently selected mod actions. Should be used with a using block.
+        /// </summary>
+        /// <returns></returns>
         public UpdatePacket PrepareUpdate()
         {
             return State.Core.PrepareUpdate(this, State);

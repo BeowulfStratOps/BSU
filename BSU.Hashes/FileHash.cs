@@ -2,6 +2,9 @@
 
 namespace BSU.Hashes
 {
+    /// <summary>
+    /// Base class for file hashes used in BSU.
+    /// </summary>
     public abstract class FileHash
     {
         // TODO: replace SHA1 with MurmurHash?
@@ -13,6 +16,10 @@ namespace BSU.Hashes
             return GetBytes().SequenceEqual(otherHash.GetBytes());
         }
 
-        public override int GetHashCode() => GetBytes().Aggregate(1, (current, t) => current * t % 1234354566);
+        /// <summary>
+        /// Accompanies equals method
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode() => GetBytes().Aggregate(1, (current, t) => current * t % 1234354566); // TODO: check if that makes any sense..
     }
 }

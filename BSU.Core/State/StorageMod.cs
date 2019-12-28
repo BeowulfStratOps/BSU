@@ -7,6 +7,9 @@ using NLog;
 
 namespace BSU.Core.State
 {
+    /// <summary>
+    /// Represents a locally stored mod in the context of a <see cref="BSU.Core.State.State"/>.
+    /// </summary>
     public class StorageMod
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -11,7 +11,9 @@ using NLog;
 
 namespace BSU.BSO
 {
-    // TODO: document it's using lower case paths only!
+    /// <summary>
+    /// A single repository mod in BSO format.
+    /// </summary>
     internal class BsoRepoMod : IRepositoryMod
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -24,6 +26,11 @@ namespace BSU.BSO
 
         public List<string> GetFileList() => _hashFile.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
 
+        /// <summary>
+        /// Downloads a single file. Exception if file is not found.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <returns></returns>
         public byte[] GetFile(string path)
         {
             using var client = new WebClient();
@@ -50,6 +57,10 @@ namespace BSU.BSO
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
         }
 
+        /// <summary>
+        /// Attempts to build a extract a display name for this mod. Cached.
+        /// </summary>
+        /// <returns></returns>
         public string GetDisplayName()
         {
             if (_displayName != null) return _displayName;
@@ -72,16 +83,39 @@ namespace BSU.BSO
             return _displayName = Util.GetDisplayName(modCpp, keys);
         }
 
+        /// <summary>
+        /// Name / identifier for this mod. Unique within the repository. Equals the mod folder's name.
+        /// </summary>
+        /// <returns></returns>
         public string GetIdentifier() => _name;
 
+        /// <summary>
+        /// Returns metadata for a file. Null if file data not found.
+        /// Looks up stored value, no IO overhead.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <returns></returns>
         public FileHash GetFileHash(string path)
         {
             var entry = GetFileEntry(path);
             return entry == null ? null : new SHA1AndPboHash(entry.Hash, entry.FileSize);
         }
 
+        /// <summary>
+        /// Returns metadata for a file. Exception if file data not found.
+        /// Looks up stored value, no IO overhead.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <returns></returns>
         public long GetFileSize(string path) => GetFileEntry(path).FileSize;
 
+        /// <summary>
+        /// Downloads a file. Exception if not found.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="filePath">Path in local file storage, as download target.</param>
+        /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
+        /// <param name="token">Can be used to cancel this operation.</param>
         public void DownloadTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
         {
             var url = _url + GetRealPath(path);
@@ -94,6 +128,13 @@ namespace BSU.BSO
             Logger.Debug("{0} Finished downloading content {1} / {2}", _uid, _url, path);
         }
 
+        /// <summary>
+        /// Updates an existing file. Exception if not found.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="filePath">Path in local file storage, as local target.</param>
+        /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
+        /// <param name="token">Can be used to cancel this operation.</param>
         public void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
         {
             DownloadTo(path, filePath, updateCallback, token);

@@ -6,13 +6,28 @@ using NLog;
 
 namespace BSU.Core.State
 {
+    /// <summary>
+    /// Represents a repository mod in the context of a <see cref="BSU.Core.State.State"/>.
+    /// </summary>
     public class RepositoryMod
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public readonly string Name;
+
+        /// <summary>
+        /// Available actions for this mod.
+        /// </summary>
         public readonly IReadOnlyList<ModAction> Actions;
-        public ModAction Selected;
+
+        /// <summary>
+        /// Currently selected action for this mod. Must be on of the <see cref="Actions"/>
+        /// </summary>
+        public ModAction Selected; // TODO: setter: make sure it's in Actions
+
+        /// <summary>
+        /// Display name of this mod.
+        /// </summary>
         public readonly string DisplayName;
 
         internal readonly Repository Repo;

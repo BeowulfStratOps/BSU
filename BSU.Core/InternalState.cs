@@ -9,6 +9,10 @@ using NLog;
 
 namespace BSU.Core
 {
+    /// <summary>
+    /// Internal state of the core. Knows locations, but no repo/storage states.
+    /// Tracks the state across restarts by using a settings file.
+    /// </summary>
     internal class InternalState
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

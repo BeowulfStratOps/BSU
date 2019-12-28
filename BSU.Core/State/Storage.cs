@@ -4,6 +4,9 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.State
 {
+    /// <summary>
+    /// Represents a storage in a <see cref="BSU.Core.State.State"/>
+    /// </summary>
     public class Storage
     {
         public readonly List<StorageMod> Mods;
@@ -16,6 +19,9 @@ namespace BSU.Core.State
         internal readonly Uid Uid = new Uid();
 
 
+        /// <summary>
+        /// Remove this storage. Does not delete files. Invalidates the state.
+        /// </summary>
         public void Remove()
         {
             State.Core.RemoveStorage(this);

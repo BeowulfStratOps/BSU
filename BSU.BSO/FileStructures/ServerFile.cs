@@ -4,6 +4,9 @@ using Newtonsoft.Json;
 
 namespace BSU.BSO.FileStructures
 {
+    /// <summary>
+    /// Server meta data. To be serialized on a server.
+    /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     public class ServerFile
     {

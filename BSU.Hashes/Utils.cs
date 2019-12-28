@@ -7,6 +7,7 @@ namespace BSU.Hashes
     {
         public static string GetExtension(string path)
         {
+            // TODO: get a library for this /s
             return path.Split('.').Last();
         }
 

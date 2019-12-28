@@ -5,8 +5,17 @@ using System.Text.RegularExpressions;
 
 namespace BSU.CoreCommon
 {
+    /// <summary>
+    /// Utility methods used by repo/storage types and core
+    /// </summary>
     public static class Util
     {
+        /// <summary>
+        /// Attempt to create a display name
+        /// </summary>
+        /// <param name="modCpp">/mod.cpp content</param>
+        /// <param name="keynames">Names of .bikey files</param>
+        /// <returns></returns>
         public static string GetDisplayName(string modCpp, List<string> keynames)
         {
             // TODO: do something way smarter here
@@ -27,6 +36,11 @@ namespace BSU.CoreCommon
             return name + " - " + version;
         }
 
+        /// <summary>
+        /// Parse simple mod.cpp contents
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public static Dictionary<string, string> ParseModCpp(string data)
         {
             data = data.Replace("\r", "");
@@ -34,9 +48,16 @@ namespace BSU.CoreCommon
             return matches.ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
         }
 
+        /// <summary>
+        /// Check whether a path complies to relative path format.
+        /// I.e. lower case, forward slashes, starting with forward slash, not ending with forward slash.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <exception cref="FormatException">Throws an exception if path doesn't comply.</exception>
         public static void CheckPath(string path)
         {
             if (!path.StartsWith('/')) throw new FormatException(path);
+            if (path.EndsWith('/')) throw new FormatException(path);
             if (path.Contains('\\')) throw new FormatException(path);
             if (path.ToLowerInvariant() != path) throw new FormatException(path);
         }

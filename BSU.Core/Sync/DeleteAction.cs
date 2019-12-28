@@ -4,6 +4,9 @@ using NLog;
 
 namespace BSU.Core.Sync
 {
+    /// <summary>
+    /// WorkUnit: Deletes a single file.
+    /// </summary>
     internal class DeleteAction : WorkUnit
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

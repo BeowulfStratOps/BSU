@@ -3,6 +3,10 @@ using Newtonsoft.Json;
 
 namespace BSU.BSO.FileStructures
 {
+    /// <summary>
+    /// Holds Hash information for all files in a mod.
+    /// To be serialized on a server.
+    /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     public class HashFile
     {
@@ -20,9 +24,16 @@ namespace BSU.BSO.FileStructures
         }
     }
 
+    /// <summary>
+    /// Single file hash. For serialization.
+    /// </summary>
     public class HashType
     {
         public string FileName { get; set; }
+
+        /// <summary>
+        /// Pbo / SHA1 hash
+        /// </summary>
         public byte[] Hash { get; set; }
         public long FileSize { get; set; }
 

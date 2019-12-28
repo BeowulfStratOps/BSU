@@ -5,6 +5,9 @@ using NLog;
 
 namespace BSU.Core.Sync
 {
+    /// <summary>
+    /// WorkUnit: Downloads a new file. Refers to the RepositoryMod for the actual download.
+    /// </summary>
     internal class DownloadAction : WorkUnit
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

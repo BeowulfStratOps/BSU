@@ -5,6 +5,9 @@ using NLog;
 
 namespace BSU.Core
 {
+    /// <summary>
+    /// Tracks settings / internal core state in a json file.
+    /// </summary>
     internal class Settings : ISettings
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -1,5 +1,8 @@
 ﻿namespace BSU.CoreCommon
 {
+    /// <summary>
+    /// Used to assign objects a unique ID, for logging.
+    /// </summary>
     public class Uid
     {
         private static int _next = 1;

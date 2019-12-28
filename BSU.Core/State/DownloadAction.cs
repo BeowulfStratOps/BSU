@@ -1,5 +1,8 @@
 ﻿namespace BSU.Core.State
 {
+    /// <summary>
+    /// Represents the choice of downloading a mod to a new location
+    /// </summary>
     public class DownloadAction : ModAction
     {
         public readonly Storage Storage;

@@ -8,6 +8,9 @@ using NLog;
 
 namespace BSU.Core.Sync
 {
+    /// <summary>
+    /// Job for updating/downloading a storage mod from a repository.
+    /// </summary>
     internal class RepoSync : IJob, IJobFacade
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -25,7 +28,7 @@ namespace BSU.Core.Sync
 
         public Uid GetUid() => _uid;
 
-        public CancellationToken GetCancellationToken() => _cancellationTokenSource.Token;
+        internal CancellationToken GetCancellationToken() => _cancellationTokenSource.Token;
 
         public RepoSync(IRepositoryMod repository, IStorageMod storage, UpdateTarget target)
         {
@@ -94,6 +97,10 @@ namespace BSU.Core.Sync
 
         public int GetTotalNewFilesCount() => _allActions.OfType<DownloadAction>().Count();
 
+        /// <summary>
+        /// Grabs an atomic piece of work.
+        /// </summary>
+        /// <returns></returns>
         public WorkUnit GetWork()
         {
             if (_cancellationTokenSource.IsCancellationRequested) return null;
@@ -102,6 +109,10 @@ namespace BSU.Core.Sync
             return work;
         }
 
+        /// <summary>
+        /// Determines whether this job is completed/errored/aborted.
+        /// </summary>
+        /// <returns></returns>
         public bool IsDone() =>
             _cancellationTokenSource.IsCancellationRequested || HasError() ||
             _allActions.All(a =>
@@ -110,25 +121,41 @@ namespace BSU.Core.Sync
 
         public string GetTargetHash() => Target.Hash;
 
+        /// <summary>
+        /// Triggered when <see cref="IsDone"/> becomes true.
+        /// </summary>
         public event IJobFacade.JobEndedDelegate JobEnded;
 
         public void SetError(Exception e) => _error = e;
 
+        /// <summary>
+        /// Returns whether an error happened during the execution of this job.
+        /// </summary>
+        /// <returns></returns>
         public bool HasError()
         {
             if (_error != null) return true;
             return _allActions.Any(a => a.HasError());
         }
 
+        /// <summary>
+        /// Returns an error that happened during execution, or null.
+        /// </summary>
+        /// <returns></returns>
         public Exception GetError()
         {
             if (_error != null) return _error;
             return _allActions.FirstOrDefault(a => a.HasError())?.GetError();
         }
 
+        /// <summary>
+        /// Signals to abort this job. Does not wait.
+        /// </summary>
         public void Abort() => _cancellationTokenSource.Cancel();
 
-
+        /// <summary>
+        /// Check if the job is finished. Necessary due to poor work-unit tracking :shrug:
+        /// </summary>
         public void CheckDone()
         {
             if (!IsDone()) return;

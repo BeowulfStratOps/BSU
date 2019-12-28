@@ -108,7 +108,7 @@ namespace RealTest
             acre.Selected = acre.Actions.OfType<UpdateAction>().Single();
 
             state.Repos.Single(r => r.Name == "main").PrepareUpdate().DoUpdate();
-            core.Shutdown();
+            core.Dispose();
             core = new Core(settingsFile);
             state = core.GetState();
 

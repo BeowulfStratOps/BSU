@@ -1,8 +1,15 @@
 ﻿namespace BSU.Core.State
 {
+    /// <summary>
+    /// Representing the choice of updating a local mod to a different version (can be lower).
+    /// </summary>
     public class UpdateAction : ModAction, IHasStorageMod
     {
+        /// <summary>
+        /// Update started previously.
+        /// </summary>
         public bool IsContinuation { get; }
+        
         public readonly StorageMod StorageMod;
         public readonly RepositoryMod RepositoryMod;
 

@@ -8,6 +8,9 @@ using NLog;
 
 namespace BSU.Core.Hashes
 {
+    /// <summary>
+    /// Hash to determine whether two mod file-sets belong to the same mod. e.g. ace 3.5 and ace 3.12 are both ACE3
+    /// </summary>
     internal class MatchHash
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -73,6 +76,11 @@ namespace BSU.Core.Hashes
             Logger.Trace("Found {0} pbo files", _pboNames.Count);
         }
 
+        /// <summary>
+        /// Calculates whether two mods MatchHashes belong to the same mod.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool IsMatch(MatchHash other)
         {
             // TODO: improve this by A LOT

@@ -4,6 +4,9 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
 {
+    /// <summary>
+    /// Base class for atomic sync operations. Tracks progress/state.
+    /// </summary>
     internal abstract class WorkUnit
     {
         protected readonly IStorageMod Storage;
@@ -26,7 +29,7 @@ namespace BSU.Core.Sync
         {
             DoWork(_token);
             _done = true;
-            _sync.CheckDone();
+            _sync.CheckDone(); // TODO: use better work-unit tracking!
         }
 
         protected abstract void DoWork(CancellationToken token);

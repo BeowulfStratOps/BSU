@@ -3,11 +3,20 @@ using System.Security.Cryptography;
 
 namespace BSU.Hashes
 {
+    /// <summary>
+    /// Fast but accurate hash for pbo files.
+    /// Reads the builtin hash for pbo files, calculates SHA1 for other files.
+    /// </summary>
     public class SHA1AndPboHash : FileHash
     {
         private readonly byte[] _hash;
         private readonly long _length;
 
+        /// <summary>
+        /// Calculates hash from file stream. Closes the stream.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="extension"></param>
         public SHA1AndPboHash(Stream file, string extension)
         {
             using (file)
@@ -26,6 +35,11 @@ namespace BSU.Hashes
             }
         }
 
+        /// <summary>
+        /// Instantiates from known hash.
+        /// </summary>
+        /// <param name="hash"></param>
+        /// <param name="length"></param>
         public SHA1AndPboHash(byte[] hash, long length)
         {
             _hash = hash;

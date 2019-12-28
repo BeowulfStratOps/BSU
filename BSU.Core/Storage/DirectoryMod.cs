@@ -9,6 +9,9 @@ using NLog;
 
 namespace BSU.Core.Storage
 {
+    /// <summary>
+    /// Local mod folder.
+    /// </summary>
     public class DirectoryMod : IStorageMod
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -27,6 +30,10 @@ namespace BSU.Core.Storage
             _parentStorage = parentStorage;
         }
 
+        /// <summary>
+        /// Attempts to retrieve a display name for this mod folder.
+        /// </summary>
+        /// <returns></returns>
         public string GetDisplayName()
         {
             if (_displayName != null) return _displayName;
@@ -45,6 +52,11 @@ namespace BSU.Core.Storage
             return _displayName = Util.GetDisplayName(modCppData, keys);
         }
 
+        /// <summary>
+        /// Returns a read-only file stream. Must be disposed.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <returns></returns>
         public Stream GetFile(string path)
         {
             try
@@ -58,6 +70,11 @@ namespace BSU.Core.Storage
             }
         }
 
+        /// <summary>
+        /// Returns a list of relative file paths.
+        /// Relative path. Using forward slashes, starting with a forward slash, and in lower case.
+        /// </summary>
+        /// <returns></returns>
         public List<string> GetFileList()
         {
             var files = _dir.EnumerateFiles("*", SearchOption.AllDirectories);
@@ -65,6 +82,11 @@ namespace BSU.Core.Storage
                 .ToList();
         }
 
+        /// <summary>
+        /// Get hash of a local file. Null if it doesn't exist.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <returns></returns>
         public FileHash GetFileHash(string path)
         {
             Util.CheckPath(path);
@@ -77,6 +99,11 @@ namespace BSU.Core.Storage
 
         public IStorage GetStorage() => _parentStorage;
 
+        /// <summary>
+        /// Deletes a file. Exception if it doesn't exists.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <exception cref="NotSupportedException">Not supported for read-only locations.</exception>
         public void DeleteFile(string path)
         {
             Logger.Trace("Deleting file {0}", path);
@@ -84,6 +111,12 @@ namespace BSU.Core.Storage
             File.Delete(GetFullFilePath(path));
         }
 
+        /// <summary>
+        /// Returns the local file system path for a relative path.
+        /// </summary>
+        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException">Not supported on read-only locations.</exception>
         public string GetFilePath(string path)
         {
             if (!_parentStorage.CanWrite()) throw new NotSupportedException();

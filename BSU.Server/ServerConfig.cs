@@ -8,8 +8,13 @@ using IniParser.Model;
 
 namespace BSU.Server
 {
+    /// <summary>
+    /// Wrapper for server config ini file
+    /// </summary>
     internal class ServerConfig
     {
+        // TODO: create an example file.
+
         public string SourcePath, TargetPath, ModList, ServerFileName;
         public ServerFile Server;
 

@@ -16,7 +16,7 @@ using UpdateAction = BSU.Core.State.UpdateAction;
 
 namespace BSU.Core
 {
-    public class Core
+    public class Core : IDisposable
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -30,6 +30,10 @@ namespace BSU.Core
             State = new InternalState(settings);
         }
 
+        /// <summary>
+        /// Create a new core instance. Should be used in a using block.
+        /// </summary>
+        /// <param name="settingsPath">Location to store local settings, including repo/storage data.</param>
         public Core(FileInfo settingsPath) : this(Settings.Load(settingsPath), new JobManager<RepoSync>())
         {
         }
@@ -48,8 +52,19 @@ namespace BSU.Core
 
         public IEnumerable<string> GetStorageTypes() => State.GetStorageTypes();
 
+        /// <summary>
+        /// Adds a repository of given type.
+        /// </summary>
+        /// <param name="name">Identifier for this repository</param>
+        /// <param name="url">Url of the repository file</param>
+        /// <param name="type">Types, as contained in repo-types</param>
         public void AddRepo(string name, string url, string type) => State.AddRepo(name, url, type);
 
+        /// <summary>
+        /// Removes a repository.
+        /// </summary>
+        /// <param name="repo">Repository identifier.</param>
+        /// <exception cref="InvalidOperationException">Fails if the repository has running jobs</exception>
         internal void RemoveRepo(Repository repo)
         {
             if (repo.BackingRepository.GetMods().Any(mod => GetActiveJobs(mod).Any()))
@@ -60,6 +75,11 @@ namespace BSU.Core
             State.RemoveRepo(repo.BackingRepository);
         }
 
+        /// <summary>
+        /// Removes a storage
+        /// </summary>
+        /// <param name="storage">Storage identifier.</param>
+        /// <exception cref="InvalidOperationException">Fails if the storage has running jobs.</exception>
         public void RemoveStorage(State.Storage storage)
         {
             if (storage.BackingStorage.GetMods().Any(mod => GetActiveJob(mod) != null))
@@ -70,11 +90,18 @@ namespace BSU.Core
             State.RemoveStorage(storage.BackingStorage);
         }
 
+        /// <summary>
+        /// Adds a storage of the given type.
+        /// </summary>
+        /// <param name="name">Identifier.</param>
+        /// <param name="directory">Directory on the local file system.</param>
+        /// <param name="type">Types, as listed in the storage types.</param>
         public void AddStorage(string name, DirectoryInfo directory, string type) =>
             State.AddStorage(name, directory, type);
 
         /// <summary>
-        /// Does all the hard work. Don't spam it.
+        /// Calculated a time-slice state of all repositories, storages, and their mods.
+        /// Does all the hard work atm, should be run async.
         /// </summary>
         /// <returns></returns>
         public State.State GetState()
@@ -159,13 +186,25 @@ namespace BSU.Core
             }
         }
 
+        /// <summary>
+        /// Print the internal state - for debugging.
+        /// </summary>
         public void PrintInternalState() => State.PrintState();
 
-        public UpdateTarget GetUpdateTarget(StorageMod mod) => State.GetUpdateTarget(mod.Mod);
+        internal UpdateTarget GetUpdateTarget(StorageMod mod) => State.GetUpdateTarget(mod.Mod);
 
         internal void UpdateDone(IStorageMod mod) => State.RemoveUpdatingTo(mod);
 
+        /// <summary>
+        /// Get all jobs the JobManager is aware of.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<IJobFacade> GetAllJobs() => JobManager.GetAllJobs();
+
+        /// <summary>
+        /// Get all jobs that are currently running or queued.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<IJobFacade> GetActiveJobs() => JobManager.GetActiveJobs();
 
         internal RepoSync GetActiveJob(IStorageMod mod)
@@ -178,8 +217,9 @@ namespace BSU.Core
             return JobManager.GetActiveJobs().Where(j => j.RepositoryMod == mod);
         }
 
-        public void Shutdown()
+        public void Dispose()
         {
+            // Stop all threaded operations, to ensure a graceful exit.
             JobManager.Shutdown();
         }
 
