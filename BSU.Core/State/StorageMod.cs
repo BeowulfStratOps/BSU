@@ -34,7 +34,7 @@ namespace BSU.Core.State
             Mod = mod;
             Storage = storage;
             Name = mod.GetIdentifier();
-            Console.WriteLine($"Hashing {storage.Name} / {Name}");
+            Logger.Info("Hashing {0} / {1}", storage.Name, Name);
             MatchHash = new MatchHash(mod);
             UpdateTarget = storage.State.Core.GetUpdateTarget(this);
 
