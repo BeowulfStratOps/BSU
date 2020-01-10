@@ -15,7 +15,11 @@ namespace BSU.CLI
 
         static int Main(string[] args)
         {
-            return new Program().Main();
+            if (args.Length > 0 && args[0] == "log_window") return LogWindow.RunClient();
+            LogWindow.StartServer();
+            var ret = new Program().Main();
+            LogWindow.StopServer();
+            return ret;
         }
 
         private int Main()
