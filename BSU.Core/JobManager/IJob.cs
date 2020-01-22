@@ -18,11 +18,7 @@ namespace BSU.Core.JobManager
         bool IsDone();
         void SetError(Exception e);
 
-        /// <summary>
-        /// Trigger done check. Necessary due to bad work unit tracking.
-        /// </summary>
-        /// <returns></returns>
-        void CheckDone();
+        void WorkItemFinished();
         void Abort();
         WorkUnit GetWork();
     }

@@ -25,11 +25,10 @@ namespace BSU.Core.Sync
 
         private Exception _error;
 
-        public void Work()
+        public virtual void Work()
         {
             DoWork(_token);
             _done = true;
-            _sync.CheckDone(); // TODO: use better work-unit tracking!
         }
 
         protected abstract void DoWork(CancellationToken token);
@@ -38,7 +37,6 @@ namespace BSU.Core.Sync
         internal void SetError(Exception e)
         {
             _error = e;
-            _sync.CheckDone();
         }
 
         public bool HasError() => _error != null;

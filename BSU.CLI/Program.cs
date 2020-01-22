@@ -40,7 +40,7 @@ namespace BSU.CLI
                 Logger.Info("Issued command {0}", command);
                 if (command == "exit")
                 {
-                    _core.Dispose();
+                    _core.Dispose(true);
                     return 0;
                 }
 

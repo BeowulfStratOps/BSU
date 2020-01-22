@@ -25,6 +25,7 @@ namespace BSU.Core.Sync
         internal readonly IStorageMod StorageMod;
         internal readonly IRepositoryMod RepositoryMod;
         internal readonly UpdateTarget Target;
+        private ReferenceCounter _workCounter = new ReferenceCounter();
 
         public Uid GetUid() => _uid;
 
@@ -106,6 +107,7 @@ namespace BSU.Core.Sync
             if (_cancellationTokenSource.IsCancellationRequested) return null;
             var work = _actionsTodo.FirstOrDefault();
             if (work != null) _actionsTodo.Remove(work);
+            _workCounter.Inc();
             return work;
         }
 
@@ -156,9 +158,10 @@ namespace BSU.Core.Sync
         /// <summary>
         /// Check if the job is finished. Necessary due to poor work-unit tracking :shrug:
         /// </summary>
-        public void CheckDone()
+        public void WorkItemFinished()
         {
-            if (!IsDone()) return;
+            _workCounter.Dec();
+            if (!_workCounter.Done) return;
             Logger.Debug("Sync done");
             JobEnded?.Invoke(!HasError());
         }

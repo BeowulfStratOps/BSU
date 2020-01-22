@@ -10,23 +10,26 @@ namespace BSU.Core.JobManager
     /// <summary>
     /// Schedules and does work in a multi-threaded main-thread independent manner
     /// </summary>
-    /// <typeparam name="TJobType"></typeparam>
-    internal class JobManager<TJobType> : IJobManager<TJobType> where TJobType : IJob
+    internal class JobManager : IJobManager
     {
+        private const int MAX_THREADS = 5;
+
         // ReSharper disable once StaticMemberInGenericType
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly List<TJobType> _jobsTodo = new List<TJobType>();
-        private readonly List<TJobType> _allJobs = new List<TJobType>();
+        private readonly List<IJob> _jobsTodo = new List<IJob>();
+        private readonly List<IJob> _allJobs = new List<IJob>();
         private bool _shutdown;
         private Thread _scheduler;
+        private object _counterLock = new object();
+        private int _threadsDone;
 
         /// <summary>
         /// Queue a job. Starts execution immediately
         /// </summary>
         /// <param name="job"></param>
         /// <exception cref="InvalidOperationException">Thrown if the manager is shutting down.</exception>
-        public void QueueJob(TJobType job)
+        public void QueueJob(IJob job)
         {
             Logger.Debug("Queueing job {0}", job.GetUid());
 
@@ -48,15 +51,15 @@ namespace BSU.Core.JobManager
         /// Returns all jobs ever queued.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<TJobType> GetAllJobs() => _allJobs.AsReadOnly();
+        public IEnumerable<IJob> GetAllJobs() => _allJobs.AsReadOnly();
 
         /// <summary>
         /// Return all jobs currently running or queued.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<TJobType> GetActiveJobs() => _allJobs.Where(j => !j.IsDone());
+        public IEnumerable<IJob> GetActiveJobs() => _allJobs.Where(j => !j.IsDone());
 
-        private WorkUnit GetWork()
+        private WorkUnit GetWork(out IJob parentJob)
         {
             lock (_jobsTodo)
             {
@@ -64,68 +67,99 @@ namespace BSU.Core.JobManager
                 if (!_jobsTodo.Any())
                 {
                     Logger.Trace("No jobs");
+                    parentJob = null;
                     return null;
                 }
 
-                var job = _jobsTodo.First();
-                Logger.Trace("Checking job {0}", job.GetUid());
-                WorkUnit work;
-                try
+                var jobs = new List<IJob>(_jobsTodo);
+                foreach (var job in jobs)
                 {
-                    Logger.Trace("Getting work from job");
-                    work = job.GetWork();
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                    job.SetError(e);
+                    Logger.Trace("Checking job {0}", job.GetUid());
+                    WorkUnit work = null;
+                    try
+                    {
+                        Logger.Trace("Getting work from job");
+                        work = job.GetWork();
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                        job.SetError(e);
+                        _jobsTodo.Remove(job);
+                    }
+
+                    if (work != null)
+                    {
+                        Logger.Trace("Got work: {0}", work);
+                        parentJob = job;
+                        return work;
+                    }
+
+                    Logger.Trace("No work. De-queueing job");
                     _jobsTodo.Remove(job);
-                    job.CheckDone(); // TODO: use better work-unit tracking!
-                    return null;
                 }
 
-                if (work != null)
-                {
-                    Logger.Trace("Got work: {0}", work);
-                    return work;
-                }
-
-                Logger.Trace("No work. De-queueing job");
-                _jobsTodo.Remove(job);
+                parentJob = null;
                 return null;
             }
         }
 
         private void DoWork()
         {
-            while (true)
+            var done = false;
+            while (true && !_shutdown && _threadsDone < MAX_THREADS)
             {
-                var work = GetWork();
-                if (work == null) break;
+                var work = GetWork(out var job);
+                if (work == null)
+                {
+                    if (!done)
+                    {
+                        done = true;
+                        Logger.Trace("Worker thread going to sleep.");
+                        lock (_counterLock)
+                        {
+                            _threadsDone++;
+                        }
+                    }
+                    Thread.Sleep(1000);
+                    continue;
+                }
+
+                if (done)
+                {
+                    done = false;
+                    Logger.Trace("Worker thread waking up.");
+                    lock (_counterLock)
+                    {
+                        _threadsDone--;
+                    }
+                }
                 try
                 {
                     work.Work();
+                    job.WorkItemFinished();
                 }
                 catch (Exception e)
                 {
                     Logger.Error(e);
                     work.SetError(e);
+                    job.WorkItemFinished();
                 }
             }
+            Logger.Trace("Worker thread ending.");
         }
 
         private void Schedule()
         {
+            _threadsDone = 0;
             var threads = new List<Thread>();
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < MAX_THREADS; i++)
             {
                 var thread = new Thread(DoWork);
                 threads.Add(thread);
                 thread.Start();
             }
-
-            // TODO: thread count might get stuck on a lower number
 
             while (threads.Any())
             {
@@ -140,10 +174,11 @@ namespace BSU.Core.JobManager
         }
 
         /// <summary>
-        /// Shutdown all threads. Does not wait.
+        /// Shutdown all threads.
         /// </summary>
-        public void Shutdown()
+        public void Shutdown(bool blocking)
         {
+            Logger.Info("JobManager shutting down");
             if (_scheduler == null || !_scheduler.IsAlive) return;
             _shutdown = true;
             lock (_jobsTodo)
@@ -153,6 +188,8 @@ namespace BSU.Core.JobManager
                     job.Abort();
                 }
             }
+
+            if (blocking) _scheduler.Join();
         }
     }
 }

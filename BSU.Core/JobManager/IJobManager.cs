@@ -2,29 +2,29 @@
 
 namespace BSU.Core.JobManager
 {
-    internal interface IJobManager<T> where T : IJob
+    internal interface IJobManager
     {
         /// <summary>
         /// Returns all jobs ever queued.
         /// </summary>
         /// <returns></returns>
-        IEnumerable<T> GetAllJobs();
+        IEnumerable<IJob> GetAllJobs();
 
         /// <summary>
         /// Return all jobs currently running or queued.
         /// </summary>
         /// <returns></returns>
-        IEnumerable<T> GetActiveJobs();
+        IEnumerable<IJob> GetActiveJobs();
 
         /// <summary>
         /// Queue a job. Starts execution immediately
         /// </summary>
         /// <param name="job"></param>
-        void QueueJob(T job);
+        void QueueJob(IJob job);
 
         /// <summary>
         /// Shutdown all threads. Does not wait.
         /// </summary>
-        void Shutdown();
+        void Shutdown(bool blocking);
     }
 }

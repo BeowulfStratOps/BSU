@@ -4,11 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using BSU.Core.JobManager;
+using BSU.Core.Services;
 using BSU.Core.State;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
 using NLog;
 using DownloadAction = BSU.Core.State.DownloadAction;
+using Repository = BSU.Core.State.Repository;
 using UpdateAction = BSU.Core.State.UpdateAction;
 
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
@@ -21,9 +23,9 @@ namespace BSU.Core
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         internal readonly InternalState State;
-        internal readonly IJobManager<RepoSync> JobManager;
+        internal readonly IJobManager JobManager;
 
-        internal Core(ISettings settings, IJobManager<RepoSync> jobManager)
+        internal Core(ISettings settings, IJobManager jobManager)
         {
             Logger.Info("Creating new core instance");
             JobManager = jobManager;
@@ -34,11 +36,11 @@ namespace BSU.Core
         /// Create a new core instance. Should be used in a using block.
         /// </summary>
         /// <param name="settingsPath">Location to store local settings, including repo/storage data.</param>
-        public Core(FileInfo settingsPath) : this(Settings.Load(settingsPath), new JobManager<RepoSync>())
+        public Core(FileInfo settingsPath) : this(Settings.Load(settingsPath), ServiceProvider.JobManager)
         {
         }
 
-        internal Core(ISettings settings) : this(settings, new JobManager<RepoSync>())
+        internal Core(ISettings settings) : this(settings, ServiceProvider.JobManager)
         {
         }
 
@@ -123,7 +125,7 @@ namespace BSU.Core
 
         private void CheckJobsWithoutUpdate()
         {
-            foreach (var updateJob in JobManager.GetActiveJobs())
+            foreach (var updateJob in JobManager.GetActiveJobs().OfType<RepoSync>())
             {
                 var target = State.GetUpdateTarget(updateJob.StorageMod);
                 if (target == null)
@@ -135,7 +137,7 @@ namespace BSU.Core
 
         private void CheckJobsWithoutRepositoryTarget(State.State state)
         {
-            foreach (var updateJob in JobManager.GetAllJobs())
+            foreach (var updateJob in JobManager.GetAllJobs().OfType<RepoSync>())
             {
                 if (state.Repos.SelectMany(r => r.Mods)
                     .All(m => m.VersionHash.GetHashString() != updateJob.Target.Hash))
@@ -199,28 +201,30 @@ namespace BSU.Core
         /// Get all jobs the JobManager is aware of.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<IJobFacade> GetAllJobs() => JobManager.GetAllJobs();
+        public IEnumerable<IJobFacade> GetAllJobs() => JobManager.GetAllJobs().OfType<IJobFacade>(); // TODO: other jobs?
 
         /// <summary>
         /// Get all jobs that are currently running or queued.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<IJobFacade> GetActiveJobs() => JobManager.GetActiveJobs();
+        public IEnumerable<IJobFacade> GetActiveJobs() => JobManager.GetActiveJobs().OfType<IJobFacade>(); // TODO: other jobs?
 
         internal RepoSync GetActiveJob(IStorageMod mod)
         {
-            return JobManager.GetActiveJobs().SingleOrDefault(j => j.StorageMod == mod);
+            return JobManager.GetActiveJobs().OfType<RepoSync>().SingleOrDefault(j => j.StorageMod == mod);
         }
 
         internal IEnumerable<RepoSync> GetActiveJobs(IRepositoryMod mod)
         {
-            return JobManager.GetActiveJobs().Where(j => j.RepositoryMod == mod);
+            return JobManager.GetActiveJobs().OfType<RepoSync>().Where(j => j.RepositoryMod == mod);
         }
 
-        public void Dispose()
+        public void Dispose() => Dispose(false);
+
+        public void Dispose(bool blocking)
         {
             // Stop all threaded operations, to ensure a graceful exit.
-            JobManager.Shutdown();
+            JobManager.Shutdown(blocking);
         }
 
         internal event Action StateInvalidated;
