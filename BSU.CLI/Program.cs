@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using BSU.Core.State;
+using BSU.Core.View;
 using NLog;
 
 namespace BSU.CLI
@@ -245,6 +246,12 @@ namespace BSU.CLI
             {
                 Console.WriteLine(" " + storageType);
             }
+        }
+
+        [CliCommand("gui", "Show continuous state.")]
+        void ContState(string[] args)
+        {
+            ContStateDisplay.Show(_core.GetContState(x => x()));
         }
     }
 }

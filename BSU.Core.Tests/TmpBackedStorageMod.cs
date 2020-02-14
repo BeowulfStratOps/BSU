@@ -62,5 +62,10 @@ namespace BSU.Core.Tests
 
         public string GetFilePath(string path) => GetFileInfo(path).FullName;
         public Uid GetUid() => new Uid();
+
+        public void Load()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using BSU.Core.Model;
 using BSU.CoreCommon;
 using NLog;
 
@@ -7,15 +8,15 @@ namespace BSU.Core.Sync
     /// <summary>
     /// WorkUnit: Updates a single file from a remote location. Refers to the RepositoryMod for the actual operation.
     /// </summary>
-    internal class UpdateAction : WorkUnit
+    internal class UpdateAction : SyncWorkUnit
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly IRepositoryMod _repository;
+        private readonly RepositoryMod _repository;
         private readonly long _sizeTotal;
         private long _sizeTodo;
 
-        public UpdateAction(IRepositoryMod repository, IStorageMod storage, string path, long sizeTotal, RepoSync sync)
+        public UpdateAction(RepositoryMod repository, StorageMod storage, string path, long sizeTotal, RepoSync sync)
             : base(storage, path, sync)
         {
             _repository = repository;
@@ -28,9 +29,9 @@ namespace BSU.Core.Sync
 
         protected override void DoWork(CancellationToken token)
         {
-            Logger.Trace("{0}, {1} Updating {2}", Storage.GetUid(), _repository.GetUid(), Path);
-            var target = Storage.GetFilePath(Path.ToLowerInvariant());
-            _repository.UpdateTo(Path, target, UpdateRemaining, token);
+            Logger.Trace("{0}, {1} Updating {2}", Storage.Uid, _repository.Uid, Path);
+            var target = Storage.Implementation.GetFilePath(Path.ToLowerInvariant());
+            _repository.Implementation.UpdateTo(Path, target, UpdateRemaining, token);
             _sizeTodo = 0;
         }
 

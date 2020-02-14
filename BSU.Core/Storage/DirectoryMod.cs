@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using BSU.CoreCommon;
 using BSU.Hashes;
 using NLog;
@@ -28,6 +29,14 @@ namespace BSU.Core.Storage
         {
             _dir = dir;
             _parentStorage = parentStorage;
+        }
+
+        public void Load()
+        {
+            GetDisplayName();
+#if SlowMode
+            Thread.Sleep(1337);
+#endif
         }
 
         /// <summary>
@@ -94,8 +103,6 @@ namespace BSU.Core.Storage
             var file = GetFile(path);
             return file == null ? null : new SHA1AndPboHash(file, extension);
         }
-
-        public string GetIdentifier() => _dir.Name;
 
         public IStorage GetStorage() => _parentStorage;
 

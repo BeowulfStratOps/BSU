@@ -42,5 +42,10 @@ namespace BSU.Core.Tests
         }
 
         public Uid GetUid() => new Uid();
+
+        public void Load()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

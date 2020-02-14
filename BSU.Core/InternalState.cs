@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BSU.BSO;
-using BSU.Core.Storage;
-using BSU.CoreCommon;
+using BSU.Core.Model;
 using NLog;
 
 namespace BSU.Core
@@ -13,34 +11,12 @@ namespace BSU.Core
     /// Internal state of the core. Knows locations, but no repo/storage states.
     /// Tracks the state across restarts by using a settings file.
     /// </summary>
-    internal class InternalState
+    public class InternalState
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Dictionary<string, Func<string, string, IRepository>> _repoTypes =
-            new Dictionary<string, Func<string, string, IRepository>>
-            {
-                {"BSO", (name, url) => new BsoRepo(url, name)}
-            };
-
-        private readonly Dictionary<string, Func<string, string, IStorage>> _storageTypes =
-            new Dictionary<string, Func<string, string, IStorage>>
-            {
-                {"STEAM", (name, path) => new SteamStorage(path, name)},
-                {"DIRECTORY", (name, path) => new DirectoryStorage(path, name)}
-            };
-
         private readonly ISettings _settings;
-
-        internal void AddRepoType(string name, Func<string, string, IRepository> create) =>
-            _repoTypes.Add(name, create);
-
-        internal IEnumerable<string> GetRepoTypes() => _repoTypes.Keys.ToList();
-
-        internal void AddStorageType(string name, Func<string, string, IStorage> create) =>
-            _storageTypes.Add(name, create);
-
-        internal IEnumerable<string> GetStorageTypes() => _storageTypes.Keys.ToList();
+        private readonly Types _types;
 
         private readonly List<Tuple<RepoEntry, Exception>> _repoErrors = new List<Tuple<RepoEntry, Exception>>();
 
@@ -48,18 +24,42 @@ namespace BSU.Core
             new List<Tuple<StorageEntry, Exception>>();
 
         // TODO: expose those to user
-        public IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors() => _repoErrors.AsReadOnly();
-        public IReadOnlyList<Tuple<StorageEntry, Exception>> GetStorageErrors() => _storageErrors.AsReadOnly();
+        internal IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors() => _repoErrors.AsReadOnly();
+        internal IReadOnlyList<Tuple<StorageEntry, Exception>> GetStorageErrors() => _storageErrors.AsReadOnly();
 
-        public InternalState(ISettings settings)
+        internal InternalState(ISettings settings, Types types)
         {
             Logger.Info("Creating new internal state");
             _settings = settings;
+            _types = types;
+        }
+
+        internal List<Model.Storage> LoadStorages()
+        {
+            var result = new List<Model.Storage>();
+            foreach (var storageEntry in _settings.Storages)
+            {
+                try
+                {
+                    result.Add(LoadStorage(storageEntry));
+                }
+                catch (Exception e)
+                {
+                    _storageErrors.Add(Tuple.Create(storageEntry, e));
+                }
+            }
+
+            return result;
+        }
+
+        internal List<Repository> LoadRepositories()
+        {
+            var result = new List<Repository>();
             foreach (var repoEntry in _settings.Repositories)
             {
                 try
                 {
-                    AddRepoToState(repoEntry);
+                    result.Add(LoadRepository(repoEntry));
                 }
                 catch (Exception e)
                 {
@@ -67,36 +67,19 @@ namespace BSU.Core
                 }
             }
 
-            foreach (var storageEntry in _settings.Storages)
-            {
-                try
-                {
-                    AddStorageToState(storageEntry);
-                }
-                catch (Exception e)
-                {
-                    _storageErrors.Add(Tuple.Create(storageEntry, e));
-                }
-            }
+            return result;
         }
 
-        private readonly List<IRepository> _repositories = new List<IRepository>();
-        private readonly List<IStorage> _storages = new List<IStorage>();
 
-        public IReadOnlyList<IRepository> GetRepositories() => _repositories.AsReadOnly();
-        public IReadOnlyList<IStorage> GetStorages() => _storages.AsReadOnly();
-
-
-        public void RemoveRepo(IRepository repo)
+        internal void RemoveRepo(Repository repo)
         {
-            Logger.Debug("Removing repo {0}", repo.GetUid());
-            var repoEntry = _settings.Repositories.Single(r => r.Name == repo.GetIdentifier());
-            _repositories.Remove(repo);
+            Logger.Debug("Removing repo {0}", repo.Uid);
+            var repoEntry = _settings.Repositories.Single(r => r.Name == repo.Identifier);
             _settings.Repositories.Remove(repoEntry);
             _settings.Store();
         }
 
-        public void AddRepo(string name, string url, string type)
+        internal Repository AddRepo(string name, string url, string type, Model.Model model)
         {
             if (_settings.Repositories.Any(r => r.Name == name)) throw new ArgumentException("Name in use");
             var repo = new RepoEntry
@@ -105,24 +88,22 @@ namespace BSU.Core
                 Type = type,
                 Url = url
             };
-            AddRepoToState(repo);
             _settings.Repositories.Add(repo);
             _settings.Store();
+            return LoadRepository(repo);
         }
 
 
-        private void AddRepoToState(RepoEntry repo)
+        private Repository LoadRepository(RepoEntry repo)
         {
-            if (!_repoTypes.TryGetValue(repo.Type, out var create))
-                throw new NotSupportedException($"Repo type {repo.Type} is not supported.");
-
-            Logger.Debug("Adding repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
-            var repository = create(repo.Name, repo.Url);
-            Logger.Debug("Created repo {0}", repository.GetUid());
-            _repositories.Add(repository);
+            Logger.Debug("Creating repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
+            var implementation = _types.GetRepoImplementation(repo.Type, repo.Url);
+            var repository = new Repository(implementation, repo.Name, repo.Url);
+            Logger.Debug("Created repo {0}", repository.Uid);
+            return repository;
         }
 
-        public void AddStorage(string name, DirectoryInfo directory, string type)
+        internal Model.Storage AddStorage(string name, DirectoryInfo directory, string type)
         {
             if (_settings.Storages.Any(s => s.Name == name)) throw new ArgumentException("Name in use");
             var storage = new StorageEntry
@@ -132,88 +113,60 @@ namespace BSU.Core
                 Type = type,
                 Updating = new Dictionary<string, UpdateTarget>()
             };
-            AddStorageToState(storage);
             _settings.Storages.Add(storage);
             _settings.Store();
+            return LoadStorage(storage);
         }
 
-        public void RemoveStorage(IStorage storage)
+        internal void RemoveStorage(Model.Storage storage)
         {
-            Logger.Debug("Removing storage {0}", storage.GetUid());
-            var storageEntry = _settings.Storages.Single(s => s.Name == storage.GetIdentifier());
-            _storages.Remove(storage);
+            Logger.Debug("Removing storage {0}", storage.Uid);
+            var storageEntry = _settings.Storages.Single(s => s.Name == storage.Identifier);
             _settings.Storages.Remove(storageEntry);
             _settings.Store();
         }
 
-        private void AddStorageToState(StorageEntry storage)
+        private Model.Storage LoadStorage(StorageEntry storage)
         {
-            if (!_storageTypes.TryGetValue(storage.Type, out var create))
-                throw new NotSupportedException($"Storage type {storage.Type} is not supported.");
-
             Logger.Debug("Adding storage {0} / {1} / {2}", storage.Name, storage.Type, storage.Path);
-            var storageObj = create(storage.Name, storage.Path);
-            Logger.Debug("Created storage {0}", storageObj.GetUid());
-            _storages.Add(storageObj);
+            var implementation = _types.GetStorageImplementation(storage.Type, storage.Path);
+            var storageObj = new Model.Storage(implementation, storage.Name, storage.Path);
+            Logger.Debug("Created storage {0}", storageObj.Uid);
+            return storageObj;
         }
 
-        public void PrintState()
+        internal void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay)
         {
-            Console.WriteLine("Repos:");
-            foreach (var repository in _repositories)
-            {
-                Console.WriteLine(
-                    $"  {repository.GetType().Name} {repository.GetIdentifier()} {repository.GetLocation()}");
-                foreach (var repoMod in repository.GetMods())
-                {
-                    Console.WriteLine($"    {repoMod.GetIdentifier()} | {repoMod.GetDisplayName()}");
-                }
-            }
-
-            Console.WriteLine("Storages:");
-            foreach (var storage in _storages)
-            {
-                Console.WriteLine($"  {storage.GetType().Name} {storage.GetIdentifier()} {storage.GetLocation()}");
-                foreach (var storageMod in storage.GetMods())
-                {
-                    Console.WriteLine(
-                        $"    {storageMod.GetIdentifier()} | {storageMod.GetDisplayName()} in {storage.GetIdentifier()}");
-                }
-            }
-        }
-
-        public void SetUpdatingTo(IStorageMod mod, string targetHash, string targetDisplay)
-        {
-            Logger.Debug("Set updating: {0} to {1} : {2}", mod.GetUid(), targetHash, targetDisplay);
-            _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating[mod.GetIdentifier()] =
-                new UpdateTarget(targetHash, targetDisplay);
+            Logger.Debug("Set updating: {0} to {1} : {2}", mod.Uid, targetHash, targetDisplay);
+            var dic =_settings.Storages.Single(s => s.Name == mod.Storage.Identifier).Updating;
+            dic[mod.Identifier] = new UpdateTarget(targetHash, targetDisplay);
             _settings.Store();
         }
 
-        public void RemoveUpdatingTo(IStorageMod mod)
+        internal void RemoveUpdatingTo(StorageMod mod)
         {
-            Logger.Debug("Remove updating: {0}", mod.GetUid());
-            _settings.Storages.Single(s => s.Name == mod.GetStorage().GetIdentifier()).Updating
-                .Remove(mod.GetIdentifier());
+            Logger.Debug("Remove updating: {0}", mod.Uid);
+            _settings.Storages.Single(s => s.Name == mod.Storage.Identifier).Updating
+                .Remove(mod.Identifier);
             _settings.Store();
         }
 
-        public void CleanupUpdatingTo(IStorage storage)
+        internal void CleanupUpdatingTo(Model.Storage storage)
         {
-            var updating = _settings.Storages.Single(s => s.Name == storage.GetIdentifier()).Updating;
+            var updating = _settings.Storages.Single(s => s.Name == storage.Identifier).Updating;
             foreach (var modId in updating.Keys.ToList())
             {
-                if (storage.GetMods().Any(m => m.GetIdentifier() == modId)) continue;
+                if (storage.Mods.Any(m => m.Identifier == modId)) continue;
                 updating.Remove(modId);
-                Logger.Debug("Cleaing up udpating for {0} / {1}", storage.GetIdentifier(), modId);
+                Logger.Debug("Cleaing up udpating for {0} / {1}", storage.Identifier, modId);
             }
         }
 
-        public UpdateTarget GetUpdateTarget(IStorageMod mod)
+        internal UpdateTarget GetUpdateTarget(StorageMod mod)
         {
             var target = _settings.Storages
-                .SingleOrDefault(s => s.Name == mod.GetStorage().GetIdentifier())?.Updating
-                .GetValueOrDefault(mod.GetIdentifier());
+                .SingleOrDefault(s => s.Name == mod.Storage.Identifier)?.Updating
+                .GetValueOrDefault(mod.Identifier);
             return target == null ? null : new UpdateTarget(target.Hash, target.Display);
         }
     }

@@ -20,6 +20,11 @@ namespace BSU.Core.Tests
         public string GetLocation() => url;
         public Uid GetUid() => new Uid();
 
+        public void Load()
+        {
+            throw new System.NotImplementedException();
+        }
+
         public List<IRepositoryMod> GetMods() => Mods.OfType<IRepositoryMod>().ToList();
 
         public string GetIdentifier() => name;

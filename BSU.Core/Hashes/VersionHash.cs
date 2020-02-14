@@ -2,7 +2,8 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using BSU.CoreCommon;
+using System.Threading;
+using BSU.Core.Model;
 using BSU.Hashes;
 using NLog;
 
@@ -17,22 +18,25 @@ namespace BSU.Core.Hashes
 
         private readonly byte[] _hash;
 
-        internal VersionHash(IStorageMod mod)
+        internal VersionHash(StorageMod mod)
         {
-            Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
+            Logger.Debug("Building version hash from storage mod {0}", mod.Uid);
             var hashes = new Dictionary<string, FileHash>();
-            foreach (var file in mod.GetFileList())
+            foreach (var file in mod.Implementation.GetFileList())
             {
-                hashes.Add(file, new SHA1AndPboHash(mod.GetFile(file), Utils.GetExtension(file)));
+                hashes.Add(file, new SHA1AndPboHash(mod.Implementation.GetFile(file), Utils.GetExtension(file)));
             }
 
             _hash = BuildHash(hashes);
+#if SlowMode
+            Thread.Sleep(4*1337);
+#endif
         }
 
-        internal VersionHash(IRepositoryMod mod)
+        internal VersionHash(RepositoryMod mod)
         {
-            Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
-            _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
+            Logger.Debug("Building version hash from storage mod {0}", mod.Uid);
+            _hash = BuildHash(mod.Implementation.GetFileList().ToDictionary(h => h, mod.Implementation.GetFileHash));
         }
 
         /// <summary>
@@ -42,7 +46,7 @@ namespace BSU.Core.Hashes
         /// <returns></returns>
         public bool IsMatch(VersionHash other)
         {
-            return _hash.SequenceEqual(other._hash);
+            return other != null && _hash.SequenceEqual(other._hash);
         }
 
         /// <summary>

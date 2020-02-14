@@ -20,7 +20,7 @@ namespace BSU.Core.State
         public readonly VersionHash VersionHash;
         internal readonly Storage Storage;
 
-        internal readonly IStorageMod Mod;
+        internal readonly Model.StorageMod Mod;
 
         public readonly UpdateTarget UpdateTarget;
         internal readonly RepoSync ActiveJob;
@@ -28,9 +28,9 @@ namespace BSU.Core.State
 
         internal readonly Uid Uid = new Uid();
 
-        internal StorageMod(IStorageMod mod, Storage storage)
+        internal StorageMod(Model.StorageMod mod, Storage storage)
         {
-            Logger.Debug("Creating state for storage mod {0} -> {1}", mod.GetUid(), Uid);
+            /*Logger.Debug("Creating state for storage mod {0} -> {1}", mod.GetUid(), Uid);
             Mod = mod;
             Storage = storage;
             Name = mod.GetIdentifier();
@@ -50,7 +50,7 @@ namespace BSU.Core.State
             if (!VersionHash.GetHashString().Equals(UpdateTarget?.Hash)) return;
             Logger.Info("Storage Mod {0} has met its update target.", mod.GetUid());
             storage.State.Core.UpdateDone(mod);
-            UpdateTarget = null;
+            UpdateTarget = null;*/
         }
 
         public IReadOnlyList<ModAction> GetRelatedActions() => _relatedActions.AsReadOnly();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using BSU.Core.JobManager;
+using BSU.Core.Model;
 using BSU.CoreCommon;
 using NLog;
 
@@ -22,42 +23,47 @@ namespace BSU.Core.Sync
 
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        internal readonly IStorageMod StorageMod;
-        internal readonly IRepositoryMod RepositoryMod;
+        internal readonly StorageMod StorageMod;
+        internal readonly RepositoryMod RepositoryMod;
         internal readonly UpdateTarget Target;
-        private ReferenceCounter _workCounter = new ReferenceCounter();
+        private readonly string _title;
+        private readonly int _priority;
+        private readonly ReferenceCounter _workCounter;
+        private readonly int _totalCount;
 
         public Uid GetUid() => _uid;
 
         internal CancellationToken GetCancellationToken() => _cancellationTokenSource.Token;
 
-        public RepoSync(IRepositoryMod repository, IStorageMod storage, UpdateTarget target)
+        public RepoSync(RepositoryMod repository, StorageMod storage, UpdateTarget target, string title, int priority)
         {
             StorageMod = storage;
             Target = target;
+            _title = title;
+            _priority = priority;
             RepositoryMod = repository;
 
-            Logger.Debug("Building sync actions {0} to {1}: {2}", storage.GetUid(), repository.GetUid(), _uid);
+            Logger.Debug("Building sync actions {0} to {1}: {2}", storage.Uid, repository.Uid, _uid);
 
             _allActions = new List<WorkUnit>();
-            var repositoryList = repository.GetFileList();
-            var storageList = storage.GetFileList();
+            var repositoryList = repository.Implementation.GetFileList();
+            var storageList = storage.Implementation.GetFileList();
             var storageListCopy = new List<string>(storageList);
             foreach (var repoFile in repositoryList)
             {
                 if (storageList.Contains(repoFile))
                 {
-                    if (!repository.GetFileHash(repoFile).Equals(storage.GetFileHash(repoFile)))
+                    if (!repository.Implementation.GetFileHash(repoFile).Equals(storage.Implementation.GetFileHash(repoFile)))
                     {
                         _allActions.Add(new UpdateAction(repository, storage, repoFile,
-                            repository.GetFileSize(repoFile), this));
+                            repository.Implementation.GetFileSize(repoFile), this));
                     }
 
                     storageListCopy.Remove(repoFile);
                 }
                 else
                 {
-                    _allActions.Add(new DownloadAction(repository, storage, repoFile, repository.GetFileSize(repoFile),
+                    _allActions.Add(new DownloadAction(repository, storage, repoFile, repository.Implementation.GetFileSize(repoFile),
                         this));
                 }
             }
@@ -71,6 +77,9 @@ namespace BSU.Core.Sync
             Logger.Debug("Download actions: {0}", _actionsTodo.OfType<DownloadAction>().Count());
             Logger.Debug("Update actions: {0}", _actionsTodo.OfType<UpdateAction>().Count());
             Logger.Debug("Delete actions: {0}", _actionsTodo.OfType<DeleteAction>().Count());
+            
+            _workCounter = new ReferenceCounter(_actionsTodo.Count);
+            _totalCount = _actionsTodo.Count;
         }
 
 
@@ -83,9 +92,9 @@ namespace BSU.Core.Sync
 
         public int GetRemainingDeletedFilesCount() => _allActions.OfType<DeleteAction>().Count(a => !a.IsDone());
 
-        public string GetStorageModDisplayName() => StorageMod.GetDisplayName();
+        public string GetStorageModDisplayName() => StorageMod.Implementation.GetDisplayName();
 
-        public string GetRepositoryModDisplayName() => RepositoryMod.GetDisplayName();
+        public string GetRepositoryModDisplayName() => RepositoryMod.Implementation.GetDisplayName();
 
         public int GetRemainingNewFilesCount() => _allActions.OfType<DownloadAction>().Count(a => !a.IsDone());
         public long GetTotalBytesToDownload() => _allActions.OfType<DownloadAction>().Sum(a => a.GetBytesTotal());
@@ -107,7 +116,6 @@ namespace BSU.Core.Sync
             if (_cancellationTokenSource.IsCancellationRequested) return null;
             var work = _actionsTodo.FirstOrDefault();
             if (work != null) _actionsTodo.Remove(work);
-            _workCounter.Inc();
             return work;
         }
 
@@ -122,11 +130,6 @@ namespace BSU.Core.Sync
                 a.HasError()); // TODO: wait for job to be fully canceled OR split IsDone into more meaningful parts
 
         public string GetTargetHash() => Target.Hash;
-
-        /// <summary>
-        /// Triggered when <see cref="IsDone"/> becomes true.
-        /// </summary>
-        public event IJobFacade.JobEndedDelegate JobEnded;
 
         public void SetError(Exception e) => _error = e;
 
@@ -155,15 +158,23 @@ namespace BSU.Core.Sync
         /// </summary>
         public void Abort() => _cancellationTokenSource.Cancel();
 
-        /// <summary>
-        /// Check if the job is finished. Necessary due to poor work-unit tracking :shrug:
-        /// </summary>
         public void WorkItemFinished()
         {
             _workCounter.Dec();
+            Progress?.Invoke();
             if (!_workCounter.Done) return;
             Logger.Debug("Sync done");
-            JobEnded?.Invoke(!HasError());
+            OnFinished?.Invoke();
         }
+
+        public event Action OnFinished;
+
+        public string GetTitle() => _title;
+
+        public event Action Progress;
+
+        public float GetProgress() => (_totalCount - _workCounter.Remaining) / (float) _totalCount;
+        
+        public int GetPriority() => _priority;
     }
 }

@@ -21,5 +21,10 @@ namespace BSU.Core.JobManager
         void WorkItemFinished();
         void Abort();
         WorkUnit GetWork();
+        event Action OnFinished;
+        string GetTitle();
+        event Action Progress;
+        float GetProgress();
+        int GetPriority();
     }
 }

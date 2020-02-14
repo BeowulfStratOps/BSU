@@ -18,8 +18,8 @@ namespace BSU.BSO
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly string _url, _name;
-        private readonly HashFile _hashFile;
+        private readonly string _url;
+        private HashFile _hashFile;
         private string _displayName;
 
         private readonly Uid _uid = new Uid();
@@ -45,17 +45,24 @@ namespace BSU.BSO
         private HashType GetFileEntry(string path) =>
             _hashFile.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
-        public BsoRepoMod(string url, string name)
+        public BsoRepoMod(string url)
         {
             _url = url;
-            _name = name;
+        }
 
+        public void Load()
+        {
             using var client = new WebClient();
             Logger.Debug("{0} Downloading hash file from {1}", _uid, _url);
             var hashFileJson = client.DownloadString(_url + "/hash.json");
             Logger.Debug("{0} Finished downloading hash file", _uid);
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
+            GetDisplayName();
+#if SlowMode
+            Thread.Sleep(1337);
+#endif
         }
+
 
         /// <summary>
         /// Attempts to build a extract a display name for this mod. Cached.
@@ -82,12 +89,6 @@ namespace BSU.BSO
 
             return _displayName = Util.GetDisplayName(modCpp, keys);
         }
-
-        /// <summary>
-        /// Name / identifier for this mod. Unique within the repository. Equals the mod folder's name.
-        /// </summary>
-        /// <returns></returns>
-        public string GetIdentifier() => _name;
 
         /// <summary>
         /// Returns metadata for a file. Null if file data not found.

@@ -10,6 +10,7 @@ namespace BSU.CoreCommon
     /// </summary>
     public interface IRepositoryMod
     {
+        void Load();
         List<string> GetFileList();
 
         /// <summary>
@@ -32,12 +33,6 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <returns></returns>
         string GetDisplayName();
-
-        /// <summary>
-        /// Name / identifier for this mod. Unique within the repository.
-        /// </summary>
-        /// <returns></returns>
-        string GetIdentifier();
 
         /// <summary>
         /// Returns metadata for a file. Exception if file data not found.
@@ -64,6 +59,5 @@ namespace BSU.CoreCommon
         /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
         void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token);
-        Uid GetUid();
     }
 }

@@ -10,22 +10,10 @@ namespace BSU.CoreCommon
         /// <returns></returns>
         bool CanWrite();
 
-        List<IStorageMod> GetMods();
-
-        /// <summary>
-        /// path or smth
-        /// </summary>
-        /// <returns></returns>
-        string GetLocation();
-
-        /// <summary>
-        /// alias. identifier of sorts
-        /// </summary>
-        /// <returns></returns>
-        string GetIdentifier();
+        Dictionary<string, IStorageMod> GetMods();
 
         IStorageMod CreateMod(string identifier);
         void RemoveMod(string identifier);
-        Uid GetUid();
+        public void Load();
     }
 }

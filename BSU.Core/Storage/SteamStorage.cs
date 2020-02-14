@@ -11,35 +11,37 @@ namespace BSU.Core.Storage
     /// </summary>
     public class SteamStorage : IStorage
     {
-        private readonly string _name;
         private readonly DirectoryInfo _basePath;
-        private readonly List<DirectoryInfo> _mods;
+        private Dictionary<string, IStorageMod> _mods;
 
         private readonly Uid _uid = new Uid();
 
         public Uid GetUid() => _uid;
 
-        public SteamStorage(string path, string name)
+        public SteamStorage(string path)
         {
             // C:\Program Files (x86)\Steam\steamapps\workshop\content\107410
             _basePath = new DirectoryInfo(Path.Combine(path, "steamapps", "workshop", "content", "107410"));
-            _name = name;
-            _mods = new List<DirectoryInfo>();
+        }
+
+        public void Load()
+        {
+            var folders = new List<DirectoryInfo>();
             if (!_basePath.Exists) throw new FileNotFoundException();
 
             foreach (var mod in _basePath.EnumerateDirectories())
             {
                 var addonDir = new DirectoryInfo(Path.Combine(mod.FullName, "addons"));
                 if (!addonDir.Exists) continue;
-                _mods.Add(mod);
+                folders.Add(mod);
             }
+
+            _mods = folders.ToDictionary(di => di.Name, di => (IStorageMod) new SteamMod(di, this));
         }
 
-        public List<IStorageMod> GetMods() => _mods.Select(di => (IStorageMod) new SteamMod(di, this)).ToList();
+        public Dictionary<string, IStorageMod> GetMods() => _mods;
 
         public string GetLocation() => _basePath.FullName;
-
-        public string GetIdentifier() => _name;
 
         public IStorageMod CreateMod(string identifier)
         {

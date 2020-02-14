@@ -8,5 +8,6 @@ namespace BSU.Core.Services
     static class ServiceProvider
     {
         public static readonly JobManager.JobManager JobManager = new JobManager.JobManager();
+        public static InternalState InternalState;
     }
 }

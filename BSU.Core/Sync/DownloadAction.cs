@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading;
+using BSU.Core.Model;
 using BSU.CoreCommon;
 using NLog;
 
@@ -8,15 +9,15 @@ namespace BSU.Core.Sync
     /// <summary>
     /// WorkUnit: Downloads a new file. Refers to the RepositoryMod for the actual download.
     /// </summary>
-    internal class DownloadAction : WorkUnit
+    internal class DownloadAction : SyncWorkUnit
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly IRepositoryMod _repository;
+        private readonly RepositoryMod _repository;
         private readonly long _sizeTotal;
         private long _sizeTodo;
 
-        public DownloadAction(IRepositoryMod repository, IStorageMod storage, string path, long sizeTotal,
+        public DownloadAction(RepositoryMod repository, StorageMod storage, string path, long sizeTotal,
             RepoSync sync) : base(storage, path, sync)
         {
             _repository = repository;
@@ -29,11 +30,12 @@ namespace BSU.Core.Sync
 
         protected override void DoWork(CancellationToken token)
         {
-            Logger.Trace("{0}, {1} Downloading {2}", _repository.GetUid(), _repository.GetUid(), Path);
-            var target = Storage.GetFilePath(Path.ToLowerInvariant());
+            Logger.Trace("{0}, {1} Downloading {2}", _repository.Uid, _repository.Uid, Path);
+            var target = Storage.Implementation.GetFilePath(Path.ToLowerInvariant());
             var di = new FileInfo(target).Directory;
             if (!di.Exists) di.Create();
-            _repository.DownloadTo(Path, target, UpdateRemaining, token);
+            _repository.Implementation.DownloadTo(Path, target, UpdateRemaining, token);
+            Thread.Sleep(2000);
             _sizeTodo = 0;
         }
 

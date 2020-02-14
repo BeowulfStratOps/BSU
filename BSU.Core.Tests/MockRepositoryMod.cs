@@ -27,6 +27,11 @@ namespace BSU.Core.Tests
         public byte[] GetFile(string path) => Files.GetValueOrDefault(path);
         public string GetDisplayName() => DisplayName;
 
+        public void Load()
+        {
+            throw new NotImplementedException();
+        }
+
         public List<string> GetFileList() => Files.Keys.ToList();
 
         public string GetIdentifier() => Identifier;

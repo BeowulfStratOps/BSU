@@ -24,6 +24,8 @@ namespace BSU.Core.JobManager
         private object _counterLock = new object();
         private int _threadsDone;
 
+        public event Action<IJob> JobAdded, JobRemoved;
+
         /// <summary>
         /// Queue a job. Starts execution immediately
         /// </summary>
@@ -40,6 +42,7 @@ namespace BSU.Core.JobManager
             {
                 _jobsTodo.Add(job);
             }
+            JobAdded?.Invoke(job);
 
             if (_scheduler != null && _scheduler.IsAlive) return;
             Logger.Debug("Starting scheduler thread");
@@ -72,7 +75,7 @@ namespace BSU.Core.JobManager
                 }
 
                 var jobs = new List<IJob>(_jobsTodo);
-                foreach (var job in jobs)
+                foreach (var job in jobs.OrderBy(j => -j.GetPriority()))
                 {
                     Logger.Trace("Checking job {0}", job.GetUid());
                     WorkUnit work = null;
@@ -86,6 +89,15 @@ namespace BSU.Core.JobManager
                         Logger.Error(e);
                         job.SetError(e);
                         _jobsTodo.Remove(job);
+                        try
+                        {
+                            JobRemoved?.Invoke(job);
+                        }
+                        catch (Exception exception)
+                        {
+                            Console.WriteLine(exception);
+                            throw;
+                        }
                     }
 
                     if (work != null)
@@ -97,6 +109,15 @@ namespace BSU.Core.JobManager
 
                     Logger.Trace("No work. De-queueing job");
                     _jobsTodo.Remove(job);
+                    try
+                    {
+                        JobRemoved?.Invoke(job);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
                 }
 
                 parentJob = null;
@@ -107,7 +128,7 @@ namespace BSU.Core.JobManager
         private void DoWork()
         {
             var done = false;
-            while (true && !_shutdown && _threadsDone < MAX_THREADS)
+            while (!_shutdown && _threadsDone < MAX_THREADS)
             {
                 var work = GetWork(out var job);
                 if (work == null)
@@ -134,10 +155,13 @@ namespace BSU.Core.JobManager
                         _threadsDone--;
                     }
                 }
+#if !DEBUG
                 try
                 {
+#endif
                     work.Work();
-                    job.WorkItemFinished();
+                    if (!_shutdown) job.WorkItemFinished();
+#if !DEBUG
                 }
                 catch (Exception e)
                 {
@@ -145,6 +169,7 @@ namespace BSU.Core.JobManager
                     work.SetError(e);
                     job.WorkItemFinished();
                 }
+#endif
             }
             Logger.Trace("Worker thread ending.");
         }

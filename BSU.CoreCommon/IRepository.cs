@@ -7,24 +7,12 @@ namespace BSU.CoreCommon
     /// </summary>
     public interface IRepository
     {
+        void Load();
+
         /// <summary>
         /// List of mods the repository contains..
         /// </summary>
         /// <returns></returns>
-        List<IRepositoryMod> GetMods();
-
-        /// <summary>
-        /// Unique identifier within the application.
-        /// </summary>
-        /// <returns></returns>
-        string GetIdentifier();
-
-        /// <summary>
-        /// Url or smth
-        /// </summary>
-        /// <returns></returns>
-        string GetLocation();
-
-        Uid GetUid();
+        Dictionary<string, IRepositoryMod> GetMods();
     }
 }

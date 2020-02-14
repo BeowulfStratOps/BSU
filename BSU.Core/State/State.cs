@@ -23,11 +23,10 @@ namespace BSU.Core.State
 
         public event Action Invalidated;
 
-        internal State(IEnumerable<IRepository> repos, IEnumerable<IStorage> storages, Core core)
+        internal State(IEnumerable<Model.Repository> repos, IEnumerable<Model.Storage> storages, Core core)
         {
             Logger.Debug("Creating new state {0}", _uid);
             Core = core;
-            core.StateInvalidated += InvalidateState; // TODO: this messes with GC
             Logger.Debug("Creating storage states");
             Storages = storages.Select(s => new Storage(s, this)).ToList().AsReadOnly();
             Logger.Debug("Creating repository states");

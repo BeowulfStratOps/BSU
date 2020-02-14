@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using BSU.CoreCommon;
 using NLog;
 
@@ -15,36 +16,39 @@ namespace BSU.Core.Storage
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly string _path, _name;
+        private readonly string _path;
         private readonly Uid _uid = new Uid();
+
+        private Dictionary<string, IStorageMod> _mods;
 
         public Uid GetUid() => _uid;
 
-        public DirectoryStorage(string path, string name)
+        public DirectoryStorage(string path)
         {
             _path = path;
-            _name = name;
             if (!new DirectoryInfo(path).Exists) throw new DirectoryNotFoundException();
         }
 
-        public List<IStorageMod> GetMods()
+        public void Load()
         {
-            return GetModFolders().Select(di => (IStorageMod) new DirectoryMod(di, this)).ToList();
+            _mods = new DirectoryInfo(_path).EnumerateDirectories("@*")
+                .ToDictionary(di => di.Name, di => (IStorageMod) new DirectoryMod(di, this));
+#if SlowMode
+            Thread.Sleep(1337);
+#endif
         }
 
-        private IEnumerable<DirectoryInfo> GetModFolders()
+        public Dictionary<string, IStorageMod> GetMods()
         {
-            return new DirectoryInfo(_path).EnumerateDirectories("@*").ToList();
+            return _mods;
         }
 
         public string GetLocation() => _path;
 
-        public string GetIdentifier() => _name;
-
         public IStorageMod CreateMod(string identifier)
         {
             Logger.Debug("Creating mod {0}", identifier);
-            var dir = new DirectoryInfo(Path.Combine(_path, "@" + identifier));
+            var dir = new DirectoryInfo(Path.Combine(_path, identifier));
             if (dir.Exists) throw new InvalidOperationException("Path exists");
             dir.Create();
             return new DirectoryMod(dir, this);

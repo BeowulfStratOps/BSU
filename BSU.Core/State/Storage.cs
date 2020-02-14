@@ -14,7 +14,7 @@ namespace BSU.Core.State
         public readonly bool CanWrite;
         internal readonly State State;
         public readonly string Name;
-        internal readonly IStorage BackingStorage;
+        internal readonly Model.Storage BackingStorage;
 
         internal readonly Uid Uid = new Uid();
 
@@ -24,18 +24,17 @@ namespace BSU.Core.State
         /// </summary>
         public void Remove()
         {
-            State.Core.RemoveStorage(this);
             State.InvalidateState();
         }
 
-        internal Storage(IStorage storage, State state)
+        internal Storage(Model.Storage storage, State state)
         {
             BackingStorage = storage;
-            Name = storage.GetIdentifier();
+            Name = storage.Identifier;
             State = state;
-            Mods = storage.GetMods().Select(m => new StorageMod(m, this)).ToList();
-            Location = storage.GetLocation();
-            CanWrite = storage.CanWrite();
+            Mods = storage.Mods.Select(m => new StorageMod(m, this)).ToList();
+            Location = storage.Location;
+            CanWrite = storage.Implementation.CanWrite();
         }
     }
 }

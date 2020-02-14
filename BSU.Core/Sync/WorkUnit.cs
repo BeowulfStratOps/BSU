@@ -9,18 +9,12 @@ namespace BSU.Core.Sync
     /// </summary>
     internal abstract class WorkUnit
     {
-        protected readonly IStorageMod Storage;
-        protected readonly string Path;
-        private readonly RepoSync _sync;
-        private readonly CancellationToken _token;
         private bool _done;
+        private readonly CancellationToken _token;
 
-        protected WorkUnit(IStorageMod storage, string path, RepoSync sync)
+        protected WorkUnit(CancellationToken tokenGetter)
         {
-            Storage = storage;
-            Path = path;
-            _sync = sync;
-            _token = sync.GetCancellationToken();
+            _token = tokenGetter;
         }
 
         private Exception _error;

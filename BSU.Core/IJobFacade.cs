@@ -22,12 +22,10 @@ namespace BSU.Core
         /// <returns></returns>
         string GetTargetHash();
 
-        public delegate void JobEndedDelegate(bool success);
-
         /// <summary>
         /// Triggered when <see cref="IsDone"/> becomes true.
         /// </summary>
-        event JobEndedDelegate JobEnded;
+        event Action OnFinished;
 
         public string GetStorageModDisplayName();
         public string GetRepositoryModDisplayName();

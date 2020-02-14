@@ -34,21 +34,21 @@ namespace BSU.Core.State
 
         public readonly VersionHash VersionHash;
 
-        internal readonly IRepositoryMod Mod;
+        internal readonly Model.RepositoryMod Mod;
 
         private readonly Uid _uid = new Uid();
 
         // TODO: find a better place for that
-        internal RepositoryMod(IRepositoryMod mod, Repository repo)
+        internal RepositoryMod(Model.RepositoryMod mod, Repository repo)
         {
-            Logger.Debug("Creating new state for repo mod {0} -> {1}", mod.GetUid(), _uid);
+            Logger.Debug("Creating new state for repo mod {0} -> {1}", mod.Uid, _uid);
 
             Repo = repo;
             Mod = mod;
 
-            DisplayName = mod.GetDisplayName();
+            DisplayName = mod.Implementation.GetDisplayName();
 
-            Name = mod.GetIdentifier();
+            Name = mod.Identifier;
 
             var matchHash = new MatchHash(mod);
             VersionHash = new VersionHash(mod);

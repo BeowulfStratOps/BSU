@@ -11,7 +11,6 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <returns></returns>
         string GetDisplayName();
-        string GetIdentifier();
         List<string> GetFileList();
 
         /// <summary>
@@ -27,7 +26,6 @@ namespace BSU.CoreCommon
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
         FileHash GetFileHash(string path);
-        IStorage GetStorage();
 
         /// <summary>
         /// Deletes a file. Exception if it doesn't exists.
@@ -41,6 +39,6 @@ namespace BSU.CoreCommon
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
         string GetFilePath(string path);
-        Uid GetUid();
+        public void Load();
     }
 }

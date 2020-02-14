@@ -17,7 +17,7 @@ namespace BSU.Core.State
 
         internal readonly State State;
 
-        internal readonly IRepository BackingRepository;
+        internal readonly Model.Repository BackingRepository;
 
         internal readonly Uid Uid = new Uid();
 
@@ -26,17 +26,16 @@ namespace BSU.Core.State
         /// </summary>
         public void Remove()
         {
-            State.Core.RemoveRepo(this);
             State.InvalidateState();
         }
 
-        internal Repository(IRepository repo, State state)
+        internal Repository(Model.Repository repo, State state)
         {
             BackingRepository = repo;
-            Logger.Debug("Creating new repo state for {0} -> {1}", repo.GetUid(), Uid);
+            Logger.Debug("Creating new repo state for {0} -> {1}", repo.Uid, Uid);
             State = state;
-            Mods = repo.GetMods().Select(m => new RepositoryMod(m, this)).ToList().AsReadOnly();
-            Name = repo.GetIdentifier();
+            Mods = repo.Mods.Select(m => new RepositoryMod(m, this)).ToList().AsReadOnly();
+            Name = repo.Identifier;
         }
 
         internal void CollectConflicts()
@@ -45,15 +44,6 @@ namespace BSU.Core.State
             {
                 mod.CollectConflicts();
             }
-        }
-
-        /// <summary>
-        /// Prepare an update from the currently selected mod actions. Should be used with a using block.
-        /// </summary>
-        /// <returns></returns>
-        public UpdatePacket PrepareUpdate()
-        {
-            return State.Core.PrepareUpdate(this, State);
         }
     }
 }

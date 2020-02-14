@@ -33,9 +33,12 @@ namespace BSU.Core
 
         public void Store()
         {
-            Logger.Debug("Saving settings");
-            var json = JsonConvert.SerializeObject(_data);
-            File.WriteAllText(_path.FullName, json);
+            lock (_path)
+            {
+                Logger.Debug("Saving settings");
+                var json = JsonConvert.SerializeObject(_data);
+                File.WriteAllText(_path.FullName, json);
+            }
         }
 
         public List<RepoEntry> Repositories => _data.Repositories;
