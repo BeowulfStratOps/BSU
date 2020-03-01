@@ -51,13 +51,13 @@ namespace BSU.Core.Model
         private void Load()
         {
             Implementation.Load();
-            MatchHash = new MatchHash(this);
+            MatchHash = new MatchHash(Implementation);
             Storage.Model.MatchMaker.AddStorageMod(this);
         }
 
         private void Hash()
         {
-            VersionHash = new VersionHash(this);
+            VersionHash = new VersionHash(Implementation);
             if (VersionHash.GetHashString() == UpdateTarget?.Hash)
                 UpdateTarget = null;
         }

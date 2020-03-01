@@ -3,55 +3,34 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BSU.Core.State;
+using BSU.Core.JobManager;
+using BSU.Core.Model;
+using BSU.Core.Model.Actions;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
 using Xunit;
-using DownloadAction = BSU.Core.State.DownloadAction;
-using UpdateAction = BSU.Core.State.UpdateAction;
+using DownloadAction = BSU.Core.Model.Actions.DownloadAction;
+using UpdateAction = BSU.Core.Model.Actions.UpdateAction;
 
 namespace BSU.Core.Tests
 {
+    // TODO: extend for ViewState
     public class CoreStateStories
     {
         public CoreStateStories()
         {
         }
 
-        private MockRepo AddRepo(Core core, string name)
+        private Repository AddRepo(Core core, string name)
         {
-            core.AddRepo(name, "url/" + name, "MOCK");
-            return core.State.GetRepositories().Single() as MockRepo;
+            core.Model.AddRepository("MOCK", "url/" + name, name);
+            return core.Model.Repositories.Single();
         }
 
-        private MockStorage AddStorage(Core core, string name)
+        private Model.Storage AddStorage(Core core, string name)
         {
-            core.AddStorage(name, new DirectoryInfo("path/" + name), "MOCK");
-            return core.State.GetStorages().Single() as MockStorage;
-        }
-
-        private (Core, MockSettings, MockRepo, MockRepositoryMod, MockStorageMod, MockStorage) DoSetup()
-        {
-            var settings = new MockSettings();
-            var syncManager = new MockJobManager();
-            var core = new Core(settings, syncManager);
-            core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
-            core.AddStorageType("MOCK", (name, path) => new MockStorage(name, path));
-            var repo = AddRepo(core, "test_repo");
-            var repoMod = new MockRepositoryMod();
-            repo.Mods.Add(repoMod);
-            var storage = AddStorage(core, "test_storage");
-            var storageMod = new MockStorageMod
-            {
-                Identifier = "test_storage_mod",
-                Storage = storage
-            };
-            storage.Mods.Add(storageMod);
-            repoMod.SetFile("Common1", "common1");
-            repoMod.SetFile("Common2", "common2");
-            storageMod.SetFile("Common1", "common1");
-            storageMod.SetFile("Common2", "common2");
-            return (core, settings, repo, repoMod, storageMod, storage);
+            core.Model.AddStorage("MOCK", new DirectoryInfo("path/" + name), name);
+            return core.Model.Storages.Single();
         }
 
         private string GetVersionHash(string version)
@@ -62,48 +41,91 @@ namespace BSU.Core.Tests
             mod.SetFile("Version", version);
             return new Hashes.VersionHash(mod).GetHashString();
         }
+        
+        private (Core, MockSettings, MockRepo, MockRepositoryMod, MockStorageMod, MockStorage) DoSetup2()
+        {
+            var settings = new MockSettings();
+            var syncManager = new MockJobManager();
+            var core = new Core(settings, syncManager, a => a());
+            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
+            core.Types.AddStorageType("MOCK", path => new MockStorage(path));
+            var repo = AddRepo(core, "test_repo");
+            var repoMod = new RepositoryMod(repo, new MockRepositoryMod(), "test_repo_mod");
+            repo.Mods.Add(repoMod);
+            var storage = AddStorage(core, "test_storage");
+            var storageMod = new StorageMod(storage, new MockStorageMod
+            {
+                Identifier = "test_storage_mod",
+                Storage = storage.Implementation as MockStorage
+            }, "test_storage_mod");
+            storage.Mods.Add(storageMod);
+            (repoMod.Implementation as MockRepositoryMod).SetFile("Common1", "common1");
+            (repoMod.Implementation as MockRepositoryMod).SetFile("Common2", "common2");
+            (storageMod.Implementation as MockStorageMod).SetFile("Common1", "common1");
+            (storageMod.Implementation as MockStorageMod).SetFile("Common2", "common2");
+            return (core, settings, repo.Implementation as MockRepo, repoMod.Implementation as MockRepositoryMod, 
+                storageMod.Implementation as MockStorageMod, storage.Implementation as MockStorage);
+        }
+
+        private (Core, MockSettings, MockRepo, MockRepositoryMod, MockStorageMod, MockStorage) DoSetup(IJobManager syncManager)
+        {
+            var settings = new MockSettings();
+            var core = new Core(settings, syncManager, a => a());
+            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
+            core.Types.AddStorageType("MOCK", path => new MockStorage(path));
+            var repo = AddRepo(core, "test_repo");
+            var repoMod = new RepositoryMod(repo, new MockRepositoryMod(), "test_repo_mod");
+            repo.Mods.Add(repoMod);
+            var storage = AddStorage(core, "test_storage");
+            var storageMod = new StorageMod(storage, new MockStorageMod
+            {
+                Identifier = "test_storage_mod",
+                Storage = storage.Implementation as MockStorage
+            }, "test_storage_mod");
+            storage.Mods.Add(storageMod);
+            (repoMod.Implementation as MockRepositoryMod).SetFile("Common1", "common1");
+            (repoMod.Implementation as MockRepositoryMod).SetFile("Common2", "common2");
+            (storageMod.Implementation as MockStorageMod).SetFile("Common1", "common1");
+            (storageMod.Implementation as MockStorageMod).SetFile("Common2", "common2");
+            return (core, settings, repo.Implementation as MockRepo, repoMod.Implementation as MockRepositoryMod, 
+                storageMod.Implementation as MockStorageMod, storage.Implementation as MockStorage);
+        }
 
         [Theory]
         [ClassData(typeof(StateTestData))]
         private void CheckState(string repoModVer, string storageModVer, string updatingTo, string job)
         {
-            var (core, settings, repo, repoMod, storageMod, storage) = DoSetup();
+            var syncManager = new MockJobManager();
+            var (core, settings, repo, repoMod, storageMod, storage) = DoSetup(syncManager);
             SetJob(job, core, storageMod, repoMod);
             SetRepoMod(repoModVer, repo, repoMod);
             SetStorageMod(storageModVer, storage, storageMod);
-            SetUpdating(updatingTo, settings, storage, storageMod);
+            SetUpdating(updatingTo, core, storage, storageMod);
 
             if (storageModVer == "" && updatingTo != "") updatingTo = "";
 
             var shouldFail = job != "" && (updatingTo != job || repoModVer != job || storageModVer == "");
 
-            State.State state;
 
-            try
-            {
-                state = core.GetState();
-                Assert.False(shouldFail, "Should have failed");
-            }
-            catch (InvalidOperationException)
-            {
-                if (shouldFail) return;
-                throw;
-            }
-
+            var model = core.Model;
+            core.Load();
+            syncManager.DoWork();
+            
+            
             if (storageModVer == updatingTo && job == "") updatingTo = "";
 
             CheckSettings(settings, updatingTo);
             CheckJob(core, job);
-            var actions = state.Repos.First().Mods.SelectMany(m => m.Actions).ToList();
+            var actions = model.Repositories.First().Mods.SelectMany(m => m.Actions).Select(kv => kv.Value).ToList();
             if (repoModVer != "")
             {
-                CheckDownload(repoModVer, actions, state.Storages.Single());
+                CheckDownload(repoModVer, actions, model.Storages.Single());
                 CheckUse(repoModVer, storageModVer, updatingTo, job, actions,
-                    state.Storages.Single().Mods.SingleOrDefault());
+                    model.Storages.Single().Mods.SingleOrDefault());
                 CheckUpdate(repoModVer, storageModVer, updatingTo, job, actions,
-                    state.Storages.Single().Mods.SingleOrDefault(),
-                    state.Repos.Single().Mods.Single());
-                CheckAwaitUpdate(repoModVer, job, actions, state.Storages.Single().Mods.SingleOrDefault());
+                    model.Storages.Single().Mods.SingleOrDefault(),
+                    model.Repositories.Single().Mods.Single());
+                CheckAwaitUpdate(repoModVer, job, actions, model.Storages.Single().Mods.SingleOrDefault());
             }
 
             Assert.Empty(actions);
@@ -118,19 +140,21 @@ namespace BSU.Core.Tests
 
         private void CheckJob(Core core, string jobVer)
         {
-            var job = core.GetAllJobs().SingleOrDefault();
+            var job = core.JobManager.GetAllJobs().OfType<RepoSync>().SingleOrDefault();
             if (jobVer == "") Assert.Null(job);
-            else Assert.Equal(GetVersionHash(jobVer), job.GetTargetHash());
+            else Assert.Equal(GetVersionHash(jobVer), job?.GetTargetHash());
         }
 
         private void SetJob(string jobVersion, Core core, IStorageMod storage, IRepositoryMod repository)
         {
             if (jobVersion == "") return;
-            core.JobManager.QueueJob(new RepoSync(repository, storage,
-                new UpdateTarget(GetVersionHash(jobVersion), null)));
+            var repo = core.Model.Repositories.SelectMany(r => r.Mods).Single(m => m.Implementation == repository);
+            var sto = core.Model.Storages.SelectMany(r => r.Mods).Single(m => m.Implementation == storage);
+            core.JobManager.QueueJob(new RepoSync(repo, sto,
+                new UpdateTarget(GetVersionHash(jobVersion), null), "set job", 0));
         }
 
-        private void CheckDownload(string repoModVer, List<ModAction> actions, State.Storage storage)
+        private void CheckDownload(string repoModVer, List<ModAction> actions, Model.Storage storage)
         {
             var download = actions.OfType<DownloadAction>().SingleOrDefault();
             Assert.NotNull(download);
@@ -176,11 +200,12 @@ namespace BSU.Core.Tests
             Assert.Equal(update.StorageMod, storageMod);
         }
 
-        private void SetUpdating(string version, MockSettings settings, MockStorage storage, MockStorageMod mod)
+        private void SetUpdating(string version, Core core, MockStorage storage, MockStorageMod mod)
         {
             if (version == "") return;
             var target = new UpdateTarget(GetVersionHash(version), version);
-            settings.Storages.Single(s => s.Name == storage.GetIdentifier()).Updating[mod.GetIdentifier()] = target;
+            core.Model.Storages.Single(s => s.Implementation == storage).Mods.Single(m => m.Implementation == mod)
+                .UpdateTarget = target;
         }
 
         private void SetStorageMod(string version, MockStorage storage, MockStorageMod mod)

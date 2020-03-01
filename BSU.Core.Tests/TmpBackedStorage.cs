@@ -8,36 +8,33 @@ namespace BSU.Core.Tests
 {
     internal class TmpBackedStorage : IStorage
     {
-        private string name;
         private DirectoryInfo _baseTmp;
 
-        public List<TmpBackedStorageMod> Mods = new List<TmpBackedStorageMod>();
+        public Dictionary<string, TmpBackedStorageMod> Mods = new Dictionary<string, TmpBackedStorageMod>();
 
-        public TmpBackedStorage(string name, DirectoryInfo baseTmp)
+        public TmpBackedStorage(DirectoryInfo baseTmp)
         {
-            this.name = name;
-            _baseTmp = baseTmp.CreateSubdirectory(name + Guid.NewGuid());
+            _baseTmp = baseTmp.CreateSubdirectory(Guid.NewGuid().ToString());
         }
 
         public bool CanWrite() => true;
 
         public string GetLocation() => _baseTmp.FullName;
 
-        public List<IStorageMod> GetMods() => Mods.OfType<IStorageMod>().ToList();
-
-        public string GetIdentifier() => name;
+        public Dictionary<string, IStorageMod> GetMods() =>
+            Mods.ToDictionary(kv => kv.Key, kv => (IStorageMod) kv.Value);
 
         public IStorageMod CreateMod(string identifier)
         {
             if (identifier == null) throw new ArgumentNullException();
             var newMod = new TmpBackedStorageMod(_baseTmp, identifier) {Storage = this};
-            Mods.Add(newMod);
+            Mods.Add(identifier, newMod);
             return newMod;
         }
 
         public void RemoveMod(string identifier)
         {
-            Mods.RemoveAll(m => m.Identifier == identifier);
+            Mods.Remove(identifier);
             // TODO: remove folder?
         }
 
@@ -45,7 +42,7 @@ namespace BSU.Core.Tests
 
         public void Load()
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

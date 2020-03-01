@@ -128,7 +128,7 @@ namespace BSU.Core.JobManager
         private void DoWork()
         {
             var done = false;
-            while (!_shutdown && _threadsDone < MAX_THREADS)
+            while (!_shutdown)// && _threadsDone < MAX_THREADS)
             {
                 var work = GetWork(out var job);
                 if (work == null)

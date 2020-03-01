@@ -44,8 +44,8 @@ namespace BSU.Core.Model
         private void Load()
         {
             Implementation.Load();
-            MatchHash = new MatchHash(this);
-            VersionHash = new VersionHash(this);
+            MatchHash = new MatchHash(Implementation);
+            VersionHash = new VersionHash(Implementation);
             _updateTarget = new UpdateTarget(VersionHash.GetHashString(), Implementation.GetDisplayName());
             Repository.Model.MatchMaker.AddRepoMod(this);
             

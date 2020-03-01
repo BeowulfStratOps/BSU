@@ -26,13 +26,13 @@ namespace BSU.Core.Hashes
         private readonly string _name;
         private readonly HashSet<string> _pboNames;
 
-        public MatchHash(StorageMod mod)
+        public MatchHash(IStorageMod mod)
         {
-            Logger.Debug("Building match hash for storage mod {0}", mod.Uid);
+            Logger.Debug("Building match hash for storage mod {0}", mod.GetUid());
             Stream modCpp = null;
             try
             {
-                modCpp = mod.Implementation.GetFile("/mod.cpp");
+                modCpp = mod.GetFile("/mod.cpp");
             }
             catch (IOException)
             {
@@ -52,7 +52,7 @@ namespace BSU.Core.Hashes
                 }
             }
 
-            _pboNames = mod.Implementation.GetFileList().Where(p => AddonsPboRegex.IsMatch(p)).ToHashSet();
+            _pboNames = mod.GetFileList().Where(p => AddonsPboRegex.IsMatch(p)).ToHashSet();
             Logger.Trace("Found {0} pbo files", _pboNames.Count);
         }
 
@@ -64,10 +64,10 @@ namespace BSU.Core.Hashes
                 .ToLowerInvariant(); // TODO: get some holy water
         }
 
-        public MatchHash(RepositoryMod mod)
+        public MatchHash(IRepositoryMod mod)
         {
-            Logger.Debug("Building match hash for repo mod {0}", mod.Uid);
-            var modCppData = mod.Implementation.GetFile("/mod.cpp");
+            Logger.Debug("Building match hash for repo mod {0}", mod.GetUid());
+            var modCppData = mod.GetFile("/mod.cpp");
             if (modCppData != null)
             {
                 var name = Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
@@ -75,7 +75,7 @@ namespace BSU.Core.Hashes
                 Logger.Trace("Found name {0}", name);
             }
 
-            _pboNames = mod.Implementation.GetFileList().Where(f => AddonsPboRegex.IsMatch(f)).ToHashSet();
+            _pboNames = mod.GetFileList().Where(f => AddonsPboRegex.IsMatch(f)).ToHashSet();
             Logger.Trace("Found {0} pbo files", _pboNames.Count);
         }
 

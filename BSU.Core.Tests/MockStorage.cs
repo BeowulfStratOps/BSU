@@ -7,14 +7,12 @@ namespace BSU.Core.Tests
 {
     internal class MockStorage : IStorage
     {
-        private string name;
         private string path;
 
-        public List<MockStorageMod> Mods = new List<MockStorageMod>();
+        public Dictionary<string, MockStorageMod> Mods = new Dictionary<string, MockStorageMod>();
 
-        public MockStorage(string name, string path)
+        public MockStorage(string path)
         {
-            this.name = name;
             this.path = path;
         }
 
@@ -22,28 +20,27 @@ namespace BSU.Core.Tests
 
         public string GetLocation() => path;
 
-        public List<IStorageMod> GetMods() => Mods.OfType<IStorageMod>().ToList();
-
-        public string GetIdentifier() => name;
+        public Dictionary<string, IStorageMod> GetMods() =>
+            Mods.ToDictionary(kv => kv.Key, kv => (IStorageMod) kv.Value);
 
         public IStorageMod CreateMod(string identifier)
         {
             if (identifier == null) throw new ArgumentNullException();
             var newMod = new MockStorageMod {Identifier = identifier, Storage = this};
-            Mods.Add(newMod);
+            Mods.Add(identifier, newMod);
             return newMod;
         }
 
         public void RemoveMod(string identifier)
         {
-            Mods.RemoveAll(m => m.Identifier == identifier);
+            Mods.Remove(identifier);
         }
 
         public Uid GetUid() => new Uid();
 
         public void Load()
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

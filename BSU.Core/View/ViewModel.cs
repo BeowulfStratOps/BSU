@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
@@ -58,5 +59,15 @@ namespace BSU.Core.View
         }
         
         internal Dictionary<Model.Actions.StorageTarget, StorageTarget> StorageTargets { get; } = new Dictionary<Model.Actions.StorageTarget, StorageTarget>();
+
+        public void AddRepository(string type, string url, string name)
+        {
+            Model.AddRepository(type, url, name);
+        }
+        
+        public void AddStorage(string type, string path, string name)
+        {
+            Model.AddStorage(type, new DirectoryInfo(path), name);
+        }
     }
 }

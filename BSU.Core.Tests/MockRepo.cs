@@ -6,14 +6,12 @@ namespace BSU.Core.Tests
 {
     internal class MockRepo : IRepository
     {
-        private string name;
         private string url;
 
-        public List<MockRepositoryMod> Mods = new List<MockRepositoryMod>();
+        public Dictionary<string, MockRepositoryMod> Mods = new Dictionary<string, MockRepositoryMod>();
 
-        public MockRepo(string name, string url)
+        public MockRepo(string url)
         {
-            this.name = name;
             this.url = url;
         }
 
@@ -22,11 +20,10 @@ namespace BSU.Core.Tests
 
         public void Load()
         {
-            throw new System.NotImplementedException();
+            
         }
 
-        public List<IRepositoryMod> GetMods() => Mods.OfType<IRepositoryMod>().ToList();
-
-        public string GetIdentifier() => name;
+        public Dictionary<string, IRepositoryMod> GetMods() =>
+            Mods.ToDictionary(kv => kv.Key, kv => (IRepositoryMod) kv.Value);
     }
 }

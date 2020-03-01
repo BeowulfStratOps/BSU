@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using BSU.Core.Model.Actions;
 using BSU.Core.Services;
@@ -78,5 +79,19 @@ namespace BSU.Core.Model
 
         public event Action<Repository> RepositoryAdded;
         public event Action<Storage> StorageAdded;
+
+        public void AddRepository(string type, string url, string name)
+        {
+            var repository = PersistentState.AddRepo(name, url, type, this);
+            Repositories.Add(repository);
+            RepositoryAdded?.Invoke(repository);
+        }
+        
+        public void AddStorage(string type, DirectoryInfo dir, string name)
+        {
+            var storage = PersistentState.AddStorage(name, dir, type);
+            Storages.Add(storage);
+            StorageAdded?.Invoke(storage);
+        }
     }
 }

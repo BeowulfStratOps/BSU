@@ -38,7 +38,7 @@ namespace BSU.Core.Tests
 
         public bool FileExists(string path) => GetFileInfo(path).Exists;
 
-        public string GetDisplayName() => throw new NotImplementedException();
+        public string GetDisplayName() => "not_implemented";
 
         public Stream GetFile(string path)
         {
@@ -65,7 +65,7 @@ namespace BSU.Core.Tests
 
         public void Load()
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

@@ -170,7 +170,7 @@ namespace RealTest
             }
         }
 
-        private class WaitJob : WorkUnit
+        private class WaitJob : SyncWorkUnit
         {
             public WaitJob(IStorageMod storage, string path, RepoSync sync) : base(storage, path, sync)
             {

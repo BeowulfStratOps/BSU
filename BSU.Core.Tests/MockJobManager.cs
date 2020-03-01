@@ -18,6 +18,20 @@ namespace BSU.Core.Tests
         {
         }
 
+        public void DoWork()
+        {
+            while (_jobs.Any())
+            {
+                var job = _jobs[0];
+                var work = job.GetWork();
+                while (work != null)
+                {
+                   work.Work();
+                   work = job.GetWork();
+                }
+            }
+        }
+
         public IEnumerable<IJob> GetActiveJobs() => _jobs.AsReadOnly();
         public IEnumerable<IJob> GetAllJobs() => _jobs.AsReadOnly();
     }

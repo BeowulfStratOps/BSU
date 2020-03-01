@@ -29,7 +29,7 @@ namespace BSU.Core.Tests
 
         public void Load()
         {
-            throw new NotImplementedException();
+            
         }
 
         public List<string> GetFileList() => Files.Keys.ToList();

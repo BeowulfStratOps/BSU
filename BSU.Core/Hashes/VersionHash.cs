@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using BSU.Core.Model;
+using BSU.CoreCommon;
 using BSU.Hashes;
 using NLog;
 
@@ -18,13 +19,13 @@ namespace BSU.Core.Hashes
 
         private readonly byte[] _hash;
 
-        internal VersionHash(StorageMod mod)
+        internal VersionHash(IStorageMod mod)
         {
-            Logger.Debug("Building version hash from storage mod {0}", mod.Uid);
+            Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
             var hashes = new Dictionary<string, FileHash>();
-            foreach (var file in mod.Implementation.GetFileList())
+            foreach (var file in mod.GetFileList())
             {
-                hashes.Add(file, new SHA1AndPboHash(mod.Implementation.GetFile(file), Utils.GetExtension(file)));
+                hashes.Add(file, new SHA1AndPboHash(mod.GetFile(file), Utils.GetExtension(file)));
             }
 
             _hash = BuildHash(hashes);
@@ -33,10 +34,10 @@ namespace BSU.Core.Hashes
 #endif
         }
 
-        internal VersionHash(RepositoryMod mod)
+        internal VersionHash(IRepositoryMod mod)
         {
-            Logger.Debug("Building version hash from storage mod {0}", mod.Uid);
-            _hash = BuildHash(mod.Implementation.GetFileList().ToDictionary(h => h, mod.Implementation.GetFileHash));
+            Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
+            _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
         }
 
         /// <summary>

@@ -40,5 +40,6 @@ namespace BSU.CoreCommon
         /// <returns></returns>
         string GetFilePath(string path);
         public void Load();
+        public Uid GetUid();
     }
 }

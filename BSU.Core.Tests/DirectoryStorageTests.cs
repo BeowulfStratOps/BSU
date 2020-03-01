@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using BSU.Core.State;
+using BSU.Core.Model.Actions;
 using Xunit;
 
 namespace BSU.Core.Tests
@@ -38,27 +38,25 @@ namespace BSU.Core.Tests
         private void Download()
         {
             var settings = new MockSettings();
-            var core = new Core(settings);
-            core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
-            core.AddRepo("test_repo", "url/test_repo", "MOCK");
-            var repo = core.State.GetRepositories().Single() as MockRepo;
+            var core = new Core(settings, a => a());
+            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
+            core.Model.AddRepository("MOCK", "url/test_repo", "test_repo");
+            var repo = core.Model.Repositories.Single().Implementation as MockRepo;
             var repoMod = new MockRepositoryMod {Identifier = "repo_test"};
-            repo.Mods.Add(repoMod);
-            core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
+            repo.Mods.Add("repo_test", repoMod);
+            core.Model.AddStorage("DIRECTORY", _tmpDir, "test_storage");
 
             foreach (var fileName in GetFileList().Keys)
             {
                 repoMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
             }
 
-            var state = core.GetState();
+            var state = core.Model;
 
-            var selectedAction = state.Repos.Single().Mods.Single().Actions.OfType<DownloadAction>().Single();
+            var selectedAction = state.Repositories.Single().Mods.Single().Actions.Values.OfType<DownloadAction>().Single();
             selectedAction.FolderName = "downloaded";
-            state.Repos.Single().Mods.Single().Selected = selectedAction;
-
-            var update = state.Repos.Single().PrepareUpdate();
-            update.DoUpdate();
+            var update = state.PrepareUpdate(new List<ModAction>{selectedAction});
+            state.DoUpdate(update);
             while (!update.IsDone())
             {
                 Thread.Sleep(10);
@@ -79,13 +77,13 @@ namespace BSU.Core.Tests
         private void Update()
         {
             var settings = new MockSettings();
-            var core = new Core(settings);
-            core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
-            core.AddRepo("test_repo", "url/test_repo", "MOCK");
-            var repo = core.State.GetRepositories().Single() as MockRepo;
+            var core = new Core(settings, a => a());
+            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
+            core.Model.AddRepository("MOCK", "url/test_repo", "test_repo");
+            var repo = core.Model.Repositories.Single().Implementation as MockRepo;
             var repoMod = new MockRepositoryMod {Identifier = "repo_test"};
-            repo.Mods.Add(repoMod);
-            core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
+            repo.Mods.Add("repo_test", repoMod);
+            core.Model.AddStorage("DIRECTORY", _tmpDir, "test_storage");
 
             var mod = Directory.CreateDirectory(Path.Combine(_tmpDir.FullName, "@my_mod"));
             File.WriteAllText(Path.Combine(mod.FullName, "1.pbo"), "some_worthless_stuff");
@@ -98,13 +96,11 @@ namespace BSU.Core.Tests
                 repoMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
             }
 
-            var state = core.GetState();
+            var state = core.Model;
 
-            var selectedAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().Single();
-            state.Repos.Single().Mods.Single().Selected = selectedAction;
-
-            var update = state.Repos.Single().PrepareUpdate();
-            update.DoUpdate();
+            var selectedAction = state.Repositories.Single().Mods.Single().Actions.Values.OfType<UpdateAction>().Single();
+            var update = state.PrepareUpdate(new List<ModAction>{selectedAction});
+            state.DoUpdate(update);
             while (!update.IsDone())
             {
                 Thread.Sleep(10);
@@ -123,13 +119,13 @@ namespace BSU.Core.Tests
         private void CaseInsensitiveUpdate()
         {
             var settings = new MockSettings();
-            var core = new Core(settings);
-            core.AddRepoType("MOCK", (name, url) => new MockRepo(name, url));
-            core.AddRepo("test_repo", "url/test_repo", "MOCK");
-            var repo = core.State.GetRepositories().Single() as MockRepo;
+            var core = new Core(settings, a => a());
+            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
+            core.Model.AddRepository("MOCK", "url/test_repo", "test_repo");
+            var repo = core.Model.Repositories.Single().Implementation as MockRepo;
             var repoMod = new MockRepositoryMod {Identifier = "repo_test"};
-            repo.Mods.Add(repoMod);
-            core.AddStorage("test_storage", _tmpDir, "DIRECTORY");
+            repo.Mods.Add("repo_test", repoMod);
+            core.Model.AddStorage("DIRECTORY", _tmpDir, "test_storage");
 
             var mod = Directory.CreateDirectory(Path.Combine(_tmpDir.FullName, "@my_mod"));
             File.WriteAllText(Path.Combine(mod.FullName, "1.Pbo"), "some_worthless_stuff");
@@ -142,13 +138,12 @@ namespace BSU.Core.Tests
                 repoMod.Files["/" + fileName] = Encoding.UTF8.GetBytes(GetFileList()[fileName]);
             }
 
-            var state = core.GetState();
+            var state = core.Model;
 
-            var selectedAction = state.Repos.Single().Mods.Single().Actions.OfType<UpdateAction>().Single();
-            state.Repos.Single().Mods.Single().Selected = selectedAction;
-
-            var update = state.Repos.Single().PrepareUpdate();
-            update.DoUpdate();
+            var selectedAction = state.Repositories.Single().Mods.Single().Actions.Values.OfType<UpdateAction>().Single();
+            
+            var update = state.PrepareUpdate(new List<ModAction>{selectedAction});
+            state.DoUpdate(update);
             while (!update.IsDone())
             {
                 Thread.Sleep(10);

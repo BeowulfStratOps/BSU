@@ -64,7 +64,7 @@ namespace BSU.Core.Tests
 
         public void Load()
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

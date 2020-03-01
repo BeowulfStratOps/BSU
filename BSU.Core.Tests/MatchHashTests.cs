@@ -1,5 +1,6 @@
 using System;
 using BSU.Core.Hashes;
+using BSU.Core.Model;
 using Xunit;
 
 namespace BSU.Core.Tests
