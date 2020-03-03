@@ -6,16 +6,11 @@ namespace BSU.Core.Tests
 {
     internal class MockRepo : IRepository
     {
-        private string url;
-
         public Dictionary<string, MockRepositoryMod> Mods = new Dictionary<string, MockRepositoryMod>();
 
-        public MockRepo(string url)
+        public MockRepo()
         {
-            this.url = url;
         }
-
-        public string GetLocation() => url;
         public Uid GetUid() => new Uid();
 
         public void Load()

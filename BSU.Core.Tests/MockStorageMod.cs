@@ -36,16 +36,19 @@ namespace BSU.Core.Tests
 
         public string GetDisplayName() => throw new NotImplementedException();
 
-        public Stream GetFile(string path)
+        public Stream OpenFile(string path, FileAccess access)
         {
             if (Locked) throw new IOException("File in use");
-            return Files.ContainsKey(path) ? new MemoryStream(Files[path]) : null;
+            if (!Files.ContainsKey(path)) return null;
+            return !access.HasFlag(FileAccess.Write)
+                ? new MemoryStream(Files[path])
+                : new MockStream(Files[path], d => Files[path] = d);
         }
 
         public FileHash GetFileHash(string path)
         {
             if (Locked) throw new IOException("File in use");
-            return new SHA1AndPboHash(GetFile(path), Utils.GetExtension(path));
+            return new SHA1AndPboHash(OpenFile(path, FileAccess.Read), Utils.GetExtension(path));
         }
 
         public List<string> GetFileList() => Files.Keys.ToList();
@@ -65,6 +68,22 @@ namespace BSU.Core.Tests
         public void Load()
         {
             
+        }
+        
+        private class MockStream : MemoryStream
+        {
+            private readonly Action<byte[]> _save;
+
+            public MockStream(byte[] data, Action<byte[]> save) : base(data)
+            {
+                _save = save;
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                _save(ToArray());
+                base.Dispose(disposing);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using BSU.Hashes;
 
@@ -46,19 +47,17 @@ namespace BSU.CoreCommon
         /// Downloads a file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="filePath">Path in local file storage, as download target.</param>
         /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        void DownloadTo(string path, string filePath, Action<long> updateCallback, CancellationToken token);
+        void DownloadTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token);
 
         /// <summary>
         /// Updates an existing file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="filePath">Path in local file storage, as local target.</param>
         /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token);
+        void UpdateTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token);
         public Uid GetUid();
     }
 }

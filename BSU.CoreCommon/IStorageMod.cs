@@ -18,7 +18,7 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        Stream GetFile(string path);
+        Stream OpenFile(string path, FileAccess access);
 
         /// <summary>
         /// Get hash of a local file. Null if it doesn't exist.
@@ -32,13 +32,6 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         void DeleteFile(string path);
-
-        /// <summary>
-        /// Returns the local file system path for a relative path.
-        /// </summary>
-        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <returns></returns>
-        string GetFilePath(string path);
         public void Load();
         public Uid GetUid();
     }

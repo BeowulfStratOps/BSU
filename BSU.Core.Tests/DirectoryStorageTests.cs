@@ -9,6 +9,7 @@ using Xunit;
 
 namespace BSU.Core.Tests
 {
+    // TODO: those should really just thest the DirectoryStorage(Mod) class. NOTHING ELSE!!
     public class DirectoryStorageTests : IDisposable
     {
         private DirectoryInfo _tmpDir;
@@ -39,7 +40,7 @@ namespace BSU.Core.Tests
         {
             var settings = new MockSettings();
             var core = new Core(settings, a => a());
-            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
+            core.Types.AddRepoType("MOCK", url => new MockRepo());
             core.Model.AddRepository("MOCK", "url/test_repo", "test_repo");
             var repo = core.Model.Repositories.Single().Implementation as MockRepo;
             var repoMod = new MockRepositoryMod {Identifier = "repo_test"};
@@ -78,7 +79,7 @@ namespace BSU.Core.Tests
         {
             var settings = new MockSettings();
             var core = new Core(settings, a => a());
-            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
+            core.Types.AddRepoType("MOCK", url => new MockRepo());
             core.Model.AddRepository("MOCK", "url/test_repo", "test_repo");
             var repo = core.Model.Repositories.Single().Implementation as MockRepo;
             var repoMod = new MockRepositoryMod {Identifier = "repo_test"};
@@ -120,7 +121,7 @@ namespace BSU.Core.Tests
         {
             var settings = new MockSettings();
             var core = new Core(settings, a => a());
-            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
+            core.Types.AddRepoType("MOCK", url => new MockRepo());
             core.Model.AddRepository("MOCK", "url/test_repo", "test_repo");
             var repo = core.Model.Repositories.Single().Implementation as MockRepo;
             var repoMod = new MockRepositoryMod {Identifier = "repo_test"};

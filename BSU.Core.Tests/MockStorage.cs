@@ -11,14 +11,11 @@ namespace BSU.Core.Tests
 
         public Dictionary<string, MockStorageMod> Mods = new Dictionary<string, MockStorageMod>();
 
-        public MockStorage(string path)
+        public MockStorage()
         {
-            this.path = path;
         }
 
         public bool CanWrite() => true;
-
-        public string GetLocation() => path;
 
         public Dictionary<string, IStorageMod> GetMods() =>
             Mods.ToDictionary(kv => kv.Key, kv => (IStorageMod) kv.Value);

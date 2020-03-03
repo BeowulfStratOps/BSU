@@ -47,7 +47,7 @@ namespace BSU.Core.Storage
         {
             if (_displayName != null) return _displayName;
 
-            var modCpp = GetFile("/mod.cpp");
+            var modCpp = OpenFile("/mod.cpp", FileAccess.Read);
             string modCppData = null;
             if (modCpp != null)
             {
@@ -66,12 +66,13 @@ namespace BSU.Core.Storage
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        public Stream GetFile(string path)
+        public Stream OpenFile(string path, FileAccess access)
         {
             try
             {
                 Logger.Trace("{0} Reading file {1}", _uid, path);
-                return File.OpenRead(GetFullFilePath(path));
+                if (!_parentStorage.CanWrite() && access.HasFlag(FileAccess.Write)) throw new NotSupportedException();
+                return File.Open(GetFullFilePath(path), FileMode.OpenOrCreate);
             }
             catch (FileNotFoundException)
             {
@@ -100,7 +101,7 @@ namespace BSU.Core.Storage
         {
             Util.CheckPath(path);
             var extension = Utils.GetExtension(path).ToLowerInvariant();
-            var file = GetFile(path);
+            var file = OpenFile(path, FileAccess.Read);
             return file == null ? null : new SHA1AndPboHash(file, extension);
         }
 
@@ -116,18 +117,6 @@ namespace BSU.Core.Storage
             Logger.Trace("Deleting file {0}", path);
             if (!_parentStorage.CanWrite()) throw new NotSupportedException();
             File.Delete(GetFullFilePath(path));
-        }
-
-        /// <summary>
-        /// Returns the local file system path for a relative path.
-        /// </summary>
-        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException">Not supported on read-only locations.</exception>
-        public string GetFilePath(string path)
-        {
-            if (!_parentStorage.CanWrite()) throw new NotSupportedException();
-            return GetFullFilePath(path);
         }
 
         private string GetFullFilePath(string path)

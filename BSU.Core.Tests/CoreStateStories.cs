@@ -47,8 +47,8 @@ namespace BSU.Core.Tests
             var settings = new MockSettings();
             var syncManager = new MockJobManager();
             var core = new Core(settings, syncManager, a => a());
-            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
-            core.Types.AddStorageType("MOCK", path => new MockStorage(path));
+            core.Types.AddRepoType("MOCK", url => new MockRepo());
+            core.Types.AddStorageType("MOCK", path => new MockStorage());
             var repo = AddRepo(core, "test_repo");
             var repoMod = new RepositoryMod(repo, new MockRepositoryMod(), "test_repo_mod");
             repo.Mods.Add(repoMod);
@@ -71,8 +71,8 @@ namespace BSU.Core.Tests
         {
             var settings = new MockSettings();
             var core = new Core(settings, syncManager, a => a());
-            core.Types.AddRepoType("MOCK", url => new MockRepo(url));
-            core.Types.AddStorageType("MOCK", path => new MockStorage(path));
+            core.Types.AddRepoType("MOCK", url => new MockRepo());
+            core.Types.AddStorageType("MOCK", path => new MockStorage());
             var repo = AddRepo(core, "test_repo");
             var repoMod = new RepositoryMod(repo, new MockRepositoryMod(), "test_repo_mod");
             repo.Mods.Add(repoMod);

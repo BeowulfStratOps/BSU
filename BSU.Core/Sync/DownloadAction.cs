@@ -31,9 +31,7 @@ namespace BSU.Core.Sync
         protected override void DoWork(CancellationToken token)
         {
             Logger.Trace("{0}, {1} Downloading {2}", _repository.Uid, _repository.Uid, Path);
-            var target = Storage.Implementation.GetFilePath(Path.ToLowerInvariant());
-            var di = new FileInfo(target).Directory;
-            if (!di.Exists) di.Create();
+            using var target = Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.Write);
             _repository.Implementation.DownloadTo(Path, target, UpdateRemaining, token);
             Thread.Sleep(2000);
             _sizeTodo = 0;

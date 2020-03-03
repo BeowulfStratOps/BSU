@@ -32,7 +32,7 @@ namespace BSU.Core.Hashes
             Stream modCpp = null;
             try
             {
-                modCpp = mod.GetFile("/mod.cpp");
+                modCpp = mod.OpenFile("/mod.cpp", FileAccess.Read);
             }
             catch (IOException)
             {

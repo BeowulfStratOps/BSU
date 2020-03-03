@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -25,7 +26,7 @@ namespace BSU.Core.Hashes
             var hashes = new Dictionary<string, FileHash>();
             foreach (var file in mod.GetFileList())
             {
-                hashes.Add(file, new SHA1AndPboHash(mod.GetFile(file), Utils.GetExtension(file)));
+                hashes.Add(file, new SHA1AndPboHash(mod.OpenFile(file, FileAccess.Read), Utils.GetExtension(file)));
             }
 
             _hash = BuildHash(hashes);

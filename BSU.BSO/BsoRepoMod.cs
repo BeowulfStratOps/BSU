@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -114,17 +115,17 @@ namespace BSU.BSO
         /// Downloads a file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="filePath">Path in local file storage, as download target.</param>
         /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        public void DownloadTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
+        public void DownloadTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
         {
             var url = _url + GetRealPath(path);
 
             using var client = new WebClient();
             Logger.Debug("{0} Downloading content {1} / {2}", _uid, _url, path);
             client.DownloadProgressChanged += (sender, args) => updateCallback(args.BytesReceived);
-            client.DownloadFile(url, filePath);
+            using var sourceStream = client.OpenRead(url);
+            sourceStream.CopyTo(fileStream);
             token.Register(client.CancelAsync);
             Logger.Debug("{0} Finished downloading content {1} / {2}", _uid, _url, path);
         }
@@ -133,12 +134,11 @@ namespace BSU.BSO
         /// Updates an existing file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="filePath">Path in local file storage, as local target.</param>
         /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        public void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
+        public void UpdateTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
         {
-            DownloadTo(path, filePath, updateCallback, token);
+            DownloadTo(path, fileStream, updateCallback, token);
         }
 
         public Uid GetUid() => _uid;

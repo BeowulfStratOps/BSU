@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.IO;
+using System.Threading;
 using BSU.Core.Model;
 using BSU.CoreCommon;
 using NLog;
@@ -30,7 +31,7 @@ namespace BSU.Core.Sync
         protected override void DoWork(CancellationToken token)
         {
             Logger.Trace("{0}, {1} Updating {2}", Storage.Uid, _repository.Uid, Path);
-            var target = Storage.Implementation.GetFilePath(Path.ToLowerInvariant());
+            using var target = Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.ReadWrite);
             _repository.Implementation.UpdateTo(Path, target, UpdateRemaining, token);
             _sizeTodo = 0;
         }

@@ -46,7 +46,7 @@ namespace BSU.Core.Tests
         public int SleepMs = 0;
         public bool NoOp = false;
 
-        public void DownloadTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
+        public void DownloadTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
         {
             for (int i = 0; i < SleepMs; i++)
             {
@@ -54,12 +54,12 @@ namespace BSU.Core.Tests
                 Thread.Sleep(1);
             }
 
-            if (!NoOp) File.WriteAllBytes(filePath, Files[path]);
+            if (!NoOp) fileStream.Write(Files[path]);
         }
 
-        public void UpdateTo(string path, string filePath, Action<long> updateCallback, CancellationToken token)
+        public void UpdateTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
         {
-            DownloadTo(path, filePath, updateCallback, token);
+            DownloadTo(path, fileStream, updateCallback, token);
         }
 
         public Uid GetUid() => new Uid();

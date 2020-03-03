@@ -9,21 +9,8 @@ using Xunit;
 
 namespace BSU.Core.Tests
 {
-    public class CoreTransition : IDisposable
+    public class CoreTransition
     {
-        private DirectoryInfo _tmpDir;
-
-        public CoreTransition()
-        {
-            _tmpDir = new DirectoryInfo(Path.GetTempPath()).CreateSubdirectory(Guid.NewGuid().ToString());
-        }
-
-        public void Dispose()
-        {
-            _tmpDir.Delete(true);
-        }
-
-
         private static void AddRepo(ISettings settings, string name)
         {
             settings.Repositories.Add(new RepoEntry
@@ -40,7 +27,7 @@ namespace BSU.Core.Tests
             {
                 Name = name,
                 Path = "path/" + name,
-                Type = "TMPBACKED",
+                Type = "MOCK",
                 Updating = new Dictionary<string, UpdateTarget>()
             });
         }
@@ -54,14 +41,14 @@ namespace BSU.Core.Tests
             return new Hashes.VersionHash(mod).GetHashString();
         }
 
-        private (ISettings, Model.Model) CommonSetup(Action<MockRepo>[] setupRepoFuncs = null, Action<TmpBackedStorage, ISettings>[] setupStorageFuncs = null)
+        private (ISettings, Model.Model) CommonSetup(Action<MockRepo>[] setupRepoFuncs = null, Action<MockStorage, ISettings>[] setupStorageFuncs = null)
         {
             var settings = new MockSettings();
             var types = new Types();
             
             types.AddRepoType("MOCK", url =>
             {
-                var repo = new MockRepo(url);
+                var repo = new MockRepo();
                 if (setupRepoFuncs == null) return repo;
                 foreach (var setupRepoFunc in setupRepoFuncs)
                 {
@@ -69,9 +56,9 @@ namespace BSU.Core.Tests
                 }
                 return repo;
             });
-            types.AddStorageType("TMPBACKED", path =>
+            types.AddStorageType("MOCK", path =>
             {
-                var storage = new TmpBackedStorage(_tmpDir);
+                var storage = new MockStorage();
                 if (setupStorageFuncs == null) return storage;
                 foreach (var setupStorageFunc in setupStorageFuncs)
                 {
@@ -104,11 +91,11 @@ namespace BSU.Core.Tests
             };
         }
 
-        private Action<TmpBackedStorage, ISettings> AddStorageMod(string currentVersion, string newVersion = null)
+        private Action<MockStorage, ISettings> AddStorageMod(string currentVersion, string newVersion = null)
         {
             return (storage, settings) =>
             {
-                var storageMod = storage.CreateMod("storage_test") as TmpBackedStorageMod;
+                var storageMod = storage.CreateMod("storage_test") as MockStorageMod;
                 storageMod.SetFile("Common1", "common1");
                 storageMod.SetFile("Common2", "common2");
                 storageMod.SetFile("Version", currentVersion);
@@ -236,7 +223,7 @@ namespace BSU.Core.Tests
             Assert.Empty(settings.Storages.Single().Updating);
             var useAction = model.Repositories.Single().Mods.Single().Actions.Values.OfType<UseAction>().SingleOrDefault();
             Assert.NotNull(useAction);
-            var storageMod = model.Storages.Single().Mods.Single().Implementation as TmpBackedStorageMod;
+            var storageMod = model.Storages.Single().Mods.Single().Implementation as MockStorageMod;
             Assert.Equal("my_version", storageMod.GetFileContent("Version"));
             Assert.NotNull(model.Storages.Single().Mods.SingleOrDefault());
             var awaitAction = model.Repositories.Single().Mods.Single().Actions.Values.OfType<AwaitUpdateAction>().SingleOrDefault();
@@ -274,7 +261,7 @@ namespace BSU.Core.Tests
             Assert.Empty(settings.Storages.Single().Updating);
             var useAction = model.Repositories.Single().Mods.Single().Actions.Values.OfType<UseAction>().SingleOrDefault();
             Assert.NotNull(useAction);
-            var storageMod = model.Storages.Single().Mods.Single().Implementation as TmpBackedStorageMod;
+            var storageMod = model.Storages.Single().Mods.Single().Implementation as MockStorageMod;
             Assert.Equal("my_version", storageMod.GetFileContent("Version"));
             Assert.NotNull(model.Storages.Single().Mods.SingleOrDefault());
             var awaitAction = model.Repositories.Single().Mods.Single().Actions.Values.OfType<AwaitUpdateAction>().SingleOrDefault();
