@@ -25,22 +25,15 @@ namespace BSU.GUI
     {
         private readonly Core.Core _core;
         
-        private readonly object _lock = new object();
-        
         public MainWindow()
         {
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             _core = new Core.Core(settingsFile, action =>
             {
-                //Console.WriteLine("Enter lock");
-                lock (_lock)
-                {
-                    if (Application.Current.Dispatcher.CheckAccess())
-                        action();
-                    else
-                        Application.Current.Dispatcher.Invoke(action);   
-                }
-                //Console.WriteLine("Left lock");
+                if (Application.Current.Dispatcher.CheckAccess())
+                    action();
+                else
+                    Application.Current.Dispatcher.Invoke(action);
             });
             DataContext = _core;
             new Thread(_core.Load).Start();
