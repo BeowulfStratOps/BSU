@@ -98,7 +98,7 @@ namespace BSU.Core.Model
             var title = $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
             var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
             var repoSync = new RepoSync(repositoryMod, this, target, title, 0);
-            ServiceProvider.JobManager.QueueJob(repoSync);
+            _updating.StartJob(repoSync);
             return repoSync;
         }
 

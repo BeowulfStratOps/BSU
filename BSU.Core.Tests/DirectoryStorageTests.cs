@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BSU.Core.Storage;
 using Xunit;
 
@@ -35,6 +36,20 @@ namespace BSU.Core.Tests
             var storage = new DirectoryStorage(_tmpDir.FullName);
             storage.Load();
             var mods = storage.GetMods();
+            // TODO: do some checking
+        }
+
+        [Fact]
+        private void CreateNestedFile()
+        {
+            using var file = Create("@ace", "mod.cpp");
+            file.WriteLine("Ey yo");
+            var storage = new DirectoryStorage(_tmpDir.FullName);
+            storage.Load();
+            using var newFile = storage.GetMods().Values.Single().OpenFile("/addons/addon2.pbo", FileAccess.Write);
+            newFile.Write(new byte[] {1, 2, 3}, 0, 3);
+            newFile.Close();
+            // TODO: check file contents, file still in use
         }
     }
 }

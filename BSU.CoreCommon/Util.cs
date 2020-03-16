@@ -56,7 +56,7 @@ namespace BSU.CoreCommon
         /// <exception cref="FormatException">Throws an exception if path doesn't comply.</exception>
         public static void CheckPath(string path)
         {
-            if (!path.StartsWith('/')) throw new FormatException(path);
+            if (!path.StartsWith('/')) throw new FormatException($"Path '{path}' should start with a '/'");
             if (path.EndsWith('/')) throw new FormatException(path);
             if (path.Contains('\\')) throw new FormatException(path);
             if (path.ToLowerInvariant() != path) throw new FormatException(path);

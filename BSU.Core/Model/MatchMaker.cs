@@ -72,7 +72,7 @@ namespace BSU.Core.Model
             if (repoModState.MatchHash == null || storageModState.MatchHash == null) return;
 
             if (repoModState.MatchHash.IsMatch(storageModState.MatchHash) ||
-                storageModState.UpdateTarget?.Hash == repoModState.VersionHash.GetHashString())
+                (repoModState.VersionHash != null && storageModState.UpdateTarget?.Hash == repoModState.VersionHash.GetHashString()))
             {
                 storageMod.RequireHash();
                 

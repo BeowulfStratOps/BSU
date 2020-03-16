@@ -71,10 +71,20 @@ namespace BSU.Core.Storage
             try
             {
                 Logger.Trace("{0} Reading file {1}", _uid, path);
-                if (!_parentStorage.CanWrite() && access.HasFlag(FileAccess.Write)) throw new NotSupportedException();
+                if (access.HasFlag(FileAccess.Write))
+                {
+                    if (!_parentStorage.CanWrite()) throw new NotSupportedException();
+                    
+                    // TODO: looks ugly
+                    Directory.CreateDirectory(new FileInfo(GetFullFilePath(path)).Directory.FullName);
+                }
                 return File.Open(GetFullFilePath(path), FileMode.OpenOrCreate);
             }
             catch (FileNotFoundException)
+            {
+                return null;
+            }
+            catch (DirectoryNotFoundException)
             {
                 return null;
             }
