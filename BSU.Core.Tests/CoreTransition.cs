@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using BSU.Core.Model.Actions;
 using BSU.Core.Services;
 using Xunit;
 
 namespace BSU.Core.Tests
 {
-    public class CoreTransition
+    /*public class CoreTransition
     {
         private static void AddRepo(ISettings settings, string name)
         {
@@ -269,5 +268,5 @@ namespace BSU.Core.Tests
             var updateAction = model.Repositories.Single().Mods.Single().Actions.Values.OfType<UpdateAction>().SingleOrDefault();
             Assert.Null(updateAction);
         }
-    }
+    }*/
 }

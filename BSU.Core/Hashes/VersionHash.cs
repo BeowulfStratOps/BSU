@@ -35,6 +35,12 @@ namespace BSU.Core.Hashes
 #endif
         }
 
+        // TODO: this is for testing only. VersionHash should be abstracted.
+        internal VersionHash(byte[] hash)
+        {
+            _hash = hash;
+        }
+
         internal VersionHash(IRepositoryMod mod)
         {
             Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
