@@ -29,5 +29,12 @@ namespace BSU.Core.Tests
         {
             Assert.Equal(ModAction.Use, GetAction("1", "1", null, null, true));
         }
+
+        [Fact]
+        private void ContinueUpdate()
+        {
+            var action = GetAction("1", "?", "1", null, true);
+            Assert.Equal(ModAction.ContinueUpdate, action);
+        }
     }
 }

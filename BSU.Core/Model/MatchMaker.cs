@@ -66,22 +66,30 @@ namespace BSU.Core.Model
         {
             // TODO: is always called from locked context, but should do it again for explicity / safety
             
+            // TODO: test this?
+            
             var repoModState = repoMod.GetState();
             var storageModState = storageMod.GetState();
             
-            if (repoModState.MatchHash == null || storageModState.MatchHash == null) return;
+            if (repoModState.MatchHash == null) return;
 
-            if (repoModState.MatchHash.IsMatch(storageModState.MatchHash) ||
-                (repoModState.VersionHash != null && storageModState.UpdateTarget?.Hash == repoModState.VersionHash.GetHashString()))
-            {
-                storageMod.RequireHash();
+            var isMatch = storageModState.MatchHash != null &&
+                          repoModState.MatchHash.IsMatch(storageModState.MatchHash);
+
+            isMatch |= repoModState.VersionHash != null &&
+                       storageModState.UpdateTarget?.Hash == repoModState.VersionHash.GetHashString();
+
+            if (!isMatch) return;
+            
+             if (storageModState.UpdateTarget == null) storageMod.RequireHash();
                 
-                var action = CalcAction.CalculateAction(repoModState.VersionHash, storageModState.VersionHash,
-                    storageModState.UpdateTarget, storageModState.JobTarget,
-                    storageMod.Storage.Implementation.CanWrite());
+            if (repoModState.VersionHash == null) return;
                 
-                repoMod.ChangeAction(storageMod, action);
-            }
+            var action = CalcAction.CalculateAction(repoModState.VersionHash, storageModState.VersionHash,
+                storageModState.JobTarget,storageModState.UpdateTarget, 
+                storageMod.Storage.Implementation.CanWrite());
+                
+            repoMod.ChangeAction(storageMod, action);
         }
     }
 }

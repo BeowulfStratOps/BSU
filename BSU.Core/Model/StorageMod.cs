@@ -41,17 +41,28 @@ namespace BSU.Core.Model
             };
             _hashing.OnFinished += () => StateChanged?.Invoke();
             _updating = new ManualJobSlot<RepoSync>();
-            _updating.OnStarted += () => StateChanged?.Invoke();
+            _updating.OnStarted += () =>
+            {
+                _versionHash = null;
+                _matchHash = null;
+                StateChanged?.Invoke();
+            };
             _updating.OnFinished += () =>
             {
                 _versionHash = null;
                 _matchHash = null;
-                _requireHashing = false;
                 _loading.StartJob();
                 StateChanged?.Invoke();
             };
-            UpdateTarget = updateTarget ?? ServiceProvider.InternalState.GetUpdateTarget(this);
-            _loading.StartJob();
+            if (updateTarget == null)
+            {
+                _updateTarget = ServiceProvider.InternalState.GetUpdateTarget(this);
+                _loading.StartJob();
+            }
+            else
+            {
+                UpdateTarget = updateTarget;
+            }
         }
 
         public void RequireHash()
@@ -95,6 +106,7 @@ namespace BSU.Core.Model
         internal RepoSync StartUpdate(RepositoryMod repositoryMod)
         {
             // TODO: state lock? for this? for repo mod?
+            if (_loading.IsActive() || _hashing.IsActive()) throw new InvalidOperationException();
             var title = $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
             var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
             var repoSync = new RepoSync(repositoryMod, this, target, title, 0);
