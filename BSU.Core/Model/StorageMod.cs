@@ -50,7 +50,7 @@ namespace BSU.Core.Model
                 _loading.StartJob();
                 StateChanged?.Invoke();
             };
-            _updateTarget = updateTarget ?? ServiceProvider.InternalState.GetUpdateTarget(this);
+            UpdateTarget = updateTarget ?? ServiceProvider.InternalState.GetUpdateTarget(this);
             _loading.StartJob();
         }
 
