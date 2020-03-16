@@ -48,13 +48,12 @@ namespace BSU.Core.Model
             return newMod;
         }
 
-        internal RepoSync PrepareDownload(RepositoryMod repositoryMod, string name)
+        internal RepoSync StartDownload(RepositoryMod repositoryMod, string name)
         {
             // TODO: state lock? for this? for repo mod?
-            var title = $"Downloading {repositoryMod.Implementation.GetDisplayName()} to {Location}";
             var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
             var storageMod = CreateMod(name, target);
-            return new RepoSync(repositoryMod, storageMod, target, title, 0);
+            return storageMod.StartUpdate(repositoryMod);
         }
         
         public event Action<StorageMod> ModAdded;

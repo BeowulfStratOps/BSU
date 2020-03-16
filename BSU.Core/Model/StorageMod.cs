@@ -92,12 +92,14 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
         
-        internal RepoSync PrepareUpdate(RepositoryMod repositoryMod)
+        internal RepoSync StartUpdate(RepositoryMod repositoryMod)
         {
             // TODO: state lock? for this? for repo mod?
             var title = $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
             var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
-            return new RepoSync(repositoryMod, this, target, title, 0);
+            var repoSync = new RepoSync(repositoryMod, this, target, title, 0);
+            ServiceProvider.JobManager.QueueJob(repoSync);
+            return repoSync;
         }
 
         public StorageModState GetState()

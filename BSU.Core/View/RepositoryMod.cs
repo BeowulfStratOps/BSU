@@ -15,7 +15,7 @@ namespace BSU.Core.View
 {
     public class RepositoryMod : INotifyPropertyChanged
     {
-        private readonly Model.RepositoryMod _mod;
+        internal readonly Model.RepositoryMod Mod;
         internal ViewModel ViewModel { get; }
         public string Name { get; }
         public string DisplayName { private set; get; }
@@ -37,7 +37,7 @@ namespace BSU.Core.View
         internal RepositoryMod(Model.RepositoryMod mod, ViewModel viewModel)
         {
             IsLoading = mod.GetState().IsLoading;
-            _mod = mod;
+            Mod = mod;
             ViewModel = viewModel;
             Name = mod.Identifier;
             mod.ActionAdded += AddAction;
@@ -65,13 +65,13 @@ namespace BSU.Core.View
 
         private void AddAction(Model.StorageMod storageMod)
         {
-            var action = _mod.Actions[storageMod];
+            var action = Mod.Actions[storageMod];
             ViewModel.UiDo(() => Matches.Add(new Match(storageMod, this, action)));
         }
         
         internal void AddStorage(Model.Storage storage)
         {
-            ViewModel.UiDo(() => Downloads.Add(new DownloadAction(storage)));
+            ViewModel.UiDo(() => Downloads.Add(new DownloadAction(storage, this)));
         }
     }
 }

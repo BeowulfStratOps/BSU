@@ -49,13 +49,7 @@ namespace BSU.Core.View
 
         public void DoUpdate()
         {
-            throw new NotImplementedException();
-            // TODO
-            /*new Thread(() =>
-            {
-                var model = Parent.ViewModel.Model;
-                model.DoUpdate(model.PrepareUpdate(new List<ModAction> {ModelAction}));
-            }).Start();*/
+            new Thread(() => Mod.StartUpdate(Parent.Mod)).Start();
         }
     }
 }
