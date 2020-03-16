@@ -36,6 +36,7 @@ namespace BSU.Core.Model
                 var modelMod = new RepositoryMod(this, mod.Value, mod.Key);
                 Mods.Add(modelMod);
                 ModAdded?.Invoke(modelMod);
+                Model.MatchMaker.AddRepositoryMod(modelMod);
             }
         }
 

@@ -1,11 +1,9 @@
 ﻿using System;
 using BSU.Core.Hashes;
-using BSU.Core.Model.Actions;
 using BSU.Core.Services;
 using BSU.Core.Sync;
-using BSU.Core.View;
+using BSU.Core.View; // TODO: wtf
 using BSU.CoreCommon;
-using StorageTarget = BSU.Core.Model.Actions.StorageTarget;
 
 namespace BSU.Core.Model
 {
@@ -15,54 +13,71 @@ namespace BSU.Core.Model
         public string Identifier { get; }
         public IStorageMod Implementation { get; }
         public Uid Uid { get; } = new Uid();
-        
-        public JobSlot<SimpleJob> Loading { get; }
-        public JobSlot<SimpleJob> Hashing { get; }
-        
-        public MatchHash MatchHash { private set; get; }
-        public VersionHash VersionHash { private set; get; }
-        
-        public ManualJobSlot<RepoSync> Updating { get; }
+
+        private readonly JobSlot<SimpleJob> _loading;
+        private readonly JobSlot<SimpleJob> _hashing;
+
+        private MatchHash _matchHash;
+        private VersionHash _versionHash;
+
+        private readonly ManualJobSlot<RepoSync> _updating;
         private UpdateTarget _updateTarget;
+
+        private bool _requireHashing;
         
-        public StorageMod(Storage parent, IStorageMod implementation, string identifier, bool newlyCreated = false)
+        private readonly object _stateLock = new object(); // TODO: use it!!!
+        
+        public StorageMod(Storage parent, IStorageMod implementation, string identifier, UpdateTarget updateTarget)
         {
             Storage = parent;
             Implementation = implementation;
             Identifier = identifier;
-            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, $"Load StorageMod {Identifier}", 1));
-            Hashing = new JobSlot<SimpleJob>(() => new SimpleJob(Hash, $"Hash StorageMod {Identifier}", 1));
-            Loading.OnFinished += () => StateChanged?.Invoke();
-            Hashing.OnFinished += () => StateChanged?.Invoke();
-            Updating = new ManualJobSlot<RepoSync>();
-            Updating.OnStarted += () => StateChanged?.Invoke();
-            Updating.OnFinished += () =>
+            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, $"Load StorageMod {Identifier}", 1));
+            _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(Hash, $"Hash StorageMod {Identifier}", 1));
+            _loading.OnFinished += () =>
             {
-                VersionHash = null;
-                Loading.StartJob();
+                StateChanged?.Invoke();
+                if (_requireHashing) _hashing.StartJob();
+            };
+            _hashing.OnFinished += () => StateChanged?.Invoke();
+            _updating = new ManualJobSlot<RepoSync>();
+            _updating.OnStarted += () => StateChanged?.Invoke();
+            _updating.OnFinished += () =>
+            {
+                _versionHash = null;
+                _matchHash = null;
+                _requireHashing = false;
+                _loading.StartJob();
                 StateChanged?.Invoke();
             };
-            _updateTarget = ServiceProvider.InternalState.GetUpdateTarget(this);
-            if (!newlyCreated)
-                Loading.StartJob();
-            
+            _updateTarget = updateTarget ?? ServiceProvider.InternalState.GetUpdateTarget(this);
+            _loading.StartJob();
+        }
+
+        public void RequireHash()
+        {
+            lock (_stateLock)
+            {
+                if (_requireHashing) return;
+                _requireHashing = true;
+                if (!_updating.IsActive()) _hashing.StartJob();
+            }
         }
 
         private void Load()
         {
             Implementation.Load();
-            MatchHash = new MatchHash(Implementation);
-            Storage.Model.MatchMaker.AddStorageMod(this);
+            _matchHash = new MatchHash(Implementation);
         }
 
         private void Hash()
         {
-            VersionHash = new VersionHash(Implementation);
-            if (VersionHash.GetHashString() == UpdateTarget?.Hash)
+            _versionHash = new VersionHash(Implementation);
+            if (_versionHash.GetHashString() == UpdateTarget?.Hash)
                 UpdateTarget = null;
         }
 
-        public UpdateTarget UpdateTarget
+        private UpdateTarget UpdateTarget
         {
             get => _updateTarget;
             set
@@ -77,6 +92,22 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
         
-        public StorageTarget AsTarget => new StorageTarget(this);
+        internal RepoSync PrepareUpdate(RepositoryMod repositoryMod)
+        {
+            // TODO: state lock? for this? for repo mod?
+            var title = $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
+            var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
+            return new RepoSync(repositoryMod, this, target, title, 0);
+        }
+
+        public StorageModState GetState()
+        {
+            lock(_stateLock)
+            {
+                var job = _updating.GetJob();
+                var jobTarget = job?.Target;
+                return new StorageModState(_matchHash, _versionHash, UpdateTarget, jobTarget, _requireHashing);
+            }
+        }
     }
 }

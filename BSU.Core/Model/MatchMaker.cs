@@ -8,7 +8,7 @@ namespace BSU.Core.Model
     {
         private readonly List<RepositoryMod> _repoMods = new List<RepositoryMod>();
         private readonly List<StorageMod> _storageMods = new List<StorageMod>();
-        private readonly object _lock = new object();
+        private readonly object _lock = new object(); // TODO: use some kind of re-entrant lock for less ugly state changed handler?
 
         // TODO: add check for started updates!
 
@@ -16,33 +16,72 @@ namespace BSU.Core.Model
         {
             lock (_lock)
             {
-                if (_storageMods.Contains(storageMod)) return;
+                if (_storageMods.Contains(storageMod)) return; // TODO: update
                 _storageMods.Add(storageMod);
-                foreach (var repoMod in _repoMods)
+                storageMod.StateChanged += () =>
                 {
-                    CheckMatch(repoMod, storageMod);
-                }
+                    lock (_lock)
+                    {
+                        UpdateStorageMod(storageMod);
+                    }
+                };
+                UpdateStorageMod(storageMod);
             }
         }
 
-        public void AddRepoMod(RepositoryMod repoMod)
+        private void UpdateStorageMod(StorageMod storageMod)
+        {
+            foreach (var repoMod in _repoMods)
+            {
+                CheckMatch(repoMod, storageMod);
+            }
+        }
+
+        public void AddRepositoryMod(RepositoryMod repoMod)
         {
             lock (_lock)
             {
-                if (_repoMods.Contains(repoMod)) return;
+                if (_repoMods.Contains(repoMod)) return; // TODO: update
                 _repoMods.Add(repoMod);
-                foreach (var storageMod in _storageMods)
+                repoMod.StateChanged += () =>
                 {
-                    CheckMatch(repoMod, storageMod);
-                }
+                    lock (_lock)
+                    {
+                        UpdateRepositoryMod(repoMod);
+                    }
+                };
+                UpdateRepositoryMod(repoMod);
+            }
+        }
+
+        private void UpdateRepositoryMod(RepositoryMod repositoryMod)
+        {
+            foreach (var storageMod in _storageMods)
+            {
+                CheckMatch(repositoryMod, storageMod);
             }
         }
 
         private void CheckMatch(RepositoryMod repoMod, StorageMod storageMod)
         {
-            if (repoMod.MatchHash.IsMatch(storageMod.MatchHash) ||
-                storageMod.UpdateTarget?.Hash == repoMod.VersionHash.GetHashString())
-                repoMod.AddMatch(storageMod);
+            // TODO: is always called from locked context, but should do it again for explicity / safety
+            
+            var repoModState = repoMod.GetState();
+            var storageModState = storageMod.GetState();
+            
+            if (repoModState.MatchHash == null || storageModState.MatchHash == null) return;
+
+            if (repoModState.MatchHash.IsMatch(storageModState.MatchHash) ||
+                storageModState.UpdateTarget?.Hash == repoModState.VersionHash.GetHashString())
+            {
+                storageMod.RequireHash();
+                
+                var action = CalcAction.CalculateAction(repoModState.VersionHash, storageModState.VersionHash,
+                    storageModState.UpdateTarget, storageModState.JobTarget,
+                    storageMod.Storage.Implementation.CanWrite());
+                
+                repoMod.ChangeAction(storageMod, action);
+            }
         }
     }
 }
