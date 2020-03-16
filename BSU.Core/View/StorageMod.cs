@@ -1,25 +1,48 @@
-﻿namespace BSU.Core.View
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using BSU.Core.Annotations;
+using BSU.Core.Sync;
+
+namespace BSU.Core.View
 {
-    public class StorageMod
+    public class StorageMod : INotifyPropertyChanged
     {
         internal Model.StorageMod ModelStorageMod { get; }
         
         public string Identifier { get; set; }
-
-        public JobSlot Loading { get; }
-        public JobSlot Hashing { get; }
-        public JobSlot Updating { get; }
+        
+        public bool IsLoading { private set; get; }
+        public bool IsHashing { private set; get; }
+        public bool IsUpdating { private set; get; }
         
         internal StorageMod(Model.StorageMod mod, ViewModel viewModel)
         {
-            Loading = new JobSlot(mod.Loading, nameof(Loading));
-            Hashing = new JobSlot(mod.Hashing, nameof(Hashing));
-            Updating = new JobSlot(mod.Updating, nameof(Updating));
+            var state = mod.GetState();
+            IsLoading = state.IsLoading;
+            IsHashing = state.IsHashing;
+            IsUpdating = state.IsUpdating;
+            mod.StateChanged += StateChanged;
             ModelStorageMod = mod;
             Identifier = mod.Identifier;
-            viewModel.StorageTargets[mod.AsTarget] = AsTarget;
         }
-        
-        internal StorageTarget AsTarget => new StorageTarget(this);
+
+        private void StateChanged()
+        {
+            var state = ModelStorageMod.GetState();
+            IsLoading = state.IsLoading;
+            IsHashing = state.IsHashing;
+            IsUpdating = state.IsUpdating;
+            OnPropertyChanged(nameof(IsLoading));
+            OnPropertyChanged(nameof(IsHashing));
+            OnPropertyChanged(nameof(IsUpdating));
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

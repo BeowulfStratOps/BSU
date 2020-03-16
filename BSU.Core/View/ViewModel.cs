@@ -29,7 +29,17 @@ namespace BSU.Core.View
             _core = core;
             UiDo = uiDo;
             model.RepositoryAdded += repository => uiDo(() => Repositories.Add(new Repository(repository, this)));
-            model.StorageAdded += storage => uiDo(() => Storages.Add(new Storage(storage, this)));
+            model.StorageAdded += storage => uiDo(() =>
+            {
+                Storages.Add(new Storage(storage, this));
+                foreach (var repository in Repositories)
+                {
+                    foreach (var mod in repository.Mods)
+                    {
+                        mod.AddStorage(storage);
+                    }
+                }
+            });
             ServiceProvider.JobManager.JobAdded += job =>
             {
                 lock (this)
@@ -58,8 +68,6 @@ namespace BSU.Core.View
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         
-        internal Dictionary<Model.Actions.StorageTarget, StorageTarget> StorageTargets { get; } = new Dictionary<Model.Actions.StorageTarget, StorageTarget>();
-
         public void AddRepository(string type, string url, string name)
         {
             Model.AddRepository(type, url, name);

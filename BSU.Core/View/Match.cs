@@ -1,18 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using BSU.Core.Annotations;
-using BSU.Core.Model.Actions;
+using BSU.Core.Model;
 
 namespace BSU.Core.View
 {
     public class Match : INotifyPropertyChanged
     {
         private string _action;
-        public StorageTarget StorageTarget { get; }
 
-        internal ModAction ModelAction { get; private set; }
+        internal Model.StorageMod Mod { get; private set; }
 
         public string Action
         {
@@ -27,18 +27,16 @@ namespace BSU.Core.View
 
         public RepositoryMod Parent { get; }
 
-        internal Match(StorageTarget target, RepositoryMod parent, ModAction modelAction)
+        internal Match(Model.StorageMod mod, RepositoryMod parent, ModAction modelAction)
         {
-            StorageTarget = target;
+            Mod = mod;
             Action = modelAction.ToString();
             Parent = parent;
-            ModelAction = modelAction;
         }
 
         internal void Update(ModAction modelAction)
         {
             Action = modelAction.ToString();
-            ModelAction = modelAction;
         }
         
         public event PropertyChangedEventHandler PropertyChanged;
@@ -51,11 +49,13 @@ namespace BSU.Core.View
 
         public void DoUpdate()
         {
-            new Thread(() =>
+            throw new NotImplementedException();
+            // TODO
+            /*new Thread(() =>
             {
                 var model = Parent.ViewModel.Model;
                 model.DoUpdate(model.PrepareUpdate(new List<ModAction> {ModelAction}));
-            }).Start();
+            }).Start();*/
         }
     }
 }

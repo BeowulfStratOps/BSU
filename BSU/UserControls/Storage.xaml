@@ -9,7 +9,7 @@
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewmodel:Storage}">
     <WrapPanel>
         <TextBlock Text="{Binding Path=Name}"></TextBlock>
-        <local:JobSlot DataContext="{Binding Path=Loading}"></local:JobSlot>
+        <!-- <local:JobSlot DataContext="{Binding Path=Loading}"></local:JobSlot> -->
         <ListBox ItemsSource="{Binding Path=Mods}">
             <ListBox.ItemTemplate>
                 <DataTemplate>

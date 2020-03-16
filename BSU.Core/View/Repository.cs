@@ -15,7 +15,7 @@ namespace BSU.Core.View
         private readonly ViewModel _viewModel;
         public string Name { get; }
 
-        public JobSlot Loading { get; }
+        public bool IsLoading { get; }
         
         public ObservableCollection<RepositoryMod> Mods { get; } = new ObservableCollection<RepositoryMod>();
 
@@ -29,7 +29,7 @@ namespace BSU.Core.View
 
         internal Repository(Model.Repository repository, ViewModel viewModel)
         {
-            Loading = new JobSlot(repository.Loading, nameof(Loading));
+            IsLoading = repository.Loading.IsActive();
             _viewModel = viewModel;
             Name = repository.Identifier;
             repository.ModAdded += mod => ViewModel.UiDo(() => Mods.Add(new RepositoryMod(mod, viewModel)));

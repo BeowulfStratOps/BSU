@@ -9,12 +9,19 @@
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewmodel:RepositoryMod}">
     <WrapPanel>
         <TextBlock Text="{Binding Path=Name}"></TextBlock>
-        <local:JobSlot DataContext="{Binding Path=Loading}"></local:JobSlot>
+        <!-- <local:JobSlot DataContext="{Binding Path=Loading}"></local:JobSlot> -->
         <TextBlock Text="{Binding Path=DisplayName}"></TextBlock>
         <ListBox ItemsSource="{Binding Path=Matches}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <local:Match></local:Match>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ListBox ItemsSource="{Binding Path=Downloads}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <local:DownloadAction></local:DownloadAction>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

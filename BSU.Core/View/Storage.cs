@@ -16,7 +16,7 @@ namespace BSU.Core.View
         public string Name { get; }
         internal Model.Storage ModelStorage { get; }
         
-        public JobSlot Loading { get; }
+        public bool IsLoading { get; }
 
         public ObservableCollection<StorageMod> Mods { get; } = new ObservableCollection<StorageMod>();
 
@@ -30,14 +30,11 @@ namespace BSU.Core.View
 
         internal Storage(Model.Storage storage, ViewModel viewModel)
         {
-            Loading = new JobSlot(storage.Loading, nameof(Loading));
+            IsLoading = storage.Loading.IsActive();
             ModelStorage = storage;
             _viewModel = viewModel;
             Name = storage.Identifier;
             storage.ModAdded += mod => ViewModel.UiDo(() => Mods.Add(new StorageMod(mod, viewModel)));
-            viewModel.StorageTargets[storage.AsTarget] = AsTarget;
         }
-        
-        internal StorageTarget AsTarget => new StorageTarget(this);
     }
 }
