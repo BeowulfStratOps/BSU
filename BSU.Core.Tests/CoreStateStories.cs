@@ -9,19 +9,15 @@ namespace BSU.Core.Tests
     // TODO: extend for ViewState
     public class CoreStateStories
     {
-        private VersionHash GetVersionHash(string version)
-        {
-            using var sha1 = SHA1.Create();
-            return new VersionHash(sha1.ComputeHash(Encoding.UTF8.GetBytes(version)));
-        }
-        
         private ModAction GetAction(string repoModVer, string storageModVer, string updatingTo, string job, bool canWrite)
         {
-            var repoHash = repoModVer == null ? null : GetVersionHash(repoModVer);
-            var storageHash = repoModVer == null ? null : GetVersionHash(storageModVer);
-            var jobTarget = job == null ? null : new UpdateTarget(GetVersionHash(job).GetHashString(), job);
-            var updatingTarget = updatingTo == null ? null : new UpdateTarget(GetVersionHash(updatingTo).GetHashString(), updatingTo);
-            return CalcAction.CalculateAction(repoHash, storageHash, jobTarget, updatingTarget, canWrite);
+            var repoHash = TestUtils.GetVersionHash(repoModVer);
+            var storageHash = TestUtils.GetVersionHash(storageModVer);
+            var jobTarget = TestUtils.GetUpdateTarget(job);
+            var updatingTarget = TestUtils.GetUpdateTarget(updatingTo);
+            var repoState = new RepositoryModState(null, repoHash);
+            var storageState = new StorageModState(null, storageHash, updatingTarget, jobTarget, true);
+            return CoreCalculation.CalculateAction(repoState, storageState, canWrite);
         }
         
         [Fact]
@@ -35,6 +31,13 @@ namespace BSU.Core.Tests
         {
             var action = GetAction("1", "?", "1", null, true);
             Assert.Equal(ModAction.ContinueUpdate, action);
+        }
+        
+        [Fact]
+        private void AbortAndUpdate()
+        {
+            var action = GetAction("2", "?", "1", "1", true);
+            Assert.Equal(ModAction.AbortAndUpdate, action);
         }
     }
 }

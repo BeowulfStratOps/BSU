@@ -1,4 +1,5 @@
-﻿using BSU.Core.Hashes;
+﻿using System;
+using BSU.Core.Hashes;
 
 namespace BSU.Core.Model
 {
@@ -17,10 +18,19 @@ namespace BSU.Core.Model
             UpdateTarget = updateTarget;
             JobTarget = jobTarget;
             VersionHashRequested = versionHashRequested;
+            CheckIsValid();
         }
         
         public bool IsLoading => MatchHash == null;
         public bool IsHashing => VersionHash == null && VersionHashRequested;
-        public bool IsUpdating => JobTarget != null;
+        public bool IsUpdating => JobTarget != null; // TODO: job or updatetarget??
+
+        private void CheckIsValid()
+        {
+            if (JobTarget != null)
+            {
+                if (JobTarget.Hash != UpdateTarget?.Hash) throw new InvalidOperationException();
+            }
+        }
     }
 }

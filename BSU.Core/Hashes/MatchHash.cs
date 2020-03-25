@@ -103,5 +103,11 @@ namespace BSU.Core.Hashes
             if (other._pboNames.Count / (float) all.Count < Threshold) return false;
             return true;
         }
+        
+        // TODO: this is for testing only. MatchHash should be abstracted.
+        internal MatchHash(IEnumerable<string> pboNames)
+        {
+            _pboNames = new HashSet<string>(pboNames);
+        }
     }
 }

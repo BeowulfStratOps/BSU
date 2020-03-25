@@ -1,4 +1,5 @@
-﻿using BSU.Core.Hashes;
+﻿using System;
+using BSU.Core.Hashes;
 
 namespace BSU.Core.Model
 {

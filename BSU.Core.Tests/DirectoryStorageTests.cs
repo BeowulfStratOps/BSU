@@ -32,7 +32,8 @@ namespace BSU.Core.Tests
         [Fact]
         private void GetMods()
         {
-            Create("@ace", "mod.cpp").WriteLine("Ey yo");
+            using var file = Create("@ace", "mod.cpp");
+            file.WriteLine("Ey yo");
             var storage = new DirectoryStorage(_tmpDir.FullName);
             storage.Load();
             var mods = storage.GetMods();

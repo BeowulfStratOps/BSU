@@ -66,28 +66,16 @@ namespace BSU.Core.Model
         {
             // TODO: is always called from locked context, but should do it again for explicity / safety
             
-            // TODO: test this?
-            
             var repoModState = repoMod.GetState();
             var storageModState = storageMod.GetState();
+
+            var (match, requireHash) = CoreCalculation.IsMatch(repoModState, storageModState);
+
+            if (requireHash) storageMod.RequireHash();
             
-            if (repoModState.MatchHash == null) return;
-
-            var isMatch = storageModState.MatchHash != null &&
-                          repoModState.MatchHash.IsMatch(storageModState.MatchHash);
-
-            isMatch |= repoModState.VersionHash != null &&
-                       storageModState.UpdateTarget?.Hash == repoModState.VersionHash.GetHashString();
-
-            if (!isMatch) return;
+            if (!match) return;
             
-             if (storageModState.UpdateTarget == null) storageMod.RequireHash();
-                
-            if (repoModState.VersionHash == null) return;
-                
-            var action = CalcAction.CalculateAction(repoModState.VersionHash, storageModState.VersionHash,
-                storageModState.JobTarget,storageModState.UpdateTarget, 
-                storageMod.Storage.Implementation.CanWrite());
+            var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.Storage.Implementation.CanWrite());
                 
             repoMod.ChangeAction(storageMod, action);
         }

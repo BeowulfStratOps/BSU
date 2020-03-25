@@ -6,6 +6,7 @@
         ContinueUpdate,
         Await,
         Use,
+        AbortAndUpdate,
         Unusable
     }
 }
