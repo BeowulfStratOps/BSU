@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
+using BSU.Core.Model;
 using BSU.Core.Sync;
 
 namespace BSU.Core.View
@@ -18,9 +19,9 @@ namespace BSU.Core.View
         internal StorageMod(Model.StorageMod mod, ViewModel viewModel)
         {
             var state = mod.GetState();
-            IsLoading = state.IsLoading;
-            IsHashing = state.IsHashing;
-            IsUpdating = state.IsUpdating;
+            IsLoading = state.State == StorageModStateEnum.Loading;
+            IsHashing = state.State == StorageModStateEnum.Hashing;
+            IsUpdating = state.State == StorageModStateEnum.Updating;
             mod.StateChanged += StateChanged;
             ModelStorageMod = mod;
             Identifier = mod.Identifier;
@@ -29,9 +30,9 @@ namespace BSU.Core.View
         private void StateChanged()
         {
             var state = ModelStorageMod.GetState();
-            IsLoading = state.IsLoading;
-            IsHashing = state.IsHashing;
-            IsUpdating = state.IsUpdating;
+            IsLoading = state.State == StorageModStateEnum.Loading;
+            IsHashing = state.State == StorageModStateEnum.Hashing;
+            IsUpdating = state.State == StorageModStateEnum.Updating;
             OnPropertyChanged(nameof(IsLoading));
             OnPropertyChanged(nameof(IsHashing));
             OnPropertyChanged(nameof(IsUpdating));

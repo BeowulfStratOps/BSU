@@ -72,12 +72,12 @@ namespace BSU.Core.Model
             var repoModState = repoMod.GetState();
             var storageModState = storageMod.GetState();
 
-            var (match, requireHash) = CoreCalculation.IsMatch(repoModState, storageModState);
-            Logger.Debug($"Check Match on {repoMod.Identifier} and {storageMod.Identifier} -> {match}, {requireHash}");
+            var match = CoreCalculation.IsMatch(repoModState, storageModState);
+            Logger.Debug($"Check Match on {repoMod.Identifier} and {storageMod.Identifier} -> {match}");
 
-            if (requireHash) storageMod.RequireHash();
+            if (match == CoreCalculation.ModMatch.RequireHash) storageMod.RequireHash();
             
-            if (!match) return;
+            if (match == CoreCalculation.ModMatch.NoMatch || match == CoreCalculation.ModMatch.Wait) return;
             
             var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.Storage.Implementation.CanWrite());
             Logger.Debug($"Calculate Action on {repoMod.Identifier} and {storageMod.Identifier} -> {action}");

@@ -7,35 +7,63 @@ namespace BSU.Core.Model
     {
         internal static ModAction CalculateAction(RepositoryModState repoModState, StorageModState storageModState, bool storageWritable)
         {
-            if (storageModState.JobTarget == null)
+            switch (storageModState.State)
             {
-                if (repoModState.VersionHash.IsMatch(storageModState.VersionHash) && !storageModState.IsUpdating)
-                    return ModAction.Use;
-                if (!storageWritable) return ModAction.Unusable;
-                return storageModState.UpdateTarget != null ? ModAction.ContinueUpdate : ModAction.Update;
+                case StorageModStateEnum.CreatedForDownload:
+                    return ModAction.Await;
+                case StorageModStateEnum.Loading:
+                    throw new InvalidCastException();
+                case StorageModStateEnum.Loaded:
+                case StorageModStateEnum.Hashing:
+                    return ModAction.Loading;
+                case StorageModStateEnum.Hashed:
+                    if (repoModState.VersionHash.IsMatch(storageModState.VersionHash)) return ModAction.Use;
+                    return storageWritable ? ModAction.Update : ModAction.Unusable;
+                case StorageModStateEnum.Updating:
+                    return storageModState.JobTarget.Hash == repoModState.VersionHash.GetHashString() ? ModAction.Await : ModAction.AbortAndUpdate;
+                case StorageModStateEnum.CreatedWithUpdateTarget:
+                    if (repoModState.VersionHash.GetHashString() != storageModState.UpdateTarget.Hash) throw new InvalidOperationException();
+                    return ModAction.ContinueUpdate;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            if (storageModState.JobTarget.Hash == repoModState.VersionHash.GetHashString())
-                return ModAction.Await;
-
-            return ModAction.AbortAndUpdate;
         }
 
-        // TODO: tuple -> enum
-        internal static (bool match, bool requireHash) IsMatch(RepositoryModState repoModState, StorageModState storageModState)
+        internal static ModMatch IsMatch(RepositoryModState repoModState, StorageModState storageModState)
         {
-            if (repoModState.IsLoading) return (false, false);
-
-            var isMatch = storageModState.MatchHash != null &&
-                          repoModState.MatchHash.IsMatch(storageModState.MatchHash);
-
-            isMatch |= repoModState.VersionHash != null &&
-                       storageModState.UpdateTarget?.Hash == repoModState.VersionHash.GetHashString();
-
-            if (!isMatch) return (false, false);
+            if (repoModState.IsLoading) return ModMatch.Wait;
             
-            if (storageModState.VersionHash == null) return (false, true);
+            switch (storageModState.State)
+            {
+                case StorageModStateEnum.Loading:
+                    return ModMatch.Wait;
+                case StorageModStateEnum.Loaded:
+                    return repoModState.MatchHash.IsMatch(storageModState.MatchHash)
+                        ? ModMatch.RequireHash
+                        : ModMatch.NoMatch; 
+                case StorageModStateEnum.Hashing:
+                    return ModMatch.Wait;
+                case StorageModStateEnum.Hashed:
+                    return repoModState.VersionHash.IsMatch(storageModState.VersionHash)
+                        ? ModMatch.Match
+                        : ModMatch.NoMatch;
+                case StorageModStateEnum.Updating:
+                case StorageModStateEnum.CreatedWithUpdateTarget:
+                case StorageModStateEnum.CreatedForDownload:
+                    return storageModState.UpdateTarget.Hash == repoModState.VersionHash.GetHashString()
+                        ? ModMatch.Match
+                        : ModMatch.NoMatch;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
-            return (true, false);
+        internal enum ModMatch
+        {
+            Wait,
+            NoMatch,
+            RequireHash,
+            Match
         }
     }
 }

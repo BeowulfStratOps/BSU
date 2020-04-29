@@ -7,6 +7,7 @@
         Await,
         Use,
         AbortAndUpdate,
-        Unusable
+        Unusable,
+        Loading
     }
 }
