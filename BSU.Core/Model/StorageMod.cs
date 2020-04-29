@@ -32,8 +32,10 @@ namespace BSU.Core.Model
             Storage = parent;
             Implementation = implementation;
             Identifier = identifier;
-            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, $"Load StorageMod {Identifier}", 1));
-            _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(Hash, $"Hash StorageMod {Identifier}", 1));
+            var title1 = $"Load StorageMod {Identifier}";
+            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title1, 1), title1);
+            var title2 = $"Hash StorageMod {Identifier}";
+            _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(Hash, title2, 1), title2);
             _loading.OnFinished += () =>
             {
                 StateChanged?.Invoke();
@@ -61,6 +63,7 @@ namespace BSU.Core.Model
             }
             else
             {
+                _versionHash = VersionHash.CreateEmpty();
                 UpdateTarget = updateTarget;
             }
         }

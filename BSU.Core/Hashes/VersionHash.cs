@@ -77,5 +77,11 @@ namespace BSU.Core.Hashes
         }
 
         public string GetHashString() => Utils.ToHexString(_hash);
+
+        public static VersionHash CreateEmpty()
+        {
+            using var sha1 = SHA1.Create();
+            return new VersionHash(sha1.ComputeHash(new byte[0]));
+        }
     }
 }

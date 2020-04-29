@@ -24,7 +24,8 @@ namespace BSU.Core.Model
             Location = location;
             Implementation = implementation;
             Identifier = identifier;
-            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, $"Load Repo {Identifier}", 1));
+            var title = $"Load Repo {Identifier}";
+            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title);
             Loading.StartJob();
         }
 

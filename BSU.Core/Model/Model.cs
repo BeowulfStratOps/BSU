@@ -39,11 +39,6 @@ namespace BSU.Core.Model
         
         public event Action<Repository> RepositoryAdded;
         public event Action<Storage> StorageAdded;
-
-        private void AddRepo()
-        {
-            
-        }
         
         public void AddRepository(string type, string url, string name)
         {

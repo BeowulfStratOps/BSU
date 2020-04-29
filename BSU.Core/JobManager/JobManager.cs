@@ -7,6 +7,9 @@ using NLog;
 
 namespace BSU.Core.JobManager
 {
+    // TO--nvm-do: replace with tasks. use TaskCreationOptions.LongRunning where applicable (heavy IO). But then how to limit threads to 5??
+    // TODO: use normal threadpool for quick stuff / high prio stuff
+    
     /// <summary>
     /// Schedules and does work in a multi-threaded main-thread independent manner
     /// </summary>

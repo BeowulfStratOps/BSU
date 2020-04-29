@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using BSU.Core.Hashes;
+using NLog;
 
 namespace BSU.Core.Model
 {
@@ -9,6 +10,8 @@ namespace BSU.Core.Model
         private readonly List<RepositoryMod> _repoMods = new List<RepositoryMod>();
         private readonly List<StorageMod> _storageMods = new List<StorageMod>();
         private readonly object _lock = new object(); // TODO: use some kind of re-entrant lock for less ugly state changed handler?
+
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         // TODO: add check for started updates!
 
@@ -70,12 +73,14 @@ namespace BSU.Core.Model
             var storageModState = storageMod.GetState();
 
             var (match, requireHash) = CoreCalculation.IsMatch(repoModState, storageModState);
+            Logger.Debug($"Check Match on {repoMod.Identifier} and {storageMod.Identifier} -> {match}, {requireHash}");
 
             if (requireHash) storageMod.RequireHash();
             
             if (!match) return;
             
             var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.Storage.Implementation.CanWrite());
+            Logger.Debug($"Calculate Action on {repoMod.Identifier} and {storageMod.Identifier} -> {action}");
                 
             repoMod.ChangeAction(storageMod, action);
         }

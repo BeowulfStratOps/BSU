@@ -15,6 +15,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using BSU.Core.View;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 
 namespace BSU.GUI
 {
@@ -27,6 +30,15 @@ namespace BSU.GUI
         
         public MainWindow()
         {
+            var config = new LoggingConfiguration();
+            var logfile = new FileTarget("logfile")
+            {
+                FileName = "G:\\file.txt",
+                DeleteOldFileOnStartup = true
+            };
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+            LogManager.Configuration = config;
+            
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             _core = new Core.Core(settingsFile, action =>
             {

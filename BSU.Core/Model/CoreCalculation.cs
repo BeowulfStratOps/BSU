@@ -23,7 +23,7 @@ namespace BSU.Core.Model
         // TODO: tuple -> enum
         internal static (bool match, bool requireHash) IsMatch(RepositoryModState repoModState, StorageModState storageModState)
         {
-            if (repoModState.MatchHash == null) return (false, false);
+            if (repoModState.IsLoading) return (false, false);
 
             var isMatch = storageModState.MatchHash != null &&
                           repoModState.MatchHash.IsMatch(storageModState.MatchHash);
@@ -33,9 +33,7 @@ namespace BSU.Core.Model
 
             if (!isMatch) return (false, false);
             
-            if (storageModState.UpdateTarget == null) return (false, true);
-                
-            if (repoModState.VersionHash == null) return (false, false);
+            if (storageModState.VersionHash == null) return (false, true);
 
             return (true, false);
         }

@@ -23,7 +23,8 @@ namespace BSU.Core.Model
             Implementation = implementation;
             Identifier = identifier;
             Location = location;
-            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, $"Load Storage {Identifier}", 1));
+            var title = $"Load Storage {Identifier}";
+            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title);
             Loading.StartJob();
         }
 
@@ -39,21 +40,16 @@ namespace BSU.Core.Model
             }
         }
 
-        public StorageMod CreateMod(string identifier, UpdateTarget updateTarget)
-        {
-            var mod = Implementation.CreateMod(identifier);
-            var newMod = new StorageMod(this, mod, identifier, updateTarget);
-            ModAdded?.Invoke(newMod);
-            Model.MatchMaker.AddStorageMod(newMod);
-            return newMod;
-        }
-
-        internal RepoSync StartDownload(RepositoryMod repositoryMod, string name)
+        internal RepoSync StartDownload(RepositoryMod repositoryMod, string identifier)
         {
             // TODO: state lock? for this? for repo mod?
-            var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
-            var storageMod = CreateMod(name, target);
-            return storageMod.StartUpdate(repositoryMod);
+            var updateTarget = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
+            var mod = Implementation.CreateMod(identifier);
+            var storageMod = new StorageMod(this, mod, identifier, updateTarget);
+            var sync = storageMod.StartUpdate(repositoryMod);
+            ModAdded?.Invoke(storageMod);
+            Model.MatchMaker.AddStorageMod(storageMod);
+            return sync;
         }
         
         public event Action<StorageMod> ModAdded;

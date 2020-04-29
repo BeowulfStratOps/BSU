@@ -28,7 +28,8 @@ namespace BSU.Core.Model
             Repository = parent;
             Implementation = implementation;
             Identifier = identifier;
-            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, $"Load RepoMod {Identifier}", 1));
+            var title = $"Load RepoMod {Identifier}";
+            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title);
             _loading.OnFinished += () => StateChanged?.Invoke();
             _loading.StartJob();
         }
