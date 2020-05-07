@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BSU.Core.JobManager;
 using BSU.Core.Model;
 using NLog;
 
@@ -11,7 +12,7 @@ namespace BSU.Core
     /// Internal state of the core. Knows locations, but no repo/storage states.
     /// Tracks the state across restarts by using a settings file.
     /// </summary>
-    public class InternalState
+    internal class InternalState : IInternalState
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -24,8 +25,8 @@ namespace BSU.Core
             new List<Tuple<StorageEntry, Exception>>();
 
         // TODO: expose those to user
-        internal IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors() => _repoErrors.AsReadOnly();
-        internal IReadOnlyList<Tuple<StorageEntry, Exception>> GetStorageErrors() => _storageErrors.AsReadOnly();
+        public IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors() => _repoErrors.AsReadOnly();
+        public IReadOnlyList<Tuple<StorageEntry, Exception>> GetStorageErrors() => _storageErrors.AsReadOnly();
 
         internal InternalState(ISettings settings, Types types)
         {
@@ -34,14 +35,14 @@ namespace BSU.Core
             _types = types;
         }
 
-        internal List<Model.Storage> LoadStorages()
+        public List<Model.Storage> LoadStorages(IJobManager jobManager)
         {
             var result = new List<Model.Storage>();
             foreach (var storageEntry in _settings.Storages)
             {
                 try
                 {
-                    result.Add(LoadStorage(storageEntry));
+                    result.Add(LoadStorage(storageEntry, jobManager));
                 }
                 catch (Exception e)
                 {
@@ -52,14 +53,14 @@ namespace BSU.Core
             return result;
         }
 
-        internal List<Repository> LoadRepositories()
+        public List<Repository> LoadRepositories(IJobManager jobManager)
         {
             var result = new List<Repository>();
             foreach (var repoEntry in _settings.Repositories)
             {
                 try
                 {
-                    result.Add(LoadRepository(repoEntry));
+                    result.Add(LoadRepository(repoEntry, jobManager));
                 }
                 catch (Exception e)
                 {
@@ -71,7 +72,7 @@ namespace BSU.Core
         }
 
 
-        internal void RemoveRepo(Repository repo)
+        public void RemoveRepo(Repository repo)
         {
             Logger.Debug("Removing repo {0}", repo.Uid);
             var repoEntry = _settings.Repositories.Single(r => r.Name == repo.Identifier);
@@ -79,7 +80,7 @@ namespace BSU.Core
             _settings.Store();
         }
 
-        internal Repository AddRepo(string name, string url, string type, Model.Model model)
+        public Repository AddRepo(string name, string url, string type, Model.Model model, IJobManager jobManager)
         {
             if (_settings.Repositories.Any(r => r.Name == name)) throw new ArgumentException("Name in use");
             var repo = new RepoEntry
@@ -90,20 +91,20 @@ namespace BSU.Core
             };
             _settings.Repositories.Add(repo);
             _settings.Store();
-            return LoadRepository(repo);
+            return LoadRepository(repo, jobManager);
         }
 
 
-        private Repository LoadRepository(RepoEntry repo)
+        public Repository LoadRepository(RepoEntry repo, IJobManager jobManager)
         {
             Logger.Debug("Creating repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
             var implementation = _types.GetRepoImplementation(repo.Type, repo.Url);
-            var repository = new Repository(implementation, repo.Name, repo.Url);
+            var repository = new Repository(implementation, repo.Name, repo.Url, jobManager);
             Logger.Debug("Created repo {0}", repository.Uid);
             return repository;
         }
 
-        internal Model.Storage AddStorage(string name, DirectoryInfo directory, string type)
+        public Model.Storage AddStorage(string name, DirectoryInfo directory, string type, IJobManager jobManager)
         {
             if (_settings.Storages.Any(s => s.Name == name)) throw new ArgumentException("Name in use");
             var storage = new StorageEntry
@@ -115,10 +116,10 @@ namespace BSU.Core
             };
             _settings.Storages.Add(storage);
             _settings.Store();
-            return LoadStorage(storage);
+            return LoadStorage(storage, jobManager);
         }
 
-        internal void RemoveStorage(Model.Storage storage)
+        public void RemoveStorage(Model.Storage storage)
         {
             Logger.Debug("Removing storage {0}", storage.Uid);
             var storageEntry = _settings.Storages.Single(s => s.Name == storage.Identifier);
@@ -126,16 +127,16 @@ namespace BSU.Core
             _settings.Store();
         }
 
-        private Model.Storage LoadStorage(StorageEntry storage)
+        public Model.Storage LoadStorage(StorageEntry storage, IJobManager jobManager)
         {
             Logger.Debug("Adding storage {0} / {1} / {2}", storage.Name, storage.Type, storage.Path);
             var implementation = _types.GetStorageImplementation(storage.Type, storage.Path);
-            var storageObj = new Model.Storage(implementation, storage.Name, storage.Path);
+            var storageObj = new Model.Storage(implementation, storage.Name, storage.Path, this, jobManager);
             Logger.Debug("Created storage {0}", storageObj.Uid);
             return storageObj;
         }
 
-        internal void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay)
+        public void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay)
         {
             Logger.Debug("Set updating: {0} to {1} : {2}", mod.Uid, targetHash, targetDisplay);
             var dic =_settings.Storages.Single(s => s.Name == mod.Storage.Identifier).Updating;
@@ -143,7 +144,7 @@ namespace BSU.Core
             _settings.Store();
         }
 
-        internal void RemoveUpdatingTo(StorageMod mod)
+        public void RemoveUpdatingTo(StorageMod mod)
         {
             Logger.Debug("Remove updating: {0}", mod.Uid);
             _settings.Storages.Single(s => s.Name == mod.Storage.Identifier).Updating
@@ -151,7 +152,7 @@ namespace BSU.Core
             _settings.Store();
         }
 
-        internal void CleanupUpdatingTo(Model.Storage storage)
+        public void CleanupUpdatingTo(Model.Storage storage)
         {
             var updating = _settings.Storages.Single(s => s.Name == storage.Identifier).Updating;
             foreach (var modId in updating.Keys.ToList())
@@ -162,7 +163,7 @@ namespace BSU.Core
             }
         }
 
-        internal UpdateTarget GetUpdateTarget(StorageMod mod)
+        public UpdateTarget GetUpdateTarget(StorageMod mod)
         {
             var target = _settings.Storages
                 .SingleOrDefault(s => s.Name == mod.Storage.Identifier)?.Updating

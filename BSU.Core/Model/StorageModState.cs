@@ -18,6 +18,60 @@ namespace BSU.Core.Model
             UpdateTarget = updateTarget;
             JobTarget = jobTarget;
             State = state;
+            CheckIsValid();
+        }
+
+        private void CheckIsValid()
+        {
+            switch (State)
+            {
+                case StorageModStateEnum.CreatedWithUpdateTarget:
+                    Assert(VersionHash == null);
+                    Assert(MatchHash == null);
+                    Assert(JobTarget == null);
+                    Assert(UpdateTarget != null);
+                    return;
+                case StorageModStateEnum.CreatedForDownload:
+                    Assert(VersionHash == null);
+                    Assert(MatchHash == null);
+                    Assert(JobTarget == null);
+                    Assert(UpdateTarget != null);
+                    return;
+                case StorageModStateEnum.Loading:
+                    Assert(VersionHash == null);
+                    Assert(MatchHash == null);
+                    Assert(JobTarget == null);
+                    return;
+                case StorageModStateEnum.Loaded:
+                    Assert(VersionHash == null);
+                    Assert(MatchHash != null);
+                    Assert(JobTarget == null);
+                    return;
+                case StorageModStateEnum.Hashing:
+                    Assert(VersionHash == null);
+                    Assert(MatchHash != null);
+                    Assert(JobTarget == null);
+                    return;
+                case StorageModStateEnum.Hashed:
+                    Assert(VersionHash != null);
+                    Assert(MatchHash != null);
+                    Assert(JobTarget == null);
+                    Assert(UpdateTarget == null);
+                    return;
+                case StorageModStateEnum.Updating:
+                    Assert(VersionHash == null);
+                    Assert(MatchHash == null);
+                    Assert(JobTarget != null);
+                    Assert(UpdateTarget != null);
+                    return;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void Assert(bool statement)
+        {
+            if (!statement) throw new InvalidOperationException();
         }
     }
 }

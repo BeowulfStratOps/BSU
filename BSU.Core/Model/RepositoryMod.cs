@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using BSU.Core.Hashes;
-using BSU.Core.Services;
-using SimpleJob = BSU.Core.View.SimpleJob; // TODO: WTF??
+using BSU.Core.JobManager;
+using SimpleJob = BSU.Core.View.SimpleJob; // TODO: WTF?? This should be a simple job ayyy lmao
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -23,13 +23,13 @@ namespace BSU.Core.Model
 
         private readonly JobSlot<SimpleJob> _loading;
 
-        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier)
+        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier, IJobManager jobManager)
         {
             Repository = parent;
             Implementation = implementation;
             Identifier = identifier;
             var title = $"Load RepoMod {Identifier}";
-            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title);
+            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
             _loading.OnFinished += () => StateChanged?.Invoke();
             _loading.StartJob();
         }

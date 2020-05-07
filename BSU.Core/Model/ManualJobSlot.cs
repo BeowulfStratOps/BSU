@@ -1,12 +1,17 @@
 ﻿using System;
 using BSU.Core.JobManager;
-using BSU.Core.Services;
 
 namespace BSU.Core.Model
 {
     internal class ManualJobSlot<T> : IJobSlot where T : class, IJob
     {
+        private readonly IJobManager _jobManager;
         private T _job;
+        
+        public ManualJobSlot(IJobManager jobManager)
+        {
+            _jobManager = jobManager;
+        }
 
         public void StartJob(T job)
         {
@@ -17,7 +22,7 @@ namespace BSU.Core.Model
                 _job = null;
                 OnFinished?.Invoke();
             };
-            ServiceProvider.JobManager.QueueJob(job);
+            _jobManager.QueueJob(job);
             OnStarted?.Invoke();
         }
 

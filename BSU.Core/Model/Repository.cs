@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BSU.Core.JobManager;
 using BSU.Core.View;
 using BSU.CoreCommon;
 
@@ -8,6 +9,7 @@ namespace BSU.Core.Model
 {
     internal class Repository
     {
+        private readonly IJobManager _jobManager;
         public IRepository Implementation { get; }
         public string Identifier { get; }
         public string Location { get; }
@@ -19,13 +21,14 @@ namespace BSU.Core.Model
 
         internal Model Model { get; set; }
 
-        public Repository(IRepository implementation, string identifier, string location)
+        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager)
         {
+            _jobManager = jobManager;
             Location = location;
             Implementation = implementation;
             Identifier = identifier;
             var title = $"Load Repo {Identifier}";
-            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title);
+            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
             Loading.StartJob();
         }
 
@@ -34,7 +37,7 @@ namespace BSU.Core.Model
             Implementation.Load();
             foreach (KeyValuePair<string,IRepositoryMod> mod in Implementation.GetMods())
             {
-                var modelMod = new RepositoryMod(this, mod.Value, mod.Key);
+                var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager);
                 Mods.Add(modelMod);
                 ModAdded?.Invoke(modelMod);
                 Model.MatchMaker.AddRepositoryMod(modelMod);

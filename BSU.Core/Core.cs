@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using BSU.Core.JobManager;
 using BSU.Core.Model;
-using BSU.Core.Services;
 using BSU.Core.Sync;
 using BSU.Core.View;
 using NLog;
@@ -30,11 +29,11 @@ namespace BSU.Core
         /// Create a new core instance. Should be used in a using block.
         /// </summary>
         /// <param name="settingsPath">Location to store local settings, including repo/storage data.</param>
-        public Core(FileInfo settingsPath, Action<Action> uiDispatcher) : this(Settings.Load(settingsPath), ServiceProvider.JobManager, uiDispatcher)
+        public Core(FileInfo settingsPath, Action<Action> uiDispatcher) : this(Settings.Load(settingsPath), new JobManager.JobManager(), uiDispatcher)
         {
         }
 
-        internal Core(ISettings settings, Action<Action> uiDispatcher) : this(settings, ServiceProvider.JobManager, uiDispatcher)
+        internal Core(ISettings settings, Action<Action> uiDispatcher) : this(settings, new JobManager.JobManager(), uiDispatcher)
         {
         }
 
@@ -45,8 +44,7 @@ namespace BSU.Core
             JobManager = jobManager;
             Types = new Types();
             var state = new InternalState(settings, Types);
-            ServiceProvider.InternalState = state;
-            Model = new Model.Model(state);
+            Model = new Model.Model(state, jobManager);
             ViewState = new ViewModel(this, uiDispatcher, Model);
         }
 

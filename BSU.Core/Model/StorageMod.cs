@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using BSU.Core.Hashes;
-using BSU.Core.Services;
+using BSU.Core.JobManager;
 using BSU.Core.Sync;
 using BSU.Core.View; // TODO: wtf
 using BSU.CoreCommon;
@@ -10,6 +10,7 @@ namespace BSU.Core.Model
 {
     internal class StorageMod
     {
+        private readonly IInternalState _internalState;
         public Storage Storage { get; }
         public string Identifier { get; }
         public IStorageMod Implementation { get; }
@@ -28,15 +29,16 @@ namespace BSU.Core.Model
 
         private StorageModStateEnum _state;
         
-        public StorageMod(Storage parent, IStorageMod implementation, string identifier, UpdateTarget updateTarget)
+        public StorageMod(Storage parent, IStorageMod implementation, string identifier, UpdateTarget updateTarget, IInternalState internalState, IJobManager jobManager)
         {
+            _internalState = internalState;
             Storage = parent;
             Implementation = implementation;
             Identifier = identifier;
             var title1 = $"Load StorageMod {Identifier}";
-            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(LoadJob, title1, 1), title1);
+            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(LoadJob, title1, 1), title1, jobManager);
             var title2 = $"Hash StorageMod {Identifier}";
-            _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(HashJob, title2, 1), title2);
+            _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(HashJob, title2, 1), title2, jobManager);
             _loading.OnFinished += () =>
             {
                 _state = StorageModStateEnum.Loaded;
@@ -47,12 +49,11 @@ namespace BSU.Core.Model
                 _state = StorageModStateEnum.Hashed;
                 StateChanged?.Invoke();
             };
-            _updating = new ManualJobSlot<RepoSync>();
+            _updating = new ManualJobSlot<RepoSync>(jobManager);
             _updating.OnStarted += () =>
             {
                 _versionHash = null;
                 _matchHash = null;
-                StateChanged?.Invoke();
             };
             _updating.OnFinished += () =>
             {
@@ -64,7 +65,7 @@ namespace BSU.Core.Model
             };
             if (updateTarget == null)
             {
-                _updateTarget = ServiceProvider.InternalState.GetUpdateTarget(this);
+                _updateTarget = _internalState.GetUpdateTarget(this);
                 if (_updateTarget == null)
                 {
                     _loading.StartJob();
@@ -119,9 +120,9 @@ namespace BSU.Core.Model
             {
                 _updateTarget = value;
                 if (value == null)
-                    ServiceProvider.InternalState.RemoveUpdatingTo(this);
+                    _internalState.RemoveUpdatingTo(this);
                 else
-                    ServiceProvider.InternalState.SetUpdatingTo(this, value.Hash, value.Display);
+                    _internalState.SetUpdatingTo(this, value.Hash, value.Display);
             }
         }
 

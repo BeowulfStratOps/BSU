@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using BSU.Core.Annotations;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
-using BSU.Core.Services;
 using BSU.CoreCommon;
 
 namespace BSU.Core.View

@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
-using BSU.Core.Services;
 using BSU.CoreCommon;
 
 namespace BSU.Core.View

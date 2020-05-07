@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using Xunit;
@@ -36,7 +37,7 @@ namespace BSU.Core.Tests
                     {
                         foreach (var updateTarget in new[] {"1", "2", "3", "4", null})
                         {
-                            foreach (var versionHashRequested in new[] {false, true})
+                            foreach (var state in Enum.GetValues(typeof(StorageModStateEnum)).Cast<StorageModStateEnum>())
                             {
                                 var storageMatchHash = TestUtils.GetMatchHash(storageMatch);
                                 var storageVersionHash = TestUtils.GetVersionHash(storageVersion);
@@ -45,7 +46,7 @@ namespace BSU.Core.Tests
                                 try
                                 {
                                     possibleStorageModStates.Add(new StorageModState(storageMatchHash, storageVersionHash,
-                                        storageUpdateTarget, storageJobTarget, versionHashRequested));
+                                        storageUpdateTarget, storageJobTarget, state));
                                 }
                                 catch (InvalidOperationException e)
                                 {
@@ -73,8 +74,8 @@ namespace BSU.Core.Tests
                 {
                     try
                     {
-                        var (match, _) = CoreCalculation.IsMatch(repoState, storageState);
-                        if (!match) continue;
+                        var match = CoreCalculation.IsMatch(repoState, storageState);
+                        if (match != CoreCalculation.ModMatch.Match) continue;
                         CoreCalculation.CalculateAction(repoState, storageState, true);
                         CoreCalculation.CalculateAction(repoState, storageState, false);
                     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace BSU.Core.JobManager
 {
@@ -26,5 +27,7 @@ namespace BSU.Core.JobManager
         /// Shutdown all threads. Does not wait.
         /// </summary>
         void Shutdown(bool blocking);
+
+        event Action<IJob> JobAdded, JobRemoved;
     }
 }

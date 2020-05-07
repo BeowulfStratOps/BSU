@@ -7,7 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using BSU.Core.Annotations;
-using BSU.Core.Services;
+using BSU.Core.JobManager;
 using BSU.CoreCommon;
 
 namespace BSU.Core.View
@@ -40,7 +40,7 @@ namespace BSU.Core.View
                     }
                 }
             });
-            ServiceProvider.JobManager.JobAdded += job =>
+            core.JobManager.JobAdded += job =>
             {
                 lock (this)
                 {
@@ -48,7 +48,7 @@ namespace BSU.Core.View
                     UiDo(() => Jobs.Add(new Job(job)));
                 }
             };
-            ServiceProvider.JobManager.JobRemoved += job =>
+            core.JobManager.JobRemoved += job =>
             {
                 lock (this)
                 {

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using BSU.Core.JobManager;
-using BSU.Core.Services;
 using NLog;
 
 namespace BSU.Core.Model
@@ -14,16 +12,18 @@ namespace BSU.Core.Model
     
     internal class JobSlot<T> : IJobSlot where T : class, IJob
     {
-        private static readonly Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         
         private readonly Func<T> _starter;
         private readonly string _title;
+        private readonly IJobManager _jobManager;
         private T _job;
 
-        internal JobSlot(Func<T> starter, string title)
+        internal JobSlot(Func<T> starter, string title, IJobManager jobManager)
         {
             _starter = starter;
             _title = title;
+            _jobManager = jobManager;
         }
         
         public bool IsActive() => _job != null;
@@ -45,7 +45,7 @@ namespace BSU.Core.Model
                 OnFinished?.Invoke();
             };
             Logger.Debug($"Queueing Job {_title}");
-            ServiceProvider.JobManager.QueueJob(_job);
+            _jobManager.QueueJob(_job);
             OnStarted?.Invoke();
         }
 

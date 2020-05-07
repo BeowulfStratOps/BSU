@@ -19,7 +19,7 @@ namespace BSU.Core.View
 
         public void DoDownload()
         {
-            new Thread(() => Storage.StartDownload(Parent.Mod, Parent.Name)).Start();
+            new Thread(() => Storage.StartDownload(Parent.Mod, Parent.Name, Storage.Model.MatchMaker)).Start();
         }
     }
 }
