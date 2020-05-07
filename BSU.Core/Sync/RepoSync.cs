@@ -37,6 +37,7 @@ namespace BSU.Core.Sync
 
         public RepoSync(RepositoryMod repository, StorageMod storage, UpdateTarget target, string title, int priority)
         {
+            // TODO: write some tests!
             StorageMod = storage;
             Target = target;
             _title = title;

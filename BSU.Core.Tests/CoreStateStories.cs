@@ -5,6 +5,7 @@ using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.Model;
+using BSU.CoreCommon;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -16,8 +17,11 @@ namespace BSU.Core.Tests
     // TODO: extend for ViewState
     public class CoreStateStories
     {
+        private readonly ITestOutputHelper _outputHelper;
+
         public CoreStateStories(ITestOutputHelper outputHelper)
         {
+            _outputHelper = outputHelper;
             var config = new LoggingConfiguration();
             var target = new XUnitTarget(outputHelper);
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, target);
@@ -53,8 +57,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var mockRepo = new MockRepositoryMod(); // TODO: pass match and version in constructor and prefill
-            var repoMod = new RepositoryMod(null, mockRepo, "myrepo", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
             var mockStorage = new MockStorage();
@@ -82,6 +85,57 @@ namespace BSU.Core.Tests
             jobManager.DoWork();
 
             Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            
+            _outputHelper.WriteLine("Starting update...");
+
+            storageMod.StartUpdate(repoMod);
+            jobManager.DoWork();
+            
+            Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
         }
+
+        [Fact]
+        private void ContinueUpdate()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (mockRepo, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var versionHash = new VersionHash(mockRepo).GetHashString();
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+
+            
+            var mockStorageParent = new Model.Storage(new MockStorage(), null, null, internalState, jobManager);
+            var mockStorage = new MockStorageMod();
+            mockStorage.SetFile("/addons/1_0.pbo", "2");
+            mockStorage.SetFile("/addons/1_1.pbo", "1");
+            mockStorage.SetFile("/addons/1_2.pbo", "2");
+            internalState.MockUpdatingTo = new UpdateTarget(versionHash, ""); // value will be returned for any requests with unknown mods
+            var storageMod = new StorageMod(mockStorageParent, mockStorage, "mystorage", null, internalState, jobManager);
+            internalState.MockUpdatingTo = null;
+            
+            matchMaker.AddStorageMod(storageMod);
+            jobManager.DoWork();
+
+            Assert.Equal(ModAction.ContinueUpdate, repoMod.Actions[storageMod]);
+            
+            _outputHelper.WriteLine("Starting update...");
+
+            storageMod.StartUpdate(repoMod);
+            jobManager.DoWork();
+            
+            Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
+        }
+
+        [Fact]
+        private void FixupFinishedUpdate()
+        {
+            // TODO:
+            // Either clean it up during loading (well, hash it, it's needed for that and will take care of it. yay.)
+            // Or at least make it so that empty jobs can trigger their finished thing. Not sure if that's relevant for any other situation??
+        }
+        
+        // TODO: acre2 exe file keeps being locked when trying to hash after update (I think). not sure if AV or us.
     }
 }

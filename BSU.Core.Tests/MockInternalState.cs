@@ -9,6 +9,7 @@ namespace BSU.Core.Tests
     internal class MockInternalState : IInternalState
     {
         private readonly Dictionary<StorageMod, UpdateTarget> _updateTargets = new Dictionary<StorageMod, UpdateTarget>();
+        public UpdateTarget MockUpdatingTo { get; set; }
 
         public IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors()
         {
@@ -67,7 +68,7 @@ namespace BSU.Core.Tests
 
         public void RemoveUpdatingTo(StorageMod mod)
         {
-            throw new NotImplementedException();
+            _updateTargets.Remove(mod);
         }
 
         public void CleanupUpdatingTo(Model.Storage storage)
@@ -77,7 +78,10 @@ namespace BSU.Core.Tests
 
         public UpdateTarget GetUpdateTarget(StorageMod mod)
         {
-            return _updateTargets.GetValueOrDefault(mod);
+            if (_updateTargets.TryGetValue(mod, out var target)) return target;
+            if (MockUpdatingTo == null) return null;
+            _updateTargets[mod] = MockUpdatingTo;
+            return MockUpdatingTo;
         }
     }
 }

@@ -39,10 +39,16 @@ namespace BSU.Core.Tests
         public Stream OpenFile(string path, FileAccess access)
         {
             if (Locked) throw new IOException("File in use");
-            if (!Files.ContainsKey(path)) return null;
-            return !access.HasFlag(FileAccess.Write)
-                ? new MemoryStream(Files[path])
-                : new MockStream(Files[path], d => Files[path] = d);
+
+            if (access.HasFlag(FileAccess.Write))
+            {
+                var data = Files.TryGetValue(path, out var content) ? content : new byte[0];
+                return new MockStream(data, d => Files[path] = d);
+            }
+            else
+            {
+                return Files.TryGetValue(path, out var content) ? new MemoryStream(content) : null;
+            }
         }
 
         public FileHash GetFileHash(string path)
@@ -70,13 +76,15 @@ namespace BSU.Core.Tests
             
         }
         
-        private class MockStream : MemoryStream
+        private sealed class MockStream : MemoryStream
         {
             private readonly Action<byte[]> _save;
 
-            public MockStream(byte[] data, Action<byte[]> save) : base(data)
+            public MockStream(byte[] data, Action<byte[]> save) : base()
             {
                 _save = save;
+                Write(data, 0, data.Length);
+                Seek(0, SeekOrigin.Begin);
             }
 
             protected override void Dispose(bool disposing)
