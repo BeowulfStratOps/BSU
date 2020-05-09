@@ -114,6 +114,11 @@ namespace BSU.Core.Sync
         /// <returns></returns>
         public WorkUnit GetWork()
         {
+            if (_allActions.Count == 0)
+            {
+                Finished();
+                return null;
+            }
             if (_cancellationTokenSource.IsCancellationRequested) return null;
             var work = _actionsTodo.FirstOrDefault();
             if (work != null) _actionsTodo.Remove(work);
@@ -163,7 +168,12 @@ namespace BSU.Core.Sync
         {
             _workCounter.Dec();
             Progress?.Invoke();
-            if (!_workCounter.Done) return;
+            if (_workCounter.Done) Finished();
+           
+        }
+
+        private void Finished()
+        {
             Logger.Debug("Sync done");
             OnFinished?.Invoke();
         }

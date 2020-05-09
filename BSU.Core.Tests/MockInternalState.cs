@@ -21,12 +21,12 @@ namespace BSU.Core.Tests
             throw new NotImplementedException();
         }
 
-        public List<Model.Storage> LoadStorages(IJobManager jobManager)
+        public List<Model.Storage> LoadStorages(IJobManager jobManager, MatchMaker matchMaker)
         {
             throw new NotImplementedException();
         }
 
-        public List<Repository> LoadRepositories(IJobManager jobManager)
+        public List<Repository> LoadRepositories(IJobManager jobManager, MatchMaker matchMaker)
         {
             throw new NotImplementedException();
         }
@@ -36,17 +36,17 @@ namespace BSU.Core.Tests
             throw new NotImplementedException();
         }
 
-        public Repository AddRepo(string name, string url, string type, Model.Model model, IJobManager jobManager)
+        public Repository AddRepo(string name, string url, string type, Model.Model model, IJobManager jobManager, MatchMaker matchMaker)
         {
             throw new NotImplementedException();
         }
 
-        public Repository LoadRepository(RepoEntry repo, IJobManager jobManager)
+        public Repository LoadRepository(RepoEntry repo, IJobManager jobManager, MatchMaker matchMaker)
         {
             throw new NotImplementedException();
         }
 
-        public Model.Storage AddStorage(string name, DirectoryInfo directory, string type, IJobManager jobManager)
+        public Model.Storage AddStorage(string name, DirectoryInfo directory, string type, IJobManager jobManager, MatchMaker matchMaker)
         {
             throw new NotImplementedException();
         }
@@ -56,14 +56,14 @@ namespace BSU.Core.Tests
             throw new NotImplementedException();
         }
 
-        public Model.Storage LoadStorage(StorageEntry storage, IJobManager jobManager)
+        public Model.Storage LoadStorage(StorageEntry storage, IJobManager jobManager, MatchMaker matchMaker)
         {
             throw new NotImplementedException();
         }
 
         public void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay)
         {
-            _updateTargets.Add(mod, new UpdateTarget(targetHash, targetDisplay));
+            _updateTargets[mod] = new UpdateTarget(targetHash, targetDisplay);
         }
 
         public void RemoveUpdatingTo(StorageMod mod)

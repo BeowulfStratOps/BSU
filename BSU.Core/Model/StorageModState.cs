@@ -41,16 +41,19 @@ namespace BSU.Core.Model
                     Assert(VersionHash == null);
                     Assert(MatchHash == null);
                     Assert(JobTarget == null);
+                    Assert(UpdateTarget == null);
                     return;
                 case StorageModStateEnum.Loaded:
                     Assert(VersionHash == null);
                     Assert(MatchHash != null);
                     Assert(JobTarget == null);
+                    Assert(UpdateTarget == null);
                     return;
                 case StorageModStateEnum.Hashing:
                     Assert(VersionHash == null);
                     Assert(MatchHash != null);
                     Assert(JobTarget == null);
+                    Assert(UpdateTarget == null);
                     return;
                 case StorageModStateEnum.Hashed:
                     Assert(VersionHash != null);

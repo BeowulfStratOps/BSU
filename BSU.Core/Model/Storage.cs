@@ -11,6 +11,7 @@ namespace BSU.Core.Model
     {
         private readonly IInternalState _internalState;
         private readonly IJobManager _jobManager;
+        private readonly MatchMaker _matchMaker;
         public IStorage Implementation { get; }
         public string Identifier { get; }
         public string Location { get; }
@@ -21,10 +22,11 @@ namespace BSU.Core.Model
         
         internal Model Model { get; set; } // TODO: meh
 
-        public Storage(IStorage implementation, string identifier, string location, IInternalState internalState, IJobManager jobManager)
+        public Storage(IStorage implementation, string identifier, string location, IInternalState internalState, IJobManager jobManager, MatchMaker matchMaker)
         {
             _internalState = internalState;
             _jobManager = jobManager;
+            _matchMaker = matchMaker;
             Implementation = implementation;
             Identifier = identifier;
             Location = location;
@@ -41,11 +43,11 @@ namespace BSU.Core.Model
                 var modelMod = new StorageMod(this, mod.Value, mod.Key, null, _internalState, _jobManager);
                 Mods.Add(modelMod);
                 ModAdded?.Invoke(modelMod);
-                Model.MatchMaker.AddStorageMod(modelMod);
+                _matchMaker.AddStorageMod(modelMod);
             }
         }
 
-        internal RepoSync StartDownload(RepositoryMod repositoryMod, string identifier, MatchMaker matchMaker)
+        internal RepoSync StartDownload(RepositoryMod repositoryMod, string identifier)
         {
             if (Loading.IsActive()) throw new InvalidOperationException();
             // TODO: state lock? for this? for repo mod?
@@ -55,7 +57,7 @@ namespace BSU.Core.Model
             Mods.Add(storageMod);
             var sync = storageMod.StartUpdate(repositoryMod);
             ModAdded?.Invoke(storageMod);
-            matchMaker.AddStorageMod(storageMod);
+            _matchMaker.AddStorageMod(storageMod);
             return sync;
         }
         

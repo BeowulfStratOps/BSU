@@ -5,6 +5,7 @@ using BSU.Core.JobManager;
 using BSU.Core.Sync;
 using BSU.Core.View; // TODO: wtf
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Model
 {
@@ -27,7 +28,21 @@ namespace BSU.Core.Model
         
         private readonly object _stateLock = new object(); // TODO: use it!!!
 
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+
         private StorageModStateEnum _state;
+        
+        private StorageModStateEnum State
+        {
+            get => _state;
+            set
+            {
+                var old = _state;
+                _state = value;
+                _logger.Trace("State of '{0}' changed from {1} to {2}.", Identifier, old, value);
+                StateChanged?.Invoke();
+            }
+        }
         
         public StorageMod(Storage parent, IStorageMod implementation, string identifier, UpdateTarget updateTarget, IInternalState internalState, IJobManager jobManager)
         {
@@ -41,27 +56,23 @@ namespace BSU.Core.Model
             _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(HashJob, title2, 1), title2, jobManager);
             _loading.OnFinished += () =>
             {
-                _state = StorageModStateEnum.Loaded;
-                StateChanged?.Invoke();
+                State = StorageModStateEnum.Loaded;
             };
             _hashing.OnFinished += () =>
             {
-                _state = StorageModStateEnum.Hashed;
-                StateChanged?.Invoke();
+                State = StorageModStateEnum.Hashed;
             };
             _updating = new ManualJobSlot<RepoSync>(jobManager);
-            _updating.OnStarted += () =>
-            {
-                _versionHash = null;
-                _matchHash = null;
-            };
             _updating.OnFinished += () =>
             {
-                _versionHash = null;
-                _matchHash = null;
-                _loading.StartJob();
-                _state = StorageModStateEnum.Loading;
-                StateChanged?.Invoke();
+                lock (_stateLock)
+                {
+                    _versionHash = null;
+                    _matchHash = null;
+                    UpdateTarget = null;
+                    _loading.StartJob();
+                    State = StorageModStateEnum.Loading;
+                }
             };
             if (updateTarget == null)
             {
@@ -87,7 +98,7 @@ namespace BSU.Core.Model
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private void CheckState(params StorageModStateEnum[] expected)
         {
-            if (!expected.Contains(_state)) throw new InvalidOperationException(_state.ToString());
+            if (!expected.Contains(State)) throw new InvalidOperationException(State.ToString());
         }
 
         public void RequireHash()
@@ -96,7 +107,7 @@ namespace BSU.Core.Model
             {
                 CheckState(StorageModStateEnum.Loaded);
                 _hashing.StartJob();
-                _state = StorageModStateEnum.Hashing;
+                State = StorageModStateEnum.Hashing;
             }
         }
 
@@ -109,8 +120,6 @@ namespace BSU.Core.Model
         private void HashJob()
         {
             _versionHash = new VersionHash(Implementation);
-            if (_versionHash.GetHashString() == UpdateTarget?.Hash)
-                UpdateTarget = null;
         }
 
         private UpdateTarget UpdateTarget
@@ -130,6 +139,7 @@ namespace BSU.Core.Model
         
         internal RepoSync StartUpdate(RepositoryMod repositoryMod)
         {
+            // TODO: building this may take some time. should be called async
             lock (_stateLock)
             {
                 // TODO: state lock? for this? for repo mod?
@@ -138,9 +148,12 @@ namespace BSU.Core.Model
                     $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
                 var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(),
                     repositoryMod.Implementation.GetDisplayName());
+                UpdateTarget = target;
                 var repoSync = new RepoSync(repositoryMod, this, target, title, 0);
+                _versionHash = null;
+                _matchHash = null;
                 _updating.StartJob(repoSync);
-                _state = StorageModStateEnum.Updating;
+                State = StorageModStateEnum.Updating;
                 return repoSync;
             }
         }
@@ -151,7 +164,7 @@ namespace BSU.Core.Model
             {
                 var job = _updating.GetJob();
                 var jobTarget = job?.Target;
-                return new StorageModState(_matchHash, _versionHash, UpdateTarget, jobTarget, _state);
+                return new StorageModState(_matchHash, _versionHash, UpdateTarget, jobTarget, State);
             }
         }
     }

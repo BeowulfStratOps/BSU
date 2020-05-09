@@ -10,6 +10,7 @@ namespace BSU.Core.Model
     internal class Repository
     {
         private readonly IJobManager _jobManager;
+        private readonly MatchMaker _matchMaker;
         public IRepository Implementation { get; }
         public string Identifier { get; }
         public string Location { get; }
@@ -21,9 +22,10 @@ namespace BSU.Core.Model
 
         internal Model Model { get; set; }
 
-        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager)
+        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, MatchMaker matchMaker)
         {
             _jobManager = jobManager;
+            _matchMaker = matchMaker;
             Location = location;
             Implementation = implementation;
             Identifier = identifier;
@@ -40,7 +42,7 @@ namespace BSU.Core.Model
                 var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager);
                 Mods.Add(modelMod);
                 ModAdded?.Invoke(modelMod);
-                Model.MatchMaker.AddRepositoryMod(modelMod);
+                _matchMaker.AddRepositoryMod(modelMod);
             }
         }
 

@@ -10,7 +10,7 @@ namespace BSU.Core.Model
         private readonly IJobManager _jobManager;
 
         // TODO: lock enumerables while stuff is being executed!!!
-        internal MatchMaker MatchMaker { get; } = new MatchMaker();
+        private readonly MatchMaker _matchMaker = new MatchMaker();
         public List<Repository> Repositories { get; } = new List<Repository>();
         public List<Storage> Storages { get; } = new List<Storage>();
 
@@ -24,13 +24,13 @@ namespace BSU.Core.Model
 
         public void Load()
         {
-            foreach (var repository in PersistentState.LoadRepositories(_jobManager))
+            foreach (var repository in PersistentState.LoadRepositories(_jobManager, _matchMaker))
             {
                 repository.Model = this;
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
             }
-            foreach (var storage in PersistentState.LoadStorages(_jobManager))
+            foreach (var storage in PersistentState.LoadStorages(_jobManager, _matchMaker))
             {
                 storage.Model = this;
                 Storages.Add(storage);
@@ -43,14 +43,14 @@ namespace BSU.Core.Model
         
         public void AddRepository(string type, string url, string name)
         {
-            var repository = PersistentState.AddRepo(name, url, type, this, _jobManager);
+            var repository = PersistentState.AddRepo(name, url, type, this, _jobManager, _matchMaker);
             Repositories.Add(repository);
             RepositoryAdded?.Invoke(repository);
         }
         
         public void AddStorage(string type, DirectoryInfo dir, string name)
         {
-            var storage = PersistentState.AddStorage(name, dir, type, _jobManager);
+            var storage = PersistentState.AddStorage(name, dir, type, _jobManager, _matchMaker);
             Storages.Add(storage);
             StorageAdded?.Invoke(storage);
         }
