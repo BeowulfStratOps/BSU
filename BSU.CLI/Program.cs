@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using BSU.Core.State;
 using BSU.Core.View;
 using NLog;
 
@@ -12,14 +11,9 @@ namespace BSU.CLI
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private Core.Core _core;
-        private State _state;
-
         static int Main(string[] args)
         {
-            if (args.Length > 0 && args[0] == "log_window") return LogWindow.RunClient();
-            LogWindow.StartServer();
             var ret = new Program().Main();
-            LogWindow.StopServer();
             return ret;
         }
 
@@ -27,7 +21,7 @@ namespace BSU.CLI
         {
             Console.WriteLine("Loading...");
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
-            _core = new Core.Core(settingsFile);
+            _core = new Core.Core(settingsFile, a => a());
 
             var commands = new Commands(this);
 
@@ -60,95 +54,59 @@ namespace BSU.CLI
             }
         }
 
-        [CliCommand("addrepo", "Adds a repository.", "type name url")]
+        [CliCommand("addrepo", "Adds a repository.", "type url name")]
         void AddRepo(string[] args)
         {
-            _core.AddRepo(args[1], args[2], args[0]);
+            _core.ViewState.AddRepository(args[0], args[1], args[2]);
         }
 
         [CliCommand("delrepo", "Removes a repository.", "name")]
         void DelRepo(string[] args)
         {
-            CheckState();
-            _state.Repos.Single(r => r.Name == args[0]).Remove();
+            throw new NotImplementedException();
+            //_state.Repos.Single(r => r.Name == args[0]).Remove();
         }
 
-        [CliCommand("addstorage", "Adds a storage.", "type name path")]
+        [CliCommand("addstorage", "Adds a storage.", "type path name")]
         void AddStorage(string[] args)
         {
-            _core.AddStorage(args[1], new DirectoryInfo(args[2]), args[0]);
+            _core.ViewState.AddStorage(args[0], args[1], args[2]);
         }
 
         [CliCommand("delstorage", "Removes a repository.", "name")]
         void DelStorage(string[] args)
         {
-            CheckState();
-            _state.Storages.Single(s => s.Name == args[0]).Remove();
+            throw new NotImplementedException();
+            //_state.Storages.Single(s => s.Name == args[0]).Remove();
         }
 
-        [CliCommand("printintstate", "Prints the internal state.")]
-        void PrintInternalState(string[] args)
-        {
-            _core.PrintInternalState();
-        }
-
-        [CliCommand("calcstate", "Calculate state.")]
-        void CalcState(string[] args)
-        {
-            _state = _core.GetState();
-            _state.Invalidated += StateOnInvalidated;
-        }
-
-        private void StateOnInvalidated()
-        {
-            Console.WriteLine("State invalidated.");
-        }
-
-        private void CheckState()
-        {
-            if (_state == null)
-            {
-                Console.WriteLine("None active. Creating...");
-                _state = _core.GetState();
-            }
-
-            if (!_state.IsValid) Console.WriteLine("State got invalidated!");
-        }
-
-        [CliCommand("showstate", "Show state.")]
+        [CliCommand("show", "Show state.")]
         void ShowState(string[] args)
         {
-            CheckState();
-
-            foreach (var repo in _state.Repos)
+            foreach (var repo in _core.ViewState.Repositories)
             {
                 Console.WriteLine(repo.Name);
                 foreach (var mod in repo.Mods)
                 {
                     Console.WriteLine("  " + mod.Name);
-                    for (int i = 0; i < mod.Actions.Count; i++)
+                    foreach (var match in mod.Matches)
                     {
-                        var action = mod.Actions[i];
-                        var actionText = "    ";
-                        actionText += action == mod.Selected ? "* " : $"{i + 1} ";
-                        actionText += action.ToString();
-                        Console.WriteLine(actionText);
-                        if (!action.GetConflicts().Any()) continue;
+                        Console.WriteLine("    " + match.Action);
+                        /* TODO: conflicts
                         Console.WriteLine("      Conflicts");
                         foreach (var conflict in action.GetConflicts())
                         {
                             Console.WriteLine("        " + conflict);
                         }
+                        */
                     }
                 }
             }
         }
 
-        [CliCommand("select", "Select an action.", "repo_name mod_name action_number")]
+        /*[CliCommand("select", "Select an action.", "repo_name mod_name action_number")]
         void Select(string[] args)
         {
-            CheckState();
-
             string repoName = args[0], modName = args[1];
             var action = int.Parse(args[2]);
 
@@ -204,19 +162,15 @@ namespace BSU.CLI
             }
 
             packet.DoUpdate();
-        }
+        }*/
 
         [CliCommand("jobs", "Shows job states")]
         void Jobs(string[] args)
         {
-            CheckState();
-
-            var jobs = _core.GetAllJobs();
-
-            foreach (var job in jobs)
+            foreach (var job in _core.ViewState.Jobs)
             {
-                Console.WriteLine($"{job.GetStorageModDisplayName()} -> {job.GetRepositoryModDisplayName()}");
-                if (job.IsDone())
+                Console.WriteLine($"{job.Title}: {job.Progress}%");
+                /*if (job.IsDone())
                 {
                     var error = job.GetError();
                     Console.WriteLine(error == null ? " Done" : $" Error: {error}");
@@ -228,7 +182,7 @@ namespace BSU.CLI
                     Console.WriteLine(
                         $" Update: {job.GetRemainingChangedFilesCount()} Files, {Utils.BytesToHuman(job.GetRemainingBytesToUpdate())}");
                     Console.WriteLine($" Delete: {job.GetRemainingDeletedFilesCount()} Files");
-                }
+                }*/
             }
         }
 
@@ -236,22 +190,16 @@ namespace BSU.CLI
         void Types(string[] args)
         {
             Console.WriteLine("Repo Types:");
-            foreach (var repoType in _core.GetRepoTypes())
+            foreach (var repoType in _core.Types.GetRepoTypes())
             {
                 Console.WriteLine(" " + repoType);
             }
 
             Console.WriteLine("Storage Types:");
-            foreach (var storageType in _core.GetStorageTypes())
+            foreach (var storageType in _core.Types.GetStorageTypes())
             {
                 Console.WriteLine(" " + storageType);
             }
-        }
-
-        [CliCommand("gui", "Show continuous state.")]
-        void ContState(string[] args)
-        {
-            ContStateDisplay.Show(_core.GetContState(x => x()));
         }
     }
 }

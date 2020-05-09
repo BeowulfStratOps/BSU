@@ -59,9 +59,6 @@ namespace BSU.BSO
             Logger.Debug("{0} Finished downloading hash file", _uid);
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
             GetDisplayName();
-#if SlowMode
-            Thread.Sleep(1337);
-#endif
         }
 
 

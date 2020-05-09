@@ -30,9 +30,6 @@ namespace BSU.Core.Hashes
             }
 
             _hash = BuildHash(hashes);
-#if SlowMode
-            Thread.Sleep(4*1337);
-#endif
         }
 
         // TODO: this is for testing only. VersionHash should be abstracted.

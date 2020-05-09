@@ -191,11 +191,5 @@ namespace BSU.Core.Tests
 
             Assert.False(repoMod.Actions.ContainsKey(storageMod));
         }
-
-        [Fact(Skip = "Not created")]
-        private void HandleLockedFilesDuringUpdate()
-        {
-            
-        }
     }
 }

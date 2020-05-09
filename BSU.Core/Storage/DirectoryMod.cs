@@ -34,9 +34,6 @@ namespace BSU.Core.Storage
         public void Load()
         {
             GetDisplayName();
-#if SlowMode
-            Thread.Sleep(1337);
-#endif
         }
 
         /// <summary>

@@ -33,9 +33,6 @@ namespace BSU.Core.Storage
         {
             _mods = new DirectoryInfo(_path).EnumerateDirectories("@*")
                 .ToDictionary(di => di.Name, di => (IStorageMod) new DirectoryMod(di, this));
-#if SlowMode
-            Thread.Sleep(1337);
-#endif
         }
 
         public Dictionary<string, IStorageMod> GetMods()

@@ -38,9 +38,6 @@ namespace BSU.BSO
             var baseUrl = string.Join('/', parts);
             _mods = serverFile.ModFolders.ToDictionary(m => m.ModName,
                 m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName));
-#if SlowMode
-            Thread.Sleep(1337);
-#endif
         }
 
         public Dictionary<string, IRepositoryMod> GetMods()
