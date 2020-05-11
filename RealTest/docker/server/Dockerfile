@@ -35,15 +35,20 @@ RUN wget --quiet "https://github.com/acemod/ACEX/releases/download/v3.5.0-rc1/ac
 RUN unzip -q out.zip
 
 WORKDIR /build
-COPY . .
+COPY BSU.Hashes ./BSU.Hashes
+COPY BSU.BSO ./BSU.BSO
+COPY BSU.Server ./BSU.Server
+COPY BSU.CoreCommon ./BSU.CoreCommon
 
 WORKDIR /build/BSU.Server
 RUN dotnet build
 
+COPY RealTest/docker/server/repo*.ini /data/
+
 WORKDIR /build/BSU.Server/bin/Debug/netcoreapp3.0
-RUN dotnet BSU.Server.dll /build/RealTest/docker/server/repo1.ini
-RUN dotnet BSU.Server.dll /build/RealTest/docker/server/repo2.ini
-RUN dotnet BSU.Server.dll /build/RealTest/docker/server/repo3.ini
+RUN dotnet BSU.Server.dll /data/repo1.ini
+RUN dotnet BSU.Server.dll /data/repo2.ini
+RUN dotnet BSU.Server.dll /data/repo3.ini
 
 FROM nginx
 

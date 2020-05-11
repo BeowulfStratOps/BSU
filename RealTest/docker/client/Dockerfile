@@ -35,3 +35,15 @@ RUN dotnet build
 WORKDIR /build_script/bin/Debug/netcoreapp3.1/
 RUN dotnet Corrupt.dll /storage/main/@ace
 RUN dotnet Corrupt.dll /storage/side/@acre2
+
+WORKDIR /build
+COPY . .
+
+WORKDIR /build/RealTest
+RUN dotnet build
+
+RUN mkdir /client
+
+WORKDIR /build/RealTest/bin/Debug/netcoreapp3.0
+
+CMD dotnet RealTest.dll
