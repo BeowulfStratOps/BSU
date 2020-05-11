@@ -6,3 +6,8 @@ services:
       dockerfile: RealTest/docker/server/Dockerfile
     ports:
       - "80:80"
+
+  client:
+    build:
+      context: ../../
+      dockerfile: RealTest/docker/client/Dockerfile
