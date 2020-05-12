@@ -6,26 +6,28 @@ WORKDIR /storage
 
 RUN mkdir main
 RUN mkdir side
-RUN mkdir steam
+RUN mkdir -p steam/steamapps/workshop/content/107410/
+
+# unzip everything to lowercase to work around linux being case sensitive
 
 RUN wget --quiet "https://github.com/CBATeam/CBA_A3/releases/download/v3.13.0.191116/CBA_A3_v3.13.0.zip" -O out.zip
-RUN unzip -q out.zip
-RUN mv @CBA_A3 steam/@cba
+RUN unzip -q -LL out.zip
+RUN mv @cba_a3 steam/steamapps/workshop/content/107410/1237192873342
 
 RUN wget --quiet "https://github.com/CBATeam/CBA_A3/releases/download/v3.9.1.181229/CBA_A3_v3.9.1.zip" -O out.zip
-RUN unzip -q out.zip
-RUN mv @CBA_A3 main/@cba
+RUN unzip -q -LL out.zip
+RUN mv @cba_a3 main/@cba
 
 RUN wget --quiet "https://github.com/acemod/ACE3/releases/download/v3.12.3/ace3_3.12.3.zip" -O out.zip
-RUN unzip -q out.zip
+RUN unzip -q -LL out.zip
 RUN mv @ace main/@ace
 
 RUN wget --quiet "https://github.com/IDI-Systems/acre2/releases/download/v2.7.2.1022/acre2_2.7.2.1022.zip" -O out.zip
-RUN unzip -q out.zip
+RUN unzip -q -LL out.zip
 RUN mv @acre2 side/@acre2
 
 RUN wget --quiet "https://github.com/acemod/ACEX/releases/download/v3.5.0-rc1/acex_3.5.0-rc1.zip" -O out.zip
-RUN unzip -q out.zip
+RUN unzip -q -LL out.zip
 RUN mv @acex side/@acex
 
 WORKDIR /build_script

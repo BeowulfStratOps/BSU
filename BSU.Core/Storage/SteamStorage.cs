@@ -27,7 +27,7 @@ namespace BSU.Core.Storage
         public void Load()
         {
             var folders = new List<DirectoryInfo>();
-            if (!_basePath.Exists) throw new FileNotFoundException();
+            if (!_basePath.Exists) throw new FileNotFoundException(); // TODO: useful error
 
             foreach (var mod in _basePath.EnumerateDirectories())
             {

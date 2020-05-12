@@ -26,8 +26,6 @@ namespace RealTest
 
             var repository = _model.Repositories.Single(r => r.Identifier == repoName);
             
-            Console.WriteLine(string.Join(", ", repository.Mods.Select(r => r.Identifier)));
-            
             var repoMod = repository.Mods.Single(m => m.Identifier == repoModName);
             
             var storage = _model.Storages.Single(s => s.Identifier == storageName);

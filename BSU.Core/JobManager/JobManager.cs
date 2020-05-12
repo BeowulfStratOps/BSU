@@ -158,13 +158,10 @@ namespace BSU.Core.JobManager
                         _threadsDone--;
                     }
                 }
-#if !DEBUG
                 try
                 {
-#endif
                     work.Work();
                     if (!_shutdown) job.WorkItemFinished();
-#if !DEBUG
                 }
                 catch (Exception e)
                 {
@@ -172,7 +169,6 @@ namespace BSU.Core.JobManager
                     work.SetError(e);
                     job.WorkItemFinished();
                 }
-#endif
             }
             Logger.Trace("Worker thread ending.");
         }

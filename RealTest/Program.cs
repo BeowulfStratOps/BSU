@@ -9,14 +9,20 @@ using System.Threading;
 using BSU.Core;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
+
 namespace RealTest
 {
     internal class Program
     {
         private static void Main(string[] args)
         {
+            SetupLogging();
+            
             var settingsFile = new FileInfo("/client/settings.json");
-            var core = new Core(settingsFile, a => a());
+            using var core = new Core(settingsFile, a => a());
             var state = core.Model;
 
             state.AddRepository("BSO", "http://server/repo1.json", "main");
@@ -26,15 +32,28 @@ namespace RealTest
             state.AddStorage("DIRECTORY", new DirectoryInfo("/storage/side"), "ww2");
             state.AddStorage("STEAM", new DirectoryInfo("/storage/steam"), "steam");
             
+            state.AddStorage("DIRECTORY", new DirectoryInfo("/cant/possibly/exist"), "error_pls");
+            
             // TODO: check for errors
 
             while (state.Repositories.Single(r => r.Identifier == "main").Loading.IsActive()) Thread.Sleep(1);
+            Thread.Sleep(10000);
             
             var executor = new ModelExecuter(core);
 
             var aceUpdate = executor.Update("main/@ace_v1", "main/@ace");
             
             while (!aceUpdate.IsDone()) Thread.Sleep(1);
+            
+            Console.WriteLine("Done");
+        }
+
+        private static void SetupLogging()
+        {
+            var config = new LoggingConfiguration();
+            var logconsole = new ConsoleTarget("logconsole");
+            config.AddRule(LogLevel.Error, LogLevel.Fatal, logconsole);
+            LogManager.Configuration = config;
         }
 
 
