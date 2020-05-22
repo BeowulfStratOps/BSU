@@ -64,7 +64,11 @@ namespace BSU.Core.Tests
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", internalState, jobManager, matchMaker);
             jobManager.DoWork();
             var update = storage.PrepareDownload(repoMod, "mystoragemod");
-            update.OnPrepared += update.Commit;
+            update.OnPrepared += () =>
+            {
+                Assert.True(update.GetPrepStats() > 0);
+                update.Commit();
+            };
             var storageMod = storage.Mods[0];
             jobManager.DoWork();
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
@@ -92,7 +96,11 @@ namespace BSU.Core.Tests
             _outputHelper.WriteLine("Starting update...");
 
             var update = storageMod.PrepareUpdate(repoMod);
-            update.OnPrepared += update.Commit;
+            update.OnPrepared += () =>
+            {
+                Assert.True(update.GetPrepStats() > 0);
+                update.Commit();
+            };
             jobManager.DoWork();
 
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
@@ -129,7 +137,11 @@ namespace BSU.Core.Tests
             _outputHelper.WriteLine("Starting update...");
 
             var update = storageMod.PrepareUpdate(repoMod);
-            update.OnPrepared += update.Commit;
+            update.OnPrepared += () =>
+            {
+                Assert.True(update.GetPrepStats() > 0);
+                update.Commit();
+            };
             jobManager.DoWork();
             
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
@@ -165,7 +177,11 @@ namespace BSU.Core.Tests
             _outputHelper.WriteLine("Starting update...");
 
             var update = storageMod.PrepareUpdate(repoMod);
-            update.OnPrepared += update.Commit;
+            update.OnPrepared += () =>
+            {
+                Assert.Equal(0, update.GetPrepStats());
+                update.Commit();
+            };
             jobManager.DoWork();
             
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);

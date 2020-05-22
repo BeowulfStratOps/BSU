@@ -7,5 +7,6 @@ namespace BSU.Core.Model
         void Commit();
         void Abort();
         event Action OnPrepared;
+        int GetPrepStats();
     }
 }

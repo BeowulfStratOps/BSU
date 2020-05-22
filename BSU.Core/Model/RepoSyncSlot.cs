@@ -73,6 +73,12 @@ namespace BSU.Core.Model
         public bool IsActive() => _state != RepoSyncSlotState.Inactive;
 
         public event Action OnFinished, OnPrepared;
+        public int GetPrepStats()
+        {
+            if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();
+
+            return (int) (_syncJob.GetTotalBytesToDownload() + _syncJob.GetTotalBytesToUpdate());
+        }
     }
 
     internal enum RepoSyncSlotState
