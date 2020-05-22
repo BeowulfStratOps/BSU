@@ -47,7 +47,7 @@ namespace BSU.Core.Model
             }
         }
 
-        internal RepoSync StartDownload(RepositoryMod repositoryMod, string identifier)
+        internal IUpdateState PrepareDownload(RepositoryMod repositoryMod, string identifier)
         {
             if (Loading.IsActive()) throw new InvalidOperationException();
             // TODO: state lock? for this? for repo mod?
@@ -55,10 +55,16 @@ namespace BSU.Core.Model
             var mod = Implementation.CreateMod(identifier);
             var storageMod = new StorageMod(this, mod, identifier, updateTarget, _internalState, _jobManager);
             Mods.Add(storageMod);
-            var sync = storageMod.StartUpdate(repositoryMod);
+            var update = storageMod.PrepareUpdate(repositoryMod, () => RollbackDownload(storageMod));
             ModAdded?.Invoke(storageMod);
             _matchMaker.AddStorageMod(storageMod);
-            return sync;
+            return update;
+        }
+
+        private void RollbackDownload(StorageMod mod)
+        {
+            // TODO: implement
+            throw new NotImplementedException();
         }
         
         public event Action<StorageMod> ModAdded;

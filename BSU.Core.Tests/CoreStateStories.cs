@@ -1,14 +1,9 @@
-using System;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
+using System.Linq;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.Model;
-using BSU.CoreCommon;
 using NLog;
 using NLog.Config;
-using NLog.Targets;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -27,8 +22,8 @@ namespace BSU.Core.Tests
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, target);
             LogManager.Configuration = config;
         }
-
-        private (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, IJobManager jobManager)
+        
+        internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, IJobManager jobManager)
         {
             var mockRepo = new MockRepositoryMod();
             for (int i = 0; i < 3; i++)
@@ -39,7 +34,7 @@ namespace BSU.Core.Tests
             return (mockRepo, repoMod);
         }
         
-        private (MockStorageMod, StorageMod) CreateStorageMod(string match, string version, IInternalState internalState, IJobManager jobManager)
+        internal static (MockStorageMod, StorageMod) CreateStorageMod(string match, string version, IInternalState internalState, IJobManager jobManager)
         {
             var mockStorageParent = new Model.Storage(new MockStorage(), null, null, internalState, jobManager, null);
             var mockStorage = new MockStorageMod();
@@ -50,6 +45,11 @@ namespace BSU.Core.Tests
             var storageMod = new StorageMod(mockStorageParent, mockStorage, "mystorage", null, internalState, jobManager);
             return (mockStorage, storageMod);
         }
+
+        internal static void FilesEqual(IMockedFiles f1, IMockedFiles f2)
+        {
+            Assert.Equal(f1.GetFiles().OrderBy(kv => kv.Key), f2.GetFiles().OrderBy(kv => kv.Key));
+        }
         
         [Fact]
         private void Download()
@@ -57,17 +57,20 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
             var mockStorage = new MockStorage();
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", internalState, jobManager, matchMaker);
             jobManager.DoWork();
-            storage.StartDownload(repoMod, "mystoragemod");
+            var update = storage.PrepareDownload(repoMod, "mystoragemod");
+            update.OnPrepared += update.Commit;
             var storageMod = storage.Mods[0];
             jobManager.DoWork();
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
+            
+            FilesEqual(repoFiles, storageMod.Implementation as IMockedFiles);
         }
         
         [Fact]
@@ -76,11 +79,11 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
-            var (_, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
 
@@ -88,10 +91,13 @@ namespace BSU.Core.Tests
             
             _outputHelper.WriteLine("Starting update...");
 
-            storageMod.StartUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod);
+            update.OnPrepared += update.Commit;
             jobManager.DoWork();
-            
+
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
+            
+            FilesEqual(repoFiles, storageFiles);
         }
 
         [Fact]
@@ -122,11 +128,14 @@ namespace BSU.Core.Tests
             
             _outputHelper.WriteLine("Starting update...");
 
-            storageMod.StartUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod);
+            update.OnPrepared += update.Commit;
             jobManager.DoWork();
             
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
             Assert.Null(internalState.GetUpdateTarget(storageMod));
+            
+            FilesEqual(mockRepo, mockStorage);
         }
 
         [Fact]
@@ -145,7 +154,7 @@ namespace BSU.Core.Tests
             jobManager.DoWork();
 
             internalState.MockUpdatingTo = new UpdateTarget(versionHash, ""); // value will be returned for any requests with unknown mods
-            var (_, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            var (mockStorage, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
             internalState.MockUpdatingTo = null;
             
             matchMaker.AddStorageMod(storageMod);
@@ -155,10 +164,13 @@ namespace BSU.Core.Tests
             
             _outputHelper.WriteLine("Starting update...");
 
-            storageMod.StartUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod);
+            update.OnPrepared += update.Commit;
             jobManager.DoWork();
             
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
+            
+            FilesEqual(mockRepo, mockStorage);
         }
 
         [Fact]

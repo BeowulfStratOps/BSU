@@ -4,13 +4,7 @@ using NLog;
 
 namespace BSU.Core.Model
 {
-    internal interface IJobSlot
-    {
-        event Action OnStarted, OnFinished;
-        bool IsActive();
-    }
-    
-    internal class JobSlot<T> : IJobSlot where T : class, IJob
+    internal class JobSlot<T>  where T : class, IJob
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         
@@ -46,11 +40,10 @@ namespace BSU.Core.Model
             };
             Logger.Debug($"Queueing Job {_title}");
             _jobManager.QueueJob(_job);
-            OnStarted?.Invoke();
         }
 
         public T GetJob() => _job;
 
-        public event Action OnStarted, OnFinished;
+        public event Action OnFinished;
     }
 }

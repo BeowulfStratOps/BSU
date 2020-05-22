@@ -49,7 +49,11 @@ namespace BSU.Core.View
 
         public void DoUpdate()
         {
-            new Thread(() => Mod.StartUpdate(Parent.Mod)).Start();
+            new Thread(() =>
+            {
+                var update = Mod.PrepareUpdate(Parent.Mod);
+                update.OnPrepared += update.Commit;
+            }).Start();
         }
     }
 }

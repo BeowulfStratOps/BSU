@@ -17,9 +17,14 @@ namespace BSU.Core.View
             Parent = parent;
         }
 
-        public void DoDownload()
+        public void DoDownload(string name = null)
         {
-            new Thread(() => Storage.StartDownload(Parent.Mod, Parent.Name)).Start();
+            name ??= Parent.Name;
+            new Thread(() =>
+            {
+                var update = Storage.PrepareDownload(Parent.Mod, name);
+                update.OnPrepared += update.Commit;
+            }).Start();
         }
     }
 }

@@ -123,6 +123,7 @@ namespace BSU.BSO
             client.DownloadProgressChanged += (sender, args) => updateCallback(args.BytesReceived);
             using var sourceStream = client.OpenRead(url);
             sourceStream.CopyTo(fileStream);
+            fileStream.SetLength(fileStream.Position);
             token.Register(client.CancelAsync);
             Logger.Debug("{0} Finished downloading content {1} / {2}", _uid, _url, path);
         }

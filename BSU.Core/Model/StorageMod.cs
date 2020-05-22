@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.Serialization;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
@@ -11,7 +12,10 @@ namespace BSU.Core.Model
 {
     internal class StorageMod
     {
+        // TODO: come up with a proper state machine implementation
+        
         private readonly IInternalState _internalState;
+        private readonly IJobManager _jobManager;
         public Storage Storage { get; }
         public string Identifier { get; }
         public IStorageMod Implementation { get; }
@@ -23,15 +27,15 @@ namespace BSU.Core.Model
         private MatchHash _matchHash;
         private VersionHash _versionHash;
 
-        private readonly ManualJobSlot<RepoSync> _updating;
+        private readonly RepoSyncSlot _updating;
         private UpdateTarget _updateTarget;
-        
+
         private readonly object _stateLock = new object(); // TODO: use it!!!
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private StorageModStateEnum _state;
-        
+
         private StorageModStateEnum State
         {
             get => _state;
@@ -43,10 +47,12 @@ namespace BSU.Core.Model
                 StateChanged?.Invoke();
             }
         }
-        
-        public StorageMod(Storage parent, IStorageMod implementation, string identifier, UpdateTarget updateTarget, IInternalState internalState, IJobManager jobManager)
+
+        public StorageMod(Storage parent, IStorageMod implementation, string identifier, UpdateTarget updateTarget,
+            IInternalState internalState, IJobManager jobManager)
         {
             _internalState = internalState;
+            _jobManager = jobManager;
             Storage = parent;
             Implementation = implementation;
             Identifier = identifier;
@@ -54,15 +60,9 @@ namespace BSU.Core.Model
             _loading = new JobSlot<SimpleJob>(() => new SimpleJob(LoadJob, title1, 1), title1, jobManager);
             var title2 = $"Hash StorageMod {Identifier}";
             _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(HashJob, title2, 1), title2, jobManager);
-            _loading.OnFinished += () =>
-            {
-                State = StorageModStateEnum.Loaded;
-            };
-            _hashing.OnFinished += () =>
-            {
-                State = StorageModStateEnum.Hashed;
-            };
-            _updating = new ManualJobSlot<RepoSync>(jobManager);
+            _loading.OnFinished += () => { State = StorageModStateEnum.Loaded; };
+            _hashing.OnFinished += () => { State = StorageModStateEnum.Hashed; };
+            _updating = new RepoSyncSlot(jobManager);
             _updating.OnFinished += () =>
             {
                 lock (_stateLock)
@@ -136,35 +136,36 @@ namespace BSU.Core.Model
         }
 
         public event Action StateChanged;
-        
-        internal RepoSync StartUpdate(RepositoryMod repositoryMod)
+
+        internal IUpdateState PrepareUpdate(RepositoryMod repositoryMod, Action rollback = null)
         {
-            // TODO: building this may take some time. should be called async
             lock (_stateLock)
             {
-                // TODO: state lock? for this? for repo mod?
-                CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed, StorageModStateEnum.CreatedWithUpdateTarget);
-                var title =
-                    $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
+                // TODO: state lock for repo mod?
+                CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed,
+                    StorageModStateEnum.CreatedWithUpdateTarget);
                 var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(),
                     repositoryMod.Implementation.GetDisplayName());
                 UpdateTarget = target;
-                var repoSync = new RepoSync(repositoryMod, this, target, title, 0);
+                var title =
+                    $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
+
+                _updating.Prepare(repositoryMod, this, target, title, rollback);
+                
                 _versionHash = null;
                 _matchHash = null;
-                _updating.StartJob(repoSync);
+
                 State = StorageModStateEnum.Updating;
-                return repoSync;
+
+                return _updating; // TODO: meh. should be a new object every time.
             }
         }
 
         public StorageModState GetState()
         {
-            lock(_stateLock)
+            lock (_stateLock)
             {
-                var job = _updating.GetJob();
-                var jobTarget = job?.Target;
-                return new StorageModState(_matchHash, _versionHash, UpdateTarget, jobTarget, State);
+                return new StorageModState(_matchHash, _versionHash, UpdateTarget, _updating.Target, State);
             }
         }
     }

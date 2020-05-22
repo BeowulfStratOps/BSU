@@ -12,6 +12,7 @@ namespace BSU.Core.Tests
     public interface IMockedFiles
     {
         void SetFile(string key, string data);
+        IReadOnlyDictionary<string, string> GetFiles();
     }
 
     public class MockRepositoryMod : IRepositoryMod, IMockedFiles
@@ -22,6 +23,11 @@ namespace BSU.Core.Tests
         public void SetFile(string key, string data)
         {
             Files[key] = Encoding.UTF8.GetBytes(data);
+        }
+
+        public IReadOnlyDictionary<string, string> GetFiles()
+        {
+            return Files.ToDictionary(kv => kv.Key, kv => Encoding.UTF8.GetString(kv.Value));
         }
 
         public byte[] GetFile(string path) => Files.GetValueOrDefault(path);

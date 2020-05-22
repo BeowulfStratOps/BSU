@@ -16,6 +16,11 @@ namespace BSU.Core.Tests
 
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
 
+        public IReadOnlyDictionary<string, string> GetFiles()
+        {
+            return Files.ToDictionary(kv => kv.Key, kv => Encoding.UTF8.GetString(kv.Value));
+        }
+        
         public void SetFile(string key, string data)
         {
             if (Locked) throw new IOException("File in use");

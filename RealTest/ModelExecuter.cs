@@ -16,7 +16,7 @@ namespace RealTest
             _model = core.Model;
         }
 
-        public RepoSync Update(string repoModPath, string storagModPath)
+        public IUpdateState Update(string repoModPath, string storagModPath)
         {
             var repoName = repoModPath.Split("/")[0];
             var repoModName = repoModPath.Split("/")[1];
@@ -35,10 +35,10 @@ namespace RealTest
             
             if (action != ModAction.Update) throw new InvalidOperationException();
 
-            return storageMod.StartUpdate(repoMod);
+            return storageMod.PrepareUpdate(repoMod);
         }
 
-        public RepoSync Download(string repoModPath, string storageName, string identifier)
+        public IUpdateState Download(string repoModPath, string storageName, string identifier)
         {
             var repoName = repoModPath.Split("/")[0];
             var repoModName = repoModPath.Split("/")[1];
@@ -48,7 +48,7 @@ namespace RealTest
             
             var storage = _model.Storages.Single(s => s.Identifier == storageName);
             
-            return storage.StartDownload(repoMod, identifier);
+            return storage.PrepareDownload(repoMod, identifier);
         }
     }
 }
