@@ -34,7 +34,7 @@ namespace BSU.Core.Model
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private StorageModStateEnum _state;
+        private StorageModStateEnum _state; // TODO: should be directly accessible
 
         private StorageModStateEnum State
         {
@@ -166,6 +166,17 @@ namespace BSU.Core.Model
             lock (_stateLock)
             {
                 return new StorageModState(_matchHash, _versionHash, UpdateTarget, _updating.Target, State);
+            }
+        }
+
+        public void Abort()
+        {
+            lock (_stateLock)
+            {
+                CheckState(StorageModStateEnum.CreatedWithUpdateTarget);
+                UpdateTarget = null;
+                _loading.StartJob();
+                State = StorageModStateEnum.Loading;
             }
         }
     }

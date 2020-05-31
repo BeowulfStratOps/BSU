@@ -63,8 +63,8 @@ namespace BSU.Core.Model
 
         private void RollbackDownload(StorageMod mod)
         {
-            // TODO: implement
-            throw new NotImplementedException();
+            _matchMaker.RemoveStorageMod(mod);
+            Implementation.RemoveMod(mod.Identifier);
         }
         
         public event Action<StorageMod> ModAdded;

@@ -57,6 +57,17 @@ namespace BSU.Core.Model
             }
         }
 
+        public void RemoveStorageMod(StorageMod mod)
+        {
+            lock (_lock)
+            {
+                foreach (var repoMod in _repoMods)
+                {
+                    repoMod.ChangeAction(mod, null);
+                }
+            }
+        }
+
         private void UpdateRepositoryMod(RepositoryMod repositoryMod)
         {
             foreach (var storageMod in _storageMods)

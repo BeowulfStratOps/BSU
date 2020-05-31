@@ -68,6 +68,7 @@ namespace BSU.Core.Model
             _rollback?.Invoke();
             Target = null;
             _state = RepoSyncSlotState.Inactive;
+            OnFinished?.Invoke();
         }
 
         public bool IsActive() => _state != RepoSyncSlotState.Inactive;

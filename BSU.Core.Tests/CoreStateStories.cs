@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
@@ -46,9 +48,17 @@ namespace BSU.Core.Tests
             return (mockStorage, storageMod);
         }
 
-        internal static void FilesEqual(IMockedFiles f1, IMockedFiles f2)
+        internal static bool FilesEqual(IMockedFiles f1, IMockedFiles f2)
         {
-            Assert.Equal(f1.GetFiles().OrderBy(kv => kv.Key), f2.GetFiles().OrderBy(kv => kv.Key));
+            var files1 = f1.GetFiles();
+            var files2 = f2.GetFiles();
+            var keys = new HashSet<string>(files1.Keys);
+            foreach (var key in files2.Keys)
+            {
+                keys.Add(key);
+            }
+
+            return keys.All(key => files1.ContainsKey(key) && files2.ContainsKey(key) && files1[key] == files2[key]);
         }
         
         [Fact]
@@ -74,7 +84,7 @@ namespace BSU.Core.Tests
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
             
-            FilesEqual(repoFiles, storageMod.Implementation as IMockedFiles);
+            Assert.True(FilesEqual(repoFiles, storageMod.Implementation as IMockedFiles));
         }
         
         [Fact]
@@ -105,7 +115,7 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
             
-            FilesEqual(repoFiles, storageFiles);
+            Assert.True(FilesEqual(repoFiles, storageFiles));
         }
 
         [Fact]
@@ -147,7 +157,7 @@ namespace BSU.Core.Tests
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
             Assert.Null(internalState.GetUpdateTarget(storageMod));
             
-            FilesEqual(mockRepo, mockStorage);
+            Assert.True(FilesEqual(mockRepo, mockStorage));
         }
 
         [Fact]
@@ -186,7 +196,7 @@ namespace BSU.Core.Tests
             
             Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
             
-            FilesEqual(mockRepo, mockStorage);
+            Assert.True(FilesEqual(mockRepo, mockStorage));
         }
 
         [Fact]
@@ -218,6 +228,67 @@ namespace BSU.Core.Tests
             jobManager.DoWork();
 
             Assert.False(repoMod.Actions.ContainsKey(storageMod));
+
+            storageMod.Abort();
+            jobManager.DoWork();
+            
+            Assert.True(repoMod.Actions.ContainsKey(storageMod));
+            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+        }
+        
+        [Fact]
+        private void AbortDownload()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+            var mockStorage = new MockStorage();
+            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", internalState, jobManager, matchMaker);
+            jobManager.DoWork();
+            var update = storage.PrepareDownload(repoMod, "mystoragemod");
+            update.OnPrepared += () =>
+            {
+                update.Abort();
+            };
+            var storageMod = storage.Mods[0];
+            jobManager.DoWork();
+            Assert.False(repoMod.Actions.ContainsKey(storageMod));
+            
+            Assert.Empty(((IMockedFiles) storageMod.Implementation).GetFiles());
+        }
+        
+        [Fact]
+        private void AbortUpdate()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+
+            var (referenceFiles, _) = CreateStorageMod("1", "2", internalState, jobManager);
+            var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            matchMaker.AddStorageMod(storageMod);
+            jobManager.DoWork();
+
+            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            
+            _outputHelper.WriteLine("Starting update...");
+
+            var update = storageMod.PrepareUpdate(repoMod);
+            update.OnPrepared += () =>
+            {
+                update.Abort();
+            };
+            jobManager.DoWork();
+
+            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            
+            Assert.True(FilesEqual(referenceFiles, storageFiles));
         }
     }
 }

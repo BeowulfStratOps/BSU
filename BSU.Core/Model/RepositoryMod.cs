@@ -51,10 +51,15 @@ namespace BSU.Core.Model
             }
         }
 
-        internal void ChangeAction(StorageMod target, ModAction newAction)
+        internal void ChangeAction(StorageMod target, ModAction? newAction)
         {
             var existing = Actions.ContainsKey(target);
-            Actions[target] = newAction;
+            if (newAction == null)
+            {
+                if (existing) Actions.Remove(target);
+                return;
+            }
+            Actions[target] = (ModAction) newAction;
             if (existing)
                 ActionChanged?.Invoke(target);
             else
