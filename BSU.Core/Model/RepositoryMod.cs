@@ -5,11 +5,14 @@ using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using SimpleJob = BSU.Core.Model.SimpleJob; // TODO: WTF?? This should be a simple job ayyy lmao
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Model
 {
     internal class RepositoryMod
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        
         public Repository Repository { get; }
         public IRepositoryMod Implementation { get; }
         public string Identifier { get; }
@@ -17,6 +20,8 @@ namespace BSU.Core.Model
 
         private MatchHash _matchHash;
         private VersionHash _versionHash;
+
+        private Exception _error;
 
         private readonly object _stateLock = new object(); // TODO: use it!!
 
@@ -31,13 +36,17 @@ namespace BSU.Core.Model
             Identifier = identifier;
             var title = $"Load RepoMod {Identifier}";
             _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
-            _loading.OnFinished += () => StateChanged?.Invoke();
+            _loading.OnFinished += error =>
+            {
+                _error = error;
+                StateChanged?.Invoke();
+            };
             _loading.StartJob();
         }
 
         private void Load(CancellationToken cancellationToken)
         {
-            // TODO: cancellationToken
+            // TODO: use cancellationToken
             Implementation.Load();
             _matchHash = new MatchHash(Implementation);
             _versionHash = new VersionHash(Implementation);
@@ -49,7 +58,7 @@ namespace BSU.Core.Model
         {
             lock (_stateLock)
             {
-                return new RepositoryModState(_matchHash, _versionHash);                
+                return new RepositoryModState(_matchHash, _versionHash, _error);                
             }
         }
 

@@ -9,15 +9,17 @@ namespace BSU.Core.Model
         public readonly VersionHash VersionHash;
         public readonly UpdateTarget UpdateTarget, JobTarget; // TODO: clarify what's the difference
         public readonly StorageModStateEnum State;
+        public readonly Exception Error;
 
         public StorageModState(MatchHash matchHash, VersionHash versionHash, UpdateTarget updateTarget,
-            UpdateTarget jobTarget, StorageModStateEnum state)
+            UpdateTarget jobTarget, StorageModStateEnum state, Exception error)
         {
             MatchHash = matchHash;
             VersionHash = versionHash;
             UpdateTarget = updateTarget;
             JobTarget = jobTarget;
             State = state;
+            Error = error;
             CheckIsValid();
         }
 
@@ -30,42 +32,63 @@ namespace BSU.Core.Model
                     Assert(MatchHash == null);
                     Assert(JobTarget == null);
                     Assert(UpdateTarget != null);
+                    Assert(Error == null);
                     return;
                 case StorageModStateEnum.CreatedForDownload:
                     Assert(VersionHash == null);
                     Assert(MatchHash == null);
                     Assert(JobTarget == null);
                     Assert(UpdateTarget != null);
+                    Assert(Error == null);
                     return;
                 case StorageModStateEnum.Loading:
                     Assert(VersionHash == null);
                     Assert(MatchHash == null);
                     Assert(JobTarget == null);
                     Assert(UpdateTarget == null);
+                    Assert(Error == null);
                     return;
                 case StorageModStateEnum.Loaded:
                     Assert(VersionHash == null);
                     Assert(MatchHash != null);
                     Assert(JobTarget == null);
                     Assert(UpdateTarget == null);
+                    Assert(Error == null);
                     return;
                 case StorageModStateEnum.Hashing:
                     Assert(VersionHash == null);
                     Assert(MatchHash != null);
                     Assert(JobTarget == null);
                     Assert(UpdateTarget == null);
+                    Assert(Error == null);
                     return;
                 case StorageModStateEnum.Hashed:
                     Assert(VersionHash != null);
                     Assert(MatchHash != null);
                     Assert(JobTarget == null);
                     Assert(UpdateTarget == null);
+                    Assert(Error == null);
                     return;
                 case StorageModStateEnum.Updating:
                     Assert(VersionHash == null);
                     Assert(MatchHash == null);
                     Assert(JobTarget != null);
                     Assert(UpdateTarget != null);
+                    Assert(Error == null);
+                    return;
+                case StorageModStateEnum.ErrorLoad:
+                    Assert(VersionHash == null);
+                    Assert(MatchHash == null);
+                    Assert(JobTarget == null);
+                    Assert(UpdateTarget == null);
+                    Assert(Error != null);
+                    return;
+                case StorageModStateEnum.ErrorUpdate:
+                    Assert(VersionHash == null);
+                    Assert(MatchHash == null);
+                    Assert(JobTarget == null);
+                    Assert(UpdateTarget != null);
+                    Assert(Error != null);
                     return;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -8,6 +8,8 @@
         Loaded,
         Hashing,
         Hashed,
-        Updating
+        Updating,
+        ErrorLoad,
+        ErrorUpdate
     }
 }

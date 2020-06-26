@@ -19,6 +19,7 @@ namespace BSU.Core.Tests
     {
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
         public string Identifier, DisplayName;
+        public bool ThrowErrorLoad;
 
         public void SetFile(string key, string data)
         {
@@ -35,7 +36,7 @@ namespace BSU.Core.Tests
 
         public void Load()
         {
-            
+            if (ThrowErrorLoad) throw new TestException();
         }
 
         public List<string> GetFileList() => Files.Keys.ToList();

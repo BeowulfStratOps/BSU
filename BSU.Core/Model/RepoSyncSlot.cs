@@ -2,7 +2,6 @@
 using System.Threading;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
-using BSU.Core.View;
 
 namespace BSU.Core.Model
 {
@@ -35,6 +34,14 @@ namespace BSU.Core.Model
             _prepareJob = new SimpleJob(cancellationToken => DoPrepare(repository, storage, target, cancellationToken), name, 1);
             _prepareJob.OnFinished += () =>
             {
+                var error = _prepareJob.Error;
+                if (error != null)
+                {
+                    _state = RepoSyncSlotState.Inactive;
+                    Target = null;
+                    OnFinished?.Invoke(error);
+                    return;
+                }
                 _state = RepoSyncSlotState.Prepared;
                 OnPrepared?.Invoke();
             };
@@ -65,22 +72,32 @@ namespace BSU.Core.Model
         {
             _state = RepoSyncSlotState.Inactive;
             Target = null;
-            OnFinished?.Invoke();
+            OnFinished?.Invoke(_syncJob.GetError());
         }
 
         public void Abort()
         {
             if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();
 
-            _rollback?.Invoke();
+            
             Target = null;
             _state = RepoSyncSlotState.Inactive;
-            OnFinished?.Invoke();
+            try
+            {
+                _rollback?.Invoke();
+                OnFinished?.Invoke(null);
+            }
+            catch (Exception e)
+            {
+                OnFinished?.Invoke(e);
+            }
+            
         }
 
         public bool IsActive() => _state != RepoSyncSlotState.Inactive;
 
-        public event Action OnFinished, OnPrepared;
+        public event Action OnPrepared;
+        public event Action<Exception> OnFinished;
         public int GetPrepStats()
         {
             if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();

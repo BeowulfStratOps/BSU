@@ -15,6 +15,7 @@ namespace BSU.Core.JobManager
         bool DoWork();
         string GetTitle();
         int GetPriority();
+        Exception GetError();
         public event Action OnFinished;
     }
 }

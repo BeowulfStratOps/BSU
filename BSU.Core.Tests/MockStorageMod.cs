@@ -13,6 +13,8 @@ namespace BSU.Core.Tests
         public string Identifier;
         public MockStorage Storage;
         public bool Locked = false;
+        public bool ThrowErrorLoad = false;
+        public bool ThrowErrorOpen = false;
 
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
 
@@ -44,6 +46,8 @@ namespace BSU.Core.Tests
         public Stream OpenFile(string path, FileAccess access)
         {
             if (Locked) throw new IOException("File in use");
+
+            if (ThrowErrorOpen) throw new TestException();
 
             if (access.HasFlag(FileAccess.Write))
             {
@@ -78,7 +82,7 @@ namespace BSU.Core.Tests
 
         public void Load()
         {
-            
+            if (ThrowErrorLoad) throw new TestException();
         }
         
         private sealed class MockStream : MemoryStream
@@ -98,5 +102,9 @@ namespace BSU.Core.Tests
                 base.Dispose(disposing);
             }
         }
+    }
+
+    internal class TestException : Exception
+    {
     }
 }

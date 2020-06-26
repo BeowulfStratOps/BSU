@@ -290,5 +290,168 @@ namespace BSU.Core.Tests
             
             Assert.True(FilesEqual(referenceFiles, storageFiles));
         }
+        
+        [Fact]
+        private void AbortUpdateJob()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+
+            var (referenceFiles, _) = CreateStorageMod("1", "2", internalState, jobManager);
+            var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            matchMaker.AddStorageMod(storageMod);
+            jobManager.DoWork();
+
+            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            
+            _outputHelper.WriteLine("Starting update...");
+
+            var update = storageMod.PrepareUpdate(repoMod);
+            jobManager.DoWork();
+            Assert.True(update.IsPrepared);
+            update.Commit();
+            jobManager.DoStep();
+            jobManager.GetActiveJobs().First().Abort();
+            jobManager.DoWork();
+
+            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            
+            Assert.False(FilesEqual(referenceFiles, storageFiles));
+        }
+        
+        [Fact]
+        private void ErrorPrepare()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+
+            var (referenceFiles, _) = CreateStorageMod("1", "2", internalState, jobManager);
+            var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            matchMaker.AddStorageMod(storageMod);
+            jobManager.DoWork();
+
+            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            
+            _outputHelper.WriteLine("Starting update...");
+
+            var prepared = false;
+            var update = storageMod.PrepareUpdate(repoMod);
+            update.OnPrepared += () => prepared = true;
+            storageFiles.ThrowErrorOpen = true;
+            jobManager.DoStep();
+            storageFiles.ThrowErrorOpen = false;
+            jobManager.DoWork();
+            
+            Assert.False(update.IsPrepared);
+            Assert.False(prepared);
+            
+            // TODO: make sure events fire
+            Assert.True(repoMod.Actions.ContainsKey(storageMod));
+            Assert.Equal(ModAction.Error, repoMod.Actions[storageMod]);
+            Assert.Equal(StorageModStateEnum.ErrorUpdate, storageMod.GetState().State);
+        }
+        
+        [Fact]
+        private void ErrorUpdate()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+
+            var (referenceFiles, _) = CreateStorageMod("1", "2", internalState, jobManager);
+            var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            matchMaker.AddStorageMod(storageMod);
+            jobManager.DoWork();
+
+            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            
+            _outputHelper.WriteLine("Starting update...");
+
+            var update = storageMod.PrepareUpdate(repoMod);
+            jobManager.DoWork();
+            Assert.True(update.IsPrepared);
+            update.Commit();
+            jobManager.DoStep();
+            storageFiles.ThrowErrorOpen = true;
+            jobManager.DoStep();
+            storageFiles.ThrowErrorOpen = false;
+            jobManager.DoWork();
+            
+            // TODO: make sure events fire
+            Assert.True(repoMod.Actions.ContainsKey(storageMod));
+            Assert.Equal(ModAction.Error, repoMod.Actions[storageMod]);
+            Assert.Equal(StorageModStateEnum.ErrorUpdate, storageMod.GetState().State);
+        }
+        
+        [Fact]
+        private void ErrorLoad()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+
+            var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            storageFiles.ThrowErrorLoad = true;
+            matchMaker.AddStorageMod(storageMod);
+            jobManager.DoWork();
+
+            // TODO: make sure events fire
+            Assert.False(repoMod.Actions.ContainsKey(storageMod));
+            Assert.Equal(StorageModStateEnum.ErrorLoad, storageMod.GetState().State);
+        }
+        
+        [Fact]
+        private void ErrorHash()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+
+            var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            storageFiles.ThrowErrorOpen = true;
+            matchMaker.AddStorageMod(storageMod);
+            jobManager.DoWork();
+
+            // TODO: make sure events fire
+            Assert.False(repoMod.Actions.ContainsKey(storageMod));
+            Assert.Equal(StorageModStateEnum.ErrorLoad, storageMod.GetState().State);
+        }
+        
+        [Fact]
+        private void ErrorLoadRepo()
+        {
+            var jobManager = new MockJobManager();
+            var internalState = new MockInternalState();
+            var matchMaker = new MatchMaker();
+            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager);
+            repoFiles.ThrowErrorLoad = true;
+            matchMaker.AddRepositoryMod(repoMod);
+            jobManager.DoWork();
+
+            var (_, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
+            matchMaker.AddStorageMod(storageMod);
+            jobManager.DoWork();
+
+            // TODO: make sure events fire
+            Assert.False(repoMod.Actions.ContainsKey(storageMod));
+            Assert.NotNull(repoMod.GetState().Error);
+        }
     }
 }

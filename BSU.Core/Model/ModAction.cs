@@ -8,6 +8,7 @@
         Use,
         AbortAndUpdate,
         Unusable,
-        Loading
+        Loading,
+        Error
     }
 }

@@ -157,6 +157,11 @@ namespace BSU.Core.Sync
             OnFinished?.Invoke();
         }
 
+        public Exception GetError()
+        {
+            return Errors.Any() ? new CombinedException(Errors) : null;
+        }
+
         public event Action OnFinished;
 
         public string GetTitle() => _title;
@@ -166,5 +171,15 @@ namespace BSU.Core.Sync
         public float GetProgress() => (_totalCount - _workCounter.Remaining) / (float) _totalCount;
         
         public int GetPriority() => _priority;
+    }
+
+    internal class CombinedException : Exception
+    {
+        public readonly List<Exception> Exceptions;
+
+        public CombinedException(List<Exception> exceptions)
+        {
+            Exceptions = exceptions;
+        }
     }
 }

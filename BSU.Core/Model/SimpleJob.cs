@@ -53,6 +53,8 @@ namespace BSU.Core.Model
             return false;
         }
 
+        public Exception GetError() => Error;
+
         public event Action OnFinished;
         
         public string GetTitle() => _title;

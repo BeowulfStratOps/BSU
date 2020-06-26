@@ -34,7 +34,9 @@ namespace BSU.Core.Model
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private StorageModStateEnum _state; // TODO: should be directly accessible
+        private StorageModStateEnum _state; // TODO: should not be directly accessible
+
+        private Exception _error;
 
         private StorageModStateEnum State
         {
@@ -60,18 +62,34 @@ namespace BSU.Core.Model
             _loading = new JobSlot<SimpleJob>(() => new SimpleJob(LoadJob, title1, 1), title1, jobManager);
             var title2 = $"Hash StorageMod {Identifier}";
             _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(HashJob, title2, 1), title2, jobManager);
-            _loading.OnFinished += () => { State = StorageModStateEnum.Loaded; };
-            _hashing.OnFinished += () => { State = StorageModStateEnum.Hashed; };
+            _loading.OnFinished += error =>
+            {
+                _error = error;
+                State = error == null ? StorageModStateEnum.Loaded : StorageModStateEnum.ErrorLoad;
+            };
+            _hashing.OnFinished += error =>
+            {
+                _error = error;
+                State = error == null ? StorageModStateEnum.Hashed : StorageModStateEnum.ErrorLoad;
+            }; // TODO: check error
             _updating = new RepoSyncSlot(jobManager);
-            _updating.OnFinished += () =>
+            _updating.OnFinished += error =>
             {
                 lock (_stateLock)
                 {
                     _versionHash = null;
                     _matchHash = null;
-                    UpdateTarget = null;
-                    _loading.StartJob();
-                    State = StorageModStateEnum.Loading;
+                    
+                    if (error == null)
+                    {
+                        UpdateTarget = null;
+                        _loading.StartJob();
+                        State = StorageModStateEnum.Loading;
+                        return;
+                    }
+                    
+                    _error = error;
+                    State = StorageModStateEnum.ErrorUpdate;
                 }
             };
             if (updateTarget == null)
@@ -167,7 +185,7 @@ namespace BSU.Core.Model
         {
             lock (_stateLock)
             {
-                return new StorageModState(_matchHash, _versionHash, UpdateTarget, _updating.Target, State);
+                return new StorageModState(_matchHash, _versionHash, UpdateTarget, _updating.Target, State, _error);
             }
         }
 

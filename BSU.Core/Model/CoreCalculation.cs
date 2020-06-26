@@ -24,6 +24,8 @@ namespace BSU.Core.Model
                 case StorageModStateEnum.CreatedWithUpdateTarget:
                     if (repoModState.VersionHash.GetHashString() != storageModState.UpdateTarget.Hash) throw new InvalidOperationException();
                     return ModAction.ContinueUpdate;
+                case StorageModStateEnum.ErrorUpdate:
+                    return ModAction.Error;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -32,6 +34,7 @@ namespace BSU.Core.Model
         internal static ModMatch IsMatch(RepositoryModState repoModState, StorageModState storageModState)
         {
             if (repoModState.IsLoading) return ModMatch.Wait;
+            if (repoModState.Error != null) return ModMatch.NoMatch;
             
             switch (storageModState.State)
             {
@@ -50,9 +53,12 @@ namespace BSU.Core.Model
                 case StorageModStateEnum.Updating:
                 case StorageModStateEnum.CreatedWithUpdateTarget:
                 case StorageModStateEnum.CreatedForDownload:
+                case StorageModStateEnum.ErrorUpdate:
                     return storageModState.UpdateTarget.Hash == repoModState.VersionHash.GetHashString()
                         ? ModMatch.Match
                         : ModMatch.NoMatch;
+                case StorageModStateEnum.ErrorLoad:
+                    return ModMatch.NoMatch;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

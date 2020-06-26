@@ -16,9 +16,19 @@ namespace BSU.Core.Tests
             {
                 foreach (var repoVersion in new[] {"1", "2", "3", "4", null})
                 {
-                    var repoMatchHash = TestUtils.GetMatchHash(repoMatch);
-                    var repoVersionHash = TestUtils.GetVersionHash(repoVersion);
-                    possibleRepoStates.Add(new RepositoryModState(repoMatchHash, repoVersionHash));
+                    foreach (var error in new[] {null, new TestException()})
+                    {
+                        var repoMatchHash = TestUtils.GetMatchHash(repoMatch);
+                        var repoVersionHash = TestUtils.GetVersionHash(repoVersion);
+                        try
+                        {
+                            possibleRepoStates.Add(new RepositoryModState(repoMatchHash, repoVersionHash, error));
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Invalid state
+                        }
+                    }
                 }
             }
 
@@ -39,18 +49,21 @@ namespace BSU.Core.Tests
                         {
                             foreach (var state in Enum.GetValues(typeof(StorageModStateEnum)).Cast<StorageModStateEnum>())
                             {
-                                var storageMatchHash = TestUtils.GetMatchHash(storageMatch);
-                                var storageVersionHash = TestUtils.GetVersionHash(storageVersion);
-                                var storageUpdateTarget = TestUtils.GetUpdateTarget(updateTarget);
-                                var storageJobTarget = TestUtils.GetUpdateTarget(jobTarget);
-                                try
+                                foreach (var error in new[] {null, new TestException()})
                                 {
-                                    possibleStorageModStates.Add(new StorageModState(storageMatchHash, storageVersionHash,
-                                        storageUpdateTarget, storageJobTarget, state));
-                                }
-                                catch (InvalidOperationException e)
-                                {
-                                    // invalid state.
+                                    var storageMatchHash = TestUtils.GetMatchHash(storageMatch);
+                                    var storageVersionHash = TestUtils.GetVersionHash(storageVersion);
+                                    var storageUpdateTarget = TestUtils.GetUpdateTarget(updateTarget);
+                                    var storageJobTarget = TestUtils.GetUpdateTarget(jobTarget);
+                                    try
+                                    {
+                                        possibleStorageModStates.Add(new StorageModState(storageMatchHash,
+                                            storageVersionHash, storageUpdateTarget, storageJobTarget, state, error));
+                                    }
+                                    catch (InvalidOperationException)
+                                    {
+                                        // invalid state
+                                    }
                                 }
                             }
                         }
@@ -62,7 +75,7 @@ namespace BSU.Core.Tests
         }
         
         [Fact]
-        public void NoExceptions()
+        public void NoExceptions() // TODO: generate test cases dynamically, instead of looping states?
         {
             var count = 0;
 
@@ -72,17 +85,10 @@ namespace BSU.Core.Tests
             {
                 foreach (var storageState in possibleStorageStates)
                 {
-                    try
-                    {
-                        var match = CoreCalculation.IsMatch(repoState, storageState);
-                        if (match != CoreCalculation.ModMatch.Match) continue;
-                        CoreCalculation.CalculateAction(repoState, storageState, true);
-                        CoreCalculation.CalculateAction(repoState, storageState, false);
-                    }
-                    catch (Exception e)
-                    {
-                        count++;
-                    }
+                    var match = CoreCalculation.IsMatch(repoState, storageState);
+                    if (match != CoreCalculation.ModMatch.Match) continue;
+                    CoreCalculation.CalculateAction(repoState, storageState, true);
+                    CoreCalculation.CalculateAction(repoState, storageState, false);
                 }
             }
             
