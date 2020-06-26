@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
 using BSU.Core.JobManager;
+using BSU.Core.Sync;
 
 namespace BSU.Core.View
 {
@@ -15,9 +16,10 @@ namespace BSU.Core.View
         {
             BackingJob = backingJob;
             Title = backingJob.GetTitle();
-            backingJob.Progress += () =>
+            if (!(backingJob is IJobProgress jobProgress)) return; // TODO: set to infinite thingy
+            jobProgress.OnProgress += () =>
             {
-                var newValue = (int) (100 * backingJob.GetProgress());
+                var newValue = (int) (100 * jobProgress.GetProgress());
                 if (Progress == newValue) return;
                 Progress = newValue;
                 OnPropertyChanged(nameof(Progress));

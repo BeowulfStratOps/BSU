@@ -11,20 +11,10 @@ namespace BSU.Core.JobManager
     {
         Uid GetUid();
 
-        /// <summary>
-        /// Determines whether this job is completed/errored/aborted.
-        /// </summary>
-        /// <returns></returns>
-        bool IsDone();
-        void SetError(Exception e);
-
-        void WorkItemFinished();
         void Abort();
-        WorkUnit GetWork();
-        event Action OnFinished;
+        bool DoWork();
         string GetTitle();
-        event Action Progress;
-        float GetProgress();
         int GetPriority();
+        public event Action OnFinished;
     }
 }

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
-using SimpleJob = BSU.Core.View.SimpleJob; // TODO: WTF?? This should be a simple job ayyy lmao
+using SimpleJob = BSU.Core.Model.SimpleJob; // TODO: WTF?? This should be a simple job ayyy lmao
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -34,8 +35,9 @@ namespace BSU.Core.Model
             _loading.StartJob();
         }
 
-        private void Load()
+        private void Load(CancellationToken cancellationToken)
         {
+            // TODO: cancellationToken
             Implementation.Load();
             _matchHash = new MatchHash(Implementation);
             _versionHash = new VersionHash(Implementation);

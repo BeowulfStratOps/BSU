@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
 using BSU.Core.View;
@@ -35,8 +36,9 @@ namespace BSU.Core.Model
             Loading.StartJob();
         }
 
-        private void Load()
+        private void Load(CancellationToken cancellationToken)
         {
+            // TODO: use cancellationToken
             Implementation.Load();
             foreach (KeyValuePair<string,IStorageMod> mod in Implementation.GetMods())
             {

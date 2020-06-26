@@ -12,12 +12,12 @@ namespace BSU.Core.Sync
     /// <summary>
     /// Job for updating/downloading a storage mod from a repository.
     /// </summary>
-    internal class RepoSync : IJob, IJobFacade
+    internal class RepoSync : IJob, IJobProgress
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly List<WorkUnit> _allActions, _actionsTodo;
-        private Exception _error;
+        private readonly List<SyncWorkUnit> _allActions, _actionsTodo;
+        private readonly List<Exception> Errors = new List<Exception>();
 
         private readonly Uid _uid = new Uid();
 
@@ -30,13 +30,13 @@ namespace BSU.Core.Sync
         private readonly int _priority;
         private readonly ReferenceCounter _workCounter;
         private readonly int _totalCount;
+        public readonly bool NothingToDo;
 
         public Uid GetUid() => _uid;
 
-        internal CancellationToken GetCancellationToken() => _cancellationTokenSource.Token;
-
-        public RepoSync(RepositoryMod repository, StorageMod storage, UpdateTarget target, string title, int priority)
+        public RepoSync(RepositoryMod repository, StorageMod storage, UpdateTarget target, string title, int priority, CancellationToken cancellationToken)
         {
+            // TODO: use cancellationToken
             // TODO: write some tests!
             StorageMod = storage;
             Target = target;
@@ -46,7 +46,7 @@ namespace BSU.Core.Sync
 
             Logger.Debug("Building sync actions {0} to {1}: {2}", storage.Uid, repository.Uid, _uid);
 
-            _allActions = new List<WorkUnit>();
+            _allActions = new List<SyncWorkUnit>();
             var repositoryList = repository.Implementation.GetFileList();
             var storageList = storage.Implementation.GetFileList();
             var storageListCopy = new List<string>(storageList);
@@ -74,13 +74,15 @@ namespace BSU.Core.Sync
                 _allActions.Add(new DeleteAction(storage, storageModFile, this));
             }
 
-            _actionsTodo = new List<WorkUnit>(_allActions);
+            _actionsTodo = new List<SyncWorkUnit>(_allActions);
             Logger.Debug("Download actions: {0}", _actionsTodo.OfType<DownloadAction>().Count());
             Logger.Debug("Update actions: {0}", _actionsTodo.OfType<UpdateAction>().Count());
             Logger.Debug("Delete actions: {0}", _actionsTodo.OfType<DeleteAction>().Count());
             
-            _workCounter = new ReferenceCounter(_actionsTodo.Count);
             _totalCount = _actionsTodo.Count;
+            _workCounter = new ReferenceCounter(_actionsTodo.Count);
+
+            NothingToDo = _totalCount == 0;
         }
 
 
@@ -108,68 +110,44 @@ namespace BSU.Core.Sync
 
         public int GetTotalNewFilesCount() => _allActions.OfType<DownloadAction>().Count();
 
-        /// <summary>
-        /// Grabs an atomic piece of work.
-        /// </summary>
-        /// <returns></returns>
-        public WorkUnit GetWork()
+        public bool DoWork()
         {
-            if (_allActions.Count == 0)
+            if (_cancellationTokenSource.IsCancellationRequested) return false;
+            SyncWorkUnit work;
+            lock (_actionsTodo)
             {
-                Finished();
-                return null;
+                if (_actionsTodo.Count == 0) return false;
+                work = _actionsTodo[0];
+                _actionsTodo.Remove(work);
             }
-            if (_cancellationTokenSource.IsCancellationRequested) return null;
-            var work = _actionsTodo.FirstOrDefault();
-            if (work != null) _actionsTodo.Remove(work);
-            return work;
-        }
 
-        /// <summary>
-        /// Determines whether this job is completed/errored/aborted.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsDone() =>
-            _cancellationTokenSource.IsCancellationRequested || HasError() ||
-            _allActions.All(a =>
-                a.IsDone() ||
-                a.HasError()); // TODO: wait for job to be fully canceled OR split IsDone into more meaningful parts
+            try
+            {
+                work.Work(_cancellationTokenSource.Token);
+            }
+            catch (Exception e)
+            {
+                Errors.Add(e);
+                Logger.Error(e);
+            }
+            
+            if (_workCounter.Dec()) Finished();
+            
+            lock (_actionsTodo)
+            {
+                return _actionsTodo.Count > 0;
+            }
+        }
 
         public string GetTargetHash() => Target.Hash;
-
-        public void SetError(Exception e) => _error = e;
-
-        /// <summary>
-        /// Returns whether an error happened during the execution of this job.
-        /// </summary>
-        /// <returns></returns>
-        public bool HasError()
-        {
-            if (_error != null) return true;
-            return _allActions.Any(a => a.HasError());
-        }
-
-        /// <summary>
-        /// Returns an error that happened during execution, or null.
-        /// </summary>
-        /// <returns></returns>
-        public Exception GetError()
-        {
-            if (_error != null) return _error;
-            return _allActions.FirstOrDefault(a => a.HasError())?.GetError();
-        }
 
         /// <summary>
         /// Signals to abort this job. Does not wait.
         /// </summary>
-        public void Abort() => _cancellationTokenSource.Cancel();
-
-        public void WorkItemFinished()
+        public void Abort()
         {
-            _workCounter.Dec();
-            Progress?.Invoke();
-            if (_workCounter.Done) Finished();
-           
+            _cancellationTokenSource.Cancel();
+            OnFinished?.Invoke();
         }
 
         private void Finished()
@@ -182,7 +160,7 @@ namespace BSU.Core.Sync
 
         public string GetTitle() => _title;
 
-        public event Action Progress;
+        public event Action OnProgress;
 
         public float GetProgress() => (_totalCount - _workCounter.Remaining) / (float) _totalCount;
         

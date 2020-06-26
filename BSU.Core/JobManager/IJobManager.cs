@@ -9,13 +9,13 @@ namespace BSU.Core.JobManager
         /// Returns all jobs ever queued.
         /// </summary>
         /// <returns></returns>
-        IEnumerable<IJob> GetAllJobs();
+        IReadOnlyList<IJob> GetAllJobs();
 
         /// <summary>
         /// Return all jobs currently running or queued.
         /// </summary>
         /// <returns></returns>
-        IEnumerable<IJob> GetActiveJobs();
+        IReadOnlyList<IJob> GetActiveJobs();
 
         /// <summary>
         /// Queue a job. Starts execution immediately

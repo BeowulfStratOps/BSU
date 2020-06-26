@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
 using BSU.Core.View;
@@ -31,7 +32,7 @@ namespace BSU.Core.Model
             _rollback = rollback;
             var name = $"Preparing {storage.Identifier} update";
             
-            _prepareJob = new SimpleJob(() => DoPrepare(repository, storage, target), name, 1);
+            _prepareJob = new SimpleJob(cancellationToken => DoPrepare(repository, storage, target, cancellationToken), name, 1);
             _prepareJob.OnFinished += () =>
             {
                 _state = RepoSyncSlotState.Prepared;
@@ -41,24 +42,30 @@ namespace BSU.Core.Model
             _jobManager.QueueJob(_prepareJob);
         }
 
-        private void DoPrepare(RepositoryMod repository, StorageMod storage, UpdateTarget target)
+        private void DoPrepare(RepositoryMod repository, StorageMod storage, UpdateTarget target, CancellationToken cancellationToken)
         {
-            
             var name = $"Updating {storage.Identifier}";
-            _syncJob = new RepoSync(repository, storage, target, name, 0);
+            _syncJob = new RepoSync(repository, storage, target, name, 0, cancellationToken);
         }
 
         public void Commit()
         {
             if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();
+            if (_syncJob.NothingToDo)
+            { 
+                Finished();
+                return;
+            }
             _state = RepoSyncSlotState.Updating;
-            _syncJob.OnFinished += () =>
-            {
-                _state = RepoSyncSlotState.Inactive;
-                Target = null;
-                OnFinished?.Invoke();
-            };
+            _syncJob.OnFinished += Finished;
             _jobManager.QueueJob(_syncJob);
+        }
+
+        private void Finished()
+        {
+            _state = RepoSyncSlotState.Inactive;
+            Target = null;
+            OnFinished?.Invoke();
         }
 
         public void Abort()
@@ -80,6 +87,8 @@ namespace BSU.Core.Model
 
             return (int) (_syncJob.GetTotalBytesToDownload() + _syncJob.GetTotalBytesToUpdate());
         }
+
+        public bool IsPrepared => _state == RepoSyncSlotState.Prepared;
     }
 
     internal enum RepoSyncSlotState

@@ -8,5 +8,6 @@ namespace BSU.Core.Model
         void Abort();
         event Action OnPrepared;
         int GetPrepStats();
+        bool IsPrepared { get; }
     }
 }

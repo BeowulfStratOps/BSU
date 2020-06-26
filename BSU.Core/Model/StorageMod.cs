@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
-using BSU.Core.View; // TODO: wtf
 using BSU.CoreCommon;
 using NLog;
 
@@ -111,14 +111,16 @@ namespace BSU.Core.Model
             }
         }
 
-        private void LoadJob()
+        private void LoadJob(CancellationToken cancellationToken)
         {
+            // TODO: use cancellationToken
             Implementation.Load();
             _matchHash = new MatchHash(Implementation);
         }
 
-        private void HashJob()
+        private void HashJob(CancellationToken cancellationToken)
         {
+            // TODO: use cancellationToken
             _versionHash = new VersionHash(Implementation);
         }
 

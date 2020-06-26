@@ -28,16 +28,22 @@ namespace BSU.Core.Tests
                 var job = _jobs[0];
                 _jobs.Remove(job);
                 while (true)
-                { 
-                    var work = job.GetWork();
-                    if (work == null) break;
-                    work.Work();
-                    job.WorkItemFinished();
+                {
+                    if (!job.DoWork()) break;
                 }
             }
         }
 
-        public IEnumerable<IJob> GetActiveJobs() => _jobs.AsReadOnly();
-        public IEnumerable<IJob> GetAllJobs() => _jobs.AsReadOnly();
+        public bool DoStep()
+        {
+            if (!_jobs.Any()) return false;
+            var job = _jobs[0];
+            if (job.DoWork()) return true;
+            _jobs.Remove(job);
+            return _jobs.Any();
+        }
+
+        public IReadOnlyList<IJob> GetActiveJobs() => _jobs.AsReadOnly();
+        public IReadOnlyList<IJob> GetAllJobs() => _jobs.AsReadOnly();
     }
 }
