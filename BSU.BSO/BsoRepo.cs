@@ -29,7 +29,7 @@ namespace BSU.BSO
         public void Load()
         {
             using var client = new WebClient();
-            Logger.Debug("{0] Downloading server file from {1}", _uid, _url);
+            Logger.Debug("{0} Downloading server file from {1}", _uid, _url);
             var serverFileJson = client.DownloadString(_url);
             var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
 

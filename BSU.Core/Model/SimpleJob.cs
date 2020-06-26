@@ -17,6 +17,7 @@ namespace BSU.Core.Model
         public Exception Error { get; private set; }
         private readonly  Uid _uid = new Uid();
         private bool _done = false;
+        private object _lock = new object();
 
         public SimpleJob(Action<CancellationToken> action, string title, int priority)
         {
@@ -34,7 +35,11 @@ namespace BSU.Core.Model
 
         public bool DoWork()
         {
-            if (_done) return false;
+            lock (_lock)
+            {
+                if (_done) return false;
+                _done = true;
+            }
             try
             {
                 _action(_tokenSource.Token);
@@ -44,7 +49,6 @@ namespace BSU.Core.Model
                 Error = e;
                 Logger.Error(e);
             }
-            _done = true;
             OnFinished?.Invoke();
             return false;
         }

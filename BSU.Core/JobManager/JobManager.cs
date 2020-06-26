@@ -34,7 +34,7 @@ namespace BSU.Core.JobManager
             }
         }
 
-        public event Action<IJob> JobAdded, JobRemoved;
+        public event Action<IJob> JobAdded;
 
         /// <summary>
         /// Queue a job. Starts execution immediately
@@ -43,7 +43,7 @@ namespace BSU.Core.JobManager
         /// <exception cref="InvalidOperationException">Thrown if the manager is shutting down.</exception>
         public void QueueJob(IJob job)
         {
-            Logger.Debug("Queueing job {0}", job.GetUid());
+            Logger.Debug("Queueing job {0}: {1}", job.GetUid(), job.GetTitle());
 
             if (_shutdown) throw new InvalidOperationException("JobManager is shutting down! Come back tomorrow.");
 
@@ -99,11 +99,12 @@ namespace BSU.Core.JobManager
                     continue;
                 }
 
-                var done = job.DoWork();
+                var moreToDo = job.DoWork();
 
                 lock (_jobsTodo)
                 {
-                    if (done) _jobsTodo.Remove(job);
+                    if (moreToDo) continue;
+                    if (_jobsTodo.Remove(job)) Logger.Debug("Removed job {0}: {1}", job.GetUid(), job.GetTitle());
                 }
             }
             Logger.Debug("Worker thread ending");

@@ -131,6 +131,7 @@ namespace BSU.Core.Sync
                 Logger.Error(e);
             }
             
+            OnProgress?.Invoke();
             if (_workCounter.Dec()) Finished();
             
             lock (_actionsTodo)

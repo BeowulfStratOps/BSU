@@ -46,15 +46,15 @@ namespace BSU.Core.View
                 {
                     UiDo(() => Logs.Add("Started " + job.GetTitle()));
                     UiDo(() => Jobs.Add(new Job(job)));
-                }
-            };
-            core.JobManager.JobRemoved += job =>
-            {
-                lock (this)
-                {
-                    UiDo(() => Logs.Add("Ended " + job.GetTitle()));
-                    var uiJob = Jobs.SingleOrDefault(j => j.BackingJob == job);
-                    UiDo(() => Jobs.Remove(uiJob));
+                    job.OnFinished += () =>
+                    {
+                        lock (this)
+                        {
+                            UiDo(() => Logs.Add("Ended " + job.GetTitle()));
+                            var uiJob = Jobs.SingleOrDefault(j => j.BackingJob == job);
+                            UiDo(() => Jobs.Remove(uiJob));
+                        }
+                    };
                 }
             };
 

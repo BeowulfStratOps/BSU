@@ -31,7 +31,7 @@ namespace BSU.GUI
         public MainWindow()
         {
             var config = new LoggingConfiguration();
-            var logfile = new FileTarget("logfile")
+            var logfile = new FileTarget("logfile") // TODO: use nlog.config
             {
                 FileName = "G:\\file.txt",
                 DeleteOldFileOnStartup = true

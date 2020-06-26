@@ -28,6 +28,6 @@ namespace BSU.Core.JobManager
         /// </summary>
         void Shutdown(bool blocking);
 
-        event Action<IJob> JobAdded, JobRemoved;
+        event Action<IJob> JobAdded;
     }
 }
