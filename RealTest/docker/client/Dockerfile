@@ -48,4 +48,4 @@ RUN mkdir /client
 
 WORKDIR /build/RealTest/bin/Debug/netcoreapp3.0
 
-CMD dotnet RealTest.dll
+ENTRYPOINT [ "dotnet", "RealTest.dll" ]

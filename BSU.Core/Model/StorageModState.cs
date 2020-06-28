@@ -28,76 +28,76 @@ namespace BSU.Core.Model
             switch (State)
             {
                 case StorageModStateEnum.CreatedWithUpdateTarget:
-                    Assert(VersionHash == null);
-                    Assert(MatchHash == null);
-                    Assert(JobTarget == null);
-                    Assert(UpdateTarget != null);
-                    Assert(Error == null);
+                    Assert(VersionHash == null, nameof(VersionHash));
+                    Assert(MatchHash == null, nameof(MatchHash));
+                    Assert(JobTarget == null, nameof(JobTarget));
+                    Assert(UpdateTarget != null, nameof(UpdateTarget));
+                    Assert(Error == null, nameof(Error));
                     return;
                 case StorageModStateEnum.CreatedForDownload:
-                    Assert(VersionHash == null);
-                    Assert(MatchHash == null);
-                    Assert(JobTarget == null);
-                    Assert(UpdateTarget != null);
-                    Assert(Error == null);
+                    Assert(VersionHash == null, nameof(VersionHash));
+                    Assert(MatchHash == null, nameof(MatchHash));
+                    Assert(JobTarget == null, nameof(JobTarget));
+                    Assert(UpdateTarget != null, nameof(UpdateTarget));
+                    Assert(Error == null, nameof(Error));
                     return;
                 case StorageModStateEnum.Loading:
-                    Assert(VersionHash == null);
-                    Assert(MatchHash == null);
-                    Assert(JobTarget == null);
-                    Assert(UpdateTarget == null);
-                    Assert(Error == null);
+                    Assert(VersionHash == null, nameof(VersionHash));
+                    Assert(MatchHash == null, nameof(MatchHash));
+                    Assert(JobTarget == null, nameof(JobTarget));
+                    Assert(UpdateTarget == null, nameof(UpdateTarget));
+                    Assert(Error == null, nameof(Error));
                     return;
                 case StorageModStateEnum.Loaded:
-                    Assert(VersionHash == null);
-                    Assert(MatchHash != null);
-                    Assert(JobTarget == null);
-                    Assert(UpdateTarget == null);
-                    Assert(Error == null);
+                    Assert(VersionHash == null, nameof(VersionHash));
+                    Assert(MatchHash != null, nameof(MatchHash));
+                    Assert(JobTarget == null, nameof(JobTarget));
+                    Assert(UpdateTarget == null, nameof(UpdateTarget));
+                    Assert(Error == null, nameof(Error));
                     return;
                 case StorageModStateEnum.Hashing:
-                    Assert(VersionHash == null);
-                    Assert(MatchHash != null);
-                    Assert(JobTarget == null);
-                    Assert(UpdateTarget == null);
-                    Assert(Error == null);
+                    Assert(VersionHash == null, nameof(VersionHash));
+                    Assert(MatchHash != null, nameof(MatchHash));
+                    Assert(JobTarget == null, nameof(JobTarget));
+                    Assert(UpdateTarget == null, nameof(UpdateTarget));
+                    Assert(Error == null, nameof(Error));
                     return;
                 case StorageModStateEnum.Hashed:
-                    Assert(VersionHash != null);
-                    Assert(MatchHash != null);
-                    Assert(JobTarget == null);
-                    Assert(UpdateTarget == null);
-                    Assert(Error == null);
+                    Assert(VersionHash != null, nameof(VersionHash));
+                    Assert(MatchHash != null, nameof(MatchHash));
+                    Assert(JobTarget == null, nameof(JobTarget));
+                    Assert(UpdateTarget == null, nameof(UpdateTarget));
+                    Assert(Error == null, nameof(Error));
                     return;
                 case StorageModStateEnum.Updating:
-                    Assert(VersionHash == null);
-                    Assert(MatchHash == null);
-                    Assert(JobTarget != null);
-                    Assert(UpdateTarget != null);
-                    Assert(Error == null);
+                    Assert(VersionHash == null, nameof(VersionHash));
+                    Assert(MatchHash == null, nameof(MatchHash));
+                    Assert(JobTarget != null, nameof(JobTarget));
+                    Assert(UpdateTarget != null, nameof(UpdateTarget));
+                    Assert(Error == null, nameof(Error));
                     return;
                 case StorageModStateEnum.ErrorLoad:
-                    Assert(VersionHash == null);
-                    Assert(MatchHash == null);
-                    Assert(JobTarget == null);
-                    Assert(UpdateTarget == null);
-                    Assert(Error != null);
+                    Assert(VersionHash == null, nameof(VersionHash));
+                    Assert(MatchHash == null, nameof(MatchHash));
+                    Assert(JobTarget == null, nameof(JobTarget));
+                    Assert(UpdateTarget == null, nameof(UpdateTarget));
+                    Assert(Error != null, nameof(Error));
                     return;
                 case StorageModStateEnum.ErrorUpdate:
-                    Assert(VersionHash == null);
-                    Assert(MatchHash == null);
-                    Assert(JobTarget == null);
-                    Assert(UpdateTarget != null);
-                    Assert(Error != null);
+                    Assert(VersionHash == null, nameof(VersionHash));
+                    Assert(MatchHash == null, nameof(MatchHash));
+                    Assert(JobTarget == null, nameof(JobTarget));
+                    Assert(UpdateTarget != null, nameof(UpdateTarget));
+                    Assert(Error != null, nameof(Error));
                     return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        private void Assert(bool statement)
+        private void Assert(bool statement, string argument)
         {
-            if (!statement) throw new InvalidOperationException();
+            if (!statement) throw new InvalidOperationException(argument);
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using BSU.Core;
+using BSU.Core.Model;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
 using NLog;
@@ -17,12 +18,56 @@ namespace RealTest
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static int Main(string[] args)
+        {
+            if (args.Length < 1)
+            {
+                Console.WriteLine("Missing argument: mode");
+                return 1;
+            }
+
+            var mode = args[0];
+
+            var tests = GetTests();
+            
+            if (mode == "get")
+            {
+                Console.WriteLine(string.Join("\n", tests.Keys));
+                return 0;
+            }
+
+            if (!tests.ContainsKey(mode))
+            {
+                Console.WriteLine($"Test case {mode} not found.");
+                return 1;
+            }
+
+            try
+            {
+                var test = tests[mode];
+                test.Invoke(null, null);
+                return 0;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return 1;
+            }
+        }
+
+        private static Dictionary<string, MethodInfo> GetTests()
+        {
+            var methods = typeof(Program).GetMethods(BindingFlags.Static | BindingFlags.NonPublic);
+            return methods.Where(m => m.Name.EndsWith("Test"))
+                .ToDictionary(m => m.Name, m => m);
+        }
+
+        private static void DownloadTest()
         {
             SetupLogging();
             
             var settingsFile = new FileInfo("/client/settings.json");
-            using var core = new Core(settingsFile, a => a());
+            var core = new Core(settingsFile, a => a());
             var state = core.Model;
 
             state.AddRepository("BSO", "http://server/repo1.json", "main");
@@ -32,20 +77,56 @@ namespace RealTest
             state.AddStorage("DIRECTORY", new DirectoryInfo("/storage/side"), "ww2");
             state.AddStorage("STEAM", new DirectoryInfo("/storage/steam"), "steam");
             
-            state.AddStorage("DIRECTORY", new DirectoryInfo("/cant/possibly/exist"), "error_pls");
-            
+            // TODO: state.AddStorage("DIRECTORY", new DirectoryInfo("/cant/possibly/exist"), "error_pls");
             // TODO: check for errors
 
-            while (state.Repositories.Single(r => r.Identifier == "main").Loading.IsActive()) Thread.Sleep(1);
-            Thread.Sleep(10000);
+            WaitUntil(() => !(state.Storages.SingleOrDefault(s => s.Identifier == "main")?.Loading.IsActive() ?? true),
+                TimeSpan.FromSeconds(5));
+            WaitUntil(() => !(GetRepoMod(state, "main", "@ace_v1")?.GetState().IsLoading ?? true),
+                TimeSpan.FromSeconds(5));
+            var repoMod = GetRepoMod(state, "main", "@ace_v1");
+            var storageMod = GetStorageMod(state, "main", "@ace");
+            WaitUntil(() => repoMod.Actions[storageMod] == ModAction.Update, TimeSpan.FromSeconds(5));
             
             var executor = new ModelExecuter(core);
 
-            var aceUpdate = executor.Update("main/@ace_v1", "main/@ace");
+            var aceUpdate = executor.PrepareUpdate("main/@ace_v1", "main/@ace");
             
-            while (!aceUpdate.IsDone()) Thread.Sleep(1);
+            WaitUntil(() => aceUpdate.IsPrepared, TimeSpan.FromSeconds(5));
+            
+            aceUpdate.Commit();
+
+            WaitUntil(() => repoMod.Actions.TryGetValue(storageMod, out var action) && action == ModAction.Use, TimeSpan.FromSeconds(10));
             
             Console.WriteLine("Done");
+            
+            core.Dispose(true);
+            
+            Console.WriteLine("Shut down");
+            
+            // TODO: check result
+        }
+
+        private static RepositoryMod GetRepoMod(Model model, string repo, string mod)
+        {
+            return model.Repositories.SingleOrDefault(r => r.Identifier == repo)?.Mods
+                .SingleOrDefault(m => m.Identifier == mod);
+        }
+        
+        private static StorageMod GetStorageMod(Model model, string storage, string mod)
+        {
+            return model.Storages.SingleOrDefault(r => r.Identifier == storage)?.Mods
+                .SingleOrDefault(m => m.Identifier == mod);
+        }
+
+        private static void WaitUntil(Func<bool> check, TimeSpan timeout)
+        {
+            var start = DateTime.Now;
+            while (!check() && (DateTime.Now - start) < timeout)
+            {
+                Thread.Sleep(1);
+            }
+            if (!check()) throw new TimeoutException();
         }
 
         private static void SetupLogging()
