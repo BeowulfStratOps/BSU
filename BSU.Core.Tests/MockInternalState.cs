@@ -83,5 +83,20 @@ namespace BSU.Core.Tests
             _updateTargets[mod] = MockUpdatingTo;
             return MockUpdatingTo;
         }
+
+        public void SetUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool HasUsedMod(RepositoryMod repositoryMod)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
-using SimpleJob = BSU.Core.Model.SimpleJob; // TODO: WTF?? This should be a simple job ayyy lmao
 using BSU.CoreCommon;
 using NLog;
 
@@ -11,6 +10,7 @@ namespace BSU.Core.Model
 {
     internal class RepositoryMod
     {
+        private readonly IInternalState _internalState;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         
         public Repository Repository { get; }
@@ -29,8 +29,9 @@ namespace BSU.Core.Model
 
         private readonly JobSlot<SimpleJob> _loading;
 
-        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier, IJobManager jobManager)
+        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier, IJobManager jobManager, IInternalState internalState)
         {
+            _internalState = internalState;
             Repository = parent;
             Implementation = implementation;
             Identifier = identifier;
@@ -41,6 +42,7 @@ namespace BSU.Core.Model
                 _error = error;
                 StateChanged?.Invoke();
             };
+            
             _loading.StartJob();
         }
 
@@ -64,6 +66,8 @@ namespace BSU.Core.Model
 
         internal void ChangeAction(StorageMod target, ModAction? newAction)
         {
+            // TODO: lock?
+            // TODO: update conflicts
             var existing = Actions.ContainsKey(target);
             if (newAction == null)
             {

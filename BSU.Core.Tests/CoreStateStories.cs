@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
@@ -25,14 +24,14 @@ namespace BSU.Core.Tests
             LogManager.Configuration = config;
         }
         
-        internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, IJobManager jobManager)
+        internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, IJobManager jobManager, IInternalState internalState)
         {
             var mockRepo = new MockRepositoryMod();
             for (int i = 0; i < 3; i++)
             {
                 mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);                
             }
-            var repoMod = new RepositoryMod(null, mockRepo, "myrepo", jobManager);
+            var repoMod = new RepositoryMod(null, mockRepo, "myrepo", jobManager, internalState);
             return (mockRepo, repoMod);
         }
         
@@ -67,7 +66,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
             var mockStorage = new MockStorage();
@@ -93,7 +92,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
@@ -124,7 +123,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (mockRepo, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (mockRepo, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             var versionHash = new VersionHash(mockRepo).GetHashString();
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
@@ -170,7 +169,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (mockRepo, repoMod) = CreateRepoMod("1", "2", jobManager);
+            var (mockRepo, repoMod) = CreateRepoMod("1", "2", jobManager, internalState);
             var versionHash = new VersionHash(mockRepo).GetHashString();
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
@@ -208,9 +207,9 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (mockRepo, _) = CreateRepoMod("1", "2", jobManager);
+            var (mockRepo, _) = CreateRepoMod("1", "2", jobManager, internalState);
             var versionHash = new VersionHash(mockRepo).GetHashString();
-            var (_, repoMod) = CreateRepoMod("1", "3", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "3", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
@@ -242,7 +241,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
             var mockStorage = new MockStorage();
@@ -266,7 +265,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
@@ -297,7 +296,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
@@ -329,11 +328,11 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
-            var (referenceFiles, _) = CreateStorageMod("1", "2", internalState, jobManager);
+            CreateStorageMod("1", "2", internalState, jobManager);
             var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
@@ -365,11 +364,11 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
-            var (referenceFiles, _) = CreateStorageMod("1", "2", internalState, jobManager);
+            CreateStorageMod("1", "2", internalState, jobManager);
             var (storageFiles, storageMod) = CreateStorageMod("1", "2", internalState, jobManager);
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
@@ -400,7 +399,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
@@ -420,7 +419,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (_, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (_, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();
 
@@ -440,7 +439,7 @@ namespace BSU.Core.Tests
             var jobManager = new MockJobManager();
             var internalState = new MockInternalState();
             var matchMaker = new MatchMaker();
-            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager);
+            var (repoFiles, repoMod) = CreateRepoMod("1", "1", jobManager, internalState);
             repoFiles.ThrowErrorLoad = true;
             matchMaker.AddRepositoryMod(repoMod);
             jobManager.DoWork();

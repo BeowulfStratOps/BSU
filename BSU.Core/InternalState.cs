@@ -87,7 +87,8 @@ namespace BSU.Core
             {
                 Name = name,
                 Type = type,
-                Url = url
+                Url = url,
+                UsedMods = new Dictionary<string, StorageModIdentifiers>()
             };
             _settings.Repositories.Add(repo);
             _settings.Store();
@@ -99,7 +100,7 @@ namespace BSU.Core
         {
             Logger.Debug("Creating repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
             var implementation = _types.GetRepoImplementation(repo.Type, repo.Url);
-            var repository = new Repository(implementation, repo.Name, repo.Url, jobManager, matchMaker);
+            var repository = new Repository(implementation, repo.Name, repo.Url, jobManager, matchMaker, this);
             Logger.Debug("Created repo {0}", repository.Uid);
             return repository;
         }
@@ -169,6 +170,31 @@ namespace BSU.Core
                 .SingleOrDefault(s => s.Name == mod.Storage.Identifier)?.Updating
                 .GetValueOrDefault(mod.Identifier);
             return target == null ? null : new UpdateTarget(target.Hash, target.Display);
+        }
+
+        public bool IsUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)
+        {
+            var repository = _settings.Repositories.Single(repo => repo.Name == repositoryMod.Repository.Identifier);
+            if (!repository.UsedMods.TryGetValue(repositoryMod.Identifier, out var usedMod) || usedMod == null) return false;
+            return usedMod.StorageIdentifier == storageMod.Storage.Identifier &&
+                   usedMod.StorageIdentifier == storageMod.Identifier;
+        }
+
+        public bool HasUsedMod(RepositoryMod repositoryMod)
+        {
+            var repository = _settings.Repositories.Single(repo => repo.Name == repositoryMod.Repository.Identifier);
+            return repository.UsedMods.ContainsKey(repositoryMod.Identifier);
+        }
+
+        public void SetUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)
+        {
+            var repository = _settings.Repositories.Single(repo => repo.Name == repositoryMod.Repository.Identifier);
+            repository.UsedMods[repositoryMod.Identifier] = new StorageModIdentifiers
+            {
+                StorageIdentifier = storageMod.Storage.Identifier,
+                ModIdentifier = storageMod.Identifier
+            };
+            _settings.Store();
         }
     }
 }

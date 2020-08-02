@@ -70,7 +70,8 @@ namespace BSU.Core.View
         
         internal void AddStorage(Model.Storage storage)
         {
-            ViewModel.UiDo(() => Downloads.Add(new DownloadAction(storage, this)));
+            if (storage.Implementation.CanWrite())
+                ViewModel.UiDo(() => Downloads.Add(new DownloadAction(storage, this)));
         }
     }
 }

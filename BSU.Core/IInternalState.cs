@@ -22,5 +22,9 @@ namespace BSU.Core
         void RemoveUpdatingTo(StorageMod mod);
         void CleanupUpdatingTo(Model.Storage storage);
         UpdateTarget GetUpdateTarget(StorageMod mod);
+        void SetUsedMod(RepositoryMod repositoryMod, StorageMod storageMod);
+
+        public bool IsUsedMod(RepositoryMod repositoryMod, StorageMod storageMod);
+        public bool HasUsedMod(RepositoryMod repositoryMod);
     }
 }

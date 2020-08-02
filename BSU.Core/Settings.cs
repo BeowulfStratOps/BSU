@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using NLog;
@@ -70,5 +71,12 @@ namespace BSU.Core
         public string Name;
         public string Type;
         public string Url;
+        public Dictionary<string, StorageModIdentifiers> UsedMods;
+    }
+
+    internal class StorageModIdentifiers
+    {
+        public string StorageIdentifier;
+        public string ModIdentifier;
     }
 }
