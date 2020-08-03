@@ -7,6 +7,9 @@ namespace BSU.Core.Model
 {
     internal class MatchMaker
     {
+        // TODO: matchmaker should be fully synchronized and the main driving power of any stuff. mods can not change
+        // state while the match maker isn't ready for them. (mod jobs are futures, they can't actually do anything)
+        
         private readonly List<RepositoryMod> _repoMods = new List<RepositoryMod>();
         private readonly List<StorageMod> _storageMods = new List<StorageMod>();
         private readonly object _lock = new object(); // TODO: use some kind of re-entrant lock for less ugly state changed handler?

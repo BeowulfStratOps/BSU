@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -30,14 +31,32 @@ namespace BSU.Core.View
         internal Match(Model.StorageMod mod, RepositoryMod parent, ModAction modelAction)
         {
             Mod = mod;
-            Action = modelAction.ToString();
+            Action = modelAction.ActionType.ToString();
+            modelAction.Updated += () =>
+            {
+                ViewModel.UiDo(() =>
+                {
+                    Action = modelAction.ActionType.ToString();
+                });
+            };
+
+            foreach (var conflict in modelAction.Conflicts)
+            {
+                ViewModel.UiDo(() => { Conflicts.Add(conflict.Parent.Repository.Identifier); });
+            }
+
+            modelAction.ConflictAdded += action => ViewModel.UiDo(() =>
+            {
+                Conflicts.Add(action.Parent.Repository.Identifier);
+            });
+            modelAction.ConflictRemoved += action => ViewModel.UiDo(() =>
+            {
+                Conflicts.Remove(action.Parent.Repository.Identifier);
+            });
             Parent = parent;
         }
 
-        internal void Update(ModAction modelAction)
-        {
-            Action = modelAction.ToString();
-        }
+        public ObservableCollection<string> Conflicts { get; } = new ObservableCollection<string>();
         
         public event PropertyChangedEventHandler PropertyChanged;
 

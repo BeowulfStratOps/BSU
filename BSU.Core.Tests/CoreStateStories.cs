@@ -81,7 +81,7 @@ namespace BSU.Core.Tests
             var storageMod = storage.Mods[0];
             jobManager.DoWork();
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
-            Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod]);
             
             Assert.True(FilesEqual(repoFiles, storageMod.Implementation as IMockedFiles));
         }
@@ -100,7 +100,7 @@ namespace BSU.Core.Tests
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod]);
             
             _outputHelper.WriteLine("Starting update...");
 
@@ -112,7 +112,7 @@ namespace BSU.Core.Tests
             };
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod]);
             
             Assert.True(FilesEqual(repoFiles, storageFiles));
         }
@@ -141,7 +141,7 @@ namespace BSU.Core.Tests
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.ContinueUpdate, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.ContinueUpdate, repoMod.Actions[storageMod]);
             
             _outputHelper.WriteLine("Starting update...");
 
@@ -153,7 +153,7 @@ namespace BSU.Core.Tests
             };
             jobManager.DoWork();
             
-            Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod]);
             Assert.Null(internalState.GetUpdateTarget(storageMod));
             
             Assert.True(FilesEqual(mockRepo, mockStorage));
@@ -181,7 +181,7 @@ namespace BSU.Core.Tests
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.ContinueUpdate, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.ContinueUpdate, repoMod.Actions[storageMod]);
             
             _outputHelper.WriteLine("Starting update...");
 
@@ -193,7 +193,7 @@ namespace BSU.Core.Tests
             };
             jobManager.DoWork();
             
-            Assert.Equal(ModAction.Use, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod]);
             
             Assert.True(FilesEqual(mockRepo, mockStorage));
         }
@@ -232,7 +232,7 @@ namespace BSU.Core.Tests
             jobManager.DoWork();
             
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
-            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod]);
         }
         
         [Fact]
@@ -274,7 +274,7 @@ namespace BSU.Core.Tests
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod]);
             
             _outputHelper.WriteLine("Starting update...");
 
@@ -285,7 +285,7 @@ namespace BSU.Core.Tests
             };
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod]);
             
             Assert.True(FilesEqual(referenceFiles, storageFiles));
         }
@@ -305,7 +305,7 @@ namespace BSU.Core.Tests
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod]);
             
             _outputHelper.WriteLine("Starting update...");
 
@@ -317,7 +317,7 @@ namespace BSU.Core.Tests
             jobManager.GetActiveJobs().First().Abort();
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod]);
             
             Assert.False(FilesEqual(referenceFiles, storageFiles));
         }
@@ -337,7 +337,7 @@ namespace BSU.Core.Tests
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod]);
             
             _outputHelper.WriteLine("Starting update...");
 
@@ -354,7 +354,7 @@ namespace BSU.Core.Tests
             
             // TODO: make sure events fire
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
-            Assert.Equal(ModAction.Error, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Error, repoMod.Actions[storageMod]);
             Assert.Equal(StorageModStateEnum.ErrorUpdate, storageMod.GetState().State);
         }
         
@@ -373,7 +373,7 @@ namespace BSU.Core.Tests
             matchMaker.AddStorageMod(storageMod);
             jobManager.DoWork();
 
-            Assert.Equal(ModAction.Update, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod]);
             
             _outputHelper.WriteLine("Starting update...");
 
@@ -389,7 +389,7 @@ namespace BSU.Core.Tests
             
             // TODO: make sure events fire
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
-            Assert.Equal(ModAction.Error, repoMod.Actions[storageMod]);
+            Assert.Equal(ModActionEnum.Error, repoMod.Actions[storageMod]);
             Assert.Equal(StorageModStateEnum.ErrorUpdate, storageMod.GetState().State);
         }
         

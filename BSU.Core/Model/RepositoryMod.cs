@@ -64,25 +64,26 @@ namespace BSU.Core.Model
             }
         }
 
-        internal void ChangeAction(StorageMod target, ModAction? newAction)
+        internal void ChangeAction(StorageMod target, ModActionEnum? newAction)
         {
-            // TODO: lock?
-            // TODO: update conflicts
             var existing = Actions.ContainsKey(target);
             if (newAction == null)
             {
-                if (existing) Actions.Remove(target);
+                if (!existing) return;
+                Actions[target].Remove();
+                Actions.Remove(target);
                 return;
             }
-            Actions[target] = (ModAction) newAction;
             if (existing)
-                ActionChanged?.Invoke(target);
+            {
+                Actions[target].Update((ModActionEnum) newAction);
+            }
             else
+            {
+                Actions[target] = new ModAction(target, (ModActionEnum) newAction, this);
                 ActionAdded?.Invoke(target);
+            }
         }
-        
-        // TODO: ???
         public event Action<StorageMod> ActionAdded;
-        public event Action<StorageMod> ActionChanged;
     }
 }

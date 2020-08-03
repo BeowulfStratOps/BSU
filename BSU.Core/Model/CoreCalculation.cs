@@ -5,27 +5,27 @@ namespace BSU.Core.Model
 {
     public class CoreCalculation
     {
-        internal static ModAction CalculateAction(RepositoryModState repoModState, StorageModState storageModState, bool storageWritable)
+        internal static ModActionEnum CalculateAction(RepositoryModState repoModState, StorageModState storageModState, bool storageWritable)
         {
             switch (storageModState.State)
             {
                 case StorageModStateEnum.CreatedForDownload:
-                    return ModAction.Await;
+                    return ModActionEnum.Await;
                 case StorageModStateEnum.Loading:
                     throw new InvalidCastException();
                 case StorageModStateEnum.Loaded:
                 case StorageModStateEnum.Hashing:
-                    return ModAction.Loading;
+                    return ModActionEnum.Loading;
                 case StorageModStateEnum.Hashed:
-                    if (repoModState.VersionHash.IsMatch(storageModState.VersionHash)) return ModAction.Use;
-                    return storageWritable ? ModAction.Update : ModAction.Unusable;
+                    if (repoModState.VersionHash.IsMatch(storageModState.VersionHash)) return ModActionEnum.Use;
+                    return storageWritable ? ModActionEnum.Update : ModActionEnum.Unusable;
                 case StorageModStateEnum.Updating:
-                    return storageModState.JobTarget.Hash == repoModState.VersionHash.GetHashString() ? ModAction.Await : ModAction.AbortAndUpdate;
+                    return storageModState.JobTarget.Hash == repoModState.VersionHash.GetHashString() ? ModActionEnum.Await : ModActionEnum.AbortAndUpdate;
                 case StorageModStateEnum.CreatedWithUpdateTarget:
                     if (repoModState.VersionHash.GetHashString() != storageModState.UpdateTarget.Hash) throw new InvalidOperationException();
-                    return ModAction.ContinueUpdate;
+                    return ModActionEnum.ContinueUpdate;
                 case StorageModStateEnum.ErrorUpdate:
-                    return ModAction.Error;
+                    return ModActionEnum.Error;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

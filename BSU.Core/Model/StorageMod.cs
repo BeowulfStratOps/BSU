@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -35,6 +36,8 @@ namespace BSU.Core.Model
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private StorageModStateEnum _state; // TODO: should not be directly accessible
+        
+        public readonly List<ModAction> RelatedModActions = new List<ModAction>();
 
         private Exception _error;
 

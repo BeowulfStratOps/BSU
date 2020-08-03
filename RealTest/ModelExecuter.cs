@@ -33,7 +33,7 @@ namespace RealTest
 
             var action = repoMod.Actions.GetValueOrDefault(storageMod);
             
-            if (action != ModAction.Update) throw new InvalidOperationException();
+            if (action != ModActionEnum.Update) throw new InvalidOperationException();
 
             return storageMod.PrepareUpdate(repoMod);
         }

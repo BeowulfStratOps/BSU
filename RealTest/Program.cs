@@ -86,7 +86,7 @@ namespace RealTest
                 TimeSpan.FromSeconds(5));
             var repoMod = GetRepoMod(state, "main", "@ace_v1");
             var storageMod = GetStorageMod(state, "main", "@ace");
-            WaitUntil(() => repoMod.Actions[storageMod] == ModAction.Update, TimeSpan.FromSeconds(5));
+            WaitUntil(() => repoMod.Actions[storageMod] == ModActionEnum.Update, TimeSpan.FromSeconds(5));
             
             var executor = new ModelExecuter(core);
 
@@ -96,7 +96,7 @@ namespace RealTest
             
             aceUpdate.Commit();
 
-            WaitUntil(() => repoMod.Actions.TryGetValue(storageMod, out var action) && action == ModAction.Use, TimeSpan.FromSeconds(10));
+            WaitUntil(() => repoMod.Actions.TryGetValue(storageMod, out var action) && action == ModActionEnum.Use, TimeSpan.FromSeconds(10));
             
             Console.WriteLine("Done");
             

@@ -44,11 +44,6 @@ namespace BSU.Core.View
             {
                 AddAction(target);
             }
-            mod.ActionChanged += storageTarget =>
-            {
-                var match = Matches.SingleOrDefault(m => m.Mod == storageTarget);
-                match?.Update(mod.Actions[storageTarget]);
-            };
             mod.StateChanged += () =>
             {
                 DisplayName = mod.Implementation.GetDisplayName();

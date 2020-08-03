@@ -15,5 +15,6 @@
                 </ContextMenu>
             </TextBlock.ContextMenu>
         </TextBlock>
+        <ListBox ItemsSource="{Binding Path=Conflicts}"></ListBox>
     </WrapPanel>
 </UserControl>
