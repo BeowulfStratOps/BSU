@@ -175,6 +175,7 @@ namespace BSU.Core
         public bool IsUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)
         {
             var repository = _settings.Repositories.Single(repo => repo.Name == repositoryMod.Repository.Identifier);
+            if (repository.UsedMods == null) return false;
             if (!repository.UsedMods.TryGetValue(repositoryMod.Identifier, out var usedMod) || usedMod == null) return false;
             return usedMod.StorageIdentifier == storageMod.Storage.Identifier &&
                    usedMod.StorageIdentifier == storageMod.Identifier;
@@ -183,7 +184,7 @@ namespace BSU.Core
         public bool HasUsedMod(RepositoryMod repositoryMod)
         {
             var repository = _settings.Repositories.Single(repo => repo.Name == repositoryMod.Repository.Identifier);
-            return repository.UsedMods.ContainsKey(repositoryMod.Identifier);
+            return repository.UsedMods?.ContainsKey(repositoryMod.Identifier) ?? false;
         }
 
         public void SetUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
@@ -24,6 +25,9 @@ namespace BSU.Core.Model
         private Exception _error;
 
         private readonly object _stateLock = new object(); // TODO: use it!!
+
+        public StorageMod SelectedStorageMod { get; set; }
+        public Storage SelectedDownloadStorage { get; set; }
 
         public Dictionary<StorageMod, ModAction> Actions { get; } = new Dictionary<StorageMod, ModAction>(); // TODO: wat is dis? Does it need a lock?
 
@@ -64,14 +68,20 @@ namespace BSU.Core.Model
             }
         }
 
-        internal void ChangeAction(StorageMod target, ModActionEnum? newAction)
+        internal void ChangeAction(StorageMod target, ModActionEnum? newAction, bool allModsLoaded)
         {
+            // TODO: signal if allModsLoaded becomes true. might be important for displaying things
             var existing = Actions.ContainsKey(target);
             if (newAction == null)
             {
                 if (!existing) return;
                 Actions[target].Remove();
                 Actions.Remove(target);
+                if (SelectedStorageMod == target)
+                {
+                    SelectedStorageMod = null;
+                    SelectionChanged?.Invoke();
+                }
                 return;
             }
             if (existing)
@@ -83,7 +93,45 @@ namespace BSU.Core.Model
                 Actions[target] = new ModAction(target, (ModActionEnum) newAction, this);
                 ActionAdded?.Invoke(target);
             }
+            DoAutoSelection(allModsLoaded);
         }
+
+        private void DoAutoSelection(bool allModsLoaded)
+        {
+            // never change a selection once it was made. Could effectively be clickjacking on the user
+            // TODO: check if a better option became available and notify user
+            if (SelectedDownloadStorage != null || SelectedStorageMod != null) return;
+
+            if (_internalState.HasUsedMod(this))
+            {
+                var storageMod = Actions.Keys.FirstOrDefault(mod => _internalState.IsUsedMod(this, mod));
+                if (storageMod != null)
+                {
+                    SelectedStorageMod = storageMod;
+                    SelectionChanged?.Invoke();
+                }
+            }
+            
+            // Still loading
+            if (!allModsLoaded) return;
+            if (Actions.Values.Any(action => action.ActionType == ModActionEnum.Loading)) return;
+            
+            // Order of precedence
+            var precedence = new[]
+                {ModActionEnum.Use, ModActionEnum.Await, ModActionEnum.ContinueUpdate, ModActionEnum.Update};
+
+            foreach (var actionType in precedence)
+            {
+                var storageMod = Actions.Keys.FirstOrDefault(mod => Actions[mod].ActionType == actionType);
+                if (storageMod == null) continue;
+
+                SelectedStorageMod = storageMod;
+                SelectionChanged?.Invoke();
+                return;
+            }
+        }
+        
         public event Action<StorageMod> ActionAdded;
+        public event Action SelectionChanged;
     }
 }

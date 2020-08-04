@@ -71,7 +71,7 @@ namespace BSU.Core
         public string Name;
         public string Type;
         public string Url;
-        public Dictionary<string, StorageModIdentifiers> UsedMods;
+        public Dictionary<string, StorageModIdentifiers> UsedMods = new Dictionary<string, StorageModIdentifiers>();
     }
 
     internal class StorageModIdentifiers

@@ -16,6 +16,8 @@ namespace BSU.Core.Model
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+        private bool _allModsLoaded = false;
+
         // TODO: add check for started updates!
 
         public void AddStorageMod(StorageMod storageMod)
@@ -37,10 +39,23 @@ namespace BSU.Core.Model
 
         private void UpdateStorageMod(StorageMod storageMod)
         {
+            CheckStoragesLoading();
             foreach (var repoMod in _repoMods)
             {
                 CheckMatch(repoMod, storageMod);
             }
+        }
+
+        private void CheckStoragesLoading()
+        {
+            if (_allModsLoaded) return;
+            
+            foreach (var storageMod in _storageMods)
+            {
+                if (storageMod.GetState().MatchHash == null) return;
+            }
+
+            _allModsLoaded = true;
         }
 
         public void AddRepositoryMod(RepositoryMod repoMod)
@@ -66,7 +81,7 @@ namespace BSU.Core.Model
             {
                 foreach (var repoMod in _repoMods)
                 {
-                    repoMod.ChangeAction(mod, null);
+                    repoMod.ChangeAction(mod, null, _allModsLoaded);
                 }
             }
         }
@@ -96,7 +111,7 @@ namespace BSU.Core.Model
             var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.Storage.Implementation.CanWrite());
             Logger.Debug($"Calculate Action on {repoMod.Identifier} and {storageMod.Identifier} -> {action}");
                 
-            repoMod.ChangeAction(storageMod, action);
+            repoMod.ChangeAction(storageMod, action, _allModsLoaded);
         }
     }
 }

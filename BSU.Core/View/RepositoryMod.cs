@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using BSU.Core.Annotations;
-using BSU.Core.Hashes;
-using BSU.Core.Model;
-using BSU.CoreCommon;
 
 namespace BSU.Core.View
 {
@@ -44,6 +37,11 @@ namespace BSU.Core.View
             {
                 AddAction(target);
             }
+
+            mod.SelectionChanged += () =>
+            {
+                // TODO: do stuff
+            };
             mod.StateChanged += () =>
             {
                 DisplayName = mod.Implementation.GetDisplayName();
