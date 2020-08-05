@@ -39,20 +39,27 @@ namespace BSU.Core.Model
 
         private void UpdateStorageMod(StorageMod storageMod)
         {
-            CheckStoragesLoading();
             foreach (var repoMod in _repoMods)
             {
                 CheckMatch(repoMod, storageMod);
             }
+            CheckAllModsLoaded();
         }
 
-        private void CheckStoragesLoading()
+        private void CheckAllModsLoaded()
         {
             if (_allModsLoaded) return;
+            
+            // TODO: check storages / repos
             
             foreach (var storageMod in _storageMods)
             {
                 if (storageMod.GetState().MatchHash == null) return;
+            }
+            
+            foreach (var repoMod in _repoMods)
+            {
+                if (repoMod.GetState().MatchHash == null) return;
             }
 
             foreach (var repoMod in _repoMods)
