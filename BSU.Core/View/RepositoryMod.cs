@@ -18,12 +18,34 @@ namespace BSU.Core.View
         
         public ObservableCollection<DownloadAction> Downloads { get; } = new ObservableCollection<DownloadAction>();
 
+        public object Selection { get; private set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void SetSelection(Model.RepositoryMod mod)
+        {
+            // Use setter for this
+            if (mod.SelectedStorageMod != null)
+            {
+                Selection = mod.SelectedStorageMod.Identifier;
+                OnPropertyChanged(nameof(Selection));
+                return;
+            }
+            if (mod.SelectedDownloadStorage != null)
+            {
+                Selection = mod.SelectedDownloadStorage.Identifier;
+                OnPropertyChanged(nameof(Selection));
+                return;
+            }
+
+            Selection = "None";
+            OnPropertyChanged(nameof(Selection));
         }
 
         internal RepositoryMod(Model.RepositoryMod mod, ViewModel viewModel)
@@ -37,11 +59,9 @@ namespace BSU.Core.View
             {
                 AddAction(target);
             }
-
-            mod.SelectionChanged += () =>
-            {
-                // TODO: do stuff
-            };
+            
+            SetSelection(mod);
+            mod.SelectionChanged += () => SetSelection(mod);
             mod.StateChanged += () =>
             {
                 DisplayName = mod.Implementation.GetDisplayName();

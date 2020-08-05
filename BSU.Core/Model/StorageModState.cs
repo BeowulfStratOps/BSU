@@ -43,7 +43,7 @@ namespace BSU.Core.Model
                     return;
                 case StorageModStateEnum.Loading:
                     Assert(VersionHash == null, nameof(VersionHash));
-                    Assert(MatchHash == null, nameof(MatchHash));
+                    //Assert(MatchHash == null, nameof(MatchHash)); // TODO: re-enable
                     Assert(JobTarget == null, nameof(JobTarget));
                     Assert(UpdateTarget == null, nameof(UpdateTarget));
                     Assert(Error == null, nameof(Error));

@@ -55,6 +55,11 @@ namespace BSU.Core.Model
                 if (storageMod.GetState().MatchHash == null) return;
             }
 
+            foreach (var repoMod in _repoMods)
+            {
+                repoMod.NotifyAllModsLoaded();
+            }
+
             _allModsLoaded = true;
         }
 

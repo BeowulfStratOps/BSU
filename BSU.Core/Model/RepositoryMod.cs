@@ -94,6 +94,12 @@ namespace BSU.Core.Model
                 ActionAdded?.Invoke(target);
             }
             DoAutoSelection(allModsLoaded);
+            Repository.ReCalculateState();
+        }
+
+        public void NotifyAllModsLoaded()
+        {
+            DoAutoSelection(true);
         }
 
         private void DoAutoSelection(bool allModsLoaded)
@@ -122,16 +128,26 @@ namespace BSU.Core.Model
 
             foreach (var actionType in precedence)
             {
-                var storageMod = Actions.Keys.FirstOrDefault(mod => Actions[mod].ActionType == actionType);
+                var storageMod = Actions.Keys.FirstOrDefault(mod => Actions[mod].ActionType == actionType && !Actions[mod].Conflicts.Any());
                 if (storageMod == null) continue;
 
                 SelectedStorageMod = storageMod;
                 SelectionChanged?.Invoke();
                 return;
             }
+
+            if (!Actions.Any())
+            {
+                var downloadStorage = Repository.Model.Storages.FirstOrDefault(storage => storage.Implementation.CanWrite());
+                if (downloadStorage != null)
+                {
+                    SelectedDownloadStorage = downloadStorage;
+                    SelectionChanged?.Invoke();
+                }
+            }
         }
         
         public event Action<StorageMod> ActionAdded;
-        public event Action SelectionChanged;
+        public event Action SelectionChanged; // TODO: use a property to call it
     }
 }

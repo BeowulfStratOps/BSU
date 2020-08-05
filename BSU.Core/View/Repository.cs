@@ -14,7 +14,7 @@ namespace BSU.Core.View
         private readonly ViewModel _viewModel;
         public string Name { get; }
 
-        public bool IsLoading { get; }
+        public string CalculatedState { get; private set; }
         
         public ObservableCollection<RepositoryMod> Mods { get; } = new ObservableCollection<RepositoryMod>();
 
@@ -28,7 +28,15 @@ namespace BSU.Core.View
 
         internal Repository(Model.Repository repository, ViewModel viewModel)
         {
-            IsLoading = repository.Loading.IsActive();
+            CalculatedState = repository.CalculatedState.ToString();
+            repository.CalculatedStateChanged += () =>
+            {
+                ViewModel.UiDo(() =>
+                {
+                    CalculatedState = repository.CalculatedState.ToString();
+                    OnPropertyChanged(nameof(CalculatedState));
+                });
+            };
             _viewModel = viewModel;
             Name = repository.Identifier;
             repository.ModAdded += mod => ViewModel.UiDo(() => Mods.Add(new RepositoryMod(mod, viewModel)));

@@ -7,9 +7,11 @@
              xmlns:viewmodel="clr-namespace:BSU.Core.View;assembly=BSU.Core"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewmodel:Repository}">
-    <WrapPanel>
-        <TextBlock Text="{Binding Path=Name}"></TextBlock>
-        <!-- <local:JobSlot DataContext="{Binding Path=Loading}"></local:JobSlot> -->
+    <StackPanel Orientation="Horizontal">
+        <StackPanel Orientation="Vertical">
+            <TextBlock Text="{Binding Path=Name}"></TextBlock>
+            <TextBlock Text="{Binding Path=CalculatedState}"></TextBlock>
+        </StackPanel>
         <ListBox ItemsSource="{Binding Path=Mods}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -17,5 +19,5 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-    </WrapPanel>
+    </StackPanel>
 </UserControl>
