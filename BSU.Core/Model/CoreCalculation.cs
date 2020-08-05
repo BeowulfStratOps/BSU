@@ -1,9 +1,10 @@
 ﻿using System;
-using BSU.Core.Hashes;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BSU.Core.Model
 {
-    public class CoreCalculation
+    public static class CoreCalculation
     {
         internal static ModActionEnum CalculateAction(RepositoryModState repoModState, StorageModState storageModState, bool storageWritable)
         {
@@ -70,6 +71,86 @@ namespace BSU.Core.Model
             NoMatch,
             RequireHash,
             Match
+        }
+
+        internal static (StorageMod, Storage) AutoSelect(bool allModsLoaded, Dictionary<StorageMod, ModAction> actions,
+            Model model, bool hasUsedMod,
+            Func<StorageMod, bool> isUsedMod)
+        {
+            if (hasUsedMod)
+            {
+                var storageMod = actions.Keys.FirstOrDefault(isUsedMod);
+                if (storageMod != null)
+                {
+                    return (storageMod, null);
+                }
+            }
+
+            // Still loading
+            if (!allModsLoaded) return (null, null);
+            if (actions.Values.Any(action => action.ActionType == ModActionEnum.Loading)) return (null, null);
+
+            // Order of precedence
+            var precedence = new[]
+                {ModActionEnum.Use, ModActionEnum.Await, ModActionEnum.ContinueUpdate, ModActionEnum.Update};
+
+            foreach (var actionType in precedence)
+            {
+                var storageMod = actions.Keys.FirstOrDefault(mod =>
+                    actions[mod].ActionType == actionType && !actions[mod].Conflicts.Any());
+                if (storageMod == null) continue;
+
+                return (storageMod, null);
+            }
+
+            if (actions.All(am => am.Value.ActionType == ModActionEnum.Unusable))
+            {
+                var downloadStorage = model.Storages.FirstOrDefault(storage => storage.Implementation.CanWrite());
+                if (downloadStorage != null)
+                {
+                    return (null, downloadStorage);
+                }
+            }
+
+            return (null, null);
+        }
+        
+        internal static CalculatedRepositoryState CalculateRepositoryState(List<RepositoryMod> mods)
+        {
+            /*
+            Loading, // 3. At least one loading
+            NeedsUpdate, // 2. all selected, no internal conflicts. 
+            NeedsDownload, // 2. more than 50% of the mods need a download, otherwise same as update
+            Ready, // 1. All use
+            RequiresUserIntervention // Else
+            */
+
+            if (mods.All(mod =>
+                mod.SelectedStorageMod != null && mod.Actions[mod.SelectedStorageMod].ActionType == ModActionEnum.Use))
+            {
+                return CalculatedRepositoryState.Ready;
+            }
+
+            if (mods.All(mod => mod.SelectedStorageMod != null || mod.SelectedDownloadStorage != null))
+            {
+                // No internal conflicts
+                if (mods.Where(mod => mod.SelectedStorageMod != null).All(mod =>
+                    mod.Actions[mod.SelectedStorageMod].Conflicts.All(conflict => !mods.Contains(conflict.Parent))))
+                {
+                    if (mods.Count(mod => mod.SelectedDownloadStorage != null) > 0.5 * mods.Count)
+                        return CalculatedRepositoryState.NeedsDownload;
+                    return CalculatedRepositoryState.NeedsUpdate;
+                }
+            }
+
+            if (mods.All(mod =>
+                mod.SelectedStorageMod == null && mod.SelectedDownloadStorage == null &&
+                mod.Actions.Any(kv => kv.Value.ActionType == ModActionEnum.Loading)))
+            {
+                return CalculatedRepositoryState.Loading;
+            }
+
+            return CalculatedRepositoryState.RequiresUserIntervention;
         }
     }
 }

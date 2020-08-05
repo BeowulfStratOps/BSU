@@ -73,7 +73,7 @@ namespace BSU.Core.Model
             }
         }
 
-        internal void ChangeAction(StorageMod target, ModActionEnum? newAction, bool allModsLoaded)
+        internal void ChangeAction(StorageMod target, ModActionEnum? newAction)
         {
             // TODO: signal if allModsLoaded becomes true. might be important for displaying things
             var existing = Actions.ContainsKey(target);
@@ -98,57 +98,36 @@ namespace BSU.Core.Model
                 Actions[target] = new ModAction(target, (ModActionEnum) newAction, this);
                 ActionAdded?.Invoke(target);
             }
-            DoAutoSelection(allModsLoaded);
-            Repository.ReCalculateState();
+            DoAutoSelection();
         }
 
-        public void NotifyAllModsLoaded()
+        private bool _allModsLoaded;
+        
+        public bool AllModsLoaded
         {
-            DoAutoSelection(true);
+            private get => _allModsLoaded;
+            set
+            {
+                if (value == _allModsLoaded) return;
+                _allModsLoaded = value;
+                if (_allModsLoaded) DoAutoSelection();
+            }
         }
 
-        private void DoAutoSelection(bool allModsLoaded)
+        private void DoAutoSelection()
         {
             // never change a selection once it was made. Could effectively be clickjacking on the user
             // TODO: check if a better option became available and notify user
             if (SelectedDownloadStorage != null || SelectedStorageMod != null) return;
 
-            if (_internalState.HasUsedMod(this))
-            {
-                var storageMod = Actions.Keys.FirstOrDefault(mod => _internalState.IsUsedMod(this, mod));
-                if (storageMod != null)
-                {
-                    SelectedStorageMod = storageMod;
-                    SelectionChanged?.Invoke();
-                }
-            }
-            
-            // Still loading
-            if (!allModsLoaded) return;
-            if (Actions.Values.Any(action => action.ActionType == ModActionEnum.Loading)) return;
-            
-            // Order of precedence
-            var precedence = new[]
-                {ModActionEnum.Use, ModActionEnum.Await, ModActionEnum.ContinueUpdate, ModActionEnum.Update};
+            var (selectedStorageMod, selectedDownloadStorage) = CoreCalculation.AutoSelect(AllModsLoaded, Actions,
+                Repository.Model, _internalState.HasUsedMod(this), mod => _internalState.IsUsedMod(this, mod));
 
-            foreach (var actionType in precedence)
+            if (selectedDownloadStorage != SelectedDownloadStorage || selectedStorageMod != SelectedStorageMod)
             {
-                var storageMod = Actions.Keys.FirstOrDefault(mod => Actions[mod].ActionType == actionType && !Actions[mod].Conflicts.Any());
-                if (storageMod == null) continue;
-
-                SelectedStorageMod = storageMod;
+                SelectedDownloadStorage = selectedDownloadStorage;
+                SelectedStorageMod = selectedStorageMod;
                 SelectionChanged?.Invoke();
-                return;
-            }
-
-            if (!Actions.Any())
-            {
-                var downloadStorage = Repository.Model.Storages.FirstOrDefault(storage => storage.Implementation.CanWrite());
-                if (downloadStorage != null)
-                {
-                    SelectedDownloadStorage = downloadStorage;
-                    SelectionChanged?.Invoke();
-                }
             }
         }
         

@@ -47,6 +47,10 @@ namespace BSU.Core.Model
                 foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
                 {
                     var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager, _internalState);
+                    modelMod.ActionAdded += storageMod =>
+                    {
+                        modelMod.Actions[storageMod].Updated += ReCalculateState;
+                    };
                     Mods.Add(modelMod);
                     ModAdded?.Invoke(modelMod);
                     _matchMaker.AddRepositoryMod(modelMod);
@@ -58,10 +62,7 @@ namespace BSU.Core.Model
 
         public CalculatedRepositoryState CalculatedState
         {
-            get
-            {
-                return _calculatedState;
-            }
+            get => _calculatedState;
             private set
             {
                 if (value == _calculatedState) return;
@@ -70,46 +71,9 @@ namespace BSU.Core.Model
             }
         }
 
-        internal void ReCalculateState()
+        private void ReCalculateState()
         {
-            /*
-            Loading, // 3. At least one loading
-            NeedsUpdate, // 2. all selected, no internal conflicts. 
-            NeedsDowload, // 2. more than 50% of the mods need a download, otherwise same as update
-            Ready, // 1. All use
-            RequiresUserIntervention // Else
-            */
-
-            if (Mods.All(mod =>
-                mod.SelectedStorageMod != null && mod.Actions[mod.SelectedStorageMod].ActionType == ModActionEnum.Use))
-            {
-                CalculatedState = CalculatedRepositoryState.Ready;
-                return;
-            }
-
-            if (Mods.All(mod => mod.SelectedStorageMod != null || mod.SelectedDownloadStorage != null))
-            {
-                // No internal conflicts
-                if (Mods.Where(mod => mod.SelectedStorageMod != null).All(mod =>
-                    mod.Actions[mod.SelectedStorageMod].Conflicts.All(conflict => conflict.Parent.Repository != this)))
-                {
-                    if (Mods.Count(mod => mod.SelectedDownloadStorage != null) > 0.5 * Mods.Count)
-                        CalculatedState = CalculatedRepositoryState.NeedsDowload;
-                    else
-                        CalculatedState = CalculatedRepositoryState.NeedsUpdate;
-                    return;
-                }
-            }
-
-            if (Mods.All(mod =>
-                mod.SelectedStorageMod == null && mod.SelectedDownloadStorage == null &&
-                mod.Actions.Any(kv => kv.Value.ActionType == ModActionEnum.Loading)))
-            {
-                CalculatedState = CalculatedRepositoryState.Loading;
-                return;
-            }
-
-            CalculatedState = CalculatedRepositoryState.RequiresUserIntervention;
+            CalculatedState = CoreCalculation.CalculateRepositoryState(Mods);
         }
 
         public event Action CalculatedStateChanged;

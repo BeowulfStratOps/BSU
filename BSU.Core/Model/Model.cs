@@ -11,8 +11,7 @@ namespace BSU.Core.Model
     {
         private readonly IJobManager _jobManager;
 
-        // TODO: lock enumerables while stuff is being executed!!!
-        private readonly MatchMaker _matchMaker = new MatchMaker();
+        private readonly MatchMaker _matchMaker;
         public List<Repository> Repositories { get; } = new List<Repository>();
         public List<Storage> Storages { get; } = new List<Storage>();
 
@@ -24,6 +23,7 @@ namespace BSU.Core.Model
 
         public Model(InternalState persistentState, IJobManager jobManager)
         {
+            _matchMaker = new MatchMaker(this);
             _jobManager = jobManager;
             PersistentState = persistentState;
             _spoolThread = new Thread(Spool);

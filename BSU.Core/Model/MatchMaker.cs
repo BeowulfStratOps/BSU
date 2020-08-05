@@ -1,45 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using BSU.Core.Hashes;
+﻿using System.Collections.Generic;
+using System.Linq;
 using NLog;
 
 namespace BSU.Core.Model
 {
     internal class MatchMaker
     {
-        // TODO: matchmaker should be fully synchronized and the main driving power of any stuff. mods can not change
-        // state while the match maker isn't ready for them. (mod jobs are futures, they can't actually do anything)
-        
-        private readonly List<RepositoryMod> _repoMods = new List<RepositoryMod>();
-        private readonly List<StorageMod> _storageMods = new List<StorageMod>();
-        private readonly object _lock = new object(); // TODO: use some kind of re-entrant lock for less ugly state changed handler?
-
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Model _model;
+        private bool _allModsLoaded;
 
-        private bool _allModsLoaded = false;
+        public MatchMaker(Model model)
+        {
+            _model = model;
+        }
 
-        // TODO: add check for started updates!
+        private IEnumerable<StorageMod> GetAllStorageMods()
+        {
+            return _model.Storages.SelectMany(storage => storage.Mods);
+        }
+        
+        private IEnumerable<RepositoryMod> GetAllRepositoryMods()
+        {
+            return _model.Repositories.SelectMany(repository => repository.Mods);
+        }
 
         public void AddStorageMod(StorageMod storageMod)
         {
-            lock (_lock)
+            _allModsLoaded = false;
+            NotifyAllModsLoaded();
+            storageMod.StateChanged += () =>
             {
-                if (_storageMods.Contains(storageMod)) return; // TODO: update
-                _storageMods.Add(storageMod);
-                storageMod.StateChanged += () =>
-                {
-                    lock (_lock)
-                    {
-                        UpdateStorageMod(storageMod);
-                    }
-                };
                 UpdateStorageMod(storageMod);
-            }
+            };
+            UpdateStorageMod(storageMod);
         }
 
         private void UpdateStorageMod(StorageMod storageMod)
         {
-            foreach (var repoMod in _repoMods)
+            foreach (var repoMod in GetAllRepositoryMods())
             {
                 CheckMatch(repoMod, storageMod);
             }
@@ -50,66 +49,56 @@ namespace BSU.Core.Model
         {
             if (_allModsLoaded) return;
             
-            // TODO: check storages / repos
-            
-            foreach (var storageMod in _storageMods)
-            {
-                if (storageMod.GetState().MatchHash == null) return;
-            }
-            
-            foreach (var repoMod in _repoMods)
-            {
-                if (repoMod.GetState().MatchHash == null) return;
-            }
+            if (_model.Storages.Any(storage => storage.Loading.IsActive())) return;
 
-            foreach (var repoMod in _repoMods)
-            {
-                repoMod.NotifyAllModsLoaded();
-            }
+            if (_model.Repositories.Any(repository => repository.Loading.IsActive())) return;
+            
+            if (GetAllStorageMods().Any(storageMod => storageMod.GetState().MatchHash == null)) return;
+            
+            if (GetAllRepositoryMods().Any(repoMod => repoMod.GetState().MatchHash == null)) return;
 
             _allModsLoaded = true;
+            
+            NotifyAllModsLoaded();
+
+        }
+
+        private void NotifyAllModsLoaded()
+        {
+            foreach (var repoMod in GetAllRepositoryMods())
+            {
+                repoMod.AllModsLoaded = _allModsLoaded;
+            }
         }
 
         public void AddRepositoryMod(RepositoryMod repoMod)
         {
-            lock (_lock)
+            repoMod.StateChanged += () =>
             {
-                if (_repoMods.Contains(repoMod)) return; // TODO: update
-                _repoMods.Add(repoMod);
-                repoMod.StateChanged += () =>
-                {
-                    lock (_lock)
-                    {
-                        UpdateRepositoryMod(repoMod);
-                    }
-                };
-                UpdateRepositoryMod(repoMod);
-            }
+                    UpdateRepositoryMod(repoMod);
+            };
+            UpdateRepositoryMod(repoMod);
         }
 
         public void RemoveStorageMod(StorageMod mod)
         {
-            lock (_lock)
+            foreach (var repoMod in GetAllRepositoryMods())
             {
-                foreach (var repoMod in _repoMods)
-                {
-                    repoMod.ChangeAction(mod, null, _allModsLoaded);
-                }
+                repoMod.ChangeAction(mod, null);
             }
         }
 
         private void UpdateRepositoryMod(RepositoryMod repositoryMod)
         {
-            foreach (var storageMod in _storageMods)
+            foreach (var storageMod in GetAllStorageMods())
             {
                 CheckMatch(repositoryMod, storageMod);
             }
+            CheckAllModsLoaded();
         }
 
-        private void CheckMatch(RepositoryMod repoMod, StorageMod storageMod)
+        private static void CheckMatch(RepositoryMod repoMod, StorageMod storageMod)
         {
-            // TODO: is always called from locked context, but should do it again for explicity / safety
-            
             var repoModState = repoMod.GetState();
             var storageModState = storageMod.GetState();
 
@@ -123,7 +112,7 @@ namespace BSU.Core.Model
             var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.Storage.Implementation.CanWrite());
             Logger.Debug($"Calculate Action on {repoMod.Identifier} and {storageMod.Identifier} -> {action}");
                 
-            repoMod.ChangeAction(storageMod, action, _allModsLoaded);
+            repoMod.ChangeAction(storageMod, action);
         }
     }
 }
