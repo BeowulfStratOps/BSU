@@ -92,6 +92,7 @@ namespace BSU.Core
         public void Dispose(bool blocking)
         {
             // Stop all threaded operations, to ensure a graceful exit.
+            Model.Shutdown();
             JobManager.Shutdown(blocking);
         }
     }

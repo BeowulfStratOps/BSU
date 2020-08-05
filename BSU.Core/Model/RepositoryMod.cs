@@ -41,11 +41,10 @@ namespace BSU.Core.Model
             Identifier = identifier;
             var title = $"Load RepoMod {Identifier}";
             _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
-            _loading.OnFinished += error =>
+            /*_loading.OnFinished += error =>
             {
-                _error = error;
-                StateChanged?.Invoke();
-            };
+                _error = error; // TODO: error handling
+            };*/
             
             _loading.StartJob();
         }
@@ -54,8 +53,14 @@ namespace BSU.Core.Model
         {
             // TODO: use cancellationToken
             Implementation.Load();
-            _matchHash = new MatchHash(Implementation);
-            _versionHash = new VersionHash(Implementation);
+            var match = new MatchHash(Implementation);
+            var version = new VersionHash(Implementation);
+            Repository.Model.EnQueueAction(() =>
+            {
+                _matchHash = match;
+                _versionHash = version;
+                StateChanged?.Invoke();
+            });
         }
 
         public event Action StateChanged;

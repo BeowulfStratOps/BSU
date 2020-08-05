@@ -65,16 +65,16 @@ namespace BSU.Core.Model
             _loading = new JobSlot<SimpleJob>(() => new SimpleJob(LoadJob, title1, 1), title1, jobManager);
             var title2 = $"Hash StorageMod {Identifier}";
             _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(HashJob, title2, 1), title2, jobManager);
-            _loading.OnFinished += error =>
+            /*_loading.OnFinished += error =>
             {
-                _error = error;
+                _error = error; // TODO 
                 State = error == null ? StorageModStateEnum.Loaded : StorageModStateEnum.ErrorLoad;
-            };
-            _hashing.OnFinished += error =>
+            };*/
+            /*_hashing.OnFinished += error =>
             {
                 _error = error;
                 State = error == null ? StorageModStateEnum.Hashed : StorageModStateEnum.ErrorLoad;
-            }; // TODO: check error
+            }; // TODO: check error*/
             _updating = new RepoSyncSlot(jobManager);
             _updating.OnFinished += error =>
             {
@@ -136,13 +136,23 @@ namespace BSU.Core.Model
         {
             // TODO: use cancellationToken
             Implementation.Load();
-            _matchHash = new MatchHash(Implementation);
+            var matchHash = new MatchHash(Implementation);
+            Storage.Model.EnQueueAction(() =>
+            {
+                _matchHash = matchHash;
+                State = StorageModStateEnum.Loaded;
+            });
         }
 
         private void HashJob(CancellationToken cancellationToken)
         {
             // TODO: use cancellationToken
-            _versionHash = new VersionHash(Implementation);
+            var versionHash = new VersionHash(Implementation);
+            Storage.Model.EnQueueAction(() =>
+            {
+                _versionHash = versionHash;
+                State = StorageModStateEnum.Hashed;
+            });
         }
 
         private UpdateTarget UpdateTarget

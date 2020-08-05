@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using BSU.Core.JobManager;
 
 namespace BSU.Core.Model
@@ -16,25 +18,53 @@ namespace BSU.Core.Model
 
         private InternalState PersistentState { get; }
 
+        private readonly Thread _spoolThread;
+        private readonly ConcurrentQueue<Action> _spoolQueue = new ConcurrentQueue<Action>();
+        private bool _running = true;
+
         public Model(InternalState persistentState, IJobManager jobManager)
         {
             _jobManager = jobManager;
             PersistentState = persistentState;
+            _spoolThread = new Thread(Spool);
         }
 
         public void Load()
         {
-            foreach (var repository in PersistentState.LoadRepositories(_jobManager, _matchMaker))
+            foreach (var repository in PersistentState.LoadRepositories(_jobManager, _matchMaker, this))
             {
-                repository.Model = this;
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
             }
-            foreach (var storage in PersistentState.LoadStorages(_jobManager, _matchMaker))
+            foreach (var storage in PersistentState.LoadStorages(_jobManager, _matchMaker, this))
             {
-                storage.Model = this;
                 Storages.Add(storage);
                 StorageAdded?.Invoke(storage);
+            }
+            _spoolThread.Start();
+        }
+
+        public void Shutdown()
+        {
+            _running = false;
+        }
+
+        public void EnQueueAction(Action action)
+        {
+            _spoolQueue.Enqueue(action);
+        }
+
+        private void Spool()
+        {
+            while (_running)
+            {
+                if (!_spoolQueue.TryDequeue(out var action))
+                {
+                    // TODO: use event / some sort of signaling
+                    Thread.Sleep(50);
+                    continue;
+                }
+                action();
             }
         }
         
@@ -50,7 +80,7 @@ namespace BSU.Core.Model
         
         public void AddStorage(string type, DirectoryInfo dir, string name)
         {
-            var storage = PersistentState.AddStorage(name, dir, type, _jobManager, _matchMaker);
+            var storage = PersistentState.AddStorage(name, dir, type, _jobManager, _matchMaker, this);
             Storages.Add(storage);
             StorageAdded?.Invoke(storage);
         }

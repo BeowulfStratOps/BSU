@@ -21,13 +21,14 @@ namespace BSU.Core.Model
 
         public JobSlot<SimpleJob> Loading { get; }
         
-        internal Model Model { get; set; } // TODO: meh
+        internal Model Model { get; }
 
-        public Storage(IStorage implementation, string identifier, string location, IInternalState internalState, IJobManager jobManager, MatchMaker matchMaker)
+        public Storage(IStorage implementation, string identifier, string location, IInternalState internalState, IJobManager jobManager, MatchMaker matchMaker, Model model)
         {
             _internalState = internalState;
             _jobManager = jobManager;
             _matchMaker = matchMaker;
+            Model = model;
             Implementation = implementation;
             Identifier = identifier;
             Location = location;
@@ -40,13 +41,16 @@ namespace BSU.Core.Model
         {
             // TODO: use cancellationToken
             Implementation.Load();
-            foreach (KeyValuePair<string,IStorageMod> mod in Implementation.GetMods())
+            Model.EnQueueAction(() =>
             {
-                var modelMod = new StorageMod(this, mod.Value, mod.Key, null, _internalState, _jobManager);
-                Mods.Add(modelMod);
-                ModAdded?.Invoke(modelMod);
-                _matchMaker.AddStorageMod(modelMod);
-            }
+                foreach (KeyValuePair<string, IStorageMod> mod in Implementation.GetMods())
+                {
+                    var modelMod = new StorageMod(this, mod.Value, mod.Key, null, _internalState, _jobManager);
+                    Mods.Add(modelMod);
+                    ModAdded?.Invoke(modelMod);
+                    _matchMaker.AddStorageMod(modelMod);
+                }
+            });
         }
 
         internal IUpdateState PrepareDownload(RepositoryMod repositoryMod, string identifier)

@@ -22,13 +22,14 @@ namespace BSU.Core.Model
         
         public JobSlot<SimpleJob> Loading { get; }
 
-        internal Model Model { get; set; }
+        internal Model Model { get; }
 
-        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, MatchMaker matchMaker, IInternalState internalState)
+        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, MatchMaker matchMaker, IInternalState internalState, Model model)
         {
             _jobManager = jobManager;
             _matchMaker = matchMaker;
             _internalState = internalState;
+            Model = model;
             Location = location;
             Implementation = implementation;
             Identifier = identifier;
@@ -41,13 +42,16 @@ namespace BSU.Core.Model
         {
             // TODO: use cancellationToken
             Implementation.Load();
-            foreach (KeyValuePair<string,IRepositoryMod> mod in Implementation.GetMods())
+            Model.EnQueueAction(() =>
             {
-                var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager, _internalState);
-                Mods.Add(modelMod);
-                ModAdded?.Invoke(modelMod);
-                _matchMaker.AddRepositoryMod(modelMod);
-            }
+                foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
+                {
+                    var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager, _internalState);
+                    Mods.Add(modelMod);
+                    ModAdded?.Invoke(modelMod);
+                    _matchMaker.AddRepositoryMod(modelMod);
+                }
+            });
         }
 
         private CalculatedRepositoryState _calculatedState = CalculatedRepositoryState.Loading;
