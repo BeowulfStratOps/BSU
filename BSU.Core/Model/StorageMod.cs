@@ -31,8 +31,6 @@ namespace BSU.Core.Model
         private readonly RepoSyncSlot _updating;
         private UpdateTarget _updateTarget;
 
-        private readonly object _stateLock = new object(); // TODO: use it!!!
-
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private StorageModStateEnum _state; // TODO: should not be directly accessible
@@ -78,11 +76,11 @@ namespace BSU.Core.Model
             _updating = new RepoSyncSlot(jobManager);
             _updating.OnFinished += error =>
             {
-                lock (_stateLock)
+                Storage.Model.EnQueueAction(() =>
                 {
                     _versionHash = null;
                     _matchHash = null;
-                    
+
                     if (error == null)
                     {
                         UpdateTarget = null;
@@ -90,10 +88,10 @@ namespace BSU.Core.Model
                         State = StorageModStateEnum.Loading;
                         return;
                     }
-                    
+
                     _error = error;
                     State = StorageModStateEnum.ErrorUpdate;
-                }
+                });
             };
             if (updateTarget == null)
             {
@@ -124,12 +122,9 @@ namespace BSU.Core.Model
 
         public void RequireHash()
         {
-            lock (_stateLock)
-            {
-                CheckState(StorageModStateEnum.Loaded);
-                _hashing.StartJob();
-                State = StorageModStateEnum.Hashing;
-            }
+            CheckState(StorageModStateEnum.Loaded);
+            _hashing.StartJob();
+            State = StorageModStateEnum.Hashing;
         }
 
         private void LoadJob(CancellationToken cancellationToken)
@@ -172,45 +167,35 @@ namespace BSU.Core.Model
 
         internal IUpdateState PrepareUpdate(RepositoryMod repositoryMod, Action rollback = null)
         {
-            lock (_stateLock)
-            {
-                // TODO: state lock for repo mod?
-                CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed,
-                    StorageModStateEnum.CreatedWithUpdateTarget);
-                var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(),
-                    repositoryMod.Implementation.GetDisplayName());
-                UpdateTarget = target;
-                var title =
-                    $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
+            CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed,
+                StorageModStateEnum.CreatedWithUpdateTarget);
+            var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(),
+                repositoryMod.Implementation.GetDisplayName());
+            UpdateTarget = target;
+            var title =
+                $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
 
-                _updating.Prepare(repositoryMod, this, target, title, rollback);
-                
-                _versionHash = null;
-                _matchHash = null;
+            _updating.Prepare(repositoryMod, this, target, title, rollback);
 
-                State = StorageModStateEnum.Updating;
+            _versionHash = null;
+            _matchHash = null;
 
-                return _updating; // TODO: meh. should be a new object every time.
-            }
+            State = StorageModStateEnum.Updating;
+
+            return _updating; // TODO: meh. should be a new object every time.
         }
 
         public StorageModState GetState()
         {
-            lock (_stateLock)
-            {
-                return new StorageModState(_matchHash, _versionHash, UpdateTarget, _updating.Target, State, _error);
-            }
+            return new StorageModState(_matchHash, _versionHash, UpdateTarget, _updating.Target, State, _error);
         }
 
         public void Abort()
         {
-            lock (_stateLock)
-            {
-                CheckState(StorageModStateEnum.CreatedWithUpdateTarget);
-                UpdateTarget = null;
-                _loading.StartJob();
-                State = StorageModStateEnum.Loading;
-            }
+            CheckState(StorageModStateEnum.CreatedWithUpdateTarget);
+            UpdateTarget = null;
+            _loading.StartJob();
+            State = StorageModStateEnum.Loading;
         }
     }
 }

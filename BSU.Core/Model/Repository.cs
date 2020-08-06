@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using BSU.Core.JobManager;
-using BSU.Core.View;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -11,7 +9,7 @@ namespace BSU.Core.Model
     internal class Repository
     {
         private readonly IJobManager _jobManager;
-        private readonly MatchMaker _matchMaker;
+        private readonly IMatchMaker _matchMaker;
         private readonly IInternalState _internalState;
         public IRepository Implementation { get; }
         public string Identifier { get; }
@@ -24,7 +22,7 @@ namespace BSU.Core.Model
 
         internal Model Model { get; }
 
-        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, MatchMaker matchMaker, IInternalState internalState, Model model)
+        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, IMatchMaker matchMaker, IInternalState internalState, Model model)
         {
             _jobManager = jobManager;
             _matchMaker = matchMaker;

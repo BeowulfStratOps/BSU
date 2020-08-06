@@ -11,22 +11,12 @@ namespace BSU.Core.Tests
         private readonly Dictionary<StorageMod, UpdateTarget> _updateTargets = new Dictionary<StorageMod, UpdateTarget>();
         public UpdateTarget MockUpdatingTo { get; set; }
 
-        public IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors()
+        public IReadOnlyList<StorageEntry> GetStorages()
         {
             throw new NotImplementedException();
         }
 
-        public IReadOnlyList<Tuple<StorageEntry, Exception>> GetStorageErrors()
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<Model.Storage> LoadStorages(IJobManager jobManager, MatchMaker matchMaker)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<Repository> LoadRepositories(IJobManager jobManager, MatchMaker matchMaker)
+        public IReadOnlyList<RepositoryEntry> GetRepositories()
         {
             throw new NotImplementedException();
         }
@@ -36,27 +26,17 @@ namespace BSU.Core.Tests
             throw new NotImplementedException();
         }
 
-        public Repository AddRepo(string name, string url, string type, Model.Model model, IJobManager jobManager, MatchMaker matchMaker)
+        public void AddRepo(string name, string url, string type)
         {
             throw new NotImplementedException();
         }
 
-        public Repository LoadRepository(RepoEntry repo, IJobManager jobManager, MatchMaker matchMaker)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Model.Storage AddStorage(string name, DirectoryInfo directory, string type, IJobManager jobManager, MatchMaker matchMaker)
+        public void AddStorage(string name, DirectoryInfo directory, string type)
         {
             throw new NotImplementedException();
         }
 
         public void RemoveStorage(Model.Storage storage)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Model.Storage LoadStorage(StorageEntry storage, IJobManager jobManager, MatchMaker matchMaker)
         {
             throw new NotImplementedException();
         }

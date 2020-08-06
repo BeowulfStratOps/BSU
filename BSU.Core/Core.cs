@@ -43,8 +43,8 @@ namespace BSU.Core
             Logger.Info("Creating new core instance");
             JobManager = jobManager;
             Types = new Types();
-            var state = new InternalState(settings, Types);
-            Model = new Model.Model(state, jobManager);
+            var state = new InternalState(settings);
+            Model = new Model.Model(state, jobManager, Types);
             ViewState = new ViewModel(this, uiDispatcher, Model);
         }
 

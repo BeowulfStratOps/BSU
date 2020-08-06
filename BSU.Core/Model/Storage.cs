@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.JobManager;
-using BSU.Core.Sync;
-using BSU.Core.View;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -12,7 +10,7 @@ namespace BSU.Core.Model
     {
         private readonly IInternalState _internalState;
         private readonly IJobManager _jobManager;
-        private readonly MatchMaker _matchMaker;
+        private readonly IMatchMaker _matchMaker;
         public IStorage Implementation { get; }
         public string Identifier { get; }
         public string Location { get; }
@@ -23,7 +21,7 @@ namespace BSU.Core.Model
         
         internal Model Model { get; }
 
-        public Storage(IStorage implementation, string identifier, string location, IInternalState internalState, IJobManager jobManager, MatchMaker matchMaker, Model model)
+        public Storage(IStorage implementation, string identifier, string location, IInternalState internalState, IJobManager jobManager, IMatchMaker matchMaker, Model model)
         {
             _internalState = internalState;
             _jobManager = jobManager;
@@ -56,7 +54,6 @@ namespace BSU.Core.Model
         internal IUpdateState PrepareDownload(RepositoryMod repositoryMod, string identifier)
         {
             if (Loading.IsActive()) throw new InvalidOperationException();
-            // TODO: state lock? for this? for repo mod?
             var updateTarget = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
             var mod = Implementation.CreateMod(identifier);
             var storageMod = new StorageMod(this, mod, identifier, updateTarget, _internalState, _jobManager);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
@@ -23,8 +22,6 @@ namespace BSU.Core.Model
         private VersionHash _versionHash;
 
         private Exception _error;
-
-        private readonly object _stateLock = new object(); // TODO: use it!!
 
         public StorageMod SelectedStorageMod { get; set; }
         public Storage SelectedDownloadStorage { get; set; }
@@ -67,10 +64,7 @@ namespace BSU.Core.Model
 
         public RepositoryModState GetState()
         {
-            lock (_stateLock)
-            {
-                return new RepositoryModState(_matchHash, _versionHash, _error);                
-            }
+            return new RepositoryModState(_matchHash, _versionHash, _error);
         }
 
         internal void ChangeAction(StorageMod target, ModActionEnum? newAction)

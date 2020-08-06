@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BSU.Core.JobManager;
 using BSU.Core.Model;
 using NLog;
 
@@ -17,61 +16,23 @@ namespace BSU.Core
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly ISettings _settings;
-        private readonly Types _types;
 
-        private readonly List<Tuple<RepoEntry, Exception>> _repoErrors = new List<Tuple<RepoEntry, Exception>>();
-
-        private readonly List<Tuple<StorageEntry, Exception>> _storageErrors =
-            new List<Tuple<StorageEntry, Exception>>();
-
-        // TODO: expose those to user
-        public IReadOnlyList<Tuple<RepoEntry, Exception>> GetRepoErrors() => _repoErrors.AsReadOnly();
-        public IReadOnlyList<Tuple<StorageEntry, Exception>> GetStorageErrors() => _storageErrors.AsReadOnly();
-
-        internal InternalState(ISettings settings, Types types)
+        internal InternalState(ISettings settings)
         {
             Logger.Info("Creating new internal state");
             _settings = settings;
-            _types = types;
         }
 
-        public List<Model.Storage> LoadStorages(IJobManager jobManager, MatchMaker matchMaker, Model.Model model)
+        public IReadOnlyList<StorageEntry> GetStorages()
         {
-            var result = new List<Model.Storage>();
-            foreach (var storageEntry in _settings.Storages)
-            {
-                try
-                {
-                    result.Add(LoadStorage(storageEntry, jobManager, matchMaker, model));
-                }
-                catch (Exception e)
-                {
-                    _storageErrors.Add(Tuple.Create(storageEntry, e));
-                }
-            }
-
-            return result;
+            return _settings.Storages.AsReadOnly();
         }
 
-        public List<Repository> LoadRepositories(IJobManager jobManager, MatchMaker matchMaker, Model.Model model)
+        public IReadOnlyList<RepositoryEntry> GetRepositories()
         {
-            var result = new List<Repository>();
-            foreach (var repoEntry in _settings.Repositories)
-            {
-                try
-                {
-                    result.Add(LoadRepository(repoEntry, jobManager, matchMaker, model));
-                }
-                catch (Exception e)
-                {
-                    _repoErrors.Add(Tuple.Create(repoEntry, e));
-                }
-            }
-
-            return result;
+            return _settings.Repositories.AsReadOnly();
         }
-
-
+        
         public void RemoveRepo(Repository repo)
         {
             Logger.Debug("Removing repo {0}", repo.Uid);
@@ -80,10 +41,10 @@ namespace BSU.Core
             _settings.Store();
         }
 
-        public Repository AddRepo(string name, string url, string type, Model.Model model, IJobManager jobManager, MatchMaker matchMaker)
+        public void AddRepo(string name, string url, string type)
         {
             if (_settings.Repositories.Any(r => r.Name == name)) throw new ArgumentException("Name in use");
-            var repo = new RepoEntry
+            var repo = new RepositoryEntry
             {
                 Name = name,
                 Type = type,
@@ -92,21 +53,9 @@ namespace BSU.Core
             };
             _settings.Repositories.Add(repo);
             _settings.Store();
-            return LoadRepository(repo, jobManager, matchMaker, model);
         }
 
-
-        // TODO: smth smth factory. But also, this is stupid. Just hand over the implementation.
-        public Repository LoadRepository(RepoEntry repo, IJobManager jobManager, MatchMaker matchMaker, Model.Model model)
-        {
-            Logger.Debug("Creating repo {0} / {1} / {2}", repo.Name, repo.Type, repo.Url);
-            var implementation = _types.GetRepoImplementation(repo.Type, repo.Url);
-            var repository = new Repository(implementation, repo.Name, repo.Url, jobManager, matchMaker, this, model);
-            Logger.Debug("Created repo {0}", repository.Uid);
-            return repository;
-        }
-
-        public Model.Storage AddStorage(string name, DirectoryInfo directory, string type, IJobManager jobManager, MatchMaker matchMaker, Model.Model model)
+        public void AddStorage(string name, DirectoryInfo directory, string type)
         {
             if (_settings.Storages.Any(s => s.Name == name)) throw new ArgumentException("Name in use");
             var storage = new StorageEntry
@@ -118,7 +67,6 @@ namespace BSU.Core
             };
             _settings.Storages.Add(storage);
             _settings.Store();
-            return LoadStorage(storage, jobManager, matchMaker, model);
         }
 
         public void RemoveStorage(Model.Storage storage)
@@ -127,15 +75,6 @@ namespace BSU.Core
             var storageEntry = _settings.Storages.Single(s => s.Name == storage.Identifier);
             _settings.Storages.Remove(storageEntry);
             _settings.Store();
-        }
-
-        public Model.Storage LoadStorage(StorageEntry storage, IJobManager jobManager, MatchMaker matchMaker, Model.Model model)
-        {
-            Logger.Debug("Adding storage {0} / {1} / {2}", storage.Name, storage.Type, storage.Path);
-            var implementation = _types.GetStorageImplementation(storage.Type, storage.Path);
-            var storageObj = new Model.Storage(implementation, storage.Name, storage.Path, this, jobManager, matchMaker, model);
-            Logger.Debug("Created storage {0}", storageObj.Uid);
-            return storageObj;
         }
 
         public void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay)

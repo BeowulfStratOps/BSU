@@ -42,18 +42,18 @@ namespace BSU.Core
             }
         }
 
-        public List<RepoEntry> Repositories => _data.Repositories;
+        public List<RepositoryEntry> Repositories => _data.Repositories;
         public List<StorageEntry> Storages => _data.Storages;
 
         private class SettingsData
         {
             public SettingsData()
             {
-                Repositories = new List<RepoEntry>();
+                Repositories = new List<RepositoryEntry>();
                 Storages = new List<StorageEntry>();
             }
 
-            public readonly List<RepoEntry> Repositories;
+            public readonly List<RepositoryEntry> Repositories;
             public readonly List<StorageEntry> Storages;
         }
     }
@@ -66,7 +66,7 @@ namespace BSU.Core
         public Dictionary<string, UpdateTarget> Updating;
     }
 
-    internal class RepoEntry
+    internal class RepositoryEntry
     {
         public string Name;
         public string Type;

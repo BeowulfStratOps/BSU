@@ -4,7 +4,7 @@ using NLog;
 
 namespace BSU.Core.Model
 {
-    internal class MatchMaker
+    internal class MatchMaker : IMatchMaker
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly Model _model;
