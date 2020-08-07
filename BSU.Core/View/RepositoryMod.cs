@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
+using BSU.Core.Model;
 
 namespace BSU.Core.View
 {
@@ -33,7 +34,7 @@ namespace BSU.Core.View
             // Use setter for this
             if (mod.SelectedStorageMod != null)
             {
-                Selection = mod.SelectedStorageMod.Identifier;
+                Selection = mod.SelectedStorageMod.ToString();
                 OnPropertyChanged(nameof(Selection));
                 return;
             }
@@ -75,7 +76,7 @@ namespace BSU.Core.View
             }
         }
 
-        private void AddAction(Model.StorageMod storageMod)
+        private void AddAction(IModelStorageMod storageMod)
         {
             var action = Mod.Actions[storageMod];
             ViewModel.UiDo(() => Matches.Add(new Match(storageMod, this, action)));

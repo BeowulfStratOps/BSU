@@ -2,8 +2,8 @@
 {
     internal interface IMatchMaker
     {
-        void AddStorageMod(StorageMod storageMod);
-        void AddRepositoryMod(RepositoryMod repoMod);
-        void RemoveStorageMod(StorageMod mod);
+        void AddStorageMod(IModelStorageMod storageMod);
+        void AddRepositoryMod(IModelRepositoryMod repoMod);
+        void RemoveStorageMod(IModelStorageMod mod);
     }
 }

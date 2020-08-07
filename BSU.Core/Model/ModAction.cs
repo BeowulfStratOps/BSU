@@ -1,41 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
+using BSU.Core.Hashes;
 
 namespace BSU.Core.Model
 {
     internal class ModAction
     {
-        private readonly StorageMod _target;
-        internal readonly RepositoryMod Parent;
+        internal readonly IModelRepositoryMod Parent;
+        private readonly VersionHash _versionHash;
+        private readonly HashSet<ModAction> _relatedActions;
         public ModActionEnum ActionType { get; private set; }
 
-        public HashSet<ModAction> Conflicts = new HashSet<ModAction>();
+        public readonly HashSet<ModAction> Conflicts = new HashSet<ModAction>();
 
-        public ModAction(StorageMod target, ModActionEnum newAction, RepositoryMod parent)
+        public ModAction(ModActionEnum newAction, IModelRepositoryMod parent, VersionHash versionHash, HashSet<ModAction> relatedActions)
         {
-            _target = target;
             ActionType = newAction;
             Parent = parent;
-            foreach (var otherModAction in target.RelatedModActions)
+            _versionHash = versionHash;
+            _relatedActions = relatedActions;
+            foreach (var otherModAction in relatedActions)
             {
-                var isConflict = IsConflict(this, otherModAction);
+                var isConflict = IsConflict(otherModAction);
                 UpdateConflict(otherModAction, isConflict);
                 otherModAction.UpdateConflict(this, isConflict);
             }
-            target.RelatedModActions.Add(this);
+            relatedActions.Add(this);
         }
 
         public void Remove()
         {
             // TODO: ensure method gets called!
-            _target.RelatedModActions.Add(this);
-            foreach (var otherModAction in _target.RelatedModActions)
+            _relatedActions.Remove(this);
+            foreach (var otherModAction in _relatedActions)
             {
                 otherModAction.UpdateConflict(this, false);
             }
         }
         
-        public void UpdateConflict(ModAction modAction, bool isConflict)
+        private void UpdateConflict(ModAction modAction, bool isConflict)
         {
             if (isConflict)
             {
@@ -55,11 +58,9 @@ namespace BSU.Core.Model
             Updated?.Invoke();
         }
 
-        private bool IsConflict(ModAction a, ModAction b)
+        private bool IsConflict(ModAction other)
         {
-            var ap = a.Parent;
-            var bp = b.Parent;
-            return !ap.GetState().VersionHash.IsMatch(bp.GetState().VersionHash);
+            return !_versionHash.IsMatch(other._versionHash);
         }
 
         public event Action Updated;

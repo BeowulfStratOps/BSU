@@ -12,22 +12,24 @@ namespace BSU.Core.Model
         private readonly IJobManager _jobManager;
         private readonly IMatchMaker _matchMaker;
         private readonly IRepositoryState _internalState;
+        private readonly RelatedActionsBag _relatedActionsBag;
         public IRepository Implementation { get; }
         public string Identifier { get; }
         public string Location { get; }
         public Uid Uid { get; } = new Uid();
 
-        public List<RepositoryMod> Mods { get; } = new List<RepositoryMod>();
+        public List<IModelRepositoryMod> Mods { get; } = new List<IModelRepositoryMod>();
         
         public JobSlot<SimpleJob> Loading { get; }
 
         internal Model Model { get; }
 
-        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, IMatchMaker matchMaker, IRepositoryState internalState, Model model)
+        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, IMatchMaker matchMaker, IRepositoryState internalState, Model model, RelatedActionsBag relatedActionsBag)
         {
             _jobManager = jobManager;
             _matchMaker = matchMaker;
             _internalState = internalState;
+            _relatedActionsBag = relatedActionsBag;
             Model = model;
             Location = location;
             Implementation = implementation;
@@ -45,7 +47,7 @@ namespace BSU.Core.Model
             {
                 foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
                 {
-                    var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key));
+                    var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _relatedActionsBag);
                     modelMod.ActionAdded += storageMod =>
                     {
                         modelMod.Actions[storageMod].Updated += ReCalculateState;

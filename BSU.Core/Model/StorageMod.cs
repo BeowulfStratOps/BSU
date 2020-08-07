@@ -10,7 +10,7 @@ using NLog;
 
 namespace BSU.Core.Model
 {
-    internal class StorageMod
+    internal class StorageMod : IModelStorageMod
     {
         // TODO: come up with a proper state machine implementation
         
@@ -161,7 +161,7 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        internal IUpdateState PrepareUpdate(RepositoryMod repositoryMod, Action rollback = null)
+        public IUpdateState PrepareUpdate(RepositoryMod repositoryMod, Action rollback = null)
         {
             CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed,
                 StorageModStateEnum.CreatedWithUpdateTarget);
@@ -197,5 +197,9 @@ namespace BSU.Core.Model
         {
             return new StorageModIdentifiers(Storage.Identifier, Identifier);
         }
+
+        public bool CanWrite() => Storage.Implementation.CanWrite();
+
+        public override string ToString() => Identifier;
     }
 }

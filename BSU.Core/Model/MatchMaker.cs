@@ -15,17 +15,17 @@ namespace BSU.Core.Model
             _model = model;
         }
 
-        private IEnumerable<StorageMod> GetAllStorageMods()
+        private IEnumerable<IModelStorageMod> GetAllStorageMods()
         {
             return _model.Storages.SelectMany(storage => storage.Mods);
         }
         
-        private IEnumerable<RepositoryMod> GetAllRepositoryMods()
+        private IEnumerable<IModelRepositoryMod> GetAllRepositoryMods()
         {
             return _model.Repositories.SelectMany(repository => repository.Mods);
         }
 
-        public void AddStorageMod(StorageMod storageMod)
+        public void AddStorageMod(IModelStorageMod storageMod)
         {
             _allModsLoaded = false;
             NotifyAllModsLoaded();
@@ -36,7 +36,7 @@ namespace BSU.Core.Model
             UpdateStorageMod(storageMod);
         }
 
-        private void UpdateStorageMod(StorageMod storageMod)
+        private void UpdateStorageMod(IModelStorageMod storageMod)
         {
             foreach (var repoMod in GetAllRepositoryMods())
             {
@@ -71,7 +71,7 @@ namespace BSU.Core.Model
             }
         }
 
-        public void AddRepositoryMod(RepositoryMod repoMod)
+        public void AddRepositoryMod(IModelRepositoryMod repoMod)
         {
             repoMod.StateChanged += () =>
             {
@@ -80,7 +80,7 @@ namespace BSU.Core.Model
             UpdateRepositoryMod(repoMod);
         }
 
-        public void RemoveStorageMod(StorageMod mod)
+        public void RemoveStorageMod(IModelStorageMod mod)
         {
             foreach (var repoMod in GetAllRepositoryMods())
             {
@@ -88,7 +88,7 @@ namespace BSU.Core.Model
             }
         }
 
-        private void UpdateRepositoryMod(RepositoryMod repositoryMod)
+        private void UpdateRepositoryMod(IModelRepositoryMod repositoryMod)
         {
             foreach (var storageMod in GetAllStorageMods())
             {
@@ -97,20 +97,20 @@ namespace BSU.Core.Model
             CheckAllModsLoaded();
         }
 
-        private static void CheckMatch(RepositoryMod repoMod, StorageMod storageMod)
+        private static void CheckMatch(IModelRepositoryMod repoMod, IModelStorageMod storageMod)
         {
             var repoModState = repoMod.GetState();
             var storageModState = storageMod.GetState();
 
             var match = CoreCalculation.IsMatch(repoModState, storageModState);
-            Logger.Debug($"Check Match on {repoMod.Identifier} and {storageMod.Identifier} -> {match}");
+            Logger.Debug($"Check Match on {repoMod} and {storageMod} -> {match}");
 
             if (match == CoreCalculation.ModMatch.RequireHash) storageMod.RequireHash();
             
             if (match == CoreCalculation.ModMatch.NoMatch || match == CoreCalculation.ModMatch.Wait) return;
             
-            var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.Storage.Implementation.CanWrite());
-            Logger.Debug($"Calculate Action on {repoMod.Identifier} and {storageMod.Identifier} -> {action}");
+            var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.CanWrite());
+            Logger.Debug($"Calculate Action on {repoMod} and {storageMod} -> {action}");
                 
             repoMod.ChangeAction(storageMod, action);
         }

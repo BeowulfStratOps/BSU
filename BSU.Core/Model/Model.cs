@@ -20,6 +20,8 @@ namespace BSU.Core.Model
 
         private InternalState PersistentState { get; }
 
+        private RelatedActionsBag _relatedActionsBag;
+        
         private readonly Thread _spoolThread;
         private readonly ConcurrentQueue<Action> _spoolQueue = new ConcurrentQueue<Action>();
         private bool _running = true;
@@ -29,6 +31,7 @@ namespace BSU.Core.Model
             _matchMaker = new MatchMaker(this);
             _jobManager = jobManager;
             _types = types;
+            _relatedActionsBag = new RelatedActionsBag();
             PersistentState = persistentState;
             _spoolThread = new Thread(Spool);
         }
@@ -38,7 +41,7 @@ namespace BSU.Core.Model
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
                 var implementation = _types.GetRepoImplementation(repositoryEntry.Type, repositoryEntry.Url);
-                var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, _matchMaker, repositoryState, this);
+                var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, _matchMaker, repositoryState, this, _relatedActionsBag);
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
             }
@@ -84,7 +87,7 @@ namespace BSU.Core.Model
             if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
             var repoState = PersistentState.AddRepo(name, url, type);
             var implementation = _types.GetRepoImplementation(type, url);
-            var repository = new Repository(implementation, name, url, _jobManager, _matchMaker, repoState, this);
+            var repository = new Repository(implementation, name, url, _jobManager, _matchMaker, repoState, this, _relatedActionsBag);
             Repositories.Add(repository);
             RepositoryAdded?.Invoke(repository);
         }

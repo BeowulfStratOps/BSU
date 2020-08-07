@@ -13,7 +13,7 @@ namespace BSU.Core.View
     {
         private string _action;
 
-        internal Model.StorageMod Mod { get; private set; }
+        internal IModelStorageMod Mod { get; private set; }
 
         public string Action
         {
@@ -28,7 +28,7 @@ namespace BSU.Core.View
 
         public RepositoryMod Parent { get; }
 
-        internal Match(Model.StorageMod mod, RepositoryMod parent, ModAction modelAction)
+        internal Match(IModelStorageMod mod, RepositoryMod parent, ModAction modelAction)
         {
             Mod = mod;
             Action = modelAction.ActionType.ToString();

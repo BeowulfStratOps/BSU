@@ -74,7 +74,7 @@ namespace BSU.Core.Model
             Match
         }
 
-        internal static (StorageMod, Storage) AutoSelect(bool allModsLoaded, Dictionary<StorageMod, ModAction> actions,
+        internal static (IModelStorageMod, Storage) AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
             Model model, StorageModIdentifiers usedMod)
         {
             if (usedMod != null)
@@ -115,7 +115,7 @@ namespace BSU.Core.Model
             return (null, null);
         }
         
-        internal static CalculatedRepositoryState CalculateRepositoryState(List<RepositoryMod> mods)
+        internal static CalculatedRepositoryState CalculateRepositoryState(List<IModelRepositoryMod> mods)
         {
             /*
             Loading, // 3. At least one loading

@@ -9,9 +9,10 @@ using NLog;
 
 namespace BSU.Core.Model
 {
-    internal class RepositoryMod
+    internal class RepositoryMod : IModelRepositoryMod
     {
         private readonly IRepositoryModState _internalState;
+        private readonly RelatedActionsBag _relatedActionsBag;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         
         public Repository Repository { get; }
@@ -26,16 +27,17 @@ namespace BSU.Core.Model
 
         private Exception _error;
 
-        public StorageMod SelectedStorageMod { get; set; }
+        public IModelStorageMod SelectedStorageMod { get; set; }
         public Storage SelectedDownloadStorage { get; set; }
 
-        public Dictionary<StorageMod, ModAction> Actions { get; } = new Dictionary<StorageMod, ModAction>(); // TODO: wat is dis? Does it need a lock?
+        public Dictionary<IModelStorageMod, ModAction> Actions { get; } = new Dictionary<IModelStorageMod, ModAction>();
 
         private readonly JobSlot<SimpleJob> _loading;
 
-        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier, IJobManager jobManager, IRepositoryModState internalState)
+        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier, IJobManager jobManager, IRepositoryModState internalState, RelatedActionsBag relatedActionsBag)
         {
             _internalState = internalState;
+            _relatedActionsBag = relatedActionsBag;
             Repository = parent;
             Implementation = implementation;
             Identifier = identifier;
@@ -72,7 +74,7 @@ namespace BSU.Core.Model
             return new RepositoryModState(_matchHash, _versionHash, _error);
         }
 
-        internal void ChangeAction(StorageMod target, ModActionEnum? newAction)
+        public void ChangeAction(IModelStorageMod target, ModActionEnum? newAction)
         {
             // TODO: signal if allModsLoaded becomes true. might be important for displaying things
             var existing = Actions.ContainsKey(target);
@@ -94,7 +96,7 @@ namespace BSU.Core.Model
             }
             else
             {
-                Actions[target] = new ModAction(target, (ModActionEnum) newAction, this);
+                Actions[target] = new ModAction((ModActionEnum) newAction, this, _versionHash, _relatedActionsBag.GetBag(target));
                 ActionAdded?.Invoke(target);
             }
             DoAutoSelection();
@@ -130,7 +132,7 @@ namespace BSU.Core.Model
             }
         }
         
-        public event Action<StorageMod> ActionAdded;
+        public event Action<IModelStorageMod> ActionAdded;
         public event Action SelectionChanged; // TODO: use a property to call it
     }
 }
