@@ -28,7 +28,7 @@ namespace BSU.Core.Model
         private Exception _error;
 
         public IModelStorageMod SelectedStorageMod { get; set; }
-        public Storage SelectedDownloadStorage { get; set; }
+        public IModelStorage SelectedDownloadStorage { get; set; }
 
         public Dictionary<IModelStorageMod, ModAction> Actions { get; } = new Dictionary<IModelStorageMod, ModAction>();
 
@@ -134,7 +134,9 @@ namespace BSU.Core.Model
                 SelectionChanged?.Invoke();
             }
         }
-        
+
+        public override string ToString() => Identifier;
+
         public event Action<IModelStorageMod> ActionAdded;
         public event Action SelectionChanged; // TODO: use a property to call it
     }

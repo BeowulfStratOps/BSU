@@ -4,9 +4,8 @@ namespace BSU.Core.Model
 {
     internal interface IModelStructure
     {
-        Storage GetWritableStorage();
-        IEnumerable<Storage> GetStorages();
-        IEnumerable<Repository> GetRepositories();
+        IEnumerable<IModelStorage> GetStorages();
+        IEnumerable<IModelRepository> GetRepositories();
         IEnumerable<IModelStorageMod> GetAllStorageMods();
         IEnumerable<IModelRepositoryMod> GetAllRepositoryMods();
     }

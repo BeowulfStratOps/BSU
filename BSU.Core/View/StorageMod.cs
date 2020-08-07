@@ -8,7 +8,7 @@ namespace BSU.Core.View
 {
     public class StorageMod : INotifyPropertyChanged
     {
-        internal Model.StorageMod ModelStorageMod { get; }
+        internal IModelStorageMod ModelStorageMod { get; }
         
         public string Identifier { get; set; }
         
@@ -16,7 +16,7 @@ namespace BSU.Core.View
         public bool IsHashing { private set; get; }
         public bool IsUpdating { private set; get; }
         
-        internal StorageMod(Model.StorageMod mod, ViewModel viewModel)
+        internal StorageMod(IModelStorageMod mod, ViewModel viewModel)
         {
             var state = mod.GetState();
             IsLoading = state.State == StorageModStateEnum.Loading;
@@ -24,7 +24,7 @@ namespace BSU.Core.View
             IsUpdating = state.State == StorageModStateEnum.Updating;
             mod.StateChanged += StateChanged;
             ModelStorageMod = mod;
-            Identifier = mod.Identifier;
+            Identifier = mod.ToString();
         }
 
         private void StateChanged()

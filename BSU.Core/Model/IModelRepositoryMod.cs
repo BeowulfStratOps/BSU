@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
@@ -7,9 +8,10 @@ namespace BSU.Core.Model
     {
         UpdateTarget AsUpdateTarget { get; }
         IModelStorageMod SelectedStorageMod { get; set; }
-        Storage SelectedDownloadStorage { get; set; }
+        IModelStorage SelectedDownloadStorage { get; set; }
         Dictionary<IModelStorageMod, ModAction> Actions { get; }
         bool AllModsLoaded { set; }
+        IRepositoryMod Implementation { get; }
         event Action StateChanged;
         RepositoryModState GetState();
         void ChangeAction(IModelStorageMod target, ModActionEnum? newAction);

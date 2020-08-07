@@ -39,9 +39,9 @@ namespace BSU.Core.Model
         {
             if (_allModsLoaded) return;
             
-            if (_modelStructure.GetStorages().Any(storage => storage.Loading.IsActive())) return;
+            if (_modelStructure.GetStorages().Any(storage => storage.IsLoading)) return;
 
-            if (_modelStructure.GetRepositories().Any(repository => repository.Loading.IsActive())) return;
+            if (_modelStructure.GetRepositories().Any(repository => repository.IsLoading)) return;
             
             if (_modelStructure.GetAllStorageMods().Any(storageMod => storageMod.GetState().MatchHash == null)) return;
             
@@ -65,7 +65,7 @@ namespace BSU.Core.Model
         {
             repoMod.StateChanged += () =>
             {
-                    UpdateRepositoryMod(repoMod);
+                UpdateRepositoryMod(repoMod);
             };
             UpdateRepositoryMod(repoMod);
         }

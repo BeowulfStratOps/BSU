@@ -19,8 +19,8 @@ namespace BSU.Core.Model
         private readonly Types _types;
 
         private readonly MatchMaker _matchMaker;
-        public List<Repository> Repositories { get; } = new List<Repository>();
-        public List<Storage> Storages { get; } = new List<Storage>();
+        public List<IModelRepository> Repositories { get; } = new List<IModelRepository>();
+        public List<IModelStorage> Storages { get; } = new List<IModelStorage>();
 
         private InternalState PersistentState { get; }
 
@@ -106,14 +106,9 @@ namespace BSU.Core.Model
             StorageAdded?.Invoke(storage);
         }
 
-        public Storage GetWritableStorage()
-        {
-            return Storages.FirstOrDefault(s => s.Implementation.CanWrite());
-        }
+        public IEnumerable<IModelStorage> GetStorages() => Storages;
 
-        public IEnumerable<Storage> GetStorages() => Storages;
-
-        public IEnumerable<Repository> GetRepositories() => Repositories;
+        public IEnumerable<IModelRepository> GetRepositories() => Repositories;
 
         public IEnumerable<IModelStorageMod> GetAllStorageMods()
         {

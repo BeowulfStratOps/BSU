@@ -7,7 +7,7 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
-    internal class Repository
+    internal class Repository : IModelRepository
     {
         private readonly IJobManager _jobManager;
         private readonly IMatchMaker _matchMaker;
@@ -81,7 +81,9 @@ namespace BSU.Core.Model
         }
 
         public event Action CalculatedStateChanged;
+        
+        public bool IsLoading => Loading.IsActive();
 
-        public event Action<RepositoryMod> ModAdded;
+        public event Action<IModelRepositoryMod> ModAdded;
     }
 }

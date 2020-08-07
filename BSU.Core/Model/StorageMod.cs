@@ -165,8 +165,9 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        public IUpdateState PrepareUpdate(RepositoryMod repositoryMod, Action rollback = null)
+        public IUpdateState PrepareUpdate(IModelRepositoryMod repositoryMod, Action rollback = null)
         {
+            // TODO: needs to run synchronized / with callback!
             CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed,
                 StorageModStateEnum.CreatedWithUpdateTarget);
             var target = repositoryMod.AsUpdateTarget;

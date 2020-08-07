@@ -74,7 +74,7 @@ namespace BSU.Core.Model
             Match
         }
 
-        internal static (IModelStorageMod, Storage) AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
+        internal static (IModelStorageMod, IModelStorage) AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
             IModelStructure modelStructure, StorageModIdentifiers usedMod)
         {
             if (usedMod != null)
@@ -105,7 +105,7 @@ namespace BSU.Core.Model
 
             if (actions.All(am => am.Value.ActionType == ModActionEnum.Unusable))
             {
-                var downloadStorage = modelStructure.GetWritableStorage();
+                var downloadStorage = modelStructure.GetStorages().FirstOrDefault(s => s.CanWrite);
                 if (downloadStorage != null)
                 {
                     return (null, downloadStorage);

@@ -42,16 +42,16 @@ namespace BSU.Core.View
 
             foreach (var conflict in modelAction.Conflicts)
             {
-                ViewModel.UiDo(() => { Conflicts.Add(conflict.Parent.Repository.Identifier); });
+                ViewModel.UiDo(() => { Conflicts.Add("???"); });
             }
 
             modelAction.ConflictAdded += action => ViewModel.UiDo(() =>
             {
-                Conflicts.Add(action.Parent.Repository.Identifier);
+                Conflicts.Add("???");
             });
             modelAction.ConflictRemoved += action => ViewModel.UiDo(() =>
             {
-                Conflicts.Remove(action.Parent.Repository.Identifier);
+                Conflicts.Remove("???");
             });
             Parent = parent;
         }

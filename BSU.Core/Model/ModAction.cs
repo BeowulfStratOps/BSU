@@ -63,6 +63,8 @@ namespace BSU.Core.Model
             return !_versionHash.IsMatch(other._versionHash);
         }
 
+        public override string ToString() => ActionType.ToString();
+
         public event Action Updated;
         public event Action<ModAction> ConflictAdded, ConflictRemoved;
     }

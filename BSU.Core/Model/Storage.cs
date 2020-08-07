@@ -7,7 +7,7 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
-    internal class Storage
+    internal class Storage : IModelStorage
     {
         private readonly IStorageState _internalState;
         private readonly IJobManager _jobManager;
@@ -16,7 +16,7 @@ namespace BSU.Core.Model
         public string Identifier { get; }
         public string Location { get; }
         public Uid Uid { get; } = new Uid();
-        public List<StorageMod> Mods { private set; get; } = new List<StorageMod>(); // TODO: readonly
+        public List<IModelStorageMod> Mods { private set; get; } = new List<IModelStorageMod>(); // TODO: readonly
 
         public JobSlot<SimpleJob> Loading { get; }
 
@@ -53,8 +53,9 @@ namespace BSU.Core.Model
             });
         }
 
-        internal IUpdateState PrepareDownload(RepositoryMod repositoryMod, string identifier)
+        public IUpdateState PrepareDownload(IModelRepositoryMod repositoryMod, string identifier)
         {
+            // TODO: needs to run synchronized / with callback!
             if (Loading.IsActive()) throw new InvalidOperationException();
             var updateTarget = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
             var mod = Implementation.CreateMod(identifier);
@@ -71,7 +72,12 @@ namespace BSU.Core.Model
             _matchMaker.RemoveStorageMod(mod);
             Implementation.RemoveMod(mod.Identifier);
         }
-        
-        public event Action<StorageMod> ModAdded;
+
+        public bool CanWrite => Implementation.CanWrite();
+        public bool IsLoading => Loading.IsActive();
+
+        public override string ToString() => Identifier;
+
+        public event Action<IModelStorageMod> ModAdded;
     }
 }

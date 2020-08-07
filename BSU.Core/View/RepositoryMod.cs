@@ -8,7 +8,7 @@ namespace BSU.Core.View
 {
     public class RepositoryMod : INotifyPropertyChanged
     {
-        internal readonly Model.RepositoryMod Mod;
+        internal readonly IModelRepositoryMod Mod;
         internal ViewModel ViewModel { get; }
         public string Name { get; }
         public string DisplayName { private set; get; }
@@ -29,7 +29,7 @@ namespace BSU.Core.View
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private void SetSelection(Model.RepositoryMod mod)
+        private void SetSelection(IModelRepositoryMod mod)
         {
             // Use setter for this
             if (mod.SelectedStorageMod != null)
@@ -40,7 +40,7 @@ namespace BSU.Core.View
             }
             if (mod.SelectedDownloadStorage != null)
             {
-                Selection = mod.SelectedDownloadStorage.Identifier;
+                Selection = mod.SelectedDownloadStorage.ToString();
                 OnPropertyChanged(nameof(Selection));
                 return;
             }
@@ -49,12 +49,12 @@ namespace BSU.Core.View
             OnPropertyChanged(nameof(Selection));
         }
 
-        internal RepositoryMod(Model.RepositoryMod mod, ViewModel viewModel)
+        internal RepositoryMod(IModelRepositoryMod mod, ViewModel viewModel)
         {
             IsLoading = mod.GetState().IsLoading;
             Mod = mod;
             ViewModel = viewModel;
-            Name = mod.Identifier;
+            Name = mod.ToString();
             mod.ActionAdded += AddAction;
             foreach (var target in mod.Actions.Keys)
             {
