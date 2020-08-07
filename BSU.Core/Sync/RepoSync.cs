@@ -24,7 +24,7 @@ namespace BSU.Core.Sync
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         internal readonly StorageMod StorageMod;
-        internal readonly RepositoryMod RepositoryMod;
+        internal readonly IRepositoryMod RepositoryMod;
         internal readonly UpdateTarget Target;
         private readonly string _title;
         private readonly int _priority;
@@ -34,7 +34,7 @@ namespace BSU.Core.Sync
 
         public Uid GetUid() => _uid;
 
-        public RepoSync(RepositoryMod repository, StorageMod storage, UpdateTarget target, string title, int priority, CancellationToken cancellationToken)
+        public RepoSync(IRepositoryMod repository, StorageMod storage, UpdateTarget target, string title, int priority, CancellationToken cancellationToken)
         {
             // TODO: use cancellationToken
             // TODO: write some tests!
@@ -44,27 +44,27 @@ namespace BSU.Core.Sync
             _priority = priority;
             RepositoryMod = repository;
 
-            Logger.Debug("Building sync actions {0} to {1}: {2}", storage.Uid, repository.Uid, _uid);
+            Logger.Debug("Building sync actions {0} to {1}: {2}", storage.Uid, repository.GetUid(), _uid);
 
             _allActions = new List<SyncWorkUnit>();
-            var repositoryList = repository.Implementation.GetFileList();
+            var repositoryList = repository.GetFileList();
             var storageList = storage.Implementation.GetFileList();
             var storageListCopy = new List<string>(storageList);
             foreach (var repoFile in repositoryList)
             {
                 if (storageList.Contains(repoFile))
                 {
-                    if (!repository.Implementation.GetFileHash(repoFile).Equals(storage.Implementation.GetFileHash(repoFile)))
+                    if (!repository.GetFileHash(repoFile).Equals(storage.Implementation.GetFileHash(repoFile)))
                     {
                         _allActions.Add(new UpdateAction(repository, storage, repoFile,
-                            repository.Implementation.GetFileSize(repoFile), this));
+                            repository.GetFileSize(repoFile), this));
                     }
 
                     storageListCopy.Remove(repoFile);
                 }
                 else
                 {
-                    _allActions.Add(new DownloadAction(repository, storage, repoFile, repository.Implementation.GetFileSize(repoFile),
+                    _allActions.Add(new DownloadAction(repository, storage, repoFile, repository.GetFileSize(repoFile),
                         this));
                 }
             }
@@ -97,7 +97,7 @@ namespace BSU.Core.Sync
 
         public string GetStorageModDisplayName() => StorageMod.Implementation.GetDisplayName();
 
-        public string GetRepositoryModDisplayName() => RepositoryMod.Implementation.GetDisplayName();
+        public string GetRepositoryModDisplayName() => RepositoryMod.GetDisplayName();
 
         public int GetRemainingNewFilesCount() => _allActions.OfType<DownloadAction>().Count(a => !a.IsDone());
         public long GetTotalBytesToDownload() => _allActions.OfType<DownloadAction>().Sum(a => a.GetBytesTotal());

@@ -77,11 +77,11 @@ namespace BSU.Core
             _settings.Store();
         }
 
-        public void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay)
+        public void SetUpdatingTo(StorageMod mod, UpdateTarget target)
         {
-            Logger.Debug("Set updating: {0} to {1} : {2}", mod.Uid, targetHash, targetDisplay);
+            Logger.Debug("Set updating: {0} to {1}", mod.Uid, target);
             var dic =_settings.Storages.Single(s => s.Name == mod.Storage.Identifier).Updating;
-            dic[mod.Identifier] = new UpdateTarget(targetHash, targetDisplay);
+            dic[mod.Identifier] = target;
             _settings.Store();
         }
 

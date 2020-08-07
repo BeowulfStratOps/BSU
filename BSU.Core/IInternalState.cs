@@ -14,7 +14,7 @@ namespace BSU.Core
         void AddRepo(string name, string url, string type);
         void AddStorage(string name, DirectoryInfo directory, string type);
         void RemoveStorage(Model.Storage storage);
-        void SetUpdatingTo(StorageMod mod, string targetHash, string targetDisplay);
+        void SetUpdatingTo(StorageMod mod, UpdateTarget target);
         void RemoveUpdatingTo(StorageMod mod);
         void CleanupUpdatingTo(Model.Storage storage);
         UpdateTarget GetUpdateTarget(StorageMod mod);

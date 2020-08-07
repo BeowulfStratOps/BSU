@@ -21,7 +21,7 @@ namespace BSU.Core.Hashes
         private const float Threshold = 0.8f; // at least 80% pbo names match required
 
         private static readonly Regex AddonsPboRegex =
-            new Regex("^/addons/.*\\.pbo", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            new Regex("^/addons/.*\\.pbo$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private readonly string _name;
         private readonly HashSet<string> _pboNames;

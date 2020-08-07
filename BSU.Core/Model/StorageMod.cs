@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
-using BSU.Core.Sync;
 using BSU.CoreCommon;
 using NLog;
 
@@ -159,7 +157,7 @@ namespace BSU.Core.Model
                 if (value == null)
                     _internalState.RemoveUpdatingTo(this);
                 else
-                    _internalState.SetUpdatingTo(this, value.Hash, value.Display);
+                    _internalState.SetUpdatingTo(this, value);
             }
         }
 
@@ -169,13 +167,12 @@ namespace BSU.Core.Model
         {
             CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed,
                 StorageModStateEnum.CreatedWithUpdateTarget);
-            var target = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(),
-                repositoryMod.Implementation.GetDisplayName());
+            var target = repositoryMod.AsUpdateTarget;
             UpdateTarget = target;
             var title =
                 $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
 
-            _updating.Prepare(repositoryMod, this, target, title, rollback);
+            _updating.Prepare(repositoryMod.Implementation, this, target, title, rollback);
 
             _versionHash = null;
             _matchHash = null;

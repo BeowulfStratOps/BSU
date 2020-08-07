@@ -20,6 +20,8 @@ namespace BSU.Core.Model
 
         private MatchHash _matchHash;
         private VersionHash _versionHash;
+        
+        public UpdateTarget AsUpdateTarget { get; private set; }
 
         private Exception _error;
 
@@ -56,6 +58,8 @@ namespace BSU.Core.Model
             {
                 _matchHash = match;
                 _versionHash = version;
+                AsUpdateTarget =
+                    new UpdateTarget(GetState().VersionHash.GetHashString(), Implementation.GetDisplayName());
                 StateChanged?.Invoke();
             });
         }

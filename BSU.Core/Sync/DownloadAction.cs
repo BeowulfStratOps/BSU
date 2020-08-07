@@ -13,11 +13,11 @@ namespace BSU.Core.Sync
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly RepositoryMod _repository;
+        private readonly IRepositoryMod _repository;
         private readonly long _sizeTotal;
         private long _sizeTodo;
 
-        public DownloadAction(RepositoryMod repository, StorageMod storage, string path, long sizeTotal,
+        public DownloadAction(IRepositoryMod repository, StorageMod storage, string path, long sizeTotal,
             RepoSync sync) : base(storage, path, sync)
         {
             _repository = repository;
@@ -30,9 +30,9 @@ namespace BSU.Core.Sync
 
         protected override void DoWork(CancellationToken token)
         {
-            Logger.Trace("{0}, {1} Downloading {2}", _repository.Uid, _repository.Uid, Path);
+            Logger.Trace("{0}, {1} Downloading {2}", _repository.GetUid(), _repository.GetUid(), Path);
             using var target = Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.Write);
-            _repository.Implementation.DownloadTo(Path, target, UpdateRemaining, token);
+            _repository.DownloadTo(Path, target, UpdateRemaining, token);
             Thread.Sleep(2000);
             _sizeTodo = 0;
         }

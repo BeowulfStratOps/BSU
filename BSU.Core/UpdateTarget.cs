@@ -12,5 +12,7 @@
             Display = display;
             Hash = hash;
         }
+
+        public override string ToString() => $"{Hash}:{Display}";
     }
 }

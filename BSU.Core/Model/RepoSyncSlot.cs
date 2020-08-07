@@ -2,6 +2,7 @@
 using System.Threading;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
@@ -22,7 +23,7 @@ namespace BSU.Core.Model
             _jobManager = jobManager;
         }
 
-        public void Prepare(RepositoryMod repository, StorageMod storage, UpdateTarget target, string title, Action rollback = null)
+        public void Prepare(IRepositoryMod repository, StorageMod storage, UpdateTarget target, string title, Action rollback = null)
         {
             if (_state != RepoSyncSlotState.Inactive) throw new InvalidOperationException();
 
@@ -49,7 +50,7 @@ namespace BSU.Core.Model
             _jobManager.QueueJob(_prepareJob);
         }
 
-        private void DoPrepare(RepositoryMod repository, StorageMod storage, UpdateTarget target, CancellationToken cancellationToken)
+        private void DoPrepare(IRepositoryMod repository, StorageMod storage, UpdateTarget target, CancellationToken cancellationToken)
         {
             var name = $"Updating {storage.Identifier}";
             _syncJob = new RepoSync(repository, storage, target, name, 0, cancellationToken);
