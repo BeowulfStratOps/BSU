@@ -22,7 +22,7 @@ irepomod, istorage mod / simplify creation
         private void StorageModLifecycle()
         {
             var implementation = new MockStorageMod();
-            var internalState = new MockInternalState();
+            var internalState = new MockStorageModState();
             var jobManager = new MockJobManager();
             var mod = new Model.StorageMod(null, implementation, "asdf", null, internalState, jobManager);
         }

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using NLog;
 
-namespace BSU.Core
+namespace BSU.Core.Persistence
 {
     /// <summary>
     /// Tracks settings / internal core state in a json file.

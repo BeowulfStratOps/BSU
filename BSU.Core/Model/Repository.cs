@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.JobManager;
+using BSU.Core.Persistence;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model

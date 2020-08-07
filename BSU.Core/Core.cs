@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using BSU.Core.JobManager;
 using BSU.Core.Model;
+using BSU.Core.Persistence;
 using BSU.Core.Sync;
 using BSU.Core.View;
 using NLog;

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BSU.Core
+namespace BSU.Core.Persistence
 {
     internal interface ISettings
     {

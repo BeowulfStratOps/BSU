@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.JobManager;
+using BSU.Core.Persistence;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
     internal class Storage
     {
-        private readonly IInternalState _internalState;
+        private readonly IStorageState _internalState;
         private readonly IJobManager _jobManager;
         private readonly IMatchMaker _matchMaker;
         public IStorage Implementation { get; }
@@ -21,7 +22,7 @@ namespace BSU.Core.Model
         
         internal Model Model { get; }
 
-        public Storage(IStorage implementation, string identifier, string location, IInternalState internalState, IJobManager jobManager, IMatchMaker matchMaker, Model model)
+        public Storage(IStorage implementation, string identifier, string location, IStorageState internalState, IJobManager jobManager, IMatchMaker matchMaker, Model model)
         {
             _internalState = internalState;
             _jobManager = jobManager;
@@ -43,7 +44,8 @@ namespace BSU.Core.Model
             {
                 foreach (KeyValuePair<string, IStorageMod> mod in Implementation.GetMods())
                 {
-                    var modelMod = new StorageMod(this, mod.Value, mod.Key, null, _internalState, _jobManager);
+                    var modelMod = new StorageMod(this, mod.Value, mod.Key, null, _internalState.GetMod(mod.Key),
+                        _jobManager);
                     Mods.Add(modelMod);
                     ModAdded?.Invoke(modelMod);
                     _matchMaker.AddStorageMod(modelMod);
@@ -56,7 +58,7 @@ namespace BSU.Core.Model
             if (Loading.IsActive()) throw new InvalidOperationException();
             var updateTarget = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
             var mod = Implementation.CreateMod(identifier);
-            var storageMod = new StorageMod(this, mod, identifier, updateTarget, _internalState, _jobManager);
+            var storageMod = new StorageMod(this, mod, identifier, updateTarget, _internalState.GetMod(identifier), _jobManager);
             Mods.Add(storageMod);
             var update = storageMod.PrepareUpdate(repositoryMod, () => RollbackDownload(storageMod));
             ModAdded?.Invoke(storageMod);

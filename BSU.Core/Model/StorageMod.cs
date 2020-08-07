@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
+using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
 
@@ -13,7 +14,7 @@ namespace BSU.Core.Model
     {
         // TODO: come up with a proper state machine implementation
         
-        private readonly IInternalState _internalState;
+        private readonly IStorageModState _internalState;
         private readonly IJobManager _jobManager;
         public Storage Storage { get; }
         public string Identifier { get; }
@@ -50,7 +51,7 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(Storage parent, IStorageMod implementation, string identifier, UpdateTarget updateTarget,
-            IInternalState internalState, IJobManager jobManager)
+            IStorageModState internalState, IJobManager jobManager)
         {
             _internalState = internalState;
             _jobManager = jobManager;
@@ -93,7 +94,7 @@ namespace BSU.Core.Model
             };
             if (updateTarget == null)
             {
-                _updateTarget = _internalState.GetUpdateTarget(this);
+                _updateTarget = _internalState.UpdateTarget;
                 if (_updateTarget == null)
                 {
                     _loading.StartJob();
@@ -154,10 +155,7 @@ namespace BSU.Core.Model
             set
             {
                 _updateTarget = value;
-                if (value == null)
-                    _internalState.RemoveUpdatingTo(this);
-                else
-                    _internalState.SetUpdatingTo(this, value);
+                _internalState.UpdateTarget = value;
             }
         }
 

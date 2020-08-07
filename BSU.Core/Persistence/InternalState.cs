@@ -5,7 +5,7 @@ using System.Linq;
 using BSU.Core.Model;
 using NLog;
 
-namespace BSU.Core
+namespace BSU.Core.Persistence
 {
     /// <summary>
     /// Internal state of the core. Knows locations, but no repo/storage states.
@@ -23,9 +23,11 @@ namespace BSU.Core
             _settings = settings;
         }
 
-        public IReadOnlyList<StorageEntry> GetStorages()
+        public IReadOnlyList<Tuple<StorageEntry, IStorageState>> GetStorages()
         {
-            return _settings.Storages.AsReadOnly();
+            return _settings.Storages
+                .Select(entry => Tuple.Create(entry, (IStorageState) new StorageState(entry, _settings.Store)))
+                .ToList();
         }
 
         public IReadOnlyList<RepositoryEntry> GetRepositories()
@@ -55,7 +57,7 @@ namespace BSU.Core
             _settings.Store();
         }
 
-        public void AddStorage(string name, DirectoryInfo directory, string type)
+        public IStorageState AddStorage(string name, DirectoryInfo directory, string type)
         {
             if (_settings.Storages.Any(s => s.Name == name)) throw new ArgumentException("Name in use");
             var storage = new StorageEntry
@@ -67,49 +69,15 @@ namespace BSU.Core
             };
             _settings.Storages.Add(storage);
             _settings.Store();
+            return new StorageState(storage, _settings.Store);
         }
-
-        public void RemoveStorage(Model.Storage storage)
+        
+        public void RemoveStorage(StorageEntry storage)
         {
-            Logger.Debug("Removing storage {0}", storage.Uid);
-            var storageEntry = _settings.Storages.Single(s => s.Name == storage.Identifier);
+            Logger.Debug("Removing storage {0}", storage.Name);
+            var storageEntry = _settings.Storages.Single(s => s.Name == storage.Name);
             _settings.Storages.Remove(storageEntry);
             _settings.Store();
-        }
-
-        public void SetUpdatingTo(StorageMod mod, UpdateTarget target)
-        {
-            Logger.Debug("Set updating: {0} to {1}", mod.Uid, target);
-            var dic =_settings.Storages.Single(s => s.Name == mod.Storage.Identifier).Updating;
-            dic[mod.Identifier] = target;
-            _settings.Store();
-        }
-
-        public void RemoveUpdatingTo(StorageMod mod)
-        {
-            Logger.Debug("Remove updating: {0}", mod.Uid);
-            _settings.Storages.Single(s => s.Name == mod.Storage.Identifier).Updating
-                .Remove(mod.Identifier);
-            _settings.Store();
-        }
-
-        public void CleanupUpdatingTo(Model.Storage storage)
-        {
-            var updating = _settings.Storages.Single(s => s.Name == storage.Identifier).Updating;
-            foreach (var modId in updating.Keys.ToList())
-            {
-                if (storage.Mods.Any(m => m.Identifier == modId)) continue;
-                updating.Remove(modId);
-                Logger.Debug("Cleaing up udpating for {0} / {1}", storage.Identifier, modId);
-            }
-        }
-
-        public UpdateTarget GetUpdateTarget(StorageMod mod)
-        {
-            var target = _settings.Storages
-                .SingleOrDefault(s => s.Name == mod.Storage.Identifier)?.Updating
-                .GetValueOrDefault(mod.Identifier);
-            return target == null ? null : new UpdateTarget(target.Hash, target.Display);
         }
 
         public bool IsUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)

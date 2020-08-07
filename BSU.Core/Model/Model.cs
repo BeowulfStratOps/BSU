@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using BSU.Core.JobManager;
+using BSU.Core.Persistence;
 
 namespace BSU.Core.Model
 {
@@ -41,10 +42,10 @@ namespace BSU.Core.Model
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
             }
-            foreach (var storageEntry in PersistentState.GetStorages())
+            foreach (var (storageEntry, storageState) in PersistentState.GetStorages())
             {
                 var implementation = _types.GetStorageImplementation(storageEntry.Type, storageEntry.Path);
-                var storage = new Storage(implementation, storageEntry.Name, storageEntry.Path, PersistentState, _jobManager, _matchMaker, this);
+                var storage = new Storage(implementation, storageEntry.Name, storageEntry.Path, storageState, _jobManager, _matchMaker, this);
                 Storages.Add(storage);
                 StorageAdded?.Invoke(storage);
             }
@@ -91,9 +92,9 @@ namespace BSU.Core.Model
         public void AddStorage(string type, DirectoryInfo dir, string name)
         {
             if (!_types.GetStorageTypes().Contains(type)) throw new ArgumentException();
-            PersistentState.AddStorage(name, dir, type);
+            var storageState = PersistentState.AddStorage(name, dir, type);
             var implementation = _types.GetStorageImplementation(type, dir.FullName);
-            var storage = new Storage(implementation, name, dir.FullName, PersistentState, _jobManager, _matchMaker, this);
+            var storage = new Storage(implementation, name, dir.FullName, storageState, _jobManager, _matchMaker, this);
             Storages.Add(storage);
             StorageAdded?.Invoke(storage);
         }
