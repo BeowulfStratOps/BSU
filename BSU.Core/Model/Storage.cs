@@ -19,15 +19,15 @@ namespace BSU.Core.Model
         public List<StorageMod> Mods { private set; get; } = new List<StorageMod>(); // TODO: readonly
 
         public JobSlot<SimpleJob> Loading { get; }
-        
-        internal Model Model { get; }
 
-        public Storage(IStorage implementation, string identifier, string location, IStorageState internalState, IJobManager jobManager, IMatchMaker matchMaker, Model model)
+        private readonly IActionQueue _actionQueue;
+
+        public Storage(IStorage implementation, string identifier, string location, IStorageState internalState, IJobManager jobManager, IMatchMaker matchMaker, IActionQueue actionQueue)
         {
             _internalState = internalState;
             _jobManager = jobManager;
             _matchMaker = matchMaker;
-            Model = model;
+            _actionQueue = actionQueue;
             Implementation = implementation;
             Identifier = identifier;
             Location = location;
@@ -40,12 +40,12 @@ namespace BSU.Core.Model
         {
             // TODO: use cancellationToken
             Implementation.Load();
-            Model.EnQueueAction(() =>
+            _actionQueue.EnQueueAction(() =>
             {
                 foreach (KeyValuePair<string, IStorageMod> mod in Implementation.GetMods())
                 {
-                    var modelMod = new StorageMod(this, mod.Value, mod.Key, null, _internalState.GetMod(mod.Key),
-                        _jobManager);
+                    var modelMod = new StorageMod(_actionQueue, mod.Value, mod.Key, null, _internalState.GetMod(mod.Key),
+                        _jobManager, Identifier, Implementation.CanWrite());
                     Mods.Add(modelMod);
                     ModAdded?.Invoke(modelMod);
                     _matchMaker.AddStorageMod(modelMod);
@@ -58,7 +58,7 @@ namespace BSU.Core.Model
             if (Loading.IsActive()) throw new InvalidOperationException();
             var updateTarget = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
             var mod = Implementation.CreateMod(identifier);
-            var storageMod = new StorageMod(this, mod, identifier, updateTarget, _internalState.GetMod(identifier), _jobManager);
+            var storageMod = new StorageMod(_actionQueue, mod, identifier, updateTarget, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
             Mods.Add(storageMod);
             var update = storageMod.PrepareUpdate(repositoryMod, () => RollbackDownload(storageMod));
             ModAdded?.Invoke(storageMod);

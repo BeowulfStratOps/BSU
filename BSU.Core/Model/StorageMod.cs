@@ -16,8 +16,10 @@ namespace BSU.Core.Model
         
         private readonly IStorageModState _internalState;
         private readonly IJobManager _jobManager;
-        public Storage Storage { get; }
+        private readonly string _parentIdentifier;
+        public bool CanWrite { get; }
         public string Identifier { get; }
+        public IActionQueue ActionQueue { get; }
         public IStorageMod Implementation { get; }
         public Uid Uid { get; } = new Uid();
 
@@ -50,12 +52,14 @@ namespace BSU.Core.Model
             }
         }
 
-        public StorageMod(Storage parent, IStorageMod implementation, string identifier, UpdateTarget updateTarget,
-            IStorageModState internalState, IJobManager jobManager)
+        public StorageMod(IActionQueue actionQueue, IStorageMod implementation, string identifier, UpdateTarget updateTarget,
+            IStorageModState internalState, IJobManager jobManager, string parentIdentifier, bool canWrite)
         {
             _internalState = internalState;
             _jobManager = jobManager;
-            Storage = parent;
+            _parentIdentifier = parentIdentifier;
+            CanWrite = canWrite;
+            ActionQueue = actionQueue;
             Implementation = implementation;
             Identifier = identifier;
             var title1 = $"Load StorageMod {Identifier}";
@@ -75,7 +79,7 @@ namespace BSU.Core.Model
             _updating = new RepoSyncSlot(jobManager);
             _updating.OnFinished += error =>
             {
-                Storage.Model.EnQueueAction(() =>
+                ActionQueue.EnQueueAction(() =>
                 {
                     _versionHash = null;
                     _matchHash = null;
@@ -131,7 +135,7 @@ namespace BSU.Core.Model
             // TODO: use cancellationToken
             Implementation.Load();
             var matchHash = new MatchHash(Implementation);
-            Storage.Model.EnQueueAction(() =>
+            ActionQueue.EnQueueAction(() =>
             {
                 _matchHash = matchHash;
                 State = StorageModStateEnum.Loaded;
@@ -142,7 +146,7 @@ namespace BSU.Core.Model
         {
             // TODO: use cancellationToken
             var versionHash = new VersionHash(Implementation);
-            Storage.Model.EnQueueAction(() =>
+            ActionQueue.EnQueueAction(() =>
             {
                 _versionHash = versionHash;
                 State = StorageModStateEnum.Hashed;
@@ -168,7 +172,7 @@ namespace BSU.Core.Model
             var target = repositoryMod.AsUpdateTarget;
             UpdateTarget = target;
             var title =
-                $"Updating {Storage.Location}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
+                $"Updating {_parentIdentifier}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
 
             _updating.Prepare(repositoryMod.Implementation, this, target, title, rollback);
 
@@ -195,10 +199,8 @@ namespace BSU.Core.Model
 
         public StorageModIdentifiers GetStorageModIdentifiers()
         {
-            return new StorageModIdentifiers(Storage.Identifier, Identifier);
+            return new StorageModIdentifiers(_parentIdentifier, Identifier);
         }
-
-        public bool CanWrite() => Storage.Implementation.CanWrite();
 
         public override string ToString() => Identifier;
     }

@@ -7,22 +7,12 @@ namespace BSU.Core.Model
     internal class MatchMaker : IMatchMaker
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private readonly Model _model;
+        private readonly IModelStructure _modelStructure;
         private bool _allModsLoaded;
 
-        public MatchMaker(Model model)
+        public MatchMaker(IModelStructure modelStructure)
         {
-            _model = model;
-        }
-
-        private IEnumerable<IModelStorageMod> GetAllStorageMods()
-        {
-            return _model.Storages.SelectMany(storage => storage.Mods);
-        }
-        
-        private IEnumerable<IModelRepositoryMod> GetAllRepositoryMods()
-        {
-            return _model.Repositories.SelectMany(repository => repository.Mods);
+            _modelStructure = modelStructure;
         }
 
         public void AddStorageMod(IModelStorageMod storageMod)
@@ -38,7 +28,7 @@ namespace BSU.Core.Model
 
         private void UpdateStorageMod(IModelStorageMod storageMod)
         {
-            foreach (var repoMod in GetAllRepositoryMods())
+            foreach (var repoMod in _modelStructure.GetAllRepositoryMods())
             {
                 CheckMatch(repoMod, storageMod);
             }
@@ -49,13 +39,13 @@ namespace BSU.Core.Model
         {
             if (_allModsLoaded) return;
             
-            if (_model.Storages.Any(storage => storage.Loading.IsActive())) return;
+            if (_modelStructure.GetStorages().Any(storage => storage.Loading.IsActive())) return;
 
-            if (_model.Repositories.Any(repository => repository.Loading.IsActive())) return;
+            if (_modelStructure.GetRepositories().Any(repository => repository.Loading.IsActive())) return;
             
-            if (GetAllStorageMods().Any(storageMod => storageMod.GetState().MatchHash == null)) return;
+            if (_modelStructure.GetAllStorageMods().Any(storageMod => storageMod.GetState().MatchHash == null)) return;
             
-            if (GetAllRepositoryMods().Any(repoMod => repoMod.GetState().MatchHash == null)) return;
+            if (_modelStructure.GetAllRepositoryMods().Any(repoMod => repoMod.GetState().MatchHash == null)) return;
 
             _allModsLoaded = true;
             
@@ -65,7 +55,7 @@ namespace BSU.Core.Model
 
         private void NotifyAllModsLoaded()
         {
-            foreach (var repoMod in GetAllRepositoryMods())
+            foreach (var repoMod in _modelStructure.GetAllRepositoryMods())
             {
                 repoMod.AllModsLoaded = _allModsLoaded;
             }
@@ -82,7 +72,7 @@ namespace BSU.Core.Model
 
         public void RemoveStorageMod(IModelStorageMod mod)
         {
-            foreach (var repoMod in GetAllRepositoryMods())
+            foreach (var repoMod in _modelStructure.GetAllRepositoryMods())
             {
                 repoMod.ChangeAction(mod, null);
             }
@@ -90,7 +80,7 @@ namespace BSU.Core.Model
 
         private void UpdateRepositoryMod(IModelRepositoryMod repositoryMod)
         {
-            foreach (var storageMod in GetAllStorageMods())
+            foreach (var storageMod in _modelStructure.GetAllStorageMods())
             {
                 CheckMatch(repositoryMod, storageMod);
             }
@@ -109,7 +99,7 @@ namespace BSU.Core.Model
             
             if (match == CoreCalculation.ModMatch.NoMatch || match == CoreCalculation.ModMatch.Wait) return;
             
-            var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.CanWrite());
+            var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.CanWrite);
             Logger.Debug($"Calculate Action on {repoMod} and {storageMod} -> {action}");
                 
             repoMod.ChangeAction(storageMod, action);

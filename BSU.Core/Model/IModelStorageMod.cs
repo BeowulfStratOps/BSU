@@ -11,6 +11,6 @@ namespace BSU.Core.Model
         StorageModState GetState();
         void Abort();
         StorageModIdentifiers GetStorageModIdentifiers();
-        bool CanWrite();
+        bool CanWrite { get; }
     }
 }

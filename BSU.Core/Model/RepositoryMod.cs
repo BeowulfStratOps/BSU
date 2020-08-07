@@ -11,11 +11,11 @@ namespace BSU.Core.Model
 {
     internal class RepositoryMod : IModelRepositoryMod
     {
+        private readonly IActionQueue _actionQueue;
         private readonly IRepositoryModState _internalState;
         private readonly RelatedActionsBag _relatedActionsBag;
+        private readonly IModelStructure _modelStructure;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        
-        public Repository Repository { get; }
         public IRepositoryMod Implementation { get; }
         public string Identifier { get; }
         public Uid Uid { get; } = new Uid();
@@ -34,11 +34,14 @@ namespace BSU.Core.Model
 
         private readonly JobSlot<SimpleJob> _loading;
 
-        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier, IJobManager jobManager, IRepositoryModState internalState, RelatedActionsBag relatedActionsBag)
+        public RepositoryMod(IActionQueue actionQueue, IRepositoryMod implementation, string identifier,
+            IJobManager jobManager, IRepositoryModState internalState, RelatedActionsBag relatedActionsBag,
+            IModelStructure modelStructure)
         {
+            _actionQueue = actionQueue;
             _internalState = internalState;
             _relatedActionsBag = relatedActionsBag;
-            Repository = parent;
+            _modelStructure = modelStructure;
             Implementation = implementation;
             Identifier = identifier;
             var title = $"Load RepoMod {Identifier}";
@@ -47,7 +50,7 @@ namespace BSU.Core.Model
             {
                 _error = error; // TODO: error handling
             };*/
-            
+
             _loading.StartJob();
         }
 
@@ -57,7 +60,7 @@ namespace BSU.Core.Model
             Implementation.Load();
             var match = new MatchHash(Implementation);
             var version = new VersionHash(Implementation);
-            Repository.Model.EnQueueAction(() =>
+            _actionQueue.EnQueueAction(() =>
             {
                 _matchHash = match;
                 _versionHash = version;
@@ -122,7 +125,7 @@ namespace BSU.Core.Model
             if (SelectedDownloadStorage != null || SelectedStorageMod != null) return;
 
             var (selectedStorageMod, selectedDownloadStorage) = CoreCalculation.AutoSelect(AllModsLoaded, Actions,
-                Repository.Model, _internalState.UsedMod);
+                _modelStructure, _internalState.UsedMod);
 
             if (selectedDownloadStorage != SelectedDownloadStorage || selectedStorageMod != SelectedStorageMod)
             {
