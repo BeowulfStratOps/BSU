@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BSU.Core.Persistence;
 
 namespace BSU.Core.Model
 {
@@ -74,12 +75,11 @@ namespace BSU.Core.Model
         }
 
         internal static (StorageMod, Storage) AutoSelect(bool allModsLoaded, Dictionary<StorageMod, ModAction> actions,
-            Model model, bool hasUsedMod,
-            Func<StorageMod, bool> isUsedMod)
+            Model model, StorageModIdentifiers usedMod)
         {
-            if (hasUsedMod)
+            if (usedMod != null)
             {
-                var storageMod = actions.Keys.FirstOrDefault(isUsedMod);
+                var storageMod = actions.Keys.FirstOrDefault(mod => mod.GetStorageModIdentifiers() == usedMod);
                 if (storageMod != null)
                 {
                     return (storageMod, null);

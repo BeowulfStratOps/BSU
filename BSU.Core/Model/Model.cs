@@ -35,10 +35,10 @@ namespace BSU.Core.Model
 
         public void Load()
         {
-            foreach (var repositoryEntry in PersistentState.GetRepositories())
+            foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
                 var implementation = _types.GetRepoImplementation(repositoryEntry.Type, repositoryEntry.Url);
-                var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, _matchMaker, PersistentState, this);
+                var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, _matchMaker, repositoryState, this);
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
             }
@@ -82,9 +82,9 @@ namespace BSU.Core.Model
         public void AddRepository(string type, string url, string name)
         {
             if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
-            PersistentState.AddRepo(name, url, type);
+            var repoState = PersistentState.AddRepo(name, url, type);
             var implementation = _types.GetRepoImplementation(type, url);
-            var repository = new Repository(implementation, name, url, _jobManager, _matchMaker, PersistentState, this);
+            var repository = new Repository(implementation, name, url, _jobManager, _matchMaker, repoState, this);
             Repositories.Add(repository);
             RepositoryAdded?.Invoke(repository);
         }

@@ -56,26 +56,4 @@ namespace BSU.Core.Persistence
             public readonly List<StorageEntry> Storages;
         }
     }
-
-    internal class StorageEntry
-    {
-        public string Name;
-        public string Type;
-        public string Path;
-        public Dictionary<string, UpdateTarget> Updating;
-    }
-
-    internal class RepositoryEntry
-    {
-        public string Name;
-        public string Type;
-        public string Url;
-        public Dictionary<string, StorageModIdentifiers> UsedMods = new Dictionary<string, StorageModIdentifiers>();
-    }
-
-    internal class StorageModIdentifiers
-    {
-        public string StorageIdentifier;
-        public string ModIdentifier;
-    }
 }

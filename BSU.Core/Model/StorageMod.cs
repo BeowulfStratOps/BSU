@@ -192,5 +192,10 @@ namespace BSU.Core.Model
             _loading.StartJob();
             State = StorageModStateEnum.Loading;
         }
+
+        public StorageModIdentifiers GetStorageModIdentifiers()
+        {
+            return new StorageModIdentifiers(Storage.Identifier, Identifier);
+        }
     }
 }

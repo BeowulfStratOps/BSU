@@ -11,7 +11,7 @@ namespace BSU.Core.Model
     {
         private readonly IJobManager _jobManager;
         private readonly IMatchMaker _matchMaker;
-        private readonly IInternalState _internalState;
+        private readonly IRepositoryState _internalState;
         public IRepository Implementation { get; }
         public string Identifier { get; }
         public string Location { get; }
@@ -23,7 +23,7 @@ namespace BSU.Core.Model
 
         internal Model Model { get; }
 
-        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, IMatchMaker matchMaker, IInternalState internalState, Model model)
+        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager, IMatchMaker matchMaker, IRepositoryState internalState, Model model)
         {
             _jobManager = jobManager;
             _matchMaker = matchMaker;
@@ -45,7 +45,7 @@ namespace BSU.Core.Model
             {
                 foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
                 {
-                    var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager, _internalState);
+                    var modelMod = new RepositoryMod(this, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key));
                     modelMod.ActionAdded += storageMod =>
                     {
                         modelMod.Actions[storageMod].Updated += ReCalculateState;

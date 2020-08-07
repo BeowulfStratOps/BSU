@@ -2,6 +2,11 @@
 
 namespace BSU.Core.Persistence
 {
+    internal interface IStorageState
+    {
+        IStorageModState GetMod(string identifier);
+    }
+    
     internal class StorageState : IStorageState
     {
         private readonly StorageEntry _entry;

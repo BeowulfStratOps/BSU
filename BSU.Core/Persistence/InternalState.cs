@@ -23,86 +23,49 @@ namespace BSU.Core.Persistence
             _settings = settings;
         }
 
-        public IReadOnlyList<Tuple<StorageEntry, IStorageState>> GetStorages()
+        public IEnumerable<Tuple<IStorageEntry, IStorageState>> GetStorages()
         {
-            return _settings.Storages
-                .Select(entry => Tuple.Create(entry, (IStorageState) new StorageState(entry, _settings.Store)))
-                .ToList();
+            return _settings.Storages.Select(entry =>
+                new Tuple<IStorageEntry, IStorageState>(entry, new StorageState(entry, _settings.Store)));
         }
 
-        public IReadOnlyList<RepositoryEntry> GetRepositories()
+        public IEnumerable<Tuple<IRepositoryEntry, IRepositoryState>> GetRepositories()
         {
-            return _settings.Repositories.AsReadOnly();
+            return _settings.Repositories.Select(entry =>
+                new Tuple<IRepositoryEntry, IRepositoryState>(entry, new RepositoryState(entry, _settings.Store)));
         }
         
-        public void RemoveRepo(Repository repo)
+        public void RemoveRepo(IRepositoryEntry repo)
         {
-            Logger.Debug("Removing repo {0}", repo.Uid);
-            var repoEntry = _settings.Repositories.Single(r => r.Name == repo.Identifier);
+            Logger.Debug("Removing repo {0}", repo.Name);
+            var repoEntry = _settings.Repositories.Single(r => r.Name == repo.Name);
             _settings.Repositories.Remove(repoEntry);
             _settings.Store();
         }
 
-        public void AddRepo(string name, string url, string type)
+        public IRepositoryState AddRepo(string name, string url, string type)
         {
             if (_settings.Repositories.Any(r => r.Name == name)) throw new ArgumentException("Name in use");
-            var repo = new RepositoryEntry
-            {
-                Name = name,
-                Type = type,
-                Url = url,
-                UsedMods = new Dictionary<string, StorageModIdentifiers>()
-            };
+            var repo = new RepositoryEntry(name, type, url);
             _settings.Repositories.Add(repo);
             _settings.Store();
+            return new RepositoryState(repo, _settings.Store);
         }
 
         public IStorageState AddStorage(string name, DirectoryInfo directory, string type)
         {
             if (_settings.Storages.Any(s => s.Name == name)) throw new ArgumentException("Name in use");
-            var storage = new StorageEntry
-            {
-                Name = name,
-                Path = directory.FullName,
-                Type = type,
-                Updating = new Dictionary<string, UpdateTarget>()
-            };
+            var storage = new StorageEntry(name, directory.FullName, type);
             _settings.Storages.Add(storage);
             _settings.Store();
             return new StorageState(storage, _settings.Store);
         }
         
-        public void RemoveStorage(StorageEntry storage)
+        public void RemoveStorage(IStorageEntry storage)
         {
             Logger.Debug("Removing storage {0}", storage.Name);
             var storageEntry = _settings.Storages.Single(s => s.Name == storage.Name);
             _settings.Storages.Remove(storageEntry);
-            _settings.Store();
-        }
-
-        public bool IsUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)
-        {
-            var repository = _settings.Repositories.Single(repo => repo.Name == repositoryMod.Repository.Identifier);
-            if (repository.UsedMods == null) return false;
-            if (!repository.UsedMods.TryGetValue(repositoryMod.Identifier, out var usedMod) || usedMod == null) return false;
-            return usedMod.StorageIdentifier == storageMod.Storage.Identifier &&
-                   usedMod.StorageIdentifier == storageMod.Identifier;
-        }
-
-        public bool HasUsedMod(RepositoryMod repositoryMod)
-        {
-            var repository = _settings.Repositories.Single(repo => repo.Name == repositoryMod.Repository.Identifier);
-            return repository.UsedMods?.ContainsKey(repositoryMod.Identifier) ?? false;
-        }
-
-        public void SetUsedMod(RepositoryMod repositoryMod, StorageMod storageMod)
-        {
-            var repository = _settings.Repositories.Single(repo => repo.Name == repositoryMod.Repository.Identifier);
-            repository.UsedMods[repositoryMod.Identifier] = new StorageModIdentifiers
-            {
-                StorageIdentifier = storageMod.Storage.Identifier,
-                ModIdentifier = storageMod.Identifier
-            };
             _settings.Store();
         }
     }

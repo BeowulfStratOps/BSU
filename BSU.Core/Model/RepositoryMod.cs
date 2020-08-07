@@ -11,7 +11,7 @@ namespace BSU.Core.Model
 {
     internal class RepositoryMod
     {
-        private readonly IInternalState _internalState;
+        private readonly IRepositoryModState _internalState;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         
         public Repository Repository { get; }
@@ -33,7 +33,7 @@ namespace BSU.Core.Model
 
         private readonly JobSlot<SimpleJob> _loading;
 
-        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier, IJobManager jobManager, IInternalState internalState)
+        public RepositoryMod(Repository parent, IRepositoryMod implementation, string identifier, IJobManager jobManager, IRepositoryModState internalState)
         {
             _internalState = internalState;
             Repository = parent;
@@ -120,7 +120,7 @@ namespace BSU.Core.Model
             if (SelectedDownloadStorage != null || SelectedStorageMod != null) return;
 
             var (selectedStorageMod, selectedDownloadStorage) = CoreCalculation.AutoSelect(AllModsLoaded, Actions,
-                Repository.Model, _internalState.HasUsedMod(this), mod => _internalState.IsUsedMod(this, mod));
+                Repository.Model, _internalState.UsedMod);
 
             if (selectedDownloadStorage != SelectedDownloadStorage || selectedStorageMod != SelectedStorageMod)
             {

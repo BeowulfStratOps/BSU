@@ -7,14 +7,11 @@ namespace BSU.Core.Persistence
 {
     internal interface IInternalState
     {
-        IReadOnlyList<Tuple<StorageEntry, IStorageState>> GetStorages();
-        IReadOnlyList<RepositoryEntry> GetRepositories();
-        void RemoveRepo(Repository repo);
-        void AddRepo(string name, string url, string type);
-        void RemoveStorage(StorageEntry storage);
+        IEnumerable<Tuple<IStorageEntry, IStorageState>> GetStorages();
+        IEnumerable<Tuple<IRepositoryEntry, IRepositoryState>> GetRepositories();
+        void RemoveRepo(IRepositoryEntry repo);
+        IRepositoryState AddRepo(string name, string url, string type);
+        void RemoveStorage(IStorageEntry storage);
         IStorageState AddStorage(string name, DirectoryInfo directory, string type);
-        void SetUsedMod(RepositoryMod repositoryMod, StorageMod storageMod);
-        public bool IsUsedMod(RepositoryMod repositoryMod, StorageMod storageMod);
-        public bool HasUsedMod(RepositoryMod repositoryMod);
     }
 }

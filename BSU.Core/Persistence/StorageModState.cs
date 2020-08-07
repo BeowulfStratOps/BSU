@@ -4,6 +4,11 @@ using NLog;
 
 namespace BSU.Core.Persistence
 {
+    internal interface IStorageModState
+    {
+        UpdateTarget UpdateTarget { get; set; }
+    }
+    
     internal class StorageModState : IStorageModState
     {
         private readonly Dictionary<string, UpdateTarget> _updating;
