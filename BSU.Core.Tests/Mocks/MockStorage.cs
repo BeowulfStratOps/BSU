@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BSU.CoreCommon;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorage : IStorage
     {

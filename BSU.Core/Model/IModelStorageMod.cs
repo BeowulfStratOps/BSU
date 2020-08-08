@@ -1,5 +1,6 @@
 ﻿using System;
 using BSU.Core.Persistence;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {

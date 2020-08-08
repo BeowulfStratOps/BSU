@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
+using BSU.Core.Tests.Mocks;
 using Xunit;
 
 namespace BSU.Core.Tests

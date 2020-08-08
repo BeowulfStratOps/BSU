@@ -1,6 +1,6 @@
 ﻿using BSU.Core.Persistence;
 
-namespace BSU.Core.Tests.Test
+namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorageModState : IStorageModState
     {

@@ -1,6 +1,7 @@
 using System;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
+using BSU.Core.Tests.Mocks;
 using Xunit;
 
 namespace BSU.Core.Tests

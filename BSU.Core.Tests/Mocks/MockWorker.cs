@@ -1,13 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.JobManager;
+using BSU.Core.Model;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.Mocks
 {
-    internal class MockJobManager : IJobManager
+    internal class MockWorker : IJobManager, IActionQueue
     {
         private readonly List<IJob> _jobs = new List<IJob>();
+        private readonly Queue<Action> _actionQueue = new Queue<Action>();
 
         public void QueueJob(IJob job)
         {
@@ -23,18 +25,12 @@ namespace BSU.Core.Tests
 
         public void DoWork()
         {
-            while (_jobs.Any())
+            while (DoJobStep() || DoQueueStep())
             {
-                var job = _jobs[0];
-                _jobs.Remove(job);
-                while (true)
-                {
-                    if (!job.DoWork()) break;
-                }
             }
         }
 
-        public bool DoStep()
+        public bool DoJobStep()
         {
             if (!_jobs.Any()) return false;
             var job = _jobs[0];
@@ -42,8 +38,19 @@ namespace BSU.Core.Tests
             _jobs.Remove(job);
             return _jobs.Any();
         }
+        
+        public bool DoQueueStep()
+        {
+            if (!_actionQueue.Any()) return false;
+            _actionQueue.Dequeue()();
+            return true;
+        }
 
         public IReadOnlyList<IJob> GetActiveJobs() => _jobs.AsReadOnly();
         public IReadOnlyList<IJob> GetAllJobs() => _jobs.AsReadOnly();
+        public void EnQueueAction(Action action)
+        {
+            _actionQueue.Enqueue(action);
+        }
     }
 }

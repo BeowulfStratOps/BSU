@@ -6,7 +6,7 @@ using System.Text;
 using BSU.CoreCommon;
 using BSU.Hashes;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorageMod : IStorageMod, IMockedFiles
     {

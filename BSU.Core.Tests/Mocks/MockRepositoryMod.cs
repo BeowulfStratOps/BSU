@@ -7,7 +7,7 @@ using System.Threading;
 using BSU.CoreCommon;
 using BSU.Hashes;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.Mocks
 {
     public interface IMockedFiles
     {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BSU.Core.Hashes;
+using BSU.Core.Tests.Mocks;
 using Xunit;
 
 namespace BSU.Core.Tests
