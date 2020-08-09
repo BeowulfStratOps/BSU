@@ -7,7 +7,9 @@ namespace BSU.Core.Model
     internal interface IModelStorage
     {
         List<IModelStorageMod> Mods { get; } // TODO: readonly
-        IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier);
+
+        void PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
+            Action<Exception> setupError, Action<IUpdateState> callback);
         event Action<IModelStorageMod> ModAdded;
         bool CanWrite { get; }
         bool IsLoading { get; }

@@ -29,7 +29,7 @@ namespace BSU.Core.Tests
             
             worker.DoWork();
             
-            IModelStorageMod storageMod = new MockModelStorageMod(); // create instance
+            IModelStorageMod storageMod = new MockModelStorageMod(); // TODO: use mocking?
             
             repoMod.ChangeAction(storageMod, ModActionEnum.Update);
             repoMod2.ChangeAction(storageMod, ModActionEnum.Update);

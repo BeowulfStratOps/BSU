@@ -19,7 +19,8 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action rollback = null)
+        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action<Exception> setupError,
+            Action rollback = null)
         {
             throw new NotImplementedException();
         }

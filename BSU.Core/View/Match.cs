@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
+using System.Windows;
 
 namespace BSU.Core.View
 {
@@ -70,7 +71,7 @@ namespace BSU.Core.View
         {
             new Thread(() =>
             {
-                var update = Mod.PrepareUpdate(Parent.Mod.Implementation, Parent.Mod.AsUpdateTarget);
+                var update = Mod.PrepareUpdate(Parent.Mod.Implementation, Parent.Mod.AsUpdateTarget, e => { });
                 update.OnPrepared += update.Commit;
             }).Start();
         }

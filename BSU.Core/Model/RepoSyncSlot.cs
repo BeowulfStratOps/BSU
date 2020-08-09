@@ -15,8 +15,6 @@ namespace BSU.Core.Model
         private Action _rollback;
         
         internal UpdateTarget Target { get; private set; }
-        
-        // TODO: add lock
 
         public RepoSyncSlot(IJobManager jobManager)
         {

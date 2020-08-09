@@ -1,4 +1,5 @@
-﻿using BSU.Core.Hashes;
+﻿using System;
+using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
 using Xunit;
@@ -128,7 +129,8 @@ namespace BSU.Core.Tests
             var (implementation, storageMod, worker) = CreateStorageMod(updateTarget: target);
 
             var repo = CreateRepoMod();
-            storageMod.PrepareUpdate(repo, target);
+            storageMod.PrepareUpdate(repo, target, e => { });
+            worker.DoQueueStep();
             
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState().State);
             var state = storageMod.GetState();
@@ -148,7 +150,7 @@ namespace BSU.Core.Tests
             var (implementation, storageMod, worker) = CreateStorageMod(updateTarget: target);
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target);
+            var update = storageMod.PrepareUpdate(repo, target, e => { });
             update.OnPrepared += update.Commit;
             
             worker.DoWork();
@@ -188,7 +190,8 @@ namespace BSU.Core.Tests
             worker.DoWork();
             
             var repo = CreateRepoMod();
-            storageMod.PrepareUpdate(repo, target);
+            storageMod.PrepareUpdate(repo, target, e => { });
+            worker.DoQueueStep();
             
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState().State);
             var state = storageMod.GetState();
@@ -212,7 +215,7 @@ namespace BSU.Core.Tests
             worker.DoWork();
             
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target);
+            var update = storageMod.PrepareUpdate(repo, target, e => { });
             update.OnPrepared += update.Commit;
             
             worker.DoWork();
@@ -238,7 +241,7 @@ namespace BSU.Core.Tests
             worker.DoWork();
             
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), e => { });
             update.OnPrepared += update.Abort;
             
             worker.DoWork();
@@ -291,7 +294,7 @@ namespace BSU.Core.Tests
             var repo = CreateRepoMod();
             worker.DoWork();
             implementation.ThrowErrorOpen = true;
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), e => { });
             
             worker.DoWork();
             
@@ -309,7 +312,7 @@ namespace BSU.Core.Tests
             worker.DoWork();
             
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), e => { });
             update.OnPrepared += () =>
             {
                 implementation.ThrowErrorOpen = true;
@@ -321,6 +324,24 @@ namespace BSU.Core.Tests
             
             var state = storageMod.GetState();
             Assert.Equal(StorageModStateEnum.ErrorUpdate, state.State);
+        }
+
+        [Fact]
+        private void ErrorPrepareUpdate()
+        {
+            var target = new UpdateTarget("123", "LeMod");
+            var (implementation, storageMod, worker) = CreateStorageMod();
+
+            worker.DoWork();
+
+            var repo = CreateRepoMod();
+            Exception error = null;
+            var update = storageMod.PrepareUpdate(repo, target, e => { error = e; });
+
+            worker.DoWork();
+            
+            Assert.NotNull(error);
+            Assert.IsType<InvalidOperationException>(error);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace BSU.Core.Model
         private readonly string _parentIdentifier;
         public bool CanWrite { get; }
         public string Identifier { get; }
-        public IActionQueue ActionQueue { get; }
+        private IActionQueue ActionQueue { get; }
         public IStorageMod Implementation { get; }
         public Uid Uid { get; } = new Uid();
 
@@ -29,7 +29,7 @@ namespace BSU.Core.Model
         private MatchHash _matchHash;
         private VersionHash _versionHash;
 
-        private readonly RepoSyncSlot _updating;
+        private RepoSyncSlot _updating;
         private UpdateTarget _updateTarget;
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
@@ -80,26 +80,6 @@ namespace BSU.Core.Model
                 {
                     _error = error;
                     State = StorageModStateEnum.ErrorLoad;
-                });
-            };
-            _updating = new RepoSyncSlot(jobManager);
-            _updating.OnFinished += error =>
-            {
-                ActionQueue.EnQueueAction(() =>
-                {
-                    _versionHash = null;
-                    _matchHash = null;
-
-                    if (error == null)
-                    {
-                        UpdateTarget = null;
-                        _loading.StartJob();
-                        State = StorageModStateEnum.Loading;
-                        return;
-                    }
-
-                    _error = error;
-                    State = StorageModStateEnum.ErrorUpdate;
                 });
             };
             if (updateTarget == null)
@@ -171,28 +151,60 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action rollback = null)
+        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action<Exception> setupError, Action rollback = null)
         {
-            // TODO: needs to run synchronized / with callback!
-            CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed,
-                StorageModStateEnum.CreatedWithUpdateTarget);
-            UpdateTarget = target;
-            var title =
-                $"Updating {_parentIdentifier}/{Identifier} to {repositoryMod.GetDisplayName()}";
+            var update = new RepoSyncSlot(_jobManager);
+            ActionQueue.EnQueueAction(() =>
+            {
+                try
+                {
+                    CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed, StorageModStateEnum.CreatedWithUpdateTarget);
+                    if (_updating != null) throw new InvalidOperationException();
+                }
+                catch (Exception e)
+                {
+                    setupError(e);
+                    return;
+                }
+                
+                UpdateTarget = target;
+                var title =
+                    $"Updating {_parentIdentifier}/{Identifier} to {repositoryMod.GetDisplayName()}";
 
-            _updating.Prepare(repositoryMod, this, target, title, rollback);
+                _updating = update;
+                _updating.Prepare(repositoryMod, this, target, title, rollback);
+                _versionHash = null;
+                _matchHash = null;
+                State = StorageModStateEnum.Updating;
+            });
+            
+            update.OnFinished += error =>
+            {
+                ActionQueue.EnQueueAction(() =>
+                {
+                    _versionHash = null;
+                    _matchHash = null;
+                    _updating = null;
 
-            _versionHash = null;
-            _matchHash = null;
+                    if (error == null)
+                    {
+                        UpdateTarget = null;
+                        _loading.StartJob();
+                        State = StorageModStateEnum.Loading;
+                        return;
+                    }
 
-            State = StorageModStateEnum.Updating;
+                    _error = error;
+                    State = StorageModStateEnum.ErrorUpdate;
+                });
+            };
 
-            return _updating; // TODO: meh. should be a new object every time.
+            return update;
         }
 
         public StorageModState GetState()
         {
-            return new StorageModState(_matchHash, _versionHash, UpdateTarget, _updating.Target, State, _error);
+            return new StorageModState(_matchHash, _versionHash, UpdateTarget, _updating?.Target, State, _error);
         }
 
         public void Abort()

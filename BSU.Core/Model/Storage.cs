@@ -53,18 +53,28 @@ namespace BSU.Core.Model
             });
         }
 
-        public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
+        public void PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier, Action<Exception> setupError, Action<IUpdateState> callback)
         {
-            // TODO: needs to run synchronized / with callback!
             if (Loading.IsActive()) throw new InvalidOperationException();
-            //var updateTarget = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
-            var mod = Implementation.CreateMod(identifier);
-            var storageMod = new StorageMod(_actionQueue, mod, identifier, target, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
-            Mods.Add(storageMod);
-            var update = storageMod.PrepareUpdate(repositoryMod, target, () => RollbackDownload(storageMod));
-            ModAdded?.Invoke(storageMod);
-            _matchMaker.AddStorageMod(storageMod);
-            return update;
+
+            _actionQueue.EnQueueAction(() =>
+            {
+                try
+                {
+                    var mod = Implementation.CreateMod(identifier);
+                    var storageMod = new StorageMod(_actionQueue, mod, identifier, target, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
+                    Mods.Add(storageMod);
+                    var update = storageMod.PrepareUpdate(repositoryMod, target, setupError, () => RollbackDownload(storageMod));
+                    ModAdded?.Invoke(storageMod);
+                    _matchMaker.AddStorageMod(storageMod);
+                    callback(update);
+                }
+                catch (Exception e)
+                {
+                    setupError(e);
+                }
+                
+            });
         }
 
         private void RollbackDownload(StorageMod mod)
