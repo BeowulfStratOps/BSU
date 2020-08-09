@@ -7,6 +7,7 @@ namespace BSU.Core.Model
     internal interface IModelRepositoryMod
     {
         UpdateTarget AsUpdateTarget { get; }
+        public bool SelectedDoNothing { get; set; }
         IModelStorageMod SelectedStorageMod { get; set; }
         IModelStorage SelectedDownloadStorage { get; set; }
         Dictionary<IModelStorageMod, ModAction> Actions { get; }

@@ -27,6 +27,7 @@ namespace BSU.Core.Model
 
         private Exception _error;
 
+        public bool SelectedDoNothing { get; set; }
         public IModelStorageMod SelectedStorageMod { get; set; }
         public IModelStorage SelectedDownloadStorage { get; set; }
 
@@ -122,7 +123,7 @@ namespace BSU.Core.Model
         {
             // never change a selection once it was made. Could effectively be clickjacking on the user
             // TODO: check if a better option became available and notify user
-            if (SelectedDownloadStorage != null || SelectedStorageMod != null) return;
+            if (SelectedDoNothing || SelectedDownloadStorage != null || SelectedStorageMod != null) return;
 
             var (selectedStorageMod, selectedDownloadStorage) = CoreCalculation.AutoSelect(AllModsLoaded, Actions,
                 _modelStructure, _internalState.UsedMod);

@@ -128,7 +128,7 @@ namespace BSU.Core.Model
             if (mods.All(mod =>
                 mod.SelectedStorageMod != null && mod.Actions[mod.SelectedStorageMod].ActionType == ModActionEnum.Use))
             {
-                return CalculatedRepositoryState.Ready;
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Ready, false);
             }
 
             if (mods.All(mod => mod.SelectedStorageMod != null || mod.SelectedDownloadStorage != null))
@@ -138,8 +138,8 @@ namespace BSU.Core.Model
                     mod.Actions[mod.SelectedStorageMod].Conflicts.All(conflict => !mods.Contains(conflict.Parent))))
                 {
                     if (mods.Count(mod => mod.SelectedDownloadStorage != null) > 0.5 * mods.Count)
-                        return CalculatedRepositoryState.NeedsDownload;
-                    return CalculatedRepositoryState.NeedsUpdate;
+                        return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsDownload, false);
+                    return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsUpdate, false);
                 }
             }
 
@@ -147,10 +147,10 @@ namespace BSU.Core.Model
                 mod.SelectedStorageMod == null && mod.SelectedDownloadStorage == null &&
                 mod.Actions.Any(kv => kv.Value.ActionType == ModActionEnum.Loading)))
             {
-                return CalculatedRepositoryState.Loading;
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
             }
 
-            return CalculatedRepositoryState.RequiresUserIntervention;
+            return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.RequiresUserIntervention, false);
         }
     }
 }

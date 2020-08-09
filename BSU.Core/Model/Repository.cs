@@ -62,14 +62,14 @@ namespace BSU.Core.Model
             });
         }
 
-        private CalculatedRepositoryState _calculatedState = CalculatedRepositoryState.Loading;
+        private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
 
         public CalculatedRepositoryState CalculatedState
         {
             get => _calculatedState;
             private set
             {
-                if (value == _calculatedState) return;
+                if (value.Equals(_calculatedState)) return;
                 _calculatedState = value;
                 CalculatedStateChanged?.Invoke();
             }
