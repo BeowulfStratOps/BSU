@@ -32,7 +32,7 @@ namespace BSU.Core.Tests
             var mockRepo = new MockRepositoryMod();
             for (int i = 0; i < 3; i++)
             {
-                mockRepo.SetFile($"/addons/qwer_{i}.pbo", "asd");                
+                mockRepo.SetFile($"/addons/asdf_{i}.pbo", "asd");                
             }
 
             return mockRepo;
@@ -289,13 +289,14 @@ namespace BSU.Core.Tests
             worker.DoWork();
             
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
+            worker.DoWork();
             implementation.ThrowErrorOpen = true;
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
             
             worker.DoWork();
             
             var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.ErrorLoad, state.State);
+            Assert.Equal(StorageModStateEnum.ErrorUpdate, state.State);
         }
         
         [Fact]
@@ -319,7 +320,7 @@ namespace BSU.Core.Tests
             worker.DoWork();
             
             var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.ErrorLoad, state.State);
+            Assert.Equal(StorageModStateEnum.ErrorUpdate, state.State);
         }
     }
 }

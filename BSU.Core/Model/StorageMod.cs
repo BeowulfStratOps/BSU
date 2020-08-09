@@ -64,16 +64,24 @@ namespace BSU.Core.Model
             _loading = new JobSlot<SimpleJob>(() => new SimpleJob(LoadJob, title1, 1), title1, jobManager);
             var title2 = $"Hash StorageMod {Identifier}";
             _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(HashJob, title2, 1), title2, jobManager);
-            /*_loading.OnFinished += error =>
+            _loading.OnFinished += error =>
             {
-                _error = error; // TODO 
-                State = error == null ? StorageModStateEnum.Loaded : StorageModStateEnum.ErrorLoad;
-            };*/
-            /*_hashing.OnFinished += error =>
+                if (error == null) return; // Handled in job
+                ActionQueue.EnQueueAction(() =>
+                {
+                    _error = error;
+                    State = StorageModStateEnum.ErrorLoad;
+                });
+            };
+            _hashing.OnFinished += error =>
             {
-                _error = error;
-                State = error == null ? StorageModStateEnum.Hashed : StorageModStateEnum.ErrorLoad;
-            }; // TODO: check error*/
+                if (error == null) return; // Handled in job
+                ActionQueue.EnQueueAction(() =>
+                {
+                    _error = error;
+                    State = StorageModStateEnum.ErrorLoad;
+                });
+            };
             _updating = new RepoSyncSlot(jobManager);
             _updating.OnFinished += error =>
             {

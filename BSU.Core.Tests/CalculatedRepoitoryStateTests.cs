@@ -369,5 +369,16 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.True(result.IsPartial);
         }
+        
+        [Fact]
+        private void Single_DoNothing()
+        {
+            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
+            {
+                CreateMod(null, false, true)
+            });
+            Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
+            Assert.True(result.IsPartial);
+        }
     }
 }

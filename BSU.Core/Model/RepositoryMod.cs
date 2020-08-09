@@ -47,10 +47,14 @@ namespace BSU.Core.Model
             Identifier = identifier;
             var title = $"Load RepoMod {Identifier}";
             _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
-            /*_loading.OnFinished += error =>
+            _loading.OnFinished += error =>
             {
-                _error = error; // TODO: error handling
-            };*/
+                if (error == null) return;
+                actionQueue.EnQueueAction(() =>
+                {
+                    _error = error;
+                });
+            };
 
             _loading.StartJob();
         }
