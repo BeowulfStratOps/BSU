@@ -8,7 +8,7 @@ namespace BSU.Core.Model
     {
         void RequireHash();
         event Action StateChanged;
-        IUpdateState PrepareUpdate(IModelRepositoryMod repositoryMod, Action rollback = null);
+        IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action rollback = null);
         StorageModState GetState();
         void Abort();
         StorageModIdentifiers GetStorageModIdentifiers();

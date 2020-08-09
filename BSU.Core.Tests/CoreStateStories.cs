@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
-using BSU.Core.JobManager;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
-using BSU.Core.Tests.Test;
 using NLog;
 using NLog.Config;
 using Xunit;
@@ -13,17 +11,10 @@ using Xunit.Abstractions;
 namespace BSU.Core.Tests
 {
     // TODO: extend for ViewState
-    public class CoreStateStories
+    public class CoreStateStories : LoggedTest
     {
-        private readonly ITestOutputHelper _outputHelper;
-
-        public CoreStateStories(ITestOutputHelper outputHelper)
+        public CoreStateStories(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-            _outputHelper = outputHelper;
-            var config = new LoggingConfiguration();
-            var target = new XUnitTarget(outputHelper);
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, target);
-            LogManager.Configuration = config;
         }
         
         internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, MockWorker worker, MockModelStructure structure)
@@ -78,7 +69,7 @@ namespace BSU.Core.Tests
             var storageState = new MockStorageState();
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, worker, matchMaker, worker);
             worker.DoWork();
-            var update = storage.PrepareDownload(repoMod, "mystoragemod");
+            var update = storage.PrepareDownload(repoMod.Implementation, repoMod.AsUpdateTarget, "mystoragemod");
             update.OnPrepared += () =>
             {
                 Assert.True(update.GetPrepStats() > 0);
@@ -108,9 +99,9 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
             
-            _outputHelper.WriteLine("Starting update...");
+            OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
             update.OnPrepared += () =>
             {
                 Assert.True(update.GetPrepStats() > 0);
@@ -147,9 +138,9 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModActionEnum.ContinueUpdate, repoMod.Actions[storageMod].ActionType);
             
-            _outputHelper.WriteLine("Starting update...");
+            OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
             update.OnPrepared += () =>
             {
                 Assert.True(update.GetPrepStats() > 0);
@@ -185,9 +176,9 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModActionEnum.ContinueUpdate, repoMod.Actions[storageMod].ActionType);
             
-            _outputHelper.WriteLine("Starting update...");
+            OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
             update.OnPrepared += () =>
             {
                 Assert.Equal(0, update.GetPrepStats());
@@ -248,7 +239,7 @@ namespace BSU.Core.Tests
             var mockStorage = new MockStorage();
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", new MockStorageState(), worker, matchMaker, worker);
             worker.DoWork();
-            var update = storage.PrepareDownload(repoMod, "mystoragemod");
+            var update = storage.PrepareDownload(repoMod.Implementation, repoMod.AsUpdateTarget, "mystoragemod");
             var mockMod = mockStorage.Mods.Values.First();
             update.OnPrepared += () =>
             {
@@ -280,9 +271,9 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
             
-            _outputHelper.WriteLine("Starting update...");
+            OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
             update.OnPrepared += () =>
             {
                 update.Abort();
@@ -312,9 +303,9 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
             
-            _outputHelper.WriteLine("Starting update...");
+            OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
             worker.DoWork();
             Assert.True(update.IsPrepared);
             update.Commit();
@@ -345,10 +336,10 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
             
-            _outputHelper.WriteLine("Starting update...");
+            OutputHelper.WriteLine("Starting update...");
 
             var prepared = false;
-            var update = storageMod.PrepareUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
             update.OnPrepared += () => prepared = true;
             storageFiles.ThrowErrorOpen = true;
             worker.DoJobStep();
@@ -382,9 +373,9 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
             
-            _outputHelper.WriteLine("Starting update...");
+            OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod);
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
             worker.DoWork();
             Assert.True(update.IsPrepared);
             update.Commit();

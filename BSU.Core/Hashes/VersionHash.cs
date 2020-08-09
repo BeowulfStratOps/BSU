@@ -80,5 +80,7 @@ namespace BSU.Core.Hashes
             using var sha1 = SHA1.Create();
             return new VersionHash(sha1.ComputeHash(new byte[0]));
         }
+
+        public override string ToString() => GetHashString();
     }
 }

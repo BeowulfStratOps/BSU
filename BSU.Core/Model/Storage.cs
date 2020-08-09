@@ -53,15 +53,15 @@ namespace BSU.Core.Model
             });
         }
 
-        public IUpdateState PrepareDownload(IModelRepositoryMod repositoryMod, string identifier)
+        public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
         {
             // TODO: needs to run synchronized / with callback!
             if (Loading.IsActive()) throw new InvalidOperationException();
-            var updateTarget = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
+            //var updateTarget = new UpdateTarget(repositoryMod.GetState().VersionHash.GetHashString(), repositoryMod.Implementation.GetDisplayName());
             var mod = Implementation.CreateMod(identifier);
-            var storageMod = new StorageMod(_actionQueue, mod, identifier, updateTarget, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
+            var storageMod = new StorageMod(_actionQueue, mod, identifier, target, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
             Mods.Add(storageMod);
-            var update = storageMod.PrepareUpdate(repositoryMod, () => RollbackDownload(storageMod));
+            var update = storageMod.PrepareUpdate(repositoryMod, target, () => RollbackDownload(storageMod));
             ModAdded?.Invoke(storageMod);
             _matchMaker.AddStorageMod(storageMod);
             return update;

@@ -22,7 +22,7 @@ namespace BSU.Core.View
             name ??= Parent.Name;
             new Thread(() =>
             {
-                var update = Storage.PrepareDownload(Parent.Mod, name);
+                var update = Storage.PrepareDownload(Parent.Mod.Implementation, Parent.Mod.AsUpdateTarget, name);
                 update.OnPrepared += update.Commit;
             }).Start();
         }

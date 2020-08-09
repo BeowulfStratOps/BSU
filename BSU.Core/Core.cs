@@ -12,6 +12,7 @@ using NLog;
 
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
 [assembly: InternalsVisibleTo("RealTest")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace BSU.Core
 {

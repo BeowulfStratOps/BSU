@@ -70,7 +70,7 @@ namespace BSU.Core.View
         {
             new Thread(() =>
             {
-                var update = Mod.PrepareUpdate(Parent.Mod);
+                var update = Mod.PrepareUpdate(Parent.Mod.Implementation, Parent.Mod.AsUpdateTarget);
                 update.OnPrepared += update.Commit;
             }).Start();
         }

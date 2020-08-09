@@ -5,10 +5,9 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockModelStructure : IModelStructure
     {
-        public IEnumerable<IModelStorage> GetStorages()
-        {
-            return new List<IModelStorage>();
-        }
+        public List<IModelStorage> Storages { get; } = new List<IModelStorage>();
+
+        public IEnumerable<IModelStorage> GetStorages() => Storages;
 
         public IEnumerable<IModelRepository> GetRepositories()
         {

@@ -35,8 +35,6 @@ namespace BSU.Core.Model
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private StorageModStateEnum _state; // TODO: should not be directly accessible
-        
-        public readonly List<ModAction> RelatedModActions = new List<ModAction>();
 
         private Exception _error;
 
@@ -165,17 +163,16 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        public IUpdateState PrepareUpdate(IModelRepositoryMod repositoryMod, Action rollback = null)
+        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action rollback = null)
         {
             // TODO: needs to run synchronized / with callback!
             CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed,
                 StorageModStateEnum.CreatedWithUpdateTarget);
-            var target = repositoryMod.AsUpdateTarget;
             UpdateTarget = target;
             var title =
-                $"Updating {_parentIdentifier}/{Identifier} to {repositoryMod.Implementation.GetDisplayName()}";
+                $"Updating {_parentIdentifier}/{Identifier} to {repositoryMod.GetDisplayName()}";
 
-            _updating.Prepare(repositoryMod.Implementation, this, target, title, rollback);
+            _updating.Prepare(repositoryMod, this, target, title, rollback);
 
             _versionHash = null;
             _matchHash = null;
