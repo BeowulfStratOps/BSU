@@ -4,6 +4,7 @@ using System.Threading;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Model
 {
@@ -23,6 +24,8 @@ namespace BSU.Core.Model
         public List<IModelRepositoryMod> Mods { get; } = new List<IModelRepositoryMod>();
         
         public JobSlot<SimpleJob> Loading { get; }
+        
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager,
             IMatchMaker matchMaker, IRepositoryState internalState, IActionQueue actionQueue,
@@ -54,6 +57,7 @@ namespace BSU.Core.Model
                     modelMod.ActionAdded += storageMod =>
                     {
                         modelMod.Actions[storageMod].Updated += ReCalculateState;
+                        ReCalculateState();
                     };
                     Mods.Add(modelMod);
                     ModAdded?.Invoke(modelMod);
@@ -70,6 +74,7 @@ namespace BSU.Core.Model
             private set
             {
                 if (value.Equals(_calculatedState)) return;
+                _logger.Trace("Repo {0} State changing from {1} to {2}", Identifier, _calculatedState, value);
                 _calculatedState = value;
                 CalculatedStateChanged?.Invoke();
             }
@@ -78,6 +83,7 @@ namespace BSU.Core.Model
         private void ReCalculateState()
         {
             CalculatedState = CoreCalculation.CalculateRepositoryState(Mods);
+            _logger.Trace("Repo {0} calculated state: {1}", Identifier, CalculatedState);
         }
 
         public event Action CalculatedStateChanged;

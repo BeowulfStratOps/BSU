@@ -7,25 +7,23 @@
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
-    <StackPanel Orientation="Horizontal">
-        <StackPanel Orientation="Vertical">
-            <TextBlock FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
-            <TextBlock Text="{Binding Path=DisplayName}"></TextBlock>
-            <TextBlock Text="{Binding Path=Selection}"></TextBlock>
-        </StackPanel>
-        <ListBox ItemsSource="{Binding Path=Matches}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <local:Match></local:Match>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <ListBox ItemsSource="{Binding Path=Downloads}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <local:DownloadAction></local:DownloadAction>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </StackPanel>
+    <Border Margin="5">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                <TextBlock FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
+                <TextBlock Text="{Binding Path=DisplayName}"></TextBlock>
+                <TextBlock Text="{Binding Path=Selection}"></TextBlock>
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Width="200">
+                <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Path=Matches}" >
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <local:Match></local:Match>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Foreground="Red" FontStyle="Italic">Stuff's wrong yo</TextBlock>
+            </StackPanel>
+        </DockPanel>
+    </Border>
 </UserControl>

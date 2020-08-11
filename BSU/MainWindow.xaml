@@ -14,13 +14,15 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
-        <ListBox ItemsSource="{Binding Path=Repositories}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <local:Repository></local:Repository>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl  ItemsSource="{Binding Path=Repositories}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <local:Repository></local:Repository>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
         <ListBox Grid.Column="1" ItemsSource="{Binding Path=Storages}">
             <ListBox.ItemTemplate>
                 <DataTemplate>

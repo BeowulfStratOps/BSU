@@ -30,6 +30,8 @@ namespace BSU.Core.Model
         public bool SelectedDoNothing { get; set; }
         public IModelStorageMod SelectedStorageMod { get; set; }
         public IModelStorage SelectedDownloadStorage { get; set; }
+        
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public Dictionary<IModelStorageMod, ModAction> Actions { get; } = new Dictionary<IModelStorageMod, ModAction>();
 
@@ -84,7 +86,8 @@ namespace BSU.Core.Model
 
         public void ChangeAction(IModelStorageMod target, ModActionEnum? newAction)
         {
-            // TODO: signal if allModsLoaded becomes true. might be important for displaying things
+            _logger.Trace("RepoMod {0} changed action for {1} to {2}", Identifier, target, newAction);
+            
             var existing = Actions.ContainsKey(target);
             if (newAction == null)
             {
