@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
-using System.Windows;
 
-namespace BSU.Core.View
+namespace BSU.Core.ViewModel
 {
     public class Match : INotifyPropertyChanged
     {
@@ -35,25 +32,17 @@ namespace BSU.Core.View
             Action = modelAction.ActionType.ToString();
             modelAction.Updated += () =>
             {
-                ViewModel.UiDo(() =>
-                {
-                    Action = modelAction.ActionType.ToString();
-                });
+                Action = modelAction.ActionType.ToString();
             };
 
             foreach (var conflict in modelAction.Conflicts)
             {
-                ViewModel.UiDo(() => { Conflicts.Add("???"); });
+                Conflicts.Add("???");
             }
 
-            modelAction.ConflictAdded += action => ViewModel.UiDo(() =>
-            {
-                Conflicts.Add("???");
-            });
-            modelAction.ConflictRemoved += action => ViewModel.UiDo(() =>
-            {
-                Conflicts.Remove("???");
-            });
+            modelAction.ConflictAdded += action => Conflicts.Add("???");
+            
+            modelAction.ConflictRemoved += action => Conflicts.Remove("???");
             Parent = parent;
         }
 

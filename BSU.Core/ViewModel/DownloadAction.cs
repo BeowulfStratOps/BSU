@@ -1,7 +1,6 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 
-namespace BSU.Core.View
+namespace BSU.Core.ViewModel
 {
     public class DownloadAction
     {

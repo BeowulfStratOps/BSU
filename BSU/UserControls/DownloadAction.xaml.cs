@@ -12,7 +12,7 @@ namespace BSU.GUI.UserControls
 
         private void MenuItem_OnClick(object sender, RoutedEventArgs e)
         {
-            var match = DataContext as Core.View.DownloadAction;
+            var match = DataContext as Core.ViewModel.DownloadAction;
             match.DoDownload();
         }
     }

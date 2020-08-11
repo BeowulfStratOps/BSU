@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
-using BSU.Core.Model;
-using BSU.CoreCommon;
 
-namespace BSU.Core.View
+namespace BSU.Core.ViewModel
 {
     public class Storage : INotifyPropertyChanged
     {
@@ -33,7 +29,7 @@ namespace BSU.Core.View
             ModelStorage = storage;
             _viewModel = viewModel;
             Name = storage.Identifier;
-            storage.ModAdded += mod => ViewModel.UiDo(() => Mods.Add(new StorageMod(mod, viewModel)));
+            storage.ModAdded += mod => Mods.Add(new StorageMod(mod, viewModel));
         }
     }
 }

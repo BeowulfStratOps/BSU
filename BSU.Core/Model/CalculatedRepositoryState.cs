@@ -32,5 +32,12 @@ namespace BSU.Core.Model
         {
             return HashCode.Combine((int) State, IsPartial);
         }
+
+        public override string ToString()
+        {
+            var res = State.ToString();
+            if (IsPartial) res += " (partial)";
+            return res;
+        }
     }
 }

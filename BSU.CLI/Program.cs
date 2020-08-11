@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using BSU.Core.View;
 using NLog;
 
 namespace BSU.CLI

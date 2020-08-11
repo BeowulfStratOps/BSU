@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
 
-namespace BSU.Core.View
+namespace BSU.Core.ViewModel
 {
     public class RepositoryMod : INotifyPropertyChanged
     {
@@ -79,13 +79,13 @@ namespace BSU.Core.View
         private void AddAction(IModelStorageMod storageMod)
         {
             var action = Mod.Actions[storageMod];
-            ViewModel.UiDo(() => Matches.Add(new Match(storageMod, this, action)));
+            Matches.Add(new Match(storageMod, this, action));
         }
         
         internal void AddStorage(Model.Storage storage)
         {
             if (storage.Implementation.CanWrite())
-                ViewModel.UiDo(() => Downloads.Add(new DownloadAction(storage, this)));
+                Downloads.Add(new DownloadAction(storage, this));
         }
     }
 }

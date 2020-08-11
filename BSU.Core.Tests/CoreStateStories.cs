@@ -3,8 +3,6 @@ using System.Linq;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
-using NLog;
-using NLog.Config;
 using Xunit;
 using Xunit.Abstractions;
 

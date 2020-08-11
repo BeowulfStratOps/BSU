@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
-using BSU.Core.Model;
-using BSU.CoreCommon;
 
-namespace BSU.Core.View
+namespace BSU.Core.ViewModel
 {
     public class Repository : INotifyPropertyChanged
     {
@@ -31,15 +27,12 @@ namespace BSU.Core.View
             CalculatedState = repository.CalculatedState.ToString();
             repository.CalculatedStateChanged += () =>
             {
-                ViewModel.UiDo(() =>
-                {
-                    CalculatedState = repository.CalculatedState.ToString();
-                    OnPropertyChanged(nameof(CalculatedState));
-                });
+                CalculatedState = repository.CalculatedState.ToString();
+                OnPropertyChanged(nameof(CalculatedState));
             };
             _viewModel = viewModel;
             Name = repository.Identifier;
-            repository.ModAdded += mod => ViewModel.UiDo(() => Mods.Add(new RepositoryMod(mod, viewModel)));
+            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, viewModel));
         }
     }
 }

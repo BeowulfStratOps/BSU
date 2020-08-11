@@ -4,7 +4,7 @@ using BSU.Core.Annotations;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
 
-namespace BSU.Core.View
+namespace BSU.Core.ViewModel
 {
     public class Job : INotifyPropertyChanged
     {

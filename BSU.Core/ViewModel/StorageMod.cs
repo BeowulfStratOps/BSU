@@ -2,9 +2,8 @@
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
-using BSU.Core.Sync;
 
-namespace BSU.Core.View
+namespace BSU.Core.ViewModel
 {
     public class StorageMod : INotifyPropertyChanged
     {
