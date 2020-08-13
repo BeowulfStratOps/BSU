@@ -6,21 +6,13 @@ using BSU.Core.Model;
 
 namespace BSU.Core.ViewModel
 {
-    public class Repository : INotifyPropertyChanged
+    public class Repository : ViewModelClass
     {
         public string Name { get; }
 
         public string CalculatedState { get; private set; }
         
         public ObservableCollection<RepositoryMod> Mods { get; } = new ObservableCollection<RepositoryMod>();
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
 
         internal Repository(Model.Repository repository, ViewModel viewModel, IModelStructure structure)
         {

@@ -6,7 +6,7 @@ using BSU.Core.Sync;
 
 namespace BSU.Core.ViewModel
 {
-    public class Job : INotifyPropertyChanged
+    public class Job : ViewModelClass
     {
         public string Title { get; }
         internal IJob BackingJob;
@@ -24,14 +24,6 @@ namespace BSU.Core.ViewModel
                 Progress = newValue;
                 OnPropertyChanged(nameof(Progress));
             };
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

@@ -1,25 +1,20 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Input;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
 
 namespace BSU.Core.ViewModel
 {
-    public class RepositoryMod : INotifyPropertyChanged
+    public class RepositoryMod : ViewModelClass
     {
         private readonly IModelRepositoryMod _mod;
-        
-        
         
         public string Name { get; }
         public string DisplayName { private set; get; }
 
         public bool IsLoading { private set; get; }
-
-
+        
         public ObservableCollection<ModAction> Actions { get; } = new ObservableCollection<ModAction>();
 
         private ModAction _selection;
@@ -34,13 +29,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        //public override event PropertyChangedEventHandler PropertyChanged;
 
         internal RepositoryMod(IModelRepositoryMod mod, IModelStructure structure)
         {
@@ -70,7 +59,7 @@ namespace BSU.Core.ViewModel
             {
                 AddStorage(storage);
             }
-            SelectionChanged = new TestCommand(Test);
+            SelectionChanged = new DelegateCommand(Test);
         }
 
         private void AddAction(IModelStorageMod storageMod)
@@ -89,28 +78,6 @@ namespace BSU.Core.ViewModel
             _mod.Selection = _selection?.Selection;
         }
 
-        public TestCommand SelectionChanged { get; }
-    }
-
-    public class TestCommand : ICommand
-    {
-        private readonly Action _action;
-
-        public TestCommand(Action action)
-        {
-            _action = action;
-        }
-
-        public bool CanExecute(object parameter)
-        {
-            return true;
-        }
-
-        public void Execute(object parameter)
-        {
-            _action();
-        }
-
-        public event EventHandler CanExecuteChanged;
+        public DelegateCommand SelectionChanged { get; }
     }
 }

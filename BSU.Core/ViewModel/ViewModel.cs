@@ -9,7 +9,7 @@ using BSU.Core.Model;
 
 namespace BSU.Core.ViewModel
 {
-    public class ViewModel : INotifyPropertyChanged
+    public class ViewModel : ViewModelClass
     {
         private readonly IActionQueue _dispatcher;
         private Model.Model Model { get; }
@@ -51,14 +51,6 @@ namespace BSU.Core.ViewModel
         {
             var uiJob = Jobs.SingleOrDefault(j => j.BackingJob == job);
             Jobs.Remove(uiJob);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         
         public void AddRepository(string type, string url, string name)

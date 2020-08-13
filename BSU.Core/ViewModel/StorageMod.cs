@@ -5,7 +5,7 @@ using BSU.Core.Model;
 
 namespace BSU.Core.ViewModel
 {
-    public class StorageMod : INotifyPropertyChanged
+    public class StorageMod : ViewModelClass
     {
         internal IModelStorageMod ModelStorageMod { get; }
         
@@ -35,14 +35,6 @@ namespace BSU.Core.ViewModel
             OnPropertyChanged(nameof(IsLoading));
             OnPropertyChanged(nameof(IsHashing));
             OnPropertyChanged(nameof(IsUpdating));
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

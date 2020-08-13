@@ -5,7 +5,7 @@ using BSU.Core.Annotations;
 
 namespace BSU.Core.ViewModel
 {
-    public class Storage : INotifyPropertyChanged
+    public class Storage : ViewModelClass
     {
         private readonly ViewModel _viewModel;
         public string Name { get; }
@@ -14,14 +14,6 @@ namespace BSU.Core.ViewModel
         public bool IsLoading { get; }
 
         public ObservableCollection<StorageMod> Mods { get; } = new ObservableCollection<StorageMod>();
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
 
         internal Storage(Model.Storage storage, ViewModel viewModel)
         {

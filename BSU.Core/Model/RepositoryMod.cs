@@ -34,12 +34,11 @@ namespace BSU.Core.Model
             set
             {
                 if (value == _selection) return;
+                Logger.Trace("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
                 _selection = value;
                 SelectionChanged?.Invoke();
             }
         }
-
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public Dictionary<IModelStorageMod, ModAction> Actions { get; } = new Dictionary<IModelStorageMod, ModAction>();
 
@@ -94,7 +93,7 @@ namespace BSU.Core.Model
 
         public void ChangeAction(IModelStorageMod target, ModActionEnum? newAction)
         {
-            _logger.Trace("RepoMod {0} changed action for {1} to {2}", Identifier, target, newAction);
+            Logger.Trace("RepoMod {0} changed action for {1} to {2}", Identifier, target, newAction);
             
             var existing = Actions.ContainsKey(target);
             if (newAction == null)
@@ -129,7 +128,7 @@ namespace BSU.Core.Model
             {
                 if (value == _allModsLoaded) return;
                 _allModsLoaded = value;
-                _logger.Trace("Mod {0}: AllModsLoaded changed to {1}", Identifier, value);
+                Logger.Trace("Mod {0}: AllModsLoaded changed to {1}", Identifier, value);
                 if (_allModsLoaded) DoAutoSelection();
             }
         }
@@ -140,12 +139,12 @@ namespace BSU.Core.Model
             // TODO: check if a better option became available and notify user
             if (Selection != null) return;
 
-            _logger.Trace("Checking auto-selection for mod {0}", Identifier);
+            Logger.Trace("Checking auto-selection for mod {0}", Identifier);
             
             var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.UsedMod);
             if (selection == Selection) return;
             
-            _logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
+            Logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
             
             Selection = selection;
         }

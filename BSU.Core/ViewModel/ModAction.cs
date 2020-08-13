@@ -4,11 +4,22 @@ using BSU.Core.Model;
 
 namespace BSU.Core.ViewModel
 {
-    public class ModAction : IEquatable<ModAction>
+    public class ModAction : ViewModelClass, IEquatable<ModAction>
     {
         internal readonly RepositoryModActionSelection Selection;
-        public string Display { get; private set; }
-        
+
+        private string _display;
+        public string Display
+        {
+            get => _display;
+            private set
+            {
+                if (value == _display) return;
+                _display = value;
+                OnPropertyChanged();
+            }
+        }
+
         internal ModAction(RepositoryModActionSelection selection, Dictionary<IModelStorageMod, Model.ModAction> actions)
         {
             Selection = selection;
