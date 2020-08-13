@@ -20,6 +20,7 @@ namespace BSU.Core.Tests.Mocks
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
         public string Identifier, DisplayName;
         public bool ThrowErrorLoad;
+        private readonly Action<MockRepositoryMod> _load;
 
         public void SetFile(string key, string data)
         {
@@ -37,6 +38,7 @@ namespace BSU.Core.Tests.Mocks
         public void Load()
         {
             if (ThrowErrorLoad) throw new TestException();
+            _load?.Invoke(this);
         }
 
         public List<string> GetFileList() => Files.Keys.ToList();
@@ -52,6 +54,11 @@ namespace BSU.Core.Tests.Mocks
 
         public int SleepMs = 0;
         public bool NoOp = false;
+
+        public MockRepositoryMod(Action<MockRepositoryMod> load = null)
+        {
+            _load = load;
+        }
 
         public void DownloadTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
         {

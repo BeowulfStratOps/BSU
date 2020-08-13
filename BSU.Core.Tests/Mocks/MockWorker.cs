@@ -36,7 +36,7 @@ namespace BSU.Core.Tests.Mocks
             var job = _jobs[0];
             if (job.DoWork()) return true;
             _jobs.Remove(job);
-            return _jobs.Any();
+            return true;
         }
         
         public bool DoQueueStep()

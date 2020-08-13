@@ -8,11 +8,12 @@ namespace BSU.Core.Tests.Mocks
     internal class MockStorage : IStorage
     {
         private string path;
-
+        private Action<MockStorage> _load;
         public Dictionary<string, MockStorageMod> Mods = new Dictionary<string, MockStorageMod>();
 
-        public MockStorage()
+        public MockStorage(Action<MockStorage> load = null)
         {
+            _load = load;
         }
 
         public bool CanWrite() => true;
@@ -37,7 +38,7 @@ namespace BSU.Core.Tests.Mocks
 
         public void Load()
         {
-            
+            _load?.Invoke(this);
         }
     }
 }

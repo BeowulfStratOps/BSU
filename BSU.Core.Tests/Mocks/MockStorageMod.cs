@@ -15,8 +15,14 @@ namespace BSU.Core.Tests.Mocks
         public bool Locked = false;
         public bool ThrowErrorLoad = false;
         public bool ThrowErrorOpen = false;
+        private readonly Action<MockStorageMod> _load;
 
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
+
+        public MockStorageMod(Action<MockStorageMod> load = null)
+        {
+            _load = load;
+        }
 
         public IReadOnlyDictionary<string, string> GetFiles()
         {
@@ -83,6 +89,7 @@ namespace BSU.Core.Tests.Mocks
         public void Load()
         {
             if (ThrowErrorLoad) throw new TestException();
+            _load?.Invoke(this);
         }
         
         private sealed class MockStream : MemoryStream

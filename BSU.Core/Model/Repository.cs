@@ -59,6 +59,7 @@ namespace BSU.Core.Model
                         modelMod.Actions[storageMod].Updated += ReCalculateState;
                         ReCalculateState();
                     };
+                    modelMod.SelectionChanged += ReCalculateState;
                     Mods.Add(modelMod);
                     ModAdded?.Invoke(modelMod);
                     _matchMaker.AddRepositoryMod(modelMod);
@@ -73,7 +74,7 @@ namespace BSU.Core.Model
             get => _calculatedState;
             private set
             {
-                if (value.Equals(_calculatedState)) return;
+                if (value == _calculatedState) return;
                 _logger.Trace("Repo {0} State changing from {1} to {2}", Identifier, _calculatedState, value);
                 _calculatedState = value;
                 CalculatedStateChanged?.Invoke();
@@ -91,5 +92,7 @@ namespace BSU.Core.Model
         public bool IsLoading => Loading.IsActive();
 
         public event Action<IModelRepositoryMod> ModAdded;
+
+        public override string ToString() => Identifier;
     }
 }

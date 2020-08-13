@@ -27,13 +27,11 @@ namespace BSU.Core.Tests
                 state, new RelatedActionsBag(), new MockModelStructure());
             worker.DoWork();
             repoMod.ChangeAction(storageMod.Object, ModActionEnum.Update);
-            repoMod.SelectedStorageMod = storageMod.Object;
+            repoMod.Selection = new RepositoryModActionSelection(storageMod.Object);
             repoMod.ChangeAction(storageMod2.Object, ModActionEnum.Use);
             repoMod.AllModsLoaded = true;
             
-            Assert.Equal(storageMod.Object, repoMod.SelectedStorageMod);
-            Assert.Null(repoMod.SelectedDownloadStorage);
-            Assert.False(repoMod.SelectedDoNothing);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
         }
 
         [Fact]
@@ -49,13 +47,11 @@ namespace BSU.Core.Tests
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
             worker.DoWork();
-            repoMod.SelectedDownloadStorage = storage.Object;
+            repoMod.Selection = new RepositoryModActionSelection(storage.Object);
             repoMod.ChangeAction(storageMod2.Object, ModActionEnum.Use);
             repoMod.AllModsLoaded = true;
             
-            Assert.Null(repoMod.SelectedStorageMod);
-            Assert.Equal(storage.Object, repoMod.SelectedDownloadStorage);
-            Assert.False(repoMod.SelectedDoNothing);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storage.Object));
         }
 
         [Fact]
@@ -69,13 +65,11 @@ namespace BSU.Core.Tests
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
             worker.DoWork();
-            repoMod.SelectedDoNothing = true;
+            repoMod.Selection = new RepositoryModActionSelection();
             repoMod.ChangeAction(storageMod2.Object, ModActionEnum.Use);
             repoMod.AllModsLoaded = true;
             
-            Assert.Null(repoMod.SelectedStorageMod);
-            Assert.Null(repoMod.SelectedDownloadStorage);
-            Assert.True(repoMod.SelectedDoNothing);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection());
         }
 
         [Fact]
@@ -89,9 +83,9 @@ namespace BSU.Core.Tests
                 state, new RelatedActionsBag(), new MockModelStructure());
             worker.DoWork();
             repoMod.ChangeAction(storageMod.Object, ModActionEnum.Use);
-            Assert.Null(repoMod.SelectedStorageMod);
+            Assert.Null(repoMod.Selection);
             repoMod.AllModsLoaded = true;
-            Assert.Equal(storageMod.Object, repoMod.SelectedStorageMod);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
         }
 
         [Fact]
@@ -109,9 +103,9 @@ namespace BSU.Core.Tests
                 state, new RelatedActionsBag(), new MockModelStructure());
             worker.DoWork();
             repoMod.ChangeAction(storageMod.Object, ModActionEnum.Use);
-            Assert.Equal(storageMod.Object, repoMod.SelectedStorageMod);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
             repoMod.AllModsLoaded = true;
-            Assert.Equal(storageMod.Object, repoMod.SelectedStorageMod);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
         }
 
         [Fact]
@@ -126,7 +120,7 @@ namespace BSU.Core.Tests
             worker.DoWork();
             repoMod.AllModsLoaded = true;
             repoMod.ChangeAction(storageMod.Object, ModActionEnum.Use);
-            Assert.Equal(storageMod.Object, repoMod.SelectedStorageMod);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
         }
 
         [Fact]
@@ -144,12 +138,33 @@ namespace BSU.Core.Tests
             worker.DoWork();
             repoMod.AllModsLoaded = true;
             repoMod.ChangeAction(storageMod.Object, ModActionEnum.Use);
-            Assert.Equal(storageMod.Object, repoMod.SelectedStorageMod);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
             repoMod.AllModsLoaded = false;
             repoMod.ChangeAction(storageMod2.Object, ModActionEnum.Use);
-            Assert.Equal(storageMod.Object, repoMod.SelectedStorageMod);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
             repoMod.AllModsLoaded = true;
-            Assert.Equal(storageMod.Object, repoMod.SelectedStorageMod);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
+        }
+        
+        [Fact]
+        private void DontSelectWhileModsAreLoading()
+        {
+            var worker = new MockWorker();
+            
+            var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            
+            var structure = new MockModelStructure();
+            var storage = new Mock<IModelStorage>();
+            structure.Storages.Add(storage.Object);
+            var state = new MockRepositoryModState();
+            var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
+                state, new RelatedActionsBag(), structure);
+            worker.DoWork();
+            repoMod.ChangeAction(storageMod.Object, ModActionEnum.Loading);
+            repoMod.AllModsLoaded = true;
+            Assert.Null(repoMod.Selection);
+            repoMod.ChangeAction(storageMod.Object, ModActionEnum.Use);
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
         }
     }
 }

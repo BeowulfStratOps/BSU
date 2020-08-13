@@ -22,12 +22,12 @@ namespace BSU.Core
                 {"DIRECTORY", path => new DirectoryStorage(path)}
             };
 
-        internal void AddRepoType(string name, Func<string, IRepository> create) =>
+        public void AddRepoType(string name, Func<string, IRepository> create) =>
             _repoTypes.Add(name, create);
 
         public IEnumerable<string> GetRepoTypes() => _repoTypes.Keys.ToList();
 
-        internal void AddStorageType(string name, Func<string, IStorage> create) =>
+        public void AddStorageType(string name, Func<string, IStorage> create) =>
             _storageTypes.Add(name, create);
 
         public IEnumerable<string> GetStorageTypes() => _storageTypes.Keys.ToList();

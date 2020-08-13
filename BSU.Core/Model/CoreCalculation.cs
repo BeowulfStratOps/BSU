@@ -74,7 +74,7 @@ namespace BSU.Core.Model
             Match
         }
 
-        internal static (IModelStorageMod, IModelStorage) AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
+        internal static RepositoryModActionSelection AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
             IModelStructure modelStructure, StorageModIdentifiers usedMod)
         {
             if (usedMod != null)
@@ -82,13 +82,13 @@ namespace BSU.Core.Model
                 var storageMod = actions.Keys.FirstOrDefault(mod => mod.GetStorageModIdentifiers() == usedMod);
                 if (storageMod != null)
                 {
-                    return (storageMod, null);
+                    return new RepositoryModActionSelection(storageMod);
                 }
             }
 
             // Still loading
-            if (!allModsLoaded) return (null, null);
-            if (actions.Values.Any(action => action.ActionType == ModActionEnum.Loading)) return (null, null);
+            if (!allModsLoaded) return null;
+            if (actions.Values.Any(action => action.ActionType == ModActionEnum.Loading)) return null;
 
             // Order of precedence
             var precedence = new[]
@@ -100,7 +100,7 @@ namespace BSU.Core.Model
                     actions[mod].ActionType == actionType && !actions[mod].Conflicts.Any());
                 if (storageMod == null) continue;
 
-                return (storageMod, null);
+                return new RepositoryModActionSelection(storageMod);
             }
 
             if (actions.All(am => am.Value.ActionType == ModActionEnum.Unusable))
@@ -108,11 +108,11 @@ namespace BSU.Core.Model
                 var downloadStorage = modelStructure.GetStorages().FirstOrDefault(s => s.CanWrite);
                 if (downloadStorage != null)
                 {
-                    return (null, downloadStorage);
+                    return new RepositoryModActionSelection(downloadStorage);
                 }
             }
 
-            return (null, null);
+            return null;
         }
         
         internal static CalculatedRepositoryState CalculateRepositoryState(List<IModelRepositoryMod> mods)
@@ -126,25 +126,25 @@ namespace BSU.Core.Model
             */
 
             if (mods.All(mod =>
-                mod.SelectedStorageMod != null && mod.Actions[mod.SelectedStorageMod].ActionType == ModActionEnum.Use))
+                mod.Selection?.StorageMod != null && mod.Actions[mod.Selection?.StorageMod].ActionType == ModActionEnum.Use))
             {
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Ready, false);
             }
 
-            if (mods.All(mod => mod.SelectedStorageMod != null || mod.SelectedDownloadStorage != null))
+            if (mods.All(mod => mod.Selection?.StorageMod != null || mod.Selection?.DownloadStorage != null))
             {
                 // No internal conflicts
-                if (mods.Where(mod => mod.SelectedStorageMod != null).All(mod =>
-                    mod.Actions[mod.SelectedStorageMod].Conflicts.All(conflict => !mods.Contains(conflict.Parent))))
+                if (mods.Where(mod => mod.Selection?.StorageMod != null).All(mod =>
+                    mod.Actions[mod.Selection?.StorageMod].Conflicts.All(conflict => !mods.Contains(conflict.Parent))))
                 {
-                    if (mods.Count(mod => mod.SelectedDownloadStorage != null) > 0.5 * mods.Count)
+                    if (mods.Count(mod => mod.Selection?.DownloadStorage != null) > 0.5 * mods.Count)
                         return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsDownload, false);
                     return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsUpdate, false);
                 }
             }
 
             if (mods.All(mod =>
-                mod.SelectedStorageMod == null && mod.SelectedDownloadStorage == null &&
+                mod.Selection?.StorageMod == null && mod.Selection?.DownloadStorage == null &&
                 mod.Actions.Any(kv => kv.Value.ActionType == ModActionEnum.Loading)))
             {
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);

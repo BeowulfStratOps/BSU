@@ -95,7 +95,12 @@ namespace BSU.Core.Model
             var match = CoreCalculation.IsMatch(repoModState, storageModState);
             Logger.Debug($"Check Match on {repoMod} and {storageMod} -> {match}");
 
-            if (match == CoreCalculation.ModMatch.RequireHash) storageMod.RequireHash();
+            if (match == CoreCalculation.ModMatch.RequireHash)
+            {
+                repoMod.ChangeAction(storageMod, ModActionEnum.Loading);
+                storageMod.RequireHash();
+                return;
+            }
             
             if (match == CoreCalculation.ModMatch.NoMatch || match == CoreCalculation.ModMatch.Wait) return;
             

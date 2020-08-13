@@ -8,9 +8,7 @@ namespace BSU.Core.Tests.Mocks
     internal class MockModelRepositoryMod : IModelRepositoryMod
     {
         public UpdateTarget AsUpdateTarget { get; }
-        public bool SelectedDoNothing { get; set; }
-        public IModelStorageMod SelectedStorageMod { get; set; }
-        public IModelStorage SelectedDownloadStorage { get; set; }
+        public RepositoryModActionSelection Selection { get; set; }
         public Dictionary<IModelStorageMod, ModAction> Actions { get; }
         public bool AllModsLoaded { get; set; }
         public IRepositoryMod Implementation { get; }

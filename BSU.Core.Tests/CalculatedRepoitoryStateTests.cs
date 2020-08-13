@@ -16,17 +16,13 @@ namespace BSU.Core.Tests
         private IModelRepositoryMod CreateMod(ModActionEnum? selectedModAction, bool hasDownloadSelected, bool doNothing = false)
         {
             if (selectedModAction != null && hasDownloadSelected) throw new ArgumentException();
-            
+
             var result = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
-            if (selectedModAction == null)
-            {
-                result.Setup(m => m.SelectedStorageMod).Returns((IModelStorageMod)null);
-                result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
-            }
-            else
+            if (selectedModAction != null)
             {
                 var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-                result.Setup(m => m.SelectedStorageMod).Returns(storageMod.Object);
+                var selection = new RepositoryModActionSelection(storageMod.Object);
+                result.Setup(m => m.Selection).Returns(selection);
                 var actions = new Dictionary<IModelStorageMod, ModAction>
                 {
                     {
@@ -35,19 +31,28 @@ namespace BSU.Core.Tests
                     }
                 };
                 result.Setup(m => m.Actions).Returns(actions);
+                return result.Object;
             }
-
+            
             if (hasDownloadSelected)
             {
                 var download = new Mock<IModelStorage>(MockBehavior.Strict);
-                result.Setup(m => m.SelectedDownloadStorage).Returns(download.Object);
-            }
-            else
-            {
-                result.Setup(m => m.SelectedDownloadStorage).Returns((IModelStorage) null);
+                var selection = new RepositoryModActionSelection(download.Object);
+                result.Setup(m => m.Selection).Returns(selection);
+                result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
+                return result.Object;
             }
 
-            result.Setup(m => m.SelectedDoNothing).Returns(doNothing);
+            if (doNothing)
+            {
+                var selection = new RepositoryModActionSelection();
+                result.Setup(m => m.Selection).Returns(selection);
+                result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
+                return result.Object;
+            }
+            
+            result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
+            result.Setup(m => m.Selection).Returns((RepositoryModActionSelection)null);
 
             return result.Object;
         }

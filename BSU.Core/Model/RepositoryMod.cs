@@ -27,10 +27,18 @@ namespace BSU.Core.Model
 
         private Exception _error;
 
-        public bool SelectedDoNothing { get; set; }
-        public IModelStorageMod SelectedStorageMod { get; set; }
-        public IModelStorage SelectedDownloadStorage { get; set; }
-        
+        private RepositoryModActionSelection _selection;
+        public RepositoryModActionSelection Selection
+        {
+            get => _selection;
+            set
+            {
+                if (value == _selection) return;
+                _selection = value;
+                SelectionChanged?.Invoke();
+            }
+        }
+
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public Dictionary<IModelStorageMod, ModAction> Actions { get; } = new Dictionary<IModelStorageMod, ModAction>();
@@ -94,10 +102,9 @@ namespace BSU.Core.Model
                 if (!existing) return;
                 Actions[target].Remove();
                 Actions.Remove(target);
-                if (SelectedStorageMod == target)
+                if (Selection?.StorageMod == target)
                 {
-                    SelectedStorageMod = null;
-                    SelectionChanged?.Invoke();
+                    Selection = null;
                 }
                 return;
             }
@@ -122,6 +129,7 @@ namespace BSU.Core.Model
             {
                 if (value == _allModsLoaded) return;
                 _allModsLoaded = value;
+                _logger.Trace("Mod {0}: AllModsLoaded changed to {1}", Identifier, value);
                 if (_allModsLoaded) DoAutoSelection();
             }
         }
@@ -130,22 +138,21 @@ namespace BSU.Core.Model
         {
             // never change a selection once it was made. Could effectively be clickjacking on the user
             // TODO: check if a better option became available and notify user
-            if (SelectedDoNothing || SelectedDownloadStorage != null || SelectedStorageMod != null) return;
+            if (Selection != null) return;
 
-            var (selectedStorageMod, selectedDownloadStorage) = CoreCalculation.AutoSelect(AllModsLoaded, Actions,
-                _modelStructure, _internalState.UsedMod);
-
-            if (selectedDownloadStorage != SelectedDownloadStorage || selectedStorageMod != SelectedStorageMod)
-            {
-                SelectedDownloadStorage = selectedDownloadStorage;
-                SelectedStorageMod = selectedStorageMod;
-                SelectionChanged?.Invoke();
-            }
+            _logger.Trace("Checking auto-selection for mod {0}", Identifier);
+            
+            var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.UsedMod);
+            if (selection == Selection) return;
+            
+            _logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
+            
+            Selection = selection;
         }
 
         public override string ToString() => Identifier;
 
         public event Action<IModelStorageMod> ActionAdded;
-        public event Action SelectionChanged; // TODO: use a property to call it
+        public event Action SelectionChanged;
     }
 }

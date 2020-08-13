@@ -41,11 +41,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 null);
             
-            Assert.Equal(storageMod, selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Equal(storageMod, selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -57,11 +57,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 null);
             
-            Assert.Null(selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Null(selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -73,11 +73,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(false, mods, structure,
+            var selection = CoreCalculation.AutoSelect(false, mods, structure,
                 null);
             
-            Assert.Null(selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Null(selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -89,11 +89,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 storageMod.GetStorageModIdentifiers());
             
-            Assert.Equal(storageMod, selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Equal(storageMod, selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -105,11 +105,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 storageMod.GetStorageModIdentifiers());
             
-            Assert.Equal(storageMod, selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Equal(storageMod, selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -122,11 +122,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 null);
             
-            Assert.Equal(storageMod, selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Equal(storageMod, selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -139,11 +139,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 null);
             
-            Assert.Null(selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Null(selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -156,11 +156,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 storageMod.GetStorageModIdentifiers());
             
-            Assert.Equal(storageMod, selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Equal(storageMod, selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -172,11 +172,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(false, mods, structure,
+            var selection = CoreCalculation.AutoSelect(false, mods, structure,
                 new StorageModIdentifiers("doesn't", "exist"));
             
-            Assert.Null(selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Null(selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -188,11 +188,11 @@ namespace BSU.Core.Tests
             
             var structure = new MockModelStructure();
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 new StorageModIdentifiers("doesn't", "exist"));
             
-            Assert.Equal(storageMod, selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Equal(storageMod, selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
         
         [Fact]
@@ -207,11 +207,11 @@ namespace BSU.Core.Tests
             storage.Setup(s => s.CanWrite).Returns(true);
             structure.Storages.Add(storage.Object);
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 null);
             
-            Assert.Null(selectedMod);
-            Assert.Equal(storage.Object, selectedDownload);
+            Assert.Null(selection?.StorageMod);
+            Assert.Equal(storage.Object, selection?.DownloadStorage);
         }
         
         [Fact]
@@ -226,11 +226,11 @@ namespace BSU.Core.Tests
             storage.Setup(s => s.CanWrite).Returns(false);
             structure.Storages.Add(storage.Object);
             
-            var (selectedMod, selectedDownload) = CoreCalculation.AutoSelect(true, mods, structure,
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
                 null);
             
-            Assert.Null(selectedMod);
-            Assert.Null(selectedDownload);
+            Assert.Null(selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
         }
     }
 }
