@@ -2,12 +2,12 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
+using BSU.Core.Model;
 
 namespace BSU.Core.ViewModel
 {
     public class Repository : INotifyPropertyChanged
     {
-        private readonly ViewModel _viewModel;
         public string Name { get; }
 
         public string CalculatedState { get; private set; }
@@ -22,7 +22,7 @@ namespace BSU.Core.ViewModel
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        internal Repository(Model.Repository repository, ViewModel viewModel)
+        internal Repository(Model.Repository repository, ViewModel viewModel, IModelStructure structure)
         {
             CalculatedState = repository.CalculatedState.ToString();
             repository.CalculatedStateChanged += () =>
@@ -30,9 +30,8 @@ namespace BSU.Core.ViewModel
                 CalculatedState = repository.CalculatedState.ToString();
                 OnPropertyChanged(nameof(CalculatedState));
             };
-            _viewModel = viewModel;
             Name = repository.Identifier;
-            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, viewModel));
+            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, structure));
         }
     }
 }

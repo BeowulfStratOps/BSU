@@ -1,6 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
 
@@ -8,18 +10,29 @@ namespace BSU.Core.ViewModel
 {
     public class RepositoryMod : INotifyPropertyChanged
     {
-        internal readonly IModelRepositoryMod Mod;
-        internal ViewModel ViewModel { get; }
+        private readonly IModelRepositoryMod _mod;
+        
+        
+        
         public string Name { get; }
         public string DisplayName { private set; get; }
 
         public bool IsLoading { private set; get; }
 
-        public ObservableCollection<Match> Matches { get; } = new ObservableCollection<Match>();
-        
-        public ObservableCollection<DownloadAction> Downloads { get; } = new ObservableCollection<DownloadAction>();
 
-        public object Selection { get; private set; }
+        public ObservableCollection<ModAction> Actions { get; } = new ObservableCollection<ModAction>();
+
+        private ModAction _selection;
+        public ModAction Selection
+        {
+            get => _selection;
+            set
+            {
+                if (_selection == value) return;
+                _selection = value;
+                OnPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -29,40 +42,23 @@ namespace BSU.Core.ViewModel
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private void SetSelection(IModelRepositoryMod mod)
-        {
-            // Use setter for this
-            if (mod.SelectedStorageMod != null)
-            {
-                Selection = mod.SelectedStorageMod.ToString();
-                OnPropertyChanged(nameof(Selection));
-                return;
-            }
-            if (mod.SelectedDownloadStorage != null)
-            {
-                Selection = mod.SelectedDownloadStorage.ToString();
-                OnPropertyChanged(nameof(Selection));
-                return;
-            }
-
-            Selection = "None";
-            OnPropertyChanged(nameof(Selection));
-        }
-
-        internal RepositoryMod(IModelRepositoryMod mod, ViewModel viewModel)
+        internal RepositoryMod(IModelRepositoryMod mod, IModelStructure structure)
         {
             IsLoading = mod.GetState().IsLoading;
-            Mod = mod;
-            ViewModel = viewModel;
+            _mod = mod;
             Name = mod.ToString();
+            Actions.Add(new ModAction(new RepositoryModActionSelection(), _mod.Actions));
             mod.ActionAdded += AddAction;
             foreach (var target in mod.Actions.Keys)
             {
                 AddAction(target);
             }
             
-            SetSelection(mod);
-            mod.SelectionChanged += () => SetSelection(mod);
+            Selection = new ModAction(mod.Selection, mod.Actions);
+            mod.SelectionChanged += () =>
+            {
+                Selection = new ModAction(mod.Selection, mod.Actions);
+            };
             mod.StateChanged += () =>
             {
                 DisplayName = mod.Implementation.GetDisplayName();
@@ -70,22 +66,51 @@ namespace BSU.Core.ViewModel
                 IsLoading = mod.GetState().IsLoading;
                 OnPropertyChanged(nameof(IsLoading));
             };
-            foreach (var storage in viewModel.Storages)
+            foreach (var storage in structure.GetStorages())
             {
-                AddStorage(storage.ModelStorage);
+                AddStorage(storage);
             }
+            SelectionChanged = new TestCommand(Test);
         }
 
         private void AddAction(IModelStorageMod storageMod)
         {
-            var action = Mod.Actions[storageMod];
-            Matches.Add(new Match(storageMod, this, action));
+            Actions.Add(new ModAction(new RepositoryModActionSelection(storageMod), _mod.Actions));
         }
         
-        internal void AddStorage(Model.Storage storage)
+        internal void AddStorage(IModelStorage storage)
         {
-            if (storage.Implementation.CanWrite())
-                Downloads.Add(new DownloadAction(storage, this));
+            if (!storage.CanWrite) return;
+            Actions.Add(new ModAction(new RepositoryModActionSelection(storage), _mod.Actions));
         }
+
+        private void Test()
+        {
+            _mod.Selection = _selection?.Selection;
+        }
+
+        public TestCommand SelectionChanged { get; }
+    }
+
+    public class TestCommand : ICommand
+    {
+        private readonly Action _action;
+
+        public TestCommand(Action action)
+        {
+            _action = action;
+        }
+
+        public bool CanExecute(object parameter)
+        {
+            return true;
+        }
+
+        public void Execute(object parameter)
+        {
+            _action();
+        }
+
+        public event EventHandler CanExecuteChanged;
     }
 }

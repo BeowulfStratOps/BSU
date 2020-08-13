@@ -22,7 +22,7 @@ namespace BSU.Core.ViewModel
         {
             _dispatcher = dispatcher;
             Model = model;
-            model.RepositoryAdded += repository => Repositories.Add(new Repository(repository, this));
+            model.RepositoryAdded += repository => Repositories.Add(new Repository(repository, this, model));
             model.StorageAdded += storage =>
             {
                 Storages.Add(new Storage(storage, this));
