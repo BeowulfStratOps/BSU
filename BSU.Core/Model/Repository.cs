@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using BSU.Core.JobManager;
+using BSU.Core.Model.Utility;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -94,5 +96,15 @@ namespace BSU.Core.Model
         public event Action<IModelRepositoryMod> ModAdded;
 
         public override string ToString() => Identifier;
+
+        public void DoUpdate()
+        {
+            var repoUpdate = new RepositoryUpdate();
+            repoUpdate.AllDone += repoUpdate.Prepare;
+            repoUpdate.AllPrepared += repoUpdate.Commit;
+            repoUpdate.Set(Mods.Select(m => m.DoUpdate()).Where(p => p != null).ToList());
+            // TODO: combine promises, wait for them, present overview, commit / handle rollback.
+            // TODO: user interaction
+        }
     }
 }

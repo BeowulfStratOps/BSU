@@ -29,7 +29,7 @@ namespace BSU.Core.Model
         private MatchHash _matchHash;
         private VersionHash _versionHash;
 
-        private RepoSyncSlot _updating;
+        private StorageModUpdateState _updating;
         private UpdateTarget _updateTarget;
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
@@ -151,32 +151,19 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action<Exception> setupError, Action rollback = null)
+        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action rollback = null)
         {
-            var update = new RepoSyncSlot(_jobManager);
-            ActionQueue.EnQueueAction(() =>
-            {
-                try
-                {
-                    CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed, StorageModStateEnum.CreatedWithUpdateTarget);
-                    if (_updating != null) throw new InvalidOperationException();
-                }
-                catch (Exception e)
-                {
-                    setupError(e);
-                    return;
-                }
+            
+            CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed, StorageModStateEnum.CreatedWithUpdateTarget);
+            if (_updating != null) throw new InvalidOperationException();
+            
+            var update = new StorageModUpdateState(_jobManager, repositoryMod, this, target, rollback);
                 
-                UpdateTarget = target;
-                var title =
-                    $"Updating {_parentIdentifier}/{Identifier} to {repositoryMod.GetDisplayName()}";
-
-                _updating = update;
-                _updating.Prepare(repositoryMod, this, target, title, rollback);
-                _versionHash = null;
-                _matchHash = null;
-                State = StorageModStateEnum.Updating;
-            });
+            UpdateTarget = target;
+            _updating = update;
+            _versionHash = null;
+            _matchHash = null;
+            State = StorageModStateEnum.Updating;
             
             update.OnFinished += error =>
             {

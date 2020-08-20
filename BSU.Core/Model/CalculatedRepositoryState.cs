@@ -2,17 +2,17 @@
 
 namespace BSU.Core.Model
 {
-    internal enum CalculatedRepositoryStateEnum
+    public enum CalculatedRepositoryStateEnum
     {
         Loading, // At least one loading
         NeedsUpdate, // auto selected previously used, other auto selection worked without any conflicts, no internal conflicts. 
-        NeedsDownload, // All mods are usable or need a download
+        NeedsDownload, // All mods are usable or need a download. TODO: combine download and update state?
         Ready, // All use
         RequiresUserIntervention, // Else
         InProgress // All are ready or being worked on
     }
 
-    internal class CalculatedRepositoryState : IEquatable<CalculatedRepositoryState>
+    public class CalculatedRepositoryState : IEquatable<CalculatedRepositoryState>
     {
         public CalculatedRepositoryState(CalculatedRepositoryStateEnum state, bool isPartial)
         {

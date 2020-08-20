@@ -64,7 +64,7 @@ namespace BSU.Core.Model
                     var mod = Implementation.CreateMod(identifier);
                     var storageMod = new StorageMod(_actionQueue, mod, identifier, target, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
                     Mods.Add(storageMod);
-                    var update = storageMod.PrepareUpdate(repositoryMod, target, setupError, () => RollbackDownload(storageMod));
+                    var update = storageMod.PrepareUpdate(repositoryMod, target, () => RollbackDownload(storageMod));
                     ModAdded?.Invoke(storageMod);
                     _matchMaker.AddStorageMod(storageMod);
                     callback(update);

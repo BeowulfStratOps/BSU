@@ -6,31 +6,34 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
-    internal class RepoSyncSlot : IUpdateState
+    internal class StorageModUpdateState : IUpdateState
     {
         private readonly IJobManager _jobManager;
+        private readonly IRepositoryMod _repository;
+        private readonly StorageMod _storage;
         private RepoSync _syncJob;
         private SimpleJob _prepareJob;
         private RepoSyncSlotState _state = RepoSyncSlotState.Inactive;
         private Action _rollback;
-        
+
         internal UpdateTarget Target { get; private set; }
 
-        public RepoSyncSlot(IJobManager jobManager)
+        public StorageModUpdateState(IJobManager jobManager, IRepositoryMod repository, StorageMod storage, UpdateTarget target, Action rollback = null)
         {
+            Target = target;
             _jobManager = jobManager;
+            _repository = repository;
+            _storage = storage;
+            _rollback = rollback;
         }
 
-        public void Prepare(IRepositoryMod repository, StorageMod storage, UpdateTarget target, string title, Action rollback = null)
+        public void Prepare()
         {
             if (_state != RepoSyncSlotState.Inactive) throw new InvalidOperationException();
 
-            Target = target;
+            var name = $"Preparing {_storage.Identifier} update";
 
-            _rollback = rollback;
-            var name = $"Preparing {storage.Identifier} update";
-            
-            _prepareJob = new SimpleJob(cancellationToken => DoPrepare(repository, storage, target, cancellationToken), name, 1);
+            _prepareJob = new SimpleJob(cancellationToken => DoPrepare(cancellationToken), name, 1);
             _prepareJob.OnFinished += () =>
             {
                 var error = _prepareJob.Error;
@@ -48,17 +51,17 @@ namespace BSU.Core.Model
             _jobManager.QueueJob(_prepareJob);
         }
 
-        private void DoPrepare(IRepositoryMod repository, StorageMod storage, UpdateTarget target, CancellationToken cancellationToken)
+        private void DoPrepare(CancellationToken cancellationToken)
         {
-            var name = $"Updating {storage.Identifier}";
-            _syncJob = new RepoSync(repository, storage, target, name, 0, cancellationToken);
+            var name = $"Updating {_storage.Identifier}";
+            _syncJob = new RepoSync(_repository, _storage, Target, name, 0, cancellationToken);
         }
 
         public void Commit()
         {
             if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();
             if (_syncJob.NothingToDo)
-            { 
+            {
                 Finished();
                 return;
             }
@@ -78,7 +81,7 @@ namespace BSU.Core.Model
         {
             if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();
 
-            
+
             Target = null;
             _state = RepoSyncSlotState.Inactive;
             try
@@ -90,7 +93,7 @@ namespace BSU.Core.Model
             {
                 OnFinished?.Invoke(e);
             }
-            
+
         }
 
         public bool IsActive() => _state != RepoSyncSlotState.Inactive;

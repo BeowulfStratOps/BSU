@@ -2,8 +2,9 @@
 
 namespace BSU.Core.Model
 {
-    internal interface IUpdateState
+    public interface IUpdateState
     {
+        void Prepare();
         void Commit();
         void Abort();
         event Action OnPrepared;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
+using BSU.Core.Model.Utility;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -147,6 +148,36 @@ namespace BSU.Core.Model
             Logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
             
             Selection = selection;
+        }
+
+        public Promise<IUpdateState> DoUpdate()
+        {
+            
+            if (Selection == null) throw new InvalidOperationException();
+
+            // TODO: switch
+            
+            if (Selection.DoNothing) return null;
+
+            if (Selection.StorageMod != null)
+            {
+                var promise = new Promise<IUpdateState>();
+                var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget);
+                promise.Set(update);
+                return promise;
+            }
+
+            if (Selection.DownloadStorage != null)
+            {
+                throw new NotImplementedException();
+                var identifier = "";
+                var promise = new Promise<IUpdateState>();
+                Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, identifier,
+                    promise.Error, promise.Set);
+                return promise;
+            }
+            
+            throw new InvalidOperationException();
         }
 
         public override string ToString() => Identifier;

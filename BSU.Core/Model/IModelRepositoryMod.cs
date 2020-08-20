@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BSU.Core.Model.Utility;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -16,5 +17,6 @@ namespace BSU.Core.Model
         void ChangeAction(IModelStorageMod target, ModActionEnum? newAction);
         event Action<IModelStorageMod> ActionAdded;
         event Action SelectionChanged;
+        Promise<IUpdateState> DoUpdate();
     }
 }

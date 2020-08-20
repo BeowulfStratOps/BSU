@@ -5,6 +5,8 @@ namespace BSU.Core.Model
     // TODO: better name
     internal class RepositoryModActionSelection : IEquatable<RepositoryModActionSelection>
     {
+        // TODO: provide type/kind of this selection for switching
+        
         public bool DoNothing { get; }
         public IModelStorageMod StorageMod { get; }
         public IModelStorage DownloadStorage { get; }
