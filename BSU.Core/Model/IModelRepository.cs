@@ -10,6 +10,6 @@ namespace BSU.Core.Model
         event Action CalculatedStateChanged;
         event Action<IModelRepositoryMod> ModAdded;
         bool IsLoading { get; }
-        void DoUpdate();
+        void DoUpdate(Action<RepositoryUpdate, Action<bool>> onPrepared);
     }
 }

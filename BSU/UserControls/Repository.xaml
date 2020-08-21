@@ -5,9 +5,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:BSU.GUI.UserControls"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:gui="clr-namespace:BSU.GUI"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
+        <i:Interaction.Triggers>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdatePrepared}">
+                <gui:YesNoPopupAction></gui:YesNoPopupAction>
+            </i:EventTrigger>
+        </i:Interaction.Triggers>
         <DockPanel>
             <DockPanel Dock="Top">
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
@@ -15,7 +22,7 @@
                     <TextBlock Text="{Binding Path=CalculatedState}"></TextBlock>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE896;" Margin="2"></Button>
+                    <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE896;" Margin="2" Command="{Binding Update}"></Button>
                     <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xEDB5;" Margin="2" IsEnabled="False"></Button>
                 </StackPanel>
             </DockPanel>

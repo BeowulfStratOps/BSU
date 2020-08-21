@@ -24,9 +24,9 @@ namespace BSU.Core.Model
         public Uid Uid { get; } = new Uid();
 
         public List<IModelRepositoryMod> Mods { get; } = new List<IModelRepositoryMod>();
-        
+
         public JobSlot<SimpleJob> Loading { get; }
-        
+
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager,
@@ -90,21 +90,29 @@ namespace BSU.Core.Model
         }
 
         public event Action CalculatedStateChanged;
-        
+
         public bool IsLoading => Loading.IsActive();
 
         public event Action<IModelRepositoryMod> ModAdded;
 
         public override string ToString() => Identifier;
 
-        public void DoUpdate()
+        public void DoUpdate(Action<RepositoryUpdate, Action<bool>> onPrepared)
         {
             var repoUpdate = new RepositoryUpdate();
-            repoUpdate.AllDone += repoUpdate.Prepare;
-            repoUpdate.AllPrepared += repoUpdate.Commit;
+            repoUpdate.AllDone += repoUpdate.Prepare; // TODO: user interaction
+            repoUpdate.AllPrepared += () =>
+            {
+                onPrepared(repoUpdate, proceed =>
+                {
+                    if (proceed)
+                        repoUpdate.Commit();
+                    else
+                        repoUpdate.Abort();
+                });
+            };
             repoUpdate.Set(Mods.Select(m => m.DoUpdate()).Where(p => p != null).ToList());
-            // TODO: combine promises, wait for them, present overview, commit / handle rollback.
-            // TODO: user interaction
+            // TODO: combine promises, wait for them, present overview, commit / handle rollback
         }
     }
 }

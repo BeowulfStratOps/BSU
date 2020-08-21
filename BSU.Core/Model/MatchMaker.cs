@@ -38,17 +38,17 @@ namespace BSU.Core.Model
         private void CheckAllModsLoaded()
         {
             if (_allModsLoaded) return;
-            
+
             if (_modelStructure.GetStorages().Any(storage => storage.IsLoading)) return;
 
             if (_modelStructure.GetRepositories().Any(repository => repository.IsLoading)) return;
-            
-            if (_modelStructure.GetAllStorageMods().Any(storageMod => storageMod.GetState().MatchHash == null)) return;
-            
+
+            if (_modelStructure.GetAllStorageMods().Any(storageMod => storageMod.GetState().State == StorageModStateEnum.Loading)) return;
+
             if (_modelStructure.GetAllRepositoryMods().Any(repoMod => repoMod.GetState().MatchHash == null)) return;
 
             _allModsLoaded = true;
-            
+
             NotifyAllModsLoaded();
 
         }
@@ -101,12 +101,12 @@ namespace BSU.Core.Model
                 storageMod.RequireHash();
                 return;
             }
-            
+
             if (match == CoreCalculation.ModMatch.NoMatch || match == CoreCalculation.ModMatch.Wait) return;
-            
+
             var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.CanWrite);
             Logger.Debug($"Calculate Action on {repoMod} and {storageMod} -> {action}");
-                
+
             repoMod.ChangeAction(storageMod, action);
         }
     }

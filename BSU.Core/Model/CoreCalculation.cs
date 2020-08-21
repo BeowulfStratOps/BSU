@@ -37,7 +37,7 @@ namespace BSU.Core.Model
         {
             if (repoModState.IsLoading) return ModMatch.Wait;
             if (repoModState.Error != null) return ModMatch.NoMatch;
-            
+
             switch (storageModState.State)
             {
                 case StorageModStateEnum.Loading:
@@ -45,7 +45,7 @@ namespace BSU.Core.Model
                 case StorageModStateEnum.Loaded:
                     return repoModState.MatchHash.IsMatch(storageModState.MatchHash)
                         ? ModMatch.RequireHash
-                        : ModMatch.NoMatch; 
+                        : ModMatch.NoMatch;
                 case StorageModStateEnum.Hashing:
                     return ModMatch.Wait;
                 case StorageModStateEnum.Hashed:
@@ -77,8 +77,6 @@ namespace BSU.Core.Model
         internal static RepositoryModActionSelection AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
             IModelStructure modelStructure, StorageModIdentifiers usedMod)
         {
-            return new RepositoryModActionSelection(); // TODO: debug only!
-            
             if (usedMod != null)
             {
                 var storageMod = actions.Keys.FirstOrDefault(mod => mod.GetStorageModIdentifiers() == usedMod);
@@ -116,12 +114,12 @@ namespace BSU.Core.Model
 
             return null;
         }
-        
+
         internal static CalculatedRepositoryState CalculateRepositoryState(List<IModelRepositoryMod> mods)
         {
             /*
             Loading, // 3. At least one loading
-            NeedsUpdate, // 2. all selected, no internal conflicts. 
+            NeedsUpdate, // 2. all selected, no internal conflicts.
             NeedsDownload, // 2. more than 50% of the mods need a download, otherwise same as update
             Ready, // 1. All use
             RequiresUserIntervention // Else

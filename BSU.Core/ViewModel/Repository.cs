@@ -9,7 +9,10 @@ namespace BSU.Core.ViewModel
     public class Repository : ViewModelClass
     {
         private readonly IModelRepository _repository;
+        private readonly IActionQueue _dispatcher;
         public string Name { get; }
+
+        public YesNoInteractionRequest UpdatePrepared { get; }
 
         private CalculatedRepositoryState _calculatedState;
 
@@ -27,9 +30,10 @@ namespace BSU.Core.ViewModel
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new ObservableCollection<RepositoryMod>();
 
-        internal Repository(IModelRepository repository, ViewModel viewModel, IModelStructure structure)
+        internal Repository(IModelRepository repository, IModelStructure structure, IActionQueue dispatcher)
         {
             _repository = repository;
+            _dispatcher = dispatcher;
             Update = new DelegateCommand(DoUpdate);
             CalculatedState = repository.CalculatedState;
             repository.CalculatedStateChanged += () =>
@@ -38,6 +42,7 @@ namespace BSU.Core.ViewModel
             };
             Name = repository.ToString();
             repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, structure));
+            UpdatePrepared = new YesNoInteractionRequest();
         }
 
         private bool CanUpdate()
@@ -48,9 +53,17 @@ namespace BSU.Core.ViewModel
 
         private void DoUpdate()
         {
-            _repository.DoUpdate();
+            _repository.DoUpdate(((update, action) =>
+            {
+                var text = $"{update.GetTotalBytesToDownload()}Bytes to download. Proceed?";
+                var context = new YesNoPopupContext(text, "Proceed with Update?");
+                _dispatcher.EnQueueAction(() =>
+                {
+                    UpdatePrepared.Raise(context, action);
+                });
+            }));
         }
-        
+
         public DelegateCommand Update { get; }
     }
 }

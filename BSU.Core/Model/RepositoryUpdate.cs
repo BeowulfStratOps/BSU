@@ -63,7 +63,12 @@ namespace BSU.Core.Model
                 update.Commit();
             }
         }
-        
+
         public event Action AllPrepared;
+
+        public long GetTotalBytesToDownload()
+        {
+            return Updates.Sum(u => u.GetPrepStats());
+        }
     }
 }

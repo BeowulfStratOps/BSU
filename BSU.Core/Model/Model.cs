@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
@@ -39,7 +40,7 @@ namespace BSU.Core.Model
         {
             _dispatcher.EnQueueAction(LoadInternal);
         }
-        
+
         private void LoadInternal()
         {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
@@ -51,16 +52,25 @@ namespace BSU.Core.Model
             }
             foreach (var (storageEntry, storageState) in PersistentState.GetStorages())
             {
-                var implementation = _types.GetStorageImplementation(storageEntry.Type, storageEntry.Path);
+                IStorage implementation;
+                try
+                {
+                    implementation = _types.GetStorageImplementation(storageEntry.Type, storageEntry.Path);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    continue;
+                }
                 var storage = new Storage(implementation, storageEntry.Name, storageEntry.Path, storageState, _jobManager, _matchMaker, _dispatcher);
                 Storages.Add(storage);
                 StorageAdded?.Invoke(storage);
             }
         }
-        
+
         public event Action<Repository> RepositoryAdded;
         public event Action<Storage> StorageAdded;
-        
+
         public void AddRepository(string type, string url, string name)
         {
             if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
@@ -70,7 +80,7 @@ namespace BSU.Core.Model
             Repositories.Add(repository);
             RepositoryAdded?.Invoke(repository);
         }
-        
+
         public void AddStorage(string type, DirectoryInfo dir, string name)
         {
             if (!_types.GetStorageTypes().Contains(type)) throw new ArgumentException();

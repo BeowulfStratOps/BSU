@@ -14,25 +14,25 @@ namespace BSU.Core.Tests
         public CoreStateStories(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
-        
+
         internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, MockWorker worker, MockModelStructure structure)
         {
             var mockRepo = new MockRepositoryMod();
             for (int i = 0; i < 3; i++)
             {
-                mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);                
+                mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);
             }
             var repoMod = new RepositoryMod(worker, mockRepo, "myrepo", worker, new MockRepositoryModState(), new RelatedActionsBag(), structure);
             structure.RepositoryMods.Add(repoMod);
             return (mockRepo, repoMod);
         }
-        
+
         internal static (MockStorageMod, StorageMod) CreateStorageMod(string match, string version, MockWorker worker, MockModelStructure structure, UpdateTarget stateTarget = null)
         {
             var mockStorage = new MockStorageMod();
             for (int i = 0; i < 3; i++)
             {
-                mockStorage.SetFile($"/addons/{match}_{i}.pbo", version);                
+                mockStorage.SetFile($"/addons/{match}_{i}.pbo", version);
             }
 
             var state = new MockStorageModState {UpdateTarget = stateTarget};
@@ -53,7 +53,7 @@ namespace BSU.Core.Tests
 
             return keys.All(key => files1.ContainsKey(key) && files2.ContainsKey(key) && files1[key] == files2[key]);
         }
-        
+
         [Fact]
         private void Download()
         {
@@ -62,7 +62,7 @@ namespace BSU.Core.Tests
             var worker = new MockWorker();
             var (repoFiles, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
-            
+
             var mockStorage = new MockStorage();
             var storageState = new MockStorageState();
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, worker, matchMaker, worker);
@@ -79,17 +79,17 @@ namespace BSU.Core.Tests
             var storageMod = storage.Mods[0];
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
-            
+
             Assert.True(FilesEqual(repoFiles, mockStorage.Mods.Values.First()));
         }
-        
+
         [Fact]
         private void Update()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (repoFiles, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
 
@@ -98,10 +98,10 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
-            
+
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, e => {});
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
             update.OnPrepared += () =>
             {
                 Assert.True(update.GetPrepStats() > 0);
@@ -110,7 +110,7 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
-            
+
             Assert.True(FilesEqual(repoFiles, storageFiles));
         }
 
@@ -120,12 +120,12 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (mockRepo, repoMod) = CreateRepoMod("1", "1", worker, structure);
             var versionHash = new VersionHash(mockRepo).GetHashString();
             matchMaker.AddRepositoryMod(repoMod);
 
-            
+
             var mockStorage = new MockStorageMod();
             mockStorage.SetFile("/addons/1_0.pbo", "2");
             mockStorage.SetFile("/addons/1_1.pbo", "1");
@@ -137,20 +137,20 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.ContinueUpdate, repoMod.Actions[storageMod].ActionType);
-            
+
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, e => {});
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
             update.OnPrepared += () =>
             {
                 Assert.True(update.GetPrepStats() > 0);
                 update.Commit();
             };
             worker.DoWork();
-            
+
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
             Assert.Null(state.UpdateTarget);
-            
+
             Assert.True(FilesEqual(mockRepo, mockStorage));
         }
 
@@ -160,34 +160,34 @@ namespace BSU.Core.Tests
             // TODO:
             // Either clean it up during loading (well, hash it, it's needed for that and will take care of it. yay.)
             // Or at least make it so that empty jobs can trigger their finished thing. Not sure if that's relevant for any other situation??
-            
+
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (mockRepo, repoMod) = CreateRepoMod("1", "2", worker, structure);
             var versionHash = new VersionHash(mockRepo).GetHashString();
             matchMaker.AddRepositoryMod(repoMod);
 
             var (mockStorage, storageMod) = CreateStorageMod("1", "2", worker, structure, new UpdateTarget(versionHash, ""));
-            
+
             matchMaker.AddStorageMod(storageMod);
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.ContinueUpdate, repoMod.Actions[storageMod].ActionType);
-            
+
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, e => {});
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
             update.OnPrepared += () =>
             {
                 Assert.Equal(0, update.GetPrepStats());
                 update.Commit();
             };
             worker.DoWork();
-            
+
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
-            
+
             Assert.True(FilesEqual(mockRepo, mockStorage));
         }
 
@@ -200,13 +200,13 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (mockRepo, _) = CreateRepoMod("1", "2", worker, structure);
             var versionHash = new VersionHash(mockRepo).GetHashString();
             var (_, repoMod) = CreateRepoMod("1", "3", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
 
-            
+
             var mockStorage = new MockStorageMod();
             mockStorage.SetFile("/addons/1_0.pbo", "2");
             mockStorage.SetFile("/addons/1_1.pbo", "1");
@@ -221,18 +221,18 @@ namespace BSU.Core.Tests
 
             storageMod.Abort();
             worker.DoWork();
-            
+
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
         }
-        
+
         [Fact]
         private void AbortDownload()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (_, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
             worker.DoWork();
@@ -246,21 +246,21 @@ namespace BSU.Core.Tests
                     x.Add(mockStorage.Mods.Values.First());
                     update.OnPrepared += update.Abort;
                 });
-            
+
             worker.DoWork();
-            
+
             Assert.Empty(repoMod.Actions);
             Assert.Empty(x[0].GetFiles());
             Assert.Empty(mockStorage.Mods);
         }
-        
+
         [Fact]
         private void AbortUpdate()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (_, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
             worker.DoWork();
@@ -271,10 +271,10 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
-            
+
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, e => {});
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
             update.OnPrepared += () =>
             {
                 update.Abort();
@@ -282,17 +282,17 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
-            
+
             Assert.True(FilesEqual(referenceFiles, storageFiles));
         }
-        
+
         [Fact]
         private void AbortUpdateJob()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (_, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
             worker.DoWork();
@@ -303,10 +303,10 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
-            
+
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, e => {});
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
             worker.DoWork();
             Assert.True(update.IsPrepared);
             update.Commit();
@@ -315,17 +315,17 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
-            
+
             Assert.False(FilesEqual(referenceFiles, storageFiles));
         }
-        
+
         [Fact]
         private void ErrorPrepare()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (_, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
             worker.DoWork();
@@ -336,34 +336,34 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
-            
+
             OutputHelper.WriteLine("Starting update...");
 
             var prepared = false;
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, e => {});
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
             update.OnPrepared += () => prepared = true;
             storageFiles.ThrowErrorOpen = true;
             worker.DoQueueStep();
             worker.DoJobStep();
             storageFiles.ThrowErrorOpen = false;
             worker.DoWork();
-            
+
             Assert.False(update.IsPrepared);
             Assert.False(prepared);
-            
+
             // TODO: make sure events fire
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
             Assert.Equal(ModActionEnum.Error, repoMod.Actions[storageMod].ActionType);
             Assert.Equal(StorageModStateEnum.ErrorUpdate, storageMod.GetState().State);
         }
-        
+
         [Fact]
         private void ErrorUpdate()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (_, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
             worker.DoWork();
@@ -374,10 +374,10 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
-            
+
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, e => {});
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
             worker.DoWork();
             Assert.True(update.IsPrepared);
             update.Commit();
@@ -386,20 +386,20 @@ namespace BSU.Core.Tests
             worker.DoJobStep();
             storageFiles.ThrowErrorOpen = false;
             worker.DoWork();
-            
+
             // TODO: make sure events fire
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
             Assert.Equal(ModActionEnum.Error, repoMod.Actions[storageMod].ActionType);
             Assert.Equal(StorageModStateEnum.ErrorUpdate, storageMod.GetState().State);
         }
-        
+
         [Fact]
         private void ErrorLoad()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (_, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
             worker.DoWork();
@@ -413,14 +413,14 @@ namespace BSU.Core.Tests
             Assert.False(repoMod.Actions.ContainsKey(storageMod));
             Assert.Equal(StorageModStateEnum.ErrorLoad, storageMod.GetState().State);
         }
-        
+
         [Fact]
         private void ErrorHash()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (_, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
             worker.DoWork();
@@ -434,14 +434,14 @@ namespace BSU.Core.Tests
             Assert.False(repoMod.Actions.ContainsKey(storageMod));
             Assert.Equal(StorageModStateEnum.ErrorLoad, storageMod.GetState().State);
         }
-        
+
         [Fact]
         private void ErrorLoadRepo()
         {
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
             var worker = new MockWorker();
-            
+
             var (repoFiles, repoMod) = CreateRepoMod("1", "1", worker, structure);
             repoFiles.ThrowErrorLoad = true;
             matchMaker.AddRepositoryMod(repoMod);

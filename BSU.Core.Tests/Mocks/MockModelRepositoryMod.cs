@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using BSU.Core.Model;
+using BSU.Core.Model.Utility;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Tests.Mocks
@@ -25,5 +26,9 @@ namespace BSU.Core.Tests.Mocks
 
         public event Action<IModelStorageMod> ActionAdded;
         public event Action SelectionChanged;
+        public Promise<IUpdateState> DoUpdate()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

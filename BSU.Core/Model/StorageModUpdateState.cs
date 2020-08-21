@@ -44,6 +44,7 @@ namespace BSU.Core.Model
                     OnFinished?.Invoke(error);
                     return;
                 }
+                // TODO: handle error
                 _state = RepoSyncSlotState.Prepared;
                 OnPrepared?.Invoke();
             };

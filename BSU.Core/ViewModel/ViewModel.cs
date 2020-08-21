@@ -15,14 +15,14 @@ namespace BSU.Core.ViewModel
         private Model.Model Model { get; }
         public ObservableCollection<Repository> Repositories { get; } = new ObservableCollection<Repository>();
         public ObservableCollection<Storage> Storages { get; } = new ObservableCollection<Storage>();
-        
+
         public ObservableCollection<Job> Jobs { get; } = new ObservableCollection<Job>();
 
         internal ViewModel(Model.Model model, IJobManager jobManager, IActionQueue dispatcher)
         {
             _dispatcher = dispatcher;
             Model = model;
-            model.RepositoryAdded += repository => Repositories.Add(new Repository(repository, this, model));
+            model.RepositoryAdded += repository => Repositories.Add(new Repository(repository, model, dispatcher));
             model.StorageAdded += storage =>
             {
                 Storages.Add(new Storage(storage, this));
@@ -46,21 +46,11 @@ namespace BSU.Core.ViewModel
         {
             Jobs.Add(new Job(job));
         }
-        
+
         private void JobFinished(IJob job)
         {
             var uiJob = Jobs.SingleOrDefault(j => j.BackingJob == job);
             Jobs.Remove(uiJob);
-        }
-        
-        public void AddRepository(string type, string url, string name)
-        {
-            Model.AddRepository(type, url, name);
-        }
-        
-        public void AddStorage(string type, string path, string name)
-        {
-            Model.AddStorage(type, new DirectoryInfo(path), name);
         }
     }
 }
