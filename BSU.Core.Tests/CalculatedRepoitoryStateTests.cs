@@ -33,11 +33,11 @@ namespace BSU.Core.Tests
                 result.Setup(m => m.Actions).Returns(actions);
                 return result.Object;
             }
-            
+
             if (hasDownloadSelected)
             {
                 var download = new Mock<IModelStorage>(MockBehavior.Strict);
-                var selection = new RepositoryModActionSelection(download.Object);
+                var selection = new RepositoryModActionSelection(download.Object, "id");
                 result.Setup(m => m.Selection).Returns(selection);
                 result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
                 return result.Object;
@@ -50,7 +50,7 @@ namespace BSU.Core.Tests
                 result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
                 return result.Object;
             }
-            
+
             result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
             result.Setup(m => m.Selection).Returns((RepositoryModActionSelection)null);
 
@@ -67,7 +67,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void Single_Ready()
         {
@@ -78,7 +78,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void Single_Update()
         {
@@ -89,7 +89,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void Single_Loading()
         {
@@ -100,7 +100,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.Loading, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void Single_UserIntervention()
         {
@@ -111,7 +111,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void Single_Await()
         {
@@ -122,7 +122,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void Single_ContinueUpdate()
         {
@@ -133,7 +133,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void Single_AbortAndUpdate()
         {
@@ -144,7 +144,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UseAnd_Download()
         {
@@ -156,7 +156,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UseAnd_Ready()
         {
@@ -168,7 +168,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UseAnd_Update()
         {
@@ -180,7 +180,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UseAnd_Loading()
         {
@@ -192,7 +192,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.Loading, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UseAnd_UserIntervention()
         {
@@ -204,7 +204,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UseAnd_Await()
         {
@@ -216,7 +216,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UseAnd_ContinueUpdate()
         {
@@ -228,7 +228,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UseAnd_AbortAndUpdate()
         {
@@ -240,7 +240,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void UserIntervention_AndUpdate()
         {
@@ -252,7 +252,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void MoreDownload()
         {
@@ -265,7 +265,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void MoreUpdate()
         {
@@ -278,7 +278,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
-        
+
         [Fact]
         private void DoNothingAnd_Download()
         {
@@ -290,7 +290,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
             Assert.True(result.IsPartial);
         }
-        
+
         [Fact]
         private void DoNothingAnd_Ready()
         {
@@ -302,7 +302,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
             Assert.True(result.IsPartial);
         }
-        
+
         [Fact]
         private void DoNothingAnd_Update()
         {
@@ -314,7 +314,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.True(result.IsPartial);
         }
-        
+
         [Fact]
         private void DoNothingAnd_Loading()
         {
@@ -326,7 +326,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.Loading, result.State);
             Assert.True(result.IsPartial);
         }
-        
+
         [Fact]
         private void DoNothingAnd_UserIntervention()
         {
@@ -338,7 +338,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
             Assert.True(result.IsPartial);
         }
-        
+
         [Fact]
         private void DoNothingAnd_Await()
         {
@@ -350,7 +350,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
             Assert.True(result.IsPartial);
         }
-        
+
         [Fact]
         private void DoNothingAnd_ContinueUpdate()
         {
@@ -362,7 +362,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.True(result.IsPartial);
         }
-        
+
         [Fact]
         private void DoNothingAnd_AbortAndUpdate()
         {
@@ -374,7 +374,7 @@ namespace BSU.Core.Tests
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.True(result.IsPartial);
         }
-        
+
         [Fact]
         private void Single_DoNothing()
         {

@@ -13,8 +13,8 @@ namespace BSU.Core.Model
         private readonly StorageMod _storage;
         private RepoSync _syncJob;
         private SimpleJob _prepareJob;
-        private RepoSyncSlotState _state = RepoSyncSlotState.Inactive;
-        private Action _rollback;
+        private UpdateStateEnum _state = UpdateStateEnum.Inactive;
+        private readonly Action _rollback;
 
         internal UpdateTarget Target { get; private set; }
 
@@ -29,26 +29,26 @@ namespace BSU.Core.Model
 
         public void Prepare()
         {
-            if (_state != RepoSyncSlotState.Inactive) throw new InvalidOperationException();
+            if (_state != UpdateStateEnum.Inactive) throw new InvalidOperationException();
 
             var name = $"Preparing {_storage.Identifier} update";
 
-            _prepareJob = new SimpleJob(cancellationToken => DoPrepare(cancellationToken), name, 1);
+            _prepareJob = new SimpleJob(DoPrepare, name, 1);
             _prepareJob.OnFinished += () =>
             {
                 var error = _prepareJob.Error;
                 if (error != null)
                 {
-                    _state = RepoSyncSlotState.Inactive;
+                    _state = UpdateStateEnum.Done;
+                    IsFinished = true;
                     Target = null;
                     OnFinished?.Invoke(error);
                     return;
                 }
-                // TODO: handle error
-                _state = RepoSyncSlotState.Prepared;
+                _state = UpdateStateEnum.Prepared;
                 OnPrepared?.Invoke();
             };
-            _state = RepoSyncSlotState.Preparing;
+            _state = UpdateStateEnum.Preparing;
             _jobManager.QueueJob(_prepareJob);
         }
 
@@ -60,31 +60,31 @@ namespace BSU.Core.Model
 
         public void Commit()
         {
-            if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();
+            if (_state != UpdateStateEnum.Prepared) throw new InvalidOperationException();
             if (_syncJob.NothingToDo)
             {
                 Finished();
                 return;
             }
-            _state = RepoSyncSlotState.Updating;
+            _state = UpdateStateEnum.Updating;
             _syncJob.OnFinished += Finished;
             _jobManager.QueueJob(_syncJob);
         }
 
         private void Finished()
         {
-            _state = RepoSyncSlotState.Inactive;
+            _state = UpdateStateEnum.Done;
+            IsFinished = true;
             Target = null;
             OnFinished?.Invoke(_syncJob.GetError());
         }
 
         public void Abort()
         {
-            if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();
-
+            if (_state != UpdateStateEnum.Prepared) throw new InvalidOperationException();
 
             Target = null;
-            _state = RepoSyncSlotState.Inactive;
+            _state = UpdateStateEnum.Inactive;
             try
             {
                 _rollback?.Invoke();
@@ -97,25 +97,26 @@ namespace BSU.Core.Model
 
         }
 
-        public bool IsActive() => _state != RepoSyncSlotState.Inactive;
-
         public event Action OnPrepared;
         public event Action<Exception> OnFinished;
+
         public int GetPrepStats()
         {
-            if (_state != RepoSyncSlotState.Prepared) throw new InvalidOperationException();
+            if (_state != UpdateStateEnum.Prepared) throw new InvalidOperationException();
 
             return (int) (_syncJob.GetTotalBytesToDownload() + _syncJob.GetTotalBytesToUpdate());
         }
 
-        public bool IsPrepared => _state == RepoSyncSlotState.Prepared;
+        public bool IsPrepared => _state == UpdateStateEnum.Prepared;
+        public bool IsFinished { get; private set; }
     }
 
-    internal enum RepoSyncSlotState
+    internal enum UpdateStateEnum
     {
         Inactive,
         Preparing,
         Prepared,
-        Updating
+        Updating,
+        Done
     }
 }

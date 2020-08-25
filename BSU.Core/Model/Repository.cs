@@ -100,19 +100,21 @@ namespace BSU.Core.Model
         public void DoUpdate(Action<RepositoryUpdate, Action<bool>> onPrepared)
         {
             var repoUpdate = new RepositoryUpdate();
-            repoUpdate.AllDone += repoUpdate.Prepare; // TODO: user interaction
-            repoUpdate.AllPrepared += () =>
+            repoUpdate.OnSetup += (_, __, proceed) => proceed(true); // TODO: user interaction
+            repoUpdate.OnPrepared += (succeeded, errored, proceed) => // TODO: pass error
             {
-                onPrepared(repoUpdate, proceed =>
-                {
-                    if (proceed)
-                        repoUpdate.Commit();
-                    else
-                        repoUpdate.Abort();
-                });
+                onPrepared(repoUpdate, proceed);
             };
-            repoUpdate.Set(Mods.Select(m => m.DoUpdate()).Where(p => p != null).ToList());
-            // TODO: combine promises, wait for them, present overview, commit / handle rollback
+            foreach (var mod in Mods)
+            {
+                var updateInfo = mod.DoUpdate();
+                if (updateInfo.UpdateState != null)
+                    repoUpdate.Add(updateInfo.UpdateState);
+                else
+                    repoUpdate.Add(updateInfo.DownloadInfo);
+            }
+            repoUpdate.DoneAdding();
+            // TODO: pass OnFinished
         }
     }
 }

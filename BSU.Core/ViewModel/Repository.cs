@@ -55,7 +55,7 @@ namespace BSU.Core.ViewModel
         {
             _repository.DoUpdate(((update, action) =>
             {
-                var text = $"{update.GetTotalBytesToDownload()}Bytes to download. Proceed?";
+                var text = "someBytes to download. Proceed?"; // TODO
                 var context = new YesNoPopupContext(text, "Proceed with Update?");
                 _dispatcher.EnQueueAction(() =>
                 {

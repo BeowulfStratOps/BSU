@@ -74,6 +74,7 @@ namespace BSU.Core.Tests
                     Assert.True(update.GetPrepStats() > 0);
                     update.Commit();
                 };
+                update.Prepare();
             });
             worker.DoWork();
             var storageMod = storage.Mods[0];
@@ -107,6 +108,7 @@ namespace BSU.Core.Tests
                 Assert.True(update.GetPrepStats() > 0);
                 update.Commit();
             };
+            update.Prepare();
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
@@ -146,6 +148,7 @@ namespace BSU.Core.Tests
                 Assert.True(update.GetPrepStats() > 0);
                 update.Commit();
             };
+            update.Prepare();
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
@@ -184,6 +187,7 @@ namespace BSU.Core.Tests
                 Assert.Equal(0, update.GetPrepStats());
                 update.Commit();
             };
+            update.Prepare();
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
@@ -245,6 +249,7 @@ namespace BSU.Core.Tests
                 {
                     x.Add(mockStorage.Mods.Values.First());
                     update.OnPrepared += update.Abort;
+                    update.Prepare();
                 });
 
             worker.DoWork();
@@ -279,6 +284,7 @@ namespace BSU.Core.Tests
             {
                 update.Abort();
             };
+            update.Prepare();
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
@@ -307,6 +313,7 @@ namespace BSU.Core.Tests
             OutputHelper.WriteLine("Starting update...");
 
             var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
+            update.Prepare();
             worker.DoWork();
             Assert.True(update.IsPrepared);
             update.Commit();
@@ -342,8 +349,9 @@ namespace BSU.Core.Tests
             var prepared = false;
             var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
             update.OnPrepared += () => prepared = true;
+            update.Prepare();
             storageFiles.ThrowErrorOpen = true;
-            worker.DoQueueStep();
+            worker.DoQueueStep(); // might ot be needed anymore due to Prepare()?
             worker.DoJobStep();
             storageFiles.ThrowErrorOpen = false;
             worker.DoWork();
@@ -378,6 +386,7 @@ namespace BSU.Core.Tests
             OutputHelper.WriteLine("Starting update...");
 
             var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
+            update.Prepare();
             worker.DoWork();
             Assert.True(update.IsPrepared);
             update.Commit();

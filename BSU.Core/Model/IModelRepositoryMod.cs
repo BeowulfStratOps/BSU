@@ -17,6 +17,6 @@ namespace BSU.Core.Model
         void ChangeAction(IModelStorageMod target, ModActionEnum? newAction);
         event Action<IModelStorageMod> ActionAdded;
         event Action SelectionChanged;
-        Promise<IUpdateState> DoUpdate();
+        ModUpdateInfo DoUpdate();
     }
 }

@@ -17,11 +17,11 @@ namespace BSU.Core.Tests
         private void DontAutoselectOverSelection_Mod()
         {
             var worker = new MockWorker();
-            
+
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
             var storageMod2 = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
                 var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
@@ -30,7 +30,7 @@ namespace BSU.Core.Tests
             repoMod.Selection = new RepositoryModActionSelection(storageMod.Object);
             repoMod.ChangeAction(storageMod2.Object, ModActionEnum.Use);
             repoMod.AllModsLoaded = true;
-            
+
             Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
         }
 
@@ -40,27 +40,27 @@ namespace BSU.Core.Tests
             var worker = new MockWorker();
 
             var storage = new Mock<IModelStorage>(MockBehavior.Strict);
-            
+
             var storageMod2 = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
             var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
             worker.DoWork();
-            repoMod.Selection = new RepositoryModActionSelection(storage.Object);
+            repoMod.Selection = new RepositoryModActionSelection(storage.Object, "id");
             repoMod.ChangeAction(storageMod2.Object, ModActionEnum.Use);
             repoMod.AllModsLoaded = true;
-            
-            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storage.Object));
+
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storage.Object, "id"));
         }
 
         [Fact]
         private void DontAutoselectOverSelection_DoNothing()
         {
             var worker = new MockWorker();
-            
+
             var storageMod2 = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
             var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
@@ -68,7 +68,7 @@ namespace BSU.Core.Tests
             repoMod.Selection = new RepositoryModActionSelection();
             repoMod.ChangeAction(storageMod2.Object, ModActionEnum.Use);
             repoMod.AllModsLoaded = true;
-            
+
             Assert.Equal(repoMod.Selection, new RepositoryModActionSelection());
         }
 
@@ -77,7 +77,7 @@ namespace BSU.Core.Tests
         {
             var worker = new MockWorker();
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
             var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
@@ -94,7 +94,7 @@ namespace BSU.Core.Tests
             var worker = new MockWorker();
 
             var modIdentifier = new StorageModIdentifiers("asdf", "qwer");
-            
+
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
             storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(modIdentifier);
 
@@ -113,7 +113,7 @@ namespace BSU.Core.Tests
         {
             var worker = new MockWorker();
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
             var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
@@ -127,11 +127,11 @@ namespace BSU.Core.Tests
         private void ToggleAllLoaded()
         {
             var worker = new MockWorker();
-            
+
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
             var storageMod2 = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
             var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
@@ -145,14 +145,14 @@ namespace BSU.Core.Tests
             repoMod.AllModsLoaded = true;
             Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storageMod.Object));
         }
-        
+
         [Fact]
         private void DontSelectWhileModsAreLoading()
         {
             var worker = new MockWorker();
-            
+
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            
+
             var structure = new MockModelStructure();
             var storage = new Mock<IModelStorage>();
             structure.Storages.Add(storage.Object);

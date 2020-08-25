@@ -26,7 +26,7 @@ namespace BSU.Core.Tests.Mocks
 
         public event Action<IModelStorageMod> ActionAdded;
         public event Action SelectionChanged;
-        public Promise<IUpdateState> DoUpdate()
+        public ModUpdateInfo DoUpdate()
         {
             throw new NotImplementedException();
         }

@@ -23,7 +23,7 @@ namespace BSU.Core.Model
 
         private MatchHash _matchHash;
         private VersionHash _versionHash;
-        
+
         public UpdateTarget AsUpdateTarget { get; private set; }
 
         private Exception _error;
@@ -95,7 +95,7 @@ namespace BSU.Core.Model
         public void ChangeAction(IModelStorageMod target, ModActionEnum? newAction)
         {
             Logger.Trace("RepoMod {0} changed action for {1} to {2}", Identifier, target, newAction);
-            
+
             var existing = Actions.ContainsKey(target);
             if (newAction == null)
             {
@@ -121,7 +121,7 @@ namespace BSU.Core.Model
         }
 
         private bool _allModsLoaded;
-        
+
         public bool AllModsLoaded
         {
             private get => _allModsLoaded;
@@ -141,42 +141,38 @@ namespace BSU.Core.Model
             if (Selection != null) return;
 
             Logger.Trace("Checking auto-selection for mod {0}", Identifier);
-            
-            var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.UsedMod);
+
+            var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.UsedMod, Identifier);
             if (selection == Selection) return;
-            
+
             Logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
-            
+
             Selection = selection;
         }
 
-        public Promise<IUpdateState> DoUpdate()
+        public ModUpdateInfo DoUpdate()
         {
-            
             if (Selection == null) throw new InvalidOperationException();
 
             // TODO: switch
-            
+
             if (Selection.DoNothing) return null;
 
             if (Selection.StorageMod != null)
             {
-                var promise = new Promise<IUpdateState>();
                 var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget);
-                promise.Set(update);
-                return promise;
+                return new ModUpdateInfo(update);
             }
 
             if (Selection.DownloadStorage != null)
             {
-                throw new NotImplementedException();
-                var identifier = "";
                 var promise = new Promise<IUpdateState>();
-                Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, identifier,
+                Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, Selection.DownloadIdentifier,
                     promise.Error, promise.Set);
-                return promise;
+                var downloadInfo = new DownloadInfo(this, Selection.DownloadIdentifier, promise);
+                return new ModUpdateInfo(downloadInfo);
             }
-            
+
             throw new InvalidOperationException();
         }
 
@@ -184,5 +180,21 @@ namespace BSU.Core.Model
 
         public event Action<IModelStorageMod> ActionAdded;
         public event Action SelectionChanged;
+    }
+
+    internal class ModUpdateInfo
+    {
+        public DownloadInfo DownloadInfo { get; }
+        public IUpdateState UpdateState { get; }
+
+        public ModUpdateInfo(DownloadInfo downloadInfo)
+        {
+            DownloadInfo = downloadInfo;
+        }
+
+        public ModUpdateInfo(IUpdateState updateState)
+        {
+            UpdateState = updateState;
+        }
     }
 }

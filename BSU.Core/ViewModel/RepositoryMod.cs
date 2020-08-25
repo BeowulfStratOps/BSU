@@ -9,12 +9,12 @@ namespace BSU.Core.ViewModel
     public class RepositoryMod : ViewModelClass
     {
         private readonly IModelRepositoryMod _mod;
-        
+
         public string Name { get; }
         public string DisplayName { private set; get; }
 
         public bool IsLoading { private set; get; }
-        
+
         public ObservableCollection<ModAction> Actions { get; } = new ObservableCollection<ModAction>();
 
         private ModAction _selection;
@@ -42,7 +42,7 @@ namespace BSU.Core.ViewModel
             {
                 AddAction(target);
             }
-            
+
             Selection = new ModAction(mod.Selection, mod.Actions);
             mod.SelectionChanged += () =>
             {
@@ -66,11 +66,11 @@ namespace BSU.Core.ViewModel
         {
             Actions.Add(new ModAction(new RepositoryModActionSelection(storageMod), _mod.Actions));
         }
-        
+
         internal void AddStorage(IModelStorage storage)
         {
             if (!storage.CanWrite) return;
-            Actions.Add(new ModAction(new RepositoryModActionSelection(storage), _mod.Actions));
+            Actions.Add(new ModAction(new RepositoryModActionSelection(storage, _mod.ToString()), _mod.Actions));
         }
 
         private void Test()

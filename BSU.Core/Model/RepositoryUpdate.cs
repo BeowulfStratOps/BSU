@@ -7,68 +7,144 @@ namespace BSU.Core.Model
 {
     public class RepositoryUpdate
     {
-        public List<Promise<IUpdateState>> Promises { get; private set; }
-        public List<IUpdateState> Updates { get; private set; }
+        // TODO: make sure events go through the workerQueue
+        // TODO: use callbacks instead of events.
 
-        public void Set(List<Promise<IUpdateState>> promises)
+        private readonly List<DownloadInfo> _downloads = new List<DownloadInfo>();
+        private bool _doneAdding;
+        private List<IUpdateState> _updates = new List<IUpdateState>();
+        private Dictionary<IUpdateState, Exception> _exceptions = new Dictionary<IUpdateState, Exception>();
+        private bool _allPrepared;
+
+        internal void Add(DownloadInfo download)
         {
-            if (Promises != null) throw new InvalidOperationException();
-            Promises = promises;
-            foreach (var promise in Promises)
-            {
-                promise.OnValue += CheckAllSetUp;
-                promise.OnError += CheckAllSetUp;
-            }
+            if (_doneAdding) throw new InvalidOperationException();
+            download.Promise.OnValue += CheckAllSetUp;
+            download.Promise.OnError += CheckAllSetUp;
+            _downloads.Add(download);
+        }
+
+        internal void Add(IUpdateState updateState)
+        {
+            _updates.Add(updateState);
+        }
+
+        internal void DoneAdding()
+        {
+            if (_doneAdding) throw new InvalidOperationException();
+            _doneAdding = true;
             CheckAllSetUp();
         }
 
         private void CheckAllSetUp()
         {
-            if (Promises.All(p => p.HasError || p.HasValue))
-                AllDone?.Invoke();
+            if (!_downloads.All(p => p.Promise.HasError || p.Promise.HasValue)) return;
+            var failed = _downloads.Where(p => p.Promise.HasError).ToList();
+            var succeeded = _downloads.Where(p => !p.Promise.HasError).ToList();
+
+            foreach (var download in _downloads.Where(d => d.Promise.HasValue))
+            {
+                _updates.Add(download.Promise.Value);
+            }
+
+            void Proceed(bool doContinue)
+            {
+                if (doContinue)
+                    Prepare();
+                else
+                    Abort();
+            }
+
+            OnSetup?.Invoke(succeeded, failed, Proceed);
         }
 
-        public event Action AllDone;
-
-        public void Abort()
+        private void Abort()
         {
-            // TODO: implement for setUp
-            // TODO: implement for prepared
-            throw new NotImplementedException();
+            foreach (var update in _updates)
+            {
+                update.Abort();
+            }
         }
 
-        public void Prepare()
+        private void Prepare()
         {
-            // TODO: ensure all done
-            // TODO: roll back errored ones
-            Updates = Promises.Where(p => p.HasValue).Select(p => p.Value).ToList();
-            foreach (var update in Updates)
+            if (_updates == null) throw new InvalidOperationException();
+            foreach (var update in _updates)
             {
                 update.OnPrepared += CheckAllPrepared;
+                update.OnFinished += e =>
+                {
+                    if (e != null) _exceptions[update] = e;
+                    CheckAllPrepared();
+                };
                 update.Prepare();
             }
         }
 
         private void CheckAllPrepared()
         {
-            if (Updates.All(u => u.IsPrepared))
-                AllPrepared?.Invoke();
+            if (_allPrepared) return;
+            if (!_updates.All(u => u.IsPrepared || u.IsFinished)) return;
+            _allPrepared = true;
+            var errored = _updates.Where(u => u.IsFinished)
+                .Select(u => new Tuple<IUpdateState, Exception>(u, _exceptions[u])).ToList();
+            var succeeded = _updates.Where(u => u.IsPrepared).ToList();
+
+            void Proceed(bool doContinue)
+            {
+                if (doContinue)
+                    Commit();
+                else
+                    Abort();
+            }
+
+            OnPrepared?.Invoke(succeeded, errored, Proceed);
         }
 
-        public void Commit()
+        private void Commit()
         {
-            // TODO: rollback failed ones
-            foreach (var update in Updates)
+            // rollback failed ones
+            foreach (var update in _updates.Where(u => !u.IsPrepared))
             {
+                update.Abort();
+            }
+            _updates = _updates.Where(u => u.IsPrepared).ToList();
+            foreach (var update in _updates)
+            {
+                update.OnFinished += _ => CheckAllFinished();
                 update.Commit();
             }
         }
 
-        public event Action AllPrepared;
-
-        public long GetTotalBytesToDownload()
+        private void CheckAllFinished()
         {
-            return Updates.Sum(u => u.GetPrepStats());
+            if (!_updates.All(u => u.IsFinished)) return;
+            var errored = _updates.Where(u => _exceptions.ContainsKey(u))
+                .Select(u => new Tuple<IUpdateState, Exception>(u, _exceptions[u])).ToList();
+            var succeeded = _updates.Where(u => !_exceptions.ContainsKey(u)).ToList();
+            OnFinished?.Invoke(succeeded, errored);
         }
+
+        public delegate void SetUpDelegate(List<DownloadInfo> succeeded, List<DownloadInfo> failed, Action<bool> proceed);
+        public delegate void PreparedDelegate(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed, Action<bool> proceed);
+        public delegate void FinishedDelegate(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed);
+
+        public event SetUpDelegate OnSetup;
+        public event PreparedDelegate OnPrepared;
+        public event FinishedDelegate OnFinished;
+    }
+
+    public class DownloadInfo
+    {
+        internal DownloadInfo(IModelRepositoryMod repositoryMod, string identifier, Promise<IUpdateState> promise)
+        {
+            RepositoryMod = repositoryMod;
+            Identifier = identifier;
+            Promise = promise;
+        }
+
+        internal IModelRepositoryMod RepositoryMod { get; }
+        internal string Identifier { get; }
+        internal Promise<IUpdateState> Promise { get; }
     }
 }

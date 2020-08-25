@@ -152,7 +152,7 @@ namespace BSU.Core.Tests
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, target, () => { });
             update.OnPrepared += update.Commit;
-
+            update.Prepare();
             worker.DoWork();
 
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
@@ -218,8 +218,8 @@ namespace BSU.Core.Tests
             var update = storageMod.PrepareUpdate(repo, target, () => { });
             update.OnPrepared += update.Commit;
 
+            update.Prepare();
             worker.DoWork();
-
 
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
             var state = storageMod.GetState();
@@ -244,8 +244,8 @@ namespace BSU.Core.Tests
             var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), () => { });
             update.OnPrepared += update.Abort;
 
+            update.Prepare();
             worker.DoWork();
-
 
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
             var state = storageMod.GetState();
@@ -283,26 +283,6 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void ErrorUpdatePrep()
-        {
-            var (implementation, storageMod, worker) = CreateStorageMod();
-
-            worker.DoWork();
-            storageMod.RequireHash();
-            worker.DoWork();
-
-            var repo = CreateRepoMod();
-            worker.DoWork();
-            implementation.ThrowErrorOpen = true;
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), () => { });
-
-            worker.DoWork();
-
-            var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.ErrorUpdate, state.State);
-        }
-
-        [Fact]
         private void ErrorUpdateDo()
         {
             var (implementation, storageMod, worker) = CreateStorageMod();
@@ -318,7 +298,7 @@ namespace BSU.Core.Tests
                 implementation.ThrowErrorOpen = true;
                 update.Commit();
             };
-
+            update.Prepare();
 
             worker.DoWork();
 
@@ -333,16 +313,19 @@ namespace BSU.Core.Tests
             var (implementation, storageMod, worker) = CreateStorageMod();
 
             worker.DoWork();
+            storageMod.RequireHash();
+            worker.DoWork();
 
             var repo = CreateRepoMod();
             Exception error = null;
+            implementation.ThrowErrorOpen = true;
             var update = storageMod.PrepareUpdate(repo, target, () => { });
-
+            update.OnFinished += e => { error = e; };
+            update.Prepare();
             worker.DoWork();
 
-            throw new NotImplementedException(); // can't get any error information atm!
             Assert.NotNull(error);
-            Assert.IsType<InvalidOperationException>(error);
+            Assert.IsType<TestException>(error);
         }
     }
 }
