@@ -73,7 +73,7 @@ namespace BSU.Core.Model
                 {
                     setupError(e);
                 }
-                
+
             });
         }
 
@@ -85,6 +85,10 @@ namespace BSU.Core.Model
 
         public bool CanWrite => Implementation.CanWrite();
         public bool IsLoading => Loading.IsActive();
+        public PersistedSelection GetStorageIdentifier()
+        {
+            return new PersistedSelection(Identifier, null);
+        }
 
         public override string ToString() => Identifier;
 

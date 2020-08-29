@@ -19,8 +19,10 @@ namespace BSU.Core.Tests
             var worker = new MockWorker();
 
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(new PersistedSelection("bla", "1"));
 
             var storageMod2 = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(new PersistedSelection("bla", "2"));
 
                 var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
@@ -40,6 +42,7 @@ namespace BSU.Core.Tests
             var worker = new MockWorker();
 
             var storage = new Mock<IModelStorage>(MockBehavior.Strict);
+            storage.Setup(s => s.GetStorageIdentifier()).Returns(new PersistedSelection("bla", null));
 
             var storageMod2 = new Mock<IModelStorageMod>(MockBehavior.Strict);
 
@@ -77,6 +80,7 @@ namespace BSU.Core.Tests
         {
             var worker = new MockWorker();
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(new PersistedSelection("bla", "1"));
 
             var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
@@ -93,12 +97,12 @@ namespace BSU.Core.Tests
         {
             var worker = new MockWorker();
 
-            var modIdentifier = new StorageModIdentifiers("asdf", "qwer");
+            var modIdentifier = new PersistedSelection("asdf", "qwer");
 
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
             storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(modIdentifier);
 
-            var state = new MockRepositoryModState {UsedMod = modIdentifier};
+            var state = new MockRepositoryModState {Selection = modIdentifier};
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
             worker.DoWork();
@@ -113,6 +117,7 @@ namespace BSU.Core.Tests
         {
             var worker = new MockWorker();
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(new PersistedSelection("bla", "1"));
 
             var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
@@ -129,8 +134,10 @@ namespace BSU.Core.Tests
             var worker = new MockWorker();
 
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(new PersistedSelection("bla", "1"));
 
             var storageMod2 = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            storageMod2.Setup(s => s.GetStorageModIdentifiers()).Returns(new PersistedSelection("bla", "2"));
 
             var state = new MockRepositoryModState();
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
@@ -152,6 +159,7 @@ namespace BSU.Core.Tests
             var worker = new MockWorker();
 
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(new PersistedSelection("bla", "1"));
 
             var structure = new MockModelStructure();
             var storage = new Mock<IModelStorage>();

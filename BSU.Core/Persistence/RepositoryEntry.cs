@@ -17,7 +17,7 @@ namespace BSU.Core.Persistence
         
         
         
-        public Dictionary<string, StorageModIdentifiers> UsedMods = new Dictionary<string, StorageModIdentifiers>();
+        public Dictionary<string, PersistedSelection> UsedMods = new Dictionary<string, PersistedSelection>();
 
         public RepositoryEntry(string name, string type, string url)
         {

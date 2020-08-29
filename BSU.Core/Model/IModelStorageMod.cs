@@ -11,7 +11,7 @@ namespace BSU.Core.Model
         IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action rollback = null);
         StorageModState GetState();
         void Abort();
-        StorageModIdentifiers GetStorageModIdentifiers();
+        PersistedSelection GetStorageModIdentifiers();
         bool CanWrite { get; }
     }
 }

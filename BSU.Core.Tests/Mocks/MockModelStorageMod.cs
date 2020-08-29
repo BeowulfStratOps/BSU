@@ -36,7 +36,7 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        public StorageModIdentifiers GetStorageModIdentifiers()
+        public PersistedSelection GetStorageModIdentifiers()
         {
             throw new NotImplementedException();
         }

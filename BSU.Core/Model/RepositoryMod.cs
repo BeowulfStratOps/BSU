@@ -37,6 +37,7 @@ namespace BSU.Core.Model
                 if (value == _selection) return;
                 Logger.Trace("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
                 _selection = value;
+                _internalState.Selection = PersistedSelection.Create(value);
                 SelectionChanged?.Invoke();
             }
         }
@@ -142,7 +143,7 @@ namespace BSU.Core.Model
 
             Logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
-            var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.UsedMod, Identifier);
+            var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.Selection, Identifier);
             if (selection == Selection) return;
 
             Logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);

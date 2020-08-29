@@ -110,6 +110,7 @@ namespace BSU.Core.Model
             foreach (var mod in Mods)
             {
                 var updateInfo = mod.DoUpdate();
+                if (updateInfo == null) continue; // Do nothing
                 if (updateInfo.UpdateState != null)
                     repoUpdate.Add(updateInfo.UpdateState);
                 else

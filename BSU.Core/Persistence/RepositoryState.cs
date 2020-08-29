@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace BSU.Core.Persistence
 {
@@ -6,7 +7,7 @@ namespace BSU.Core.Persistence
     {
         IRepositoryModState GetMod(string identifier);
     }
-    
+
     internal class RepositoryState : IRepositoryState
     {
         private readonly RepositoryEntry _entry;
@@ -15,9 +16,10 @@ namespace BSU.Core.Persistence
         public RepositoryState(RepositoryEntry entry, Action store)
         {
             _entry = entry;
+            _entry.UsedMods ??= new Dictionary<string, PersistedSelection>();
             _store = store;
         }
-        
+
         public IRepositoryModState GetMod(string identifier)
         {
             return new RepositoryModState(_entry.UsedMods, _store, identifier);

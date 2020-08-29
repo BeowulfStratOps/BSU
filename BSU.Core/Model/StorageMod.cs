@@ -202,9 +202,9 @@ namespace BSU.Core.Model
             State = StorageModStateEnum.Loading;
         }
 
-        public StorageModIdentifiers GetStorageModIdentifiers()
+        public PersistedSelection GetStorageModIdentifiers()
         {
-            return new StorageModIdentifiers(_parentIdentifier, Identifier);
+            return new PersistedSelection(_parentIdentifier, Identifier);
         }
 
         public override string ToString() => Identifier;

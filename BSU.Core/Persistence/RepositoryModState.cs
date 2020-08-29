@@ -5,23 +5,23 @@ namespace BSU.Core.Persistence
 {
     internal interface IRepositoryModState
     {
-        StorageModIdentifiers UsedMod { get; set; }
+        PersistedSelection Selection { get; set; }
     }
-    
+
     internal class RepositoryModState : IRepositoryModState
     {
-        private readonly Dictionary<string, StorageModIdentifiers> _usedMods;
+        private readonly Dictionary<string, PersistedSelection> _usedMods;
         private readonly Action _store;
         private readonly string _identifier;
 
-        public RepositoryModState(Dictionary<string, StorageModIdentifiers> usedMods, Action store, string identifier)
+        public RepositoryModState(Dictionary<string, PersistedSelection> usedMods, Action store, string identifier)
         {
-            _usedMods = usedMods ?? new Dictionary<string, StorageModIdentifiers>(); // TODO: is this the right place?
+            _usedMods = usedMods;
             _store = store;
             _identifier = identifier;
         }
 
-        public StorageModIdentifiers UsedMod
+        public PersistedSelection Selection
         {
             get => _usedMods.GetValueOrDefault(_identifier);
             set

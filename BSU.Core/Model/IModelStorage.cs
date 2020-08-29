@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BSU.Core.Persistence;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -13,5 +14,6 @@ namespace BSU.Core.Model
         event Action<IModelStorageMod> ModAdded;
         bool CanWrite { get; }
         bool IsLoading { get; }
+        PersistedSelection GetStorageIdentifier();
     }
 }

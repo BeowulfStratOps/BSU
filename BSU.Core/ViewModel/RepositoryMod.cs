@@ -59,7 +59,7 @@ namespace BSU.Core.ViewModel
             {
                 AddStorage(storage);
             }
-            SelectionChanged = new DelegateCommand(Test);
+            SelectionChanged = new DelegateCommand(ChangeSelection);
         }
 
         private void AddAction(IModelStorageMod storageMod)
@@ -73,7 +73,7 @@ namespace BSU.Core.ViewModel
             Actions.Add(new ModAction(new RepositoryModActionSelection(storage, _mod.ToString()), _mod.Actions));
         }
 
-        private void Test()
+        private void ChangeSelection()
         {
             _mod.Selection = _selection?.Selection;
         }

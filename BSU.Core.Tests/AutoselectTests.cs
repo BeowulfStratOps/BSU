@@ -24,7 +24,7 @@ namespace BSU.Core.Tests
             if (hasConflict) modAction.Conflicts.Add(new ModAction(ModActionEnum.Use, null, null, new HashSet<ModAction>()));
 
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            var storageModIdentifier = new StorageModIdentifiers(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+            var storageModIdentifier = new PersistedSelection(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
             storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(storageModIdentifier);
 
             mods.Add(storageMod.Object, modAction);
@@ -164,6 +164,47 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
+        private void Used_DownloadStorage()
+        {
+            var mods = new Dictionary<IModelStorageMod, ModAction>();
+
+            AddAction(mods, ModActionEnum.Use, false);
+            AddAction(mods, ModActionEnum.Loading, false);
+
+            var structure = new MockModelStructure();
+
+            var storage = new Mock<IModelStorage>(MockBehavior.Strict);
+            storage.Setup(s => s.GetStorageIdentifier()).Returns(new PersistedSelection("bla", null));
+
+            storage.Setup(s => s.CanWrite).Returns(true);
+            structure.Storages.Add(storage.Object);
+
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
+                storage.Object.GetStorageIdentifier(), "");
+
+            Assert.Equal(storage.Object, selection?.DownloadStorage);
+            Assert.Null(selection?.StorageMod);
+        }
+
+        [Fact]
+        private void Used_DoNothing()
+        {
+            var mods = new Dictionary<IModelStorageMod, ModAction>();
+
+            AddAction(mods, ModActionEnum.Use, false);
+            AddAction(mods, ModActionEnum.Loading, false);
+
+            var structure = new MockModelStructure();
+
+            var selection = CoreCalculation.AutoSelect(true, mods, structure,
+                new PersistedSelection(null, null), "");
+
+            Assert.True(selection?.DoNothing);
+            Assert.Null(selection?.StorageMod);
+            Assert.Null(selection?.DownloadStorage);
+        }
+
+        [Fact]
         private void UsedNotPresent_BeforeAllLoaded()
         {
             var mods = new Dictionary<IModelStorageMod, ModAction>();
@@ -173,7 +214,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(false, mods, structure,
-                new StorageModIdentifiers("doesn't", "exist"), "");
+                new PersistedSelection("doesn't", "exist"), "");
 
             Assert.Null(selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -189,7 +230,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                new StorageModIdentifiers("doesn't", "exist"), "");
+                new PersistedSelection("doesn't", "exist"), "");
 
             Assert.Equal(storageMod, selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);

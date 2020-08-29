@@ -4,6 +4,6 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockRepositoryModState : IRepositoryModState
     {
-        public StorageModIdentifiers UsedMod { get; set; }
+        public PersistedSelection Selection { get; set; }
     }
 }
