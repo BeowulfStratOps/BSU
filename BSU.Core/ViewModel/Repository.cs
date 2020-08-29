@@ -53,7 +53,7 @@ namespace BSU.Core.ViewModel
 
         private void DoUpdate()
         {
-            _repository.DoUpdate(((update, action) =>
+            _repository.DoUpdate(((action) =>
             {
                 var text = "someBytes to download. Proceed?"; // TODO
                 var context = new YesNoPopupContext(text, "Proceed with Update?");

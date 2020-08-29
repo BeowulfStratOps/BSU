@@ -8,13 +8,23 @@ namespace BSU.Core.Model
     public class RepositoryUpdate
     {
         // TODO: make sure events go through the workerQueue
-        // TODO: use callbacks instead of events.
+
+        private readonly SetUpDelegate _setUpCallback;
+        private readonly PreparedDelegate _preparedCallback;
+        private readonly FinishedDelegate _finishedCallback;
 
         private readonly List<DownloadInfo> _downloads = new List<DownloadInfo>();
         private bool _doneAdding;
         private List<IUpdateState> _updates = new List<IUpdateState>();
         private Dictionary<IUpdateState, Exception> _exceptions = new Dictionary<IUpdateState, Exception>();
         private bool _allPrepared;
+
+        public RepositoryUpdate(SetUpDelegate setUpCallback, PreparedDelegate preparedCallback, FinishedDelegate finishedCallback)
+        {
+            _setUpCallback = setUpCallback;
+            _preparedCallback = preparedCallback;
+            _finishedCallback = finishedCallback;
+        }
 
         internal void Add(DownloadInfo download)
         {
@@ -55,7 +65,7 @@ namespace BSU.Core.Model
                     Abort();
             }
 
-            OnSetup?.Invoke(succeeded, failed, Proceed);
+            _setUpCallback(succeeded, failed, Proceed);
         }
 
         private void Abort()
@@ -98,7 +108,7 @@ namespace BSU.Core.Model
                     Abort();
             }
 
-            OnPrepared?.Invoke(succeeded, errored, Proceed);
+            _preparedCallback(succeeded, errored, Proceed);
         }
 
         private void Commit()
@@ -122,16 +132,12 @@ namespace BSU.Core.Model
             var errored = _updates.Where(u => _exceptions.ContainsKey(u))
                 .Select(u => new Tuple<IUpdateState, Exception>(u, _exceptions[u])).ToList();
             var succeeded = _updates.Where(u => !_exceptions.ContainsKey(u)).ToList();
-            OnFinished?.Invoke(succeeded, errored);
+            _finishedCallback(succeeded, errored);
         }
 
         public delegate void SetUpDelegate(List<DownloadInfo> succeeded, List<DownloadInfo> failed, Action<bool> proceed);
         public delegate void PreparedDelegate(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed, Action<bool> proceed);
         public delegate void FinishedDelegate(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed);
-
-        public event SetUpDelegate OnSetup;
-        public event PreparedDelegate OnPrepared;
-        public event FinishedDelegate OnFinished;
     }
 
     public class DownloadInfo

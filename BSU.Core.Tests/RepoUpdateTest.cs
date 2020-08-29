@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BSU.Core.Model;
 using BSU.Core.Model.Utility;
 using BSU.Core.Tests.Mocks;
@@ -9,113 +8,178 @@ using Xunit.Abstractions;
 
 namespace BSU.Core.Tests
 {
-    public class RepoUpdateTest : LoggedTest
+    public class RepoUpdateTest : LoggedTest, IDisposable
     {
+        private readonly FuncCheck _funcCheck;
+
         public RepoUpdateTest(ITestOutputHelper outputHelper) : base(outputHelper)
         {
+            _funcCheck = new FuncCheck();
         }
 
-        // TODO: use disposable callbacks with using, check that they were called before being disposed.
+        public void Dispose()
+        {
+            _funcCheck.Check();
+        }
+
+        private class FuncCheck
+        {
+            private readonly List<string> _calls = new List<string>();
+
+            public RepositoryUpdate.SetUpDelegate GetSetUp(int succeeded, int errored, bool proceed)
+            {
+                _calls.Remove(nameof(RepositoryUpdate.SetUpDelegate));
+                void Func(List<DownloadInfo> _succeeded, List<DownloadInfo> _errored, Action<bool> _proceed)
+                {
+                    Assert.Equal(succeeded, _succeeded.Count);
+                    Assert.Equal(errored, _errored.Count);
+                    _calls.Remove(nameof(RepositoryUpdate.SetUpDelegate));
+                    _proceed(proceed);
+                }
+                return Func;
+            }
+
+            public RepositoryUpdate.SetUpDelegate GetSetUp()
+            {
+                void Func(List<DownloadInfo> _succeeded, List<DownloadInfo> _errored, Action<bool> _proceed)
+                {
+                    Assert.False(true);
+                }
+                return Func;
+            }
+
+            public RepositoryUpdate.PreparedDelegate GetPrepared(int succeeded, int errored, bool proceed)
+            {
+                _calls.Add(nameof(RepositoryUpdate.PreparedDelegate));
+                void Func(List<IUpdateState> _succeeded, List<Tuple<IUpdateState, Exception>> _errored, Action<bool> _proceed)
+                {
+                    Assert.Equal(succeeded, _succeeded.Count);
+                    Assert.Equal(errored, _errored.Count);
+                    _calls.Remove(nameof(RepositoryUpdate.PreparedDelegate));
+                    _proceed(proceed);
+                }
+                return Func;
+            }
+
+            public RepositoryUpdate.PreparedDelegate GetPrepared()
+            {
+                void Func(List<IUpdateState> _succeeded, List<Tuple<IUpdateState, Exception>> _errored, Action<bool> _proceed)
+                {
+                    Assert.False(true);
+                }
+                return Func;
+            }
+
+            public RepositoryUpdate.FinishedDelegate GetFinished(int succeeded, int errored)
+            {
+                _calls.Add(nameof(RepositoryUpdate.FinishedDelegate));
+                void Func(List<IUpdateState> _succeeded, List<Tuple<IUpdateState, Exception>> _errored)
+                {
+                    Assert.Equal(succeeded, _succeeded.Count);
+                    Assert.Equal(errored, _errored.Count);
+                    _calls.Remove(nameof(RepositoryUpdate.FinishedDelegate));
+                }
+                return Func;
+            }
+
+            public RepositoryUpdate.FinishedDelegate GetFinished()
+            {
+                void Func(List<IUpdateState> _succeeded, List<Tuple<IUpdateState, Exception>> _errored)
+                {
+                    Assert.False(true);
+                }
+                return Func;
+            }
+
+            public void Check()
+            {
+                Assert.Empty(_calls);
+            }
+        }
 
         [Fact]
         private void Success()
         {
-            var repoUpdate = new RepositoryUpdate();
-            repoUpdate.OnSetup += (_, __, proceed) => proceed(true);
-            repoUpdate.OnPrepared += (_, __, proceed) => proceed(true);
-            var repoSuccess = false;
-            repoUpdate.OnFinished += (_, errored) => { if (!errored.Any()) repoSuccess = true; };
+            var repoUpdate = new RepositoryUpdate(
+                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetPrepared(1, 0, true),
+                _funcCheck.GetFinished(1, 0));
             var updateState = new MockUpdateState(false, false);
+
             repoUpdate.Add(updateState);
             repoUpdate.DoneAdding();
 
             Assert.True(updateState.CommitCalled);
-            Assert.True(repoSuccess);
         }
 
         [Fact]
         private void PrepAbort()
         {
-            var repoUpdate = new RepositoryUpdate();
-            repoUpdate.OnSetup += (_, __, proceed) => proceed(true);
-            repoUpdate.OnPrepared += (_, __, proceed) => proceed(false);
-            var success = true;
-            repoUpdate.OnFinished += (_, errored) => { success = false; };
+            var repoUpdate = new RepositoryUpdate(
+                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetPrepared(1, 0, false),
+                _funcCheck.GetFinished());
+
             var updateState = new MockUpdateState(false, false);
             repoUpdate.Add(updateState);
             repoUpdate.DoneAdding();
 
-
             Assert.True(updateState.AbortCalled);
-            Assert.True(success);
         }
 
         [Fact]
         private void SetupError()
         {
-            var repoUpdate = new RepositoryUpdate();
-            var setupErrored = false;
-            repoUpdate.OnSetup += (_, errors, proceed) =>
-            {
-                if (errors.Any()) setupErrored = true;
-                proceed(true);
-            };
+            var repoUpdate = new RepositoryUpdate(
+                _funcCheck.GetSetUp(0, 1, false),
+                _funcCheck.GetPrepared(),
+                _funcCheck.GetFinished());
+
             var p = new Promise<IUpdateState>();
             var info = new DownloadInfo(null, "", p);
             repoUpdate.Add(info);
             repoUpdate.DoneAdding();
 
             p.Error(new TestException());
-
-            Assert.True(setupErrored);
         }
 
         [Fact]
         private void PrepError()
         {
-            var repoUpdate = new RepositoryUpdate();
-            repoUpdate.OnSetup += (_, __, proceed) => proceed(true);
-            var prepareErrored = false;
-            repoUpdate.OnPrepared += (_, errored, proceed) =>
-            {
-                if (errored.Any()) prepareErrored = true;
-            };
+            var repoUpdate = new RepositoryUpdate(
+                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetPrepared(0, 1, false),
+                _funcCheck.GetFinished());
+
             var updateState = new MockUpdateState(true, false);
             repoUpdate.Add(updateState);
             repoUpdate.DoneAdding();
 
             Assert.False(updateState.CommitCalled);
-            Assert.True(prepareErrored);
         }
 
         [Fact]
         private void UpdateError()
         {
-            var repoUpdate = new RepositoryUpdate();
-            repoUpdate.OnSetup += (_, __, proceed) => proceed(true);
-            repoUpdate.OnPrepared += (_, __, proceed) => proceed(true);
-            var updateErrored = false;
-            repoUpdate.OnFinished += (_, errored) => { if (errored.Any()) updateErrored = true; };
+            var repoUpdate = new RepositoryUpdate(
+                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetPrepared(1, 0, true),
+                _funcCheck.GetFinished(0, 1));
+
             var updateState = new MockUpdateState(false, true);
             repoUpdate.Add(updateState);
             repoUpdate.DoneAdding();
 
             Assert.True(updateState.CommitCalled);
-            Assert.True(updateErrored);
         }
 
         [Fact]
         private void SetupError_KeepGoing()
         {
-            var repoUpdate = new RepositoryUpdate();
-            repoUpdate.OnSetup += (_, errored, proceed) =>
-            {
-                Assert.NotEmpty(errored);
-                proceed(true);
-            };
-            repoUpdate.OnPrepared += (_, __, proceed) => proceed(true);
-            var repoSuccess = false;
-            repoUpdate.OnFinished += (_, errored) => { if (!errored.Any()) repoSuccess = true; };
+            var repoUpdate = new RepositoryUpdate(
+                _funcCheck.GetSetUp(0, 1, true),
+                _funcCheck.GetPrepared(1, 0, true),
+                _funcCheck.GetFinished(1, 0));
 
             var updateState = new MockUpdateState(false, false);
             repoUpdate.Add(updateState);
@@ -129,25 +193,15 @@ namespace BSU.Core.Tests
             pFail.Error(new TestException());
 
             Assert.True(updateState.CommitCalled);
-            Assert.True(repoSuccess);
         }
 
         [Fact]
         private void PrepareError_KeepGoing()
         {
-            var repoUpdate = new RepositoryUpdate();
-            repoUpdate.OnSetup += (_, errored, proceed) =>
-            {
-                Assert.Empty(errored);
-                proceed(true);
-            };
-            repoUpdate.OnPrepared += (_, errored, proceed) =>
-            {
-                Assert.Single(errored);
-                proceed(true);
-            };
-            var repoSuccess = false;
-            repoUpdate.OnFinished += (_, errored) => { if (!errored.Any()) repoSuccess = true; };
+            var repoUpdate = new RepositoryUpdate(
+                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetPrepared(1, 1, true),
+                _funcCheck.GetFinished(1, 0));
 
             var updateState = new MockUpdateState(false, false);
             repoUpdate.Add(updateState);
@@ -157,7 +211,6 @@ namespace BSU.Core.Tests
 
             Assert.True(updateState.CommitCalled);
             Assert.True(updateStateFail.AbortCalled);
-            Assert.True(repoSuccess);
         }
     }
 }

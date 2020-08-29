@@ -97,14 +97,16 @@ namespace BSU.Core.Model
 
         public override string ToString() => Identifier;
 
-        public void DoUpdate(Action<RepositoryUpdate, Action<bool>> onPrepared)
+        public void DoUpdate(Action<Action<bool>> onPrepared)
         {
-            var repoUpdate = new RepositoryUpdate();
-            repoUpdate.OnSetup += (_, __, proceed) => proceed(true); // TODO: user interaction
-            repoUpdate.OnPrepared += (succeeded, errored, proceed) => // TODO: pass error
-            {
-                onPrepared(repoUpdate, proceed);
-            };
+            var repoUpdate = new RepositoryUpdate(
+                (_, __, proceed) => proceed(true), // TODO: user interaction,
+                (succeeded, errored, proceed) => // TODO: pass error
+                {
+                    onPrepared(proceed);
+                },
+                (_, __) => { } // TODO: pass OnFinished
+            );
             foreach (var mod in Mods)
             {
                 var updateInfo = mod.DoUpdate();
@@ -114,7 +116,6 @@ namespace BSU.Core.Model
                     repoUpdate.Add(updateInfo.DownloadInfo);
             }
             repoUpdate.DoneAdding();
-            // TODO: pass OnFinished
         }
     }
 }
