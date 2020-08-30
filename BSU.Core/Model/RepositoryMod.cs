@@ -161,6 +161,8 @@ namespace BSU.Core.Model
 
             if (Selection.StorageMod != null)
             {
+                var action = Actions[Selection.StorageMod];
+                if (action.ActionType != ModActionEnum.Update) return null;
                 var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget);
                 return new ModUpdateInfo(update);
             }
