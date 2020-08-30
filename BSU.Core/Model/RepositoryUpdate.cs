@@ -65,7 +65,7 @@ namespace BSU.Core.Model
                     Abort();
             }
 
-            _setUpCallback(succeeded, failed, Proceed);
+            _setUpCallback(new SetUpArgs(succeeded, failed), Proceed);
         }
 
         private void Abort()
@@ -108,7 +108,7 @@ namespace BSU.Core.Model
                     Abort();
             }
 
-            _preparedCallback(succeeded, errored, Proceed);
+            _preparedCallback(new PreparedArgs(succeeded, errored), Proceed);
         }
 
         private void Commit()
@@ -132,12 +132,48 @@ namespace BSU.Core.Model
             var errored = _updates.Where(u => _exceptions.ContainsKey(u))
                 .Select(u => new Tuple<IUpdateState, Exception>(u, _exceptions[u])).ToList();
             var succeeded = _updates.Where(u => !_exceptions.ContainsKey(u)).ToList();
-            _finishedCallback(succeeded, errored);
+            _finishedCallback(new FinishedArgs(succeeded, errored));
         }
 
-        public delegate void SetUpDelegate(List<DownloadInfo> succeeded, List<DownloadInfo> failed, Action<bool> proceed);
-        public delegate void PreparedDelegate(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed, Action<bool> proceed);
-        public delegate void FinishedDelegate(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed);
+        public delegate void SetUpDelegate(SetUpArgs args, Action<bool> proceed);
+        public delegate void PreparedDelegate(PreparedArgs args, Action<bool> proceed);
+        public delegate void FinishedDelegate(FinishedArgs args);
+    }
+
+    public class FinishedArgs
+    {
+        public List<IUpdateState> Succeeded { get; }
+        public List<Tuple<IUpdateState, Exception>> Failed { get; }
+
+        public FinishedArgs(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed)
+        {
+            Succeeded = succeeded;
+            Failed = failed;
+        }
+    }
+
+    public class PreparedArgs
+    {
+        public List<IUpdateState> Succeeded { get; }
+        public List<Tuple<IUpdateState, Exception>> Failed { get; }
+
+        public PreparedArgs(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed)
+        {
+            Succeeded = succeeded;
+            Failed = failed;
+        }
+    }
+
+    public class SetUpArgs
+    {
+        public List<DownloadInfo> Succeeded { get; }
+        public List<DownloadInfo> Failed { get; }
+
+        public SetUpArgs(List<DownloadInfo> succeeded, List<DownloadInfo> failed)
+        {
+            Succeeded = succeeded;
+            Failed = failed;
+        }
     }
 
     public class DownloadInfo

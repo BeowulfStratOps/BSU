@@ -29,10 +29,10 @@ namespace BSU.Core.Tests
             public RepositoryUpdate.SetUpDelegate GetSetUp(int succeeded, int errored, bool proceed)
             {
                 _calls.Remove(nameof(RepositoryUpdate.SetUpDelegate));
-                void Func(List<DownloadInfo> _succeeded, List<DownloadInfo> _errored, Action<bool> _proceed)
+                void Func(SetUpArgs args, Action<bool> _proceed)
                 {
-                    Assert.Equal(succeeded, _succeeded.Count);
-                    Assert.Equal(errored, _errored.Count);
+                    Assert.Equal(succeeded, args.Succeeded.Count);
+                    Assert.Equal(errored, args.Failed.Count);
                     _calls.Remove(nameof(RepositoryUpdate.SetUpDelegate));
                     _proceed(proceed);
                 }
@@ -41,7 +41,7 @@ namespace BSU.Core.Tests
 
             public RepositoryUpdate.SetUpDelegate GetSetUp()
             {
-                void Func(List<DownloadInfo> _succeeded, List<DownloadInfo> _errored, Action<bool> _proceed)
+                void Func(SetUpArgs args, Action<bool> _proceed)
                 {
                     Assert.False(true);
                 }
@@ -51,10 +51,10 @@ namespace BSU.Core.Tests
             public RepositoryUpdate.PreparedDelegate GetPrepared(int succeeded, int errored, bool proceed)
             {
                 _calls.Add(nameof(RepositoryUpdate.PreparedDelegate));
-                void Func(List<IUpdateState> _succeeded, List<Tuple<IUpdateState, Exception>> _errored, Action<bool> _proceed)
+                void Func(PreparedArgs args, Action<bool> _proceed)
                 {
-                    Assert.Equal(succeeded, _succeeded.Count);
-                    Assert.Equal(errored, _errored.Count);
+                    Assert.Equal(succeeded, args.Succeeded.Count);
+                    Assert.Equal(errored, args.Failed.Count);
                     _calls.Remove(nameof(RepositoryUpdate.PreparedDelegate));
                     _proceed(proceed);
                 }
@@ -63,7 +63,7 @@ namespace BSU.Core.Tests
 
             public RepositoryUpdate.PreparedDelegate GetPrepared()
             {
-                void Func(List<IUpdateState> _succeeded, List<Tuple<IUpdateState, Exception>> _errored, Action<bool> _proceed)
+                void Func(PreparedArgs args, Action<bool> _proceed)
                 {
                     Assert.False(true);
                 }
@@ -73,10 +73,10 @@ namespace BSU.Core.Tests
             public RepositoryUpdate.FinishedDelegate GetFinished(int succeeded, int errored)
             {
                 _calls.Add(nameof(RepositoryUpdate.FinishedDelegate));
-                void Func(List<IUpdateState> _succeeded, List<Tuple<IUpdateState, Exception>> _errored)
+                void Func(FinishedArgs args)
                 {
-                    Assert.Equal(succeeded, _succeeded.Count);
-                    Assert.Equal(errored, _errored.Count);
+                    Assert.Equal(succeeded, args.Succeeded.Count);
+                    Assert.Equal(errored, args.Failed.Count);
                     _calls.Remove(nameof(RepositoryUpdate.FinishedDelegate));
                 }
                 return Func;
@@ -84,7 +84,7 @@ namespace BSU.Core.Tests
 
             public RepositoryUpdate.FinishedDelegate GetFinished()
             {
-                void Func(List<IUpdateState> _succeeded, List<Tuple<IUpdateState, Exception>> _errored)
+                void Func(FinishedArgs args)
                 {
                     Assert.False(true);
                 }

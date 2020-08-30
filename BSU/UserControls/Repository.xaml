@@ -14,6 +14,12 @@
             <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdatePrepared}">
                 <gui:YesNoPopupAction></gui:YesNoPopupAction>
             </i:EventTrigger>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateSetup}">
+                <gui:YesNoPopupAction></gui:YesNoPopupAction>
+            </i:EventTrigger>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateFinished}">
+                <gui:MsgPopupAction></gui:MsgPopupAction>
+            </i:EventTrigger>
         </i:Interaction.Triggers>
         <DockPanel>
             <DockPanel Dock="Top">

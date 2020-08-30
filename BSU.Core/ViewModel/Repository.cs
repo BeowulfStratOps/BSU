@@ -61,9 +61,9 @@ namespace BSU.Core.ViewModel
             _repository.DoUpdate(SetUp, Prepared, Finished);
         }
 
-        private void Finished(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed)
+        private void Finished(FinishedArgs args)
         {
-            var text = $"{succeeded.Count} Mods updated. {failed.Count} Mods failed.";
+            var text = $"{args.Succeeded.Count} Mods updated. {args.Failed.Count} Mods failed.";
             var context = new MsgPopupContext(text, "Update Finished");
             _dispatcher.EnQueueAction(() =>
             {
@@ -71,10 +71,10 @@ namespace BSU.Core.ViewModel
             });
         }
 
-        private void Prepared(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed, Action<bool> proceed)
+        private void Prepared(PreparedArgs args, Action<bool> proceed)
         {
-            var bytes = succeeded.Sum(s => s.GetPrepStats());
-            var text = $"{bytes} Bytes from {succeeded.Count} mods to download. {failed.Count} mods failed. Proceed?";
+            var bytes = args.Succeeded.Sum(s => s.GetPrepStats());
+            var text = $"{bytes} Bytes from {args.Succeeded.Count} mods to download. {args.Failed.Count} mods failed. Proceed?";
             var context = new YesNoPopupContext(text, "Update Prepared");
             _dispatcher.EnQueueAction(() =>
             {
@@ -82,15 +82,15 @@ namespace BSU.Core.ViewModel
             });
         }
 
-        private void SetUp(List<DownloadInfo> succeeded, List<DownloadInfo> failed, Action<bool> proceed)
+        private void SetUp(SetUpArgs args, Action<bool> proceed)
         {
-            if (!failed.Any())
+            if (!args.Failed.Any())
             {
                 _dispatcher.EnQueueAction(() => proceed(true));
                 return;
             }
 
-            var folders = string.Join(", ", failed.Select(f => f.Identifier));
+            var folders = string.Join(", ", args.Failed.Select(f => f.Identifier));
             var text = $"There were errors while creating mod folders: {folders}. Proceed?";
             var context = new YesNoPopupContext(text, "Proceed with Update?");
             _dispatcher.EnQueueAction(() =>
