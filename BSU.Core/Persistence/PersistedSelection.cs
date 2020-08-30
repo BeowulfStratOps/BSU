@@ -6,7 +6,7 @@ namespace BSU.Core.Persistence
     internal class PersistedSelection
     {
         // TODO: might need a way to store download identifier?
-        // TODO: make less implicit regarding DoNothing/Mod/Download
+        // TODO: make more explicit regarding DoNothing/Mod/Download
 
         public string Storage { get; }
         public string Mod { get; }

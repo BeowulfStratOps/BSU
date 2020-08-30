@@ -97,16 +97,10 @@ namespace BSU.Core.Model
 
         public override string ToString() => Identifier;
 
-        public void DoUpdate(Action<Action<bool>> onPrepared)
+        public void DoUpdate(RepositoryUpdate.SetUpDelegate setup, RepositoryUpdate.PreparedDelegate prepared, RepositoryUpdate.FinishedDelegate finished)
         {
-            var repoUpdate = new RepositoryUpdate(
-                (_, __, proceed) => proceed(true), // TODO: user interaction,
-                (succeeded, errored, proceed) => // TODO: pass error
-                {
-                    onPrepared(proceed);
-                },
-                (_, __) => { } // TODO: pass OnFinished
-            );
+            var repoUpdate = new RepositoryUpdate(setup, prepared, finished);
+
             foreach (var mod in Mods)
             {
                 var updateInfo = mod.DoUpdate();
