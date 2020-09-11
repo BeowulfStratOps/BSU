@@ -56,6 +56,7 @@ namespace BSU.Core.Model
             _modelStructure = modelStructure;
             Implementation = implementation;
             Identifier = identifier;
+            DownloadIdentifier = identifier;
             var title = $"Load RepoMod {Identifier}";
             _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
             _loading.OnFinished += error =>
@@ -122,6 +123,7 @@ namespace BSU.Core.Model
         }
 
         private bool _allModsLoaded;
+        private string _downloadIdentifier;
 
         public bool AllModsLoaded
         {
@@ -143,7 +145,7 @@ namespace BSU.Core.Model
 
             Logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
-            var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.Selection, Identifier);
+            var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.Selection);
             if (selection == Selection) return;
 
             Logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
@@ -162,7 +164,7 @@ namespace BSU.Core.Model
             if (Selection.StorageMod != null)
             {
                 var action = Actions[Selection.StorageMod];
-                if (action.ActionType != ModActionEnum.Update) return null;
+                if (action.ActionType != ModActionEnum.Update && action.ActionType != ModActionEnum.ContinueUpdate) return null;
                 var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget);
                 return new ModUpdateInfo(update);
             }
@@ -170,19 +172,32 @@ namespace BSU.Core.Model
             if (Selection.DownloadStorage != null)
             {
                 var promise = new Promise<IUpdateState>();
-                Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, Selection.DownloadIdentifier,
+                Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier,
                     promise.Error, promise.Set);
-                var downloadInfo = new DownloadInfo(this, Selection.DownloadIdentifier, promise);
+                var downloadInfo = new DownloadInfo(this, DownloadIdentifier, promise);
                 return new ModUpdateInfo(downloadInfo);
             }
 
             throw new InvalidOperationException();
         }
 
+        public string DownloadIdentifier
+        {
+            get => _downloadIdentifier;
+            set
+            {
+                if (value == _downloadIdentifier) return;
+                _downloadIdentifier = value;
+                DownloadIdentifierChanged?.Invoke();
+            }
+        }
+
         public override string ToString() => Identifier;
 
         public event Action<IModelStorageMod> ActionAdded;
         public event Action SelectionChanged;
+
+        public event Action DownloadIdentifierChanged;
     }
 
     internal class ModUpdateInfo

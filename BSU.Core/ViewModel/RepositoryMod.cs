@@ -15,6 +15,9 @@ namespace BSU.Core.ViewModel
 
         public bool IsLoading { private set; get; }
 
+        private string _downloadIdentifier = "";
+        private bool _showDownloadIdentifier;
+
         public ObservableCollection<ModAction> Actions { get; } = new ObservableCollection<ModAction>();
 
         private ModAction _selection;
@@ -25,11 +28,15 @@ namespace BSU.Core.ViewModel
             {
                 if (_selection == value) return;
                 _selection = value;
+                if (_selection.Selection?.DownloadStorage != null)
+                {
+                    ShowDownloadIdentifier = true;
+                }
+                else
+                    ShowDownloadIdentifier = false;
                 OnPropertyChanged();
             }
         }
-
-        //public override event PropertyChangedEventHandler PropertyChanged;
 
         internal RepositoryMod(IModelRepositoryMod mod, IModelStructure structure)
         {
@@ -44,9 +51,14 @@ namespace BSU.Core.ViewModel
             }
 
             Selection = new ModAction(mod.Selection, mod.Actions);
+            DownloadIdentifier = mod.DownloadIdentifier;
             mod.SelectionChanged += () =>
             {
                 Selection = new ModAction(mod.Selection, mod.Actions);
+            };
+            mod.DownloadIdentifierChanged += () =>
+            {
+                DownloadIdentifier = mod.DownloadIdentifier;
             };
             mod.StateChanged += () =>
             {
@@ -70,7 +82,7 @@ namespace BSU.Core.ViewModel
         internal void AddStorage(IModelStorage storage)
         {
             if (!storage.CanWrite) return;
-            Actions.Add(new ModAction(new RepositoryModActionSelection(storage, _mod.ToString()), _mod.Actions));
+            Actions.Add(new ModAction(new RepositoryModActionSelection(storage), _mod.Actions));
         }
 
         private void ChangeSelection()
@@ -79,5 +91,28 @@ namespace BSU.Core.ViewModel
         }
 
         public DelegateCommand SelectionChanged { get; }
+
+        public string DownloadIdentifier
+        {
+            get => _downloadIdentifier;
+            set
+            {
+                if (value == _downloadIdentifier) return;
+                _mod.DownloadIdentifier = value;
+                _downloadIdentifier = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowDownloadIdentifier
+        {
+            get => _showDownloadIdentifier;
+            private set
+            {
+                if (value == _showDownloadIdentifier) return;
+                _showDownloadIdentifier = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

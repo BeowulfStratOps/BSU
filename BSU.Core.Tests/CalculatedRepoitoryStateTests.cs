@@ -37,7 +37,7 @@ namespace BSU.Core.Tests
             if (hasDownloadSelected)
             {
                 var download = new Mock<IModelStorage>(MockBehavior.Strict);
-                var selection = new RepositoryModActionSelection(download.Object, "id");
+                var selection = new RepositoryModActionSelection(download.Object);
                 result.Setup(m => m.Selection).Returns(selection);
                 result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
                 return result.Object;

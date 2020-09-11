@@ -50,11 +50,11 @@ namespace BSU.Core.Tests
             var repoMod = new RepositoryMod(worker, new MockRepositoryMod(), "asdf", worker,
                 state, new RelatedActionsBag(), new MockModelStructure());
             worker.DoWork();
-            repoMod.Selection = new RepositoryModActionSelection(storage.Object, "id");
+            repoMod.Selection = new RepositoryModActionSelection(storage.Object);
             repoMod.ChangeAction(storageMod2.Object, ModActionEnum.Use);
             repoMod.AllModsLoaded = true;
 
-            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storage.Object, "id"));
+            Assert.Equal(repoMod.Selection, new RepositoryModActionSelection(storage.Object));
         }
 
         [Fact]

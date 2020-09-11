@@ -75,14 +75,14 @@ namespace BSU.Core.Model
         }
 
         internal static RepositoryModActionSelection AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
-            IModelStructure modelStructure, PersistedSelection usedMod, string repositoryModIdentifier)
+            IModelStructure modelStructure, PersistedSelection usedMod)
         {
             if (usedMod != null)
             {
                 if (usedMod.Mod == null && usedMod.Storage == null) return new RepositoryModActionSelection();
 
                 var storage = modelStructure.GetStorages().FirstOrDefault(s => s.GetStorageIdentifier() == usedMod);
-                if (storage != null) return new RepositoryModActionSelection(storage, repositoryModIdentifier);
+                if (storage != null) return new RepositoryModActionSelection(storage);
 
                 var storageMod = actions.Keys.FirstOrDefault(mod => mod.GetStorageModIdentifiers() == usedMod);
                 if (storageMod != null)
@@ -113,7 +113,7 @@ namespace BSU.Core.Model
                 var downloadStorage = modelStructure.GetStorages().FirstOrDefault(s => s.CanWrite);
                 if (downloadStorage != null)
                 {
-                    return new RepositoryModActionSelection(downloadStorage, repositoryModIdentifier);
+                    return new RepositoryModActionSelection(downloadStorage);
                 }
             }
 

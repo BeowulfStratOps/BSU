@@ -42,7 +42,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                null, "");
+                null);
 
             Assert.Equal(storageMod, selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -58,7 +58,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                null, "");
+                null);
 
             Assert.Null(selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -74,7 +74,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(false, mods, structure,
-                null, "");
+                null);
 
             Assert.Null(selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -90,7 +90,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                storageMod.GetStorageModIdentifiers(), "");
+                storageMod.GetStorageModIdentifiers());
 
             Assert.Equal(storageMod, selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -106,7 +106,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                storageMod.GetStorageModIdentifiers(), "");
+                storageMod.GetStorageModIdentifiers());
 
             Assert.Equal(storageMod, selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -123,7 +123,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                null, "");
+                null);
 
             Assert.Equal(storageMod, selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -140,7 +140,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                null, "");
+                null);
 
             Assert.Null(selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -157,7 +157,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                storageMod.GetStorageModIdentifiers(), "");
+                storageMod.GetStorageModIdentifiers());
 
             Assert.Equal(storageMod, selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -180,7 +180,7 @@ namespace BSU.Core.Tests
             structure.Storages.Add(storage.Object);
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                storage.Object.GetStorageIdentifier(), "");
+                storage.Object.GetStorageIdentifier());
 
             Assert.Equal(storage.Object, selection?.DownloadStorage);
             Assert.Null(selection?.StorageMod);
@@ -197,7 +197,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                new PersistedSelection(null, null), "");
+                new PersistedSelection(null, null));
 
             Assert.True(selection?.DoNothing);
             Assert.Null(selection?.StorageMod);
@@ -214,7 +214,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(false, mods, structure,
-                new PersistedSelection("doesn't", "exist"), "");
+                new PersistedSelection("doesn't", "exist"));
 
             Assert.Null(selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -230,7 +230,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                new PersistedSelection("doesn't", "exist"), "");
+                new PersistedSelection("doesn't", "exist"));
 
             Assert.Equal(storageMod, selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -249,7 +249,7 @@ namespace BSU.Core.Tests
             structure.Storages.Add(storage.Object);
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                null, "");
+                null);
 
             Assert.Null(selection?.StorageMod);
             Assert.Equal(storage.Object, selection?.DownloadStorage);
@@ -268,7 +268,7 @@ namespace BSU.Core.Tests
             structure.Storages.Add(storage.Object);
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                null, "");
+                null);
 
             Assert.Null(selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);

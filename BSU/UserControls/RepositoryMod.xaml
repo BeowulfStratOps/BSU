@@ -9,6 +9,9 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
     <Border Margin="5">
+        <Border.Resources>
+            <BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter" />
+        </Border.Resources>
         <DockPanel>
             <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
                 <TextBlock FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
@@ -27,6 +30,10 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <DockPanel Visibility="{Binding ShowDownloadIdentifier, Converter={StaticResource VisibleIfTrueConverter}}">
+                    <TextBlock DockPanel.Dock="Left">Folder:</TextBlock>
+                    <TextBox Text="{Binding DownloadIdentifier}"></TextBox>
+                </DockPanel>
                 <TextBlock Foreground="Red" FontStyle="Italic">Stuff's wrong yo</TextBlock>
             </StackPanel>
         </DockPanel>

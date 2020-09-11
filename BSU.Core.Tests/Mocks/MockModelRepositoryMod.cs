@@ -13,6 +13,7 @@ namespace BSU.Core.Tests.Mocks
         public Dictionary<IModelStorageMod, ModAction> Actions { get; }
         public bool AllModsLoaded { get; set; }
         public IRepositoryMod Implementation { get; }
+        public string DownloadIdentifier { get; set; }
         public event Action StateChanged;
         public RepositoryModState GetState()
         {
@@ -26,6 +27,8 @@ namespace BSU.Core.Tests.Mocks
 
         public event Action<IModelStorageMod> ActionAdded;
         public event Action SelectionChanged;
+        public event Action DownloadIdentifierChanged;
+
         public ModUpdateInfo DoUpdate()
         {
             throw new NotImplementedException();
