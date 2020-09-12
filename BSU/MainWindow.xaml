@@ -8,34 +8,61 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
         Closing="MainWindow_OnClosing" WindowState="Maximized">
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo></TaskbarItemInfo>
+    </Window.TaskbarItemInfo>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="2*"/>
-        </Grid.ColumnDefinitions>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <ItemsControl  ItemsSource="{Binding Path=Repositories}">
-                <ItemsControl.ItemTemplate>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="5"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <DockPanel>
+            <Expander DockPanel.Dock="Right">
+                <Expander.Header>
+                    <TextBlock>Storage</TextBlock>
+                </Expander.Header>
+                <ScrollViewer>
+                    <StackPanel>
+                        <ItemsControl ItemsSource="{Binding Path=Storages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <local:Storage></local:Storage>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE710;" Margin="2" HorizontalAlignment="Left" Command="{Binding AddStorage}"></Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Expander>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <ItemsControl  ItemsSource="{Binding Path=Repositories}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <local:Repository></local:Repository>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE710;" Margin="2" HorizontalAlignment="Left" Command="{Binding AddRepository}"></Button>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+        <Expander Grid.Row="2" Grid.Column="0">
+            <Expander.Header>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock><Run>123</Run> Jobs </TextBlock>
+                    <ProgressBar Margin="5,0" Value="40" Minimum="0" Maximum="100" Width="150"></ProgressBar>
+                </StackPanel>
+            </Expander.Header>
+            <ListBox MinHeight="100" ItemsSource="{Binding Path=Jobs}">
+                <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <local:Repository></local:Repository>
+                        <local:Job></local:Job>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
-        <ListBox Grid.Column="1" ItemsSource="{Binding Path=Storages}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <local:Storage></local:Storage>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <ListBox Grid.Column="2" ItemsSource="{Binding Path=Jobs}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <local:Job></local:Job>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Expander>
+        <GridSplitter Grid.Row="1" Height="5" VerticalAlignment="Center" HorizontalAlignment="Stretch"></GridSplitter>
     </Grid>
 </Window>

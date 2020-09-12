@@ -7,15 +7,31 @@
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Storage}">
-    <WrapPanel>
-        <TextBlock Text="{Binding Path=Name}"></TextBlock>
-        <!-- <local:JobSlot DataContext="{Binding Path=Loading}"></local:JobSlot> -->
-        <ListBox ItemsSource="{Binding Path=Mods}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <local:StorageMod></local:StorageMod>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </WrapPanel>
+    <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
+        <DockPanel>
+            <DockPanel Dock="Top">
+                <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                    <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
+                    <TextBlock Text="[Status]"></TextBlock>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE74D;" Margin="2" Command="{Binding Delete}"></Button>
+                </StackPanel>
+            </DockPanel>
+            <Expander>
+                <Expander.Header>
+                    <TextBlock>Mods</TextBlock>
+                </Expander.Header>
+                <Border BorderBrush="Black" BorderThickness="1">
+                    <ItemsControl ItemsSource="{Binding Path=Mods}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <local:StorageMod></local:StorageMod>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </Expander>
+        </DockPanel>
+    </Border>
 </UserControl>

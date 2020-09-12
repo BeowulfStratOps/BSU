@@ -28,6 +28,7 @@
                     <TextBlock Text="{Binding Path=CalculatedState}"></TextBlock>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE74D;" Margin="2" Command="{Binding Delete}"></Button>
                     <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE896;" Margin="2" Command="{Binding Update}"></Button>
                     <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xEDB5;" Margin="2" IsEnabled="False"></Button>
                 </StackPanel>
