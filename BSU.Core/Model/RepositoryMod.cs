@@ -139,7 +139,7 @@ namespace BSU.Core.Model
 
         private void DoAutoSelection()
         {
-            // never change a selection once it was made. Could effectively be clickjacking on the user
+            // never change a selection once it was made. Would be clickjacking on the user
             // TODO: check if a better option became available and notify user
             if (Selection != null) return;
 

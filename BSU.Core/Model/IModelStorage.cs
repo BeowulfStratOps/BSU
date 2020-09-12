@@ -15,5 +15,6 @@ namespace BSU.Core.Model
         bool CanWrite { get; }
         bool IsLoading { get; }
         PersistedSelection GetStorageIdentifier();
+        bool HasMod(string downloadIdentifier);
     }
 }

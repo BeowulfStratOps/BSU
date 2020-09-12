@@ -34,7 +34,7 @@
                     <TextBlock DockPanel.Dock="Left">Folder:</TextBlock>
                     <TextBox Text="{Binding DownloadIdentifier}"></TextBox>
                 </DockPanel>
-                <TextBlock Foreground="Red" FontStyle="Italic">Stuff's wrong yo</TextBlock>
+                <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
             </StackPanel>
         </DockPanel>
     </Border>

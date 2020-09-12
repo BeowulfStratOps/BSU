@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
@@ -28,6 +29,7 @@ namespace BSU.Core.ViewModel
             {
                 if (_selection == value) return;
                 _selection = value;
+                _mod.Selection = value?.Selection;
                 if (_selection.Selection?.DownloadStorage != null)
                 {
                     ShowDownloadIdentifier = true;
@@ -35,6 +37,7 @@ namespace BSU.Core.ViewModel
                 else
                     ShowDownloadIdentifier = false;
                 OnPropertyChanged();
+                UpdateErrorText();
             }
         }
 
@@ -87,11 +90,45 @@ namespace BSU.Core.ViewModel
 
         private void ChangeSelection()
         {
-            _mod.Selection = _selection?.Selection;
+            //_mod.Selection = _selection?.Selection;
+        }
+
+        private void UpdateErrorText()
+        {
+            if (_mod.Selection == null)
+            {
+                ErrorText = "Select an action";
+                return;
+            }
+            
+            if (_mod.Selection.DoNothing)
+            {
+                ErrorText = "";
+            }
+
+            if (_mod.Selection.DownloadStorage != null)
+            {
+                var inUse = _mod.Selection.DownloadStorage.HasMod(DownloadIdentifier);
+                ErrorText = inUse ? "Name in use" : "";
+            }
+            
+            if (_mod.Selection.StorageMod != null)
+            {
+                var action = _mod.Actions[_mod.Selection.StorageMod];
+                if (!action.Conflicts.Any())
+                {
+                    ErrorText = "";
+                    return;
+                }
+
+                var conflicts = action.Conflicts.Select(c => $"{c.Parent}:{c}"); // TODO: include repo identifier
+                ErrorText = "Conflicts: " + string.Join(", ", conflicts);
+            }
         }
 
         public DelegateCommand SelectionChanged { get; }
 
+        // TODO: validate folder name: invalid chars, leading '@'
         public string DownloadIdentifier
         {
             get => _downloadIdentifier;
@@ -101,6 +138,7 @@ namespace BSU.Core.ViewModel
                 _mod.DownloadIdentifier = value;
                 _downloadIdentifier = value;
                 OnPropertyChanged();
+                UpdateErrorText();
             }
         }
 
@@ -111,6 +149,18 @@ namespace BSU.Core.ViewModel
             {
                 if (value == _showDownloadIdentifier) return;
                 _showDownloadIdentifier = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _errorText;
+        public string ErrorText
+        {
+            get => _errorText;
+            private set
+            {
+                if (value == _errorText) return;
+                _errorText = value;
                 OnPropertyChanged();
             }
         }

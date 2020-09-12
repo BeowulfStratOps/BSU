@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
@@ -88,6 +89,12 @@ namespace BSU.Core.Model
         public PersistedSelection GetStorageIdentifier()
         {
             return new PersistedSelection(Identifier, null);
+        }
+
+        public bool HasMod(string downloadIdentifier)
+        {
+            // TODO: meh?
+            return Mods.Any(m => m.GetStorageModIdentifiers().Mod == downloadIdentifier);
         }
 
         public override string ToString() => Identifier;
