@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using BSU.Core.Model;
+using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
@@ -12,9 +13,9 @@ namespace BSU.Core.ViewModel
         private readonly IActionQueue _dispatcher;
         public string Name { get; }
 
-        public YesNoInteractionRequest UpdatePrepared { get; }
-        public YesNoInteractionRequest UpdateSetup { get; }
-        public MsgInteractionRequest UpdateFinished { get; }
+        public InteractionRequest<MsgPopupContext, bool> UpdatePrepared { get; } = new InteractionRequest<MsgPopupContext, bool>();
+        public InteractionRequest<MsgPopupContext, bool> UpdateSetup { get; } = new InteractionRequest<MsgPopupContext, bool>();
+        public InteractionRequest<MsgPopupContext, object> UpdateFinished { get; } = new InteractionRequest<MsgPopupContext, object>();
 
         private CalculatedRepositoryState _calculatedState;
 
@@ -44,10 +45,6 @@ namespace BSU.Core.ViewModel
             };
             Name = repository.ToString();
             repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, structure));
-
-            UpdateSetup = new YesNoInteractionRequest();
-            UpdatePrepared = new YesNoInteractionRequest();
-            UpdateFinished = new MsgInteractionRequest();
         }
 
         private bool CanUpdate()
@@ -67,7 +64,7 @@ namespace BSU.Core.ViewModel
             var context = new MsgPopupContext(text, "Update Finished");
             _dispatcher.EnQueueAction(() =>
             {
-                UpdateFinished.Raise(context);
+                UpdateFinished.Raise(context, o => { });
             });
         }
 
@@ -75,7 +72,7 @@ namespace BSU.Core.ViewModel
         {
             var bytes = args.Succeeded.Sum(s => s.GetPrepStats());
             var text = $"{bytes} Bytes from {args.Succeeded.Count} mods to download. {args.Failed.Count} mods failed. Proceed?";
-            var context = new YesNoPopupContext(text, "Update Prepared");
+            var context = new MsgPopupContext(text, "Update Prepared");
             _dispatcher.EnQueueAction(() =>
             {
                 UpdatePrepared.Raise(context, proceed);
@@ -92,7 +89,7 @@ namespace BSU.Core.ViewModel
 
             var folders = string.Join(", ", args.Failed.Select(f => f.Identifier));
             var text = $"There were errors while creating mod folders: {folders}. Proceed?";
-            var context = new YesNoPopupContext(text, "Proceed with Update?");
+            var context = new MsgPopupContext(text, "Proceed with Update?");
             _dispatcher.EnQueueAction(() =>
             {
                 UpdateSetup.Raise(context, proceed);

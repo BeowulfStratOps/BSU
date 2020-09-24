@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace BSU.Core.ViewModel
+namespace BSU.Core.ViewModel.Util
 {
     public class DelegateCommand : ICommand
     {

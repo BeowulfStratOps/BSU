@@ -7,18 +7,19 @@
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:gui="clr-namespace:BSU.GUI"
+             xmlns:actions="clr-namespace:BSU.GUI.Actions"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
         <i:Interaction.Triggers>
             <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdatePrepared}">
-                <gui:YesNoPopupAction></gui:YesNoPopupAction>
+                <actions:YesNoPopupAction></actions:YesNoPopupAction>
             </i:EventTrigger>
             <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateSetup}">
-                <gui:YesNoPopupAction></gui:YesNoPopupAction>
+                <actions:YesNoPopupAction></actions:YesNoPopupAction>
             </i:EventTrigger>
             <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateFinished}">
-                <gui:MsgPopupAction></gui:MsgPopupAction>
+                <actions:MsgPopupAction></actions:MsgPopupAction>
             </i:EventTrigger>
         </i:Interaction.Triggers>
         <DockPanel>

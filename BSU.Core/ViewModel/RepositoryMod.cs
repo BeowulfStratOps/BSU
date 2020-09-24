@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
+using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
