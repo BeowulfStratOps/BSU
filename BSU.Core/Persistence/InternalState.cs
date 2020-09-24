@@ -35,10 +35,10 @@ namespace BSU.Core.Persistence
                 new Tuple<IRepositoryEntry, IRepositoryState>(entry, new RepositoryState(entry, _settings.Store)));
         }
         
-        public void RemoveRepo(IRepositoryEntry repo)
+        public void RemoveRepository(string repositoryIdentifier)
         {
-            Logger.Debug("Removing repo {0}", repo.Name);
-            var repoEntry = _settings.Repositories.Single(r => r.Name == repo.Name);
+            Logger.Debug("Removing repo {0}", repositoryIdentifier);
+            var repoEntry = _settings.Repositories.Single(r => r.Name == repositoryIdentifier);
             _settings.Repositories.Remove(repoEntry);
             _settings.Store();
         }
@@ -61,10 +61,10 @@ namespace BSU.Core.Persistence
             return new StorageState(storage, _settings.Store);
         }
         
-        public void RemoveStorage(IStorageEntry storage)
+        public void RemoveStorage(string storageIdentifier)
         {
-            Logger.Debug("Removing storage {0}", storage.Name);
-            var storageEntry = _settings.Storages.Single(s => s.Name == storage.Name);
+            Logger.Debug("Removing storage {0}", storageIdentifier);
+            var storageEntry = _settings.Storages.Single(s => s.Name == storageIdentifier);
             _settings.Storages.Remove(storageEntry);
             _settings.Store();
         }

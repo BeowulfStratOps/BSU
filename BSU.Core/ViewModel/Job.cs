@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
+using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {

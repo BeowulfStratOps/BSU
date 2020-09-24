@@ -21,6 +21,9 @@
             <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateFinished}">
                 <actions:MsgPopupAction></actions:MsgPopupAction>
             </i:EventTrigger>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding DeleteInteraction}">
+                <actions:YesNoCancelPopupAction></actions:YesNoCancelPopupAction>
+            </i:EventTrigger>
         </i:Interaction.Triggers>
         <DockPanel>
             <DockPanel Dock="Top">

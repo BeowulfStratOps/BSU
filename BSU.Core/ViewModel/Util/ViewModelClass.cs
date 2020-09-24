@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
 
-namespace BSU.Core.ViewModel
+namespace BSU.Core.ViewModel.Util
 {
     public abstract class ViewModelClass : INotifyPropertyChanged
     {

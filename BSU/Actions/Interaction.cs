@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Windows;
-using BSU.Core.ViewModel;
 using BSU.Core.ViewModel.Util;
 using Microsoft.Xaml.Behaviors;
 
-namespace BSU.GUI
+namespace BSU.GUI.Actions
 {
     public abstract class Interaction<TViewModel, TCallback> : TriggerAction<DependencyObject>
     {

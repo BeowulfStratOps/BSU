@@ -5,8 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BSU.GUI.UserControls"
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:gui="clr-namespace:BSU.GUI"
+        xmlns:actions="clr-namespace:BSU.GUI.Actions"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
+        Title="BSO Sync Utility" Height="450" Width="800" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
         Closing="MainWindow_OnClosing" WindowState="Maximized">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo></TaskbarItemInfo>
@@ -17,6 +20,14 @@
             <RowDefinition Height="5"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
+        <i:Interaction.Triggers>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding AddRepositoryInteraction}">
+                <actions:AddRepositoryAction></actions:AddRepositoryAction>
+            </i:EventTrigger>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding AddStorageInteraction}">
+                <actions:AddStorageAction></actions:AddStorageAction>
+            </i:EventTrigger>
+        </i:Interaction.Triggers>
         <DockPanel>
             <Expander DockPanel.Dock="Right">
                 <Expander.Header>

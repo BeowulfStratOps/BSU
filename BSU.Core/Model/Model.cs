@@ -12,7 +12,7 @@ namespace BSU.Core.Model
     {
         void EnQueueAction(Action action);
     }
-    internal class Model : IModelStructure
+    internal class Model : IModel
     {
         private readonly IJobManager _jobManager;
         private readonly Types _types;
@@ -69,7 +69,9 @@ namespace BSU.Core.Model
         }
 
         public event Action<Repository> RepositoryAdded;
+        public event Action<IModelRepository> RepositoryDeleted;
         public event Action<Storage> StorageAdded;
+        public event Action<IModelStorage> StorageDeleted;
 
         public void AddRepository(string type, string url, string name)
         {
@@ -103,6 +105,22 @@ namespace BSU.Core.Model
         public IEnumerable<IModelRepositoryMod> GetAllRepositoryMods()
         {
             return Repositories.SelectMany(repository => repository.Mods);
+        }
+
+        public void DeleteRepository(IModelRepository repository, bool removeMods)
+        {
+            if (removeMods) throw new NotImplementedException();
+            Repositories.Remove(repository);
+            PersistentState.RemoveRepository(repository.ToString());
+            RepositoryDeleted?.Invoke(repository);
+        }
+
+        public void DeleteStorage(IModelStorage storage, bool removeMods)
+        {
+            if (removeMods) throw new NotImplementedException();
+            Storages.Remove(storage);
+            PersistentState.RemoveStorage(storage.ToString());
+            StorageDeleted?.Invoke(storage);
         }
     }
 }

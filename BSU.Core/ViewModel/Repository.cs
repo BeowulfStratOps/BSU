@@ -10,6 +10,7 @@ namespace BSU.Core.ViewModel
     public class Repository : ViewModelClass
     {
         private readonly IModelRepository _repository;
+        private readonly IModel _model;
         private readonly IActionQueue _dispatcher;
         public string Name { get; }
 
@@ -33,10 +34,12 @@ namespace BSU.Core.ViewModel
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new ObservableCollection<RepositoryMod>();
 
-        internal Repository(IModelRepository repository, IModelStructure structure, IActionQueue dispatcher)
+        internal Repository(IModelRepository repository, IModel model, IActionQueue dispatcher)
         {
             _repository = repository;
+            _model = model;
             _dispatcher = dispatcher;
+            Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
             CalculatedState = repository.CalculatedState;
             repository.CalculatedStateChanged += () =>
@@ -44,7 +47,27 @@ namespace BSU.Core.ViewModel
                 CalculatedState = repository.CalculatedState;
             };
             Name = repository.ToString();
-            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, structure));
+            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model));
+        }
+
+        private void DoDelete()
+        {
+            // TODO: this doesn't look like it belongs here
+            var text = $@"Removing repository {Name}. Do you want to remove mods used by this repository?
+
+Yes - Delete mods if they are not in use by any other repository
+No - Keep local mods
+Cancel - Do not remove this repository";
+            
+            var context = new MsgPopupContext(text, "Remove Repository");
+            _dispatcher.EnQueueAction(() =>
+            {
+                DeleteInteraction.Raise(context, b =>
+                {
+                    if (b == null) return;
+                    _model.DeleteRepository(_repository, (bool) b);
+                });
+            });
         }
 
         private bool CanUpdate()
@@ -97,5 +120,8 @@ namespace BSU.Core.ViewModel
         }
 
         public DelegateCommand Update { get; }
+        
+        public DelegateCommand Delete { get; }
+        public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
     }
 }

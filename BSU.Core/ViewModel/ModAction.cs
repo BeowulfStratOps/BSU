@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using BSU.Core.Model;
+using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {

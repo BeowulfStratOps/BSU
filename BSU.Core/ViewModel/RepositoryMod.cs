@@ -89,6 +89,13 @@ namespace BSU.Core.ViewModel
             Actions.Add(new ModAction(new RepositoryModActionSelection(storage), _mod.Actions));
         }
 
+        internal void RemoveStorage(IModelStorage storage)
+        {
+            if (!storage.CanWrite) return;
+            var selection = Actions.Single(a => a.Selection.DownloadStorage == storage);
+            Actions.Remove(selection);
+        }
+
         private void ChangeSelection()
         {
             //_mod.Selection = _selection?.Selection;
