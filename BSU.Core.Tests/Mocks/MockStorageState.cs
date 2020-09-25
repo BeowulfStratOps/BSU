@@ -1,4 +1,5 @@
-﻿using BSU.Core.Persistence;
+﻿using System;
+using BSU.Core.Persistence;
 
 namespace BSU.Core.Tests.Mocks
 {
@@ -6,5 +7,6 @@ namespace BSU.Core.Tests.Mocks
     {
         private readonly MockStorageModState _modState = new MockStorageModState();
         public IStorageModState GetMod(string identifier) => _modState;
+        public Guid Identifier { get; }
     }
 }

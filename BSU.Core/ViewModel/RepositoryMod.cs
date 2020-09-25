@@ -46,7 +46,7 @@ namespace BSU.Core.ViewModel
         {
             IsLoading = mod.GetState().IsLoading;
             _mod = mod;
-            Name = mod.ToString();
+            Name = mod.Identifier;
             Actions.Add(new ModAction(new RepositoryModActionSelection(), _mod.Actions));
             mod.ActionAdded += AddAction;
             foreach (var target in mod.Actions.Keys)

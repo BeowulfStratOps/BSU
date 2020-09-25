@@ -14,6 +14,8 @@ namespace BSU.Core.Model
         event Action<IModelStorageMod> ModAdded;
         bool CanWrite { get; }
         bool IsLoading { get; }
+        Guid Identifier { get; }
+        string Name { get; }
         PersistedSelection GetStorageIdentifier();
         bool HasMod(string downloadIdentifier);
     }

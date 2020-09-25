@@ -16,7 +16,7 @@ namespace BSU.Core.Model
         
         private readonly IStorageModState _internalState;
         private readonly IJobManager _jobManager;
-        private readonly string _parentIdentifier;
+        private readonly Guid _parentIdentifier;
         public bool CanWrite { get; }
         public string Identifier { get; }
         private IActionQueue ActionQueue { get; }
@@ -51,7 +51,7 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(IActionQueue actionQueue, IStorageMod implementation, string identifier, UpdateTarget updateTarget,
-            IStorageModState internalState, IJobManager jobManager, string parentIdentifier, bool canWrite)
+            IStorageModState internalState, IJobManager jobManager, Guid parentIdentifier, bool canWrite)
         {
             _internalState = internalState;
             _jobManager = jobManager;

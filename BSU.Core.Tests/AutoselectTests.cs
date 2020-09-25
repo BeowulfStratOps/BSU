@@ -24,7 +24,7 @@ namespace BSU.Core.Tests
             if (hasConflict) modAction.Conflicts.Add(new ModAction(ModActionEnum.Use, null, null, new HashSet<ModAction>()));
 
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            var storageModIdentifier = new PersistedSelection(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+            var storageModIdentifier = new PersistedSelection(Guid.NewGuid(), Guid.NewGuid().ToString());
             storageMod.Setup(s => s.GetStorageModIdentifiers()).Returns(storageModIdentifier);
 
             mods.Add(storageMod.Object, modAction);
@@ -174,7 +174,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var storage = new Mock<IModelStorage>(MockBehavior.Strict);
-            storage.Setup(s => s.GetStorageIdentifier()).Returns(new PersistedSelection("bla", null));
+            storage.Setup(s => s.GetStorageIdentifier()).Returns(new PersistedSelection(Guid.Empty, null));
 
             storage.Setup(s => s.CanWrite).Returns(true);
             structure.Storages.Add(storage.Object);
@@ -214,7 +214,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(false, mods, structure,
-                new PersistedSelection("doesn't", "exist"));
+                new PersistedSelection(Guid.Empty, "exist"));
 
             Assert.Null(selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);
@@ -230,7 +230,7 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                new PersistedSelection("doesn't", "exist"));
+                new PersistedSelection(Guid.Empty, "exist"));
 
             Assert.Equal(storageMod, selection?.StorageMod);
             Assert.Null(selection?.DownloadStorage);

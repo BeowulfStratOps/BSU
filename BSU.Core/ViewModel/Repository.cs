@@ -39,6 +39,7 @@ namespace BSU.Core.ViewModel
             _repository = repository;
             _model = model;
             _dispatcher = dispatcher;
+            Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
             CalculatedState = repository.CalculatedState;
@@ -46,7 +47,7 @@ namespace BSU.Core.ViewModel
             {
                 CalculatedState = repository.CalculatedState;
             };
-            Name = repository.ToString();
+            Name = repository.Name;
             repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model));
         }
 
@@ -123,5 +124,6 @@ Cancel - Do not remove this repository";
         
         public DelegateCommand Delete { get; }
         public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
+        public Guid Identifier { get; }
     }
 }

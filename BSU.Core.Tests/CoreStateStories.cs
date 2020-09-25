@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.Hashes;
@@ -36,7 +37,7 @@ namespace BSU.Core.Tests
             }
 
             var state = new MockStorageModState {UpdateTarget = stateTarget};
-            var storageMod = new StorageMod(worker, mockStorage, "mystorage", null, state, worker, "parent", true);
+            var storageMod = new StorageMod(worker, mockStorage, "mystorage", null, state, worker, Guid.Empty, true);
             structure.StorageMods.Add(storageMod);
             return (mockStorage, storageMod);
         }
@@ -133,7 +134,7 @@ namespace BSU.Core.Tests
             mockStorage.SetFile("/addons/1_1.pbo", "1");
             mockStorage.SetFile("/addons/1_2.pbo", "2");
             var state = new MockStorageModState {UpdateTarget = new UpdateTarget(versionHash, "")};
-            var storageMod = new StorageMod(worker, mockStorage, "mystorage", null, state, worker, "parent", true);
+            var storageMod = new StorageMod(worker, mockStorage, "mystorage", null, state, worker, Guid.Empty, true);
             structure.StorageMods.Add(storageMod);
             matchMaker.AddStorageMod(storageMod);
             worker.DoWork();
@@ -216,7 +217,7 @@ namespace BSU.Core.Tests
             mockStorage.SetFile("/addons/1_1.pbo", "1");
             mockStorage.SetFile("/addons/1_2.pbo", "2");
             var state = new MockStorageModState {UpdateTarget = new UpdateTarget(versionHash, "")};
-            var storageMod = new StorageMod(worker, mockStorage, "mystorage", null, state, worker, "parent", true);
+            var storageMod = new StorageMod(worker, mockStorage, "mystorage", null, state, worker, Guid.Empty, true);
             structure.StorageMods.Add(storageMod);
             matchMaker.AddStorageMod(storageMod);
             worker.DoWork();

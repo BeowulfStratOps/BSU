@@ -24,7 +24,7 @@ namespace BSU.Core.Tests
             }
 
             var state = new MockStorageModState {UpdateTarget = stateTarget};
-            var storageMod = new StorageMod(worker, mockStorage, "mystorage", updateTarget, state, worker, "parent", true);
+            var storageMod = new StorageMod(worker, mockStorage, "mystorage", updateTarget, state, worker, Guid.Empty, true);
             return (mockStorage, storageMod, worker);
         }
 

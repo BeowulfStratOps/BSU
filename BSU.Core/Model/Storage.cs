@@ -14,7 +14,8 @@ namespace BSU.Core.Model
         private readonly IJobManager _jobManager;
         private readonly IMatchMaker _matchMaker;
         public IStorage Implementation { get; }
-        public string Identifier { get; }
+        public string Name { get; }
+        public Guid Identifier { get; }
         public string Location { get; }
         public Uid Uid { get; } = new Uid();
         public List<IModelStorageMod> Mods { private set; get; } = new List<IModelStorageMod>(); // TODO: readonly
@@ -23,14 +24,15 @@ namespace BSU.Core.Model
 
         private readonly IActionQueue _actionQueue;
 
-        public Storage(IStorage implementation, string identifier, string location, IStorageState internalState, IJobManager jobManager, IMatchMaker matchMaker, IActionQueue actionQueue)
+        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IJobManager jobManager, IMatchMaker matchMaker, IActionQueue actionQueue)
         {
             _internalState = internalState;
             _jobManager = jobManager;
             _matchMaker = matchMaker;
             _actionQueue = actionQueue;
             Implementation = implementation;
-            Identifier = identifier;
+            Name = name;
+            Identifier = internalState.Identifier;
             Location = location;
             var title = $"Load Storage {Identifier}";
             Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
@@ -96,8 +98,6 @@ namespace BSU.Core.Model
             // TODO: meh?
             return Mods.Any(m => m.GetStorageModIdentifiers().Mod == downloadIdentifier);
         }
-
-        public override string ToString() => Identifier;
 
         public event Action<IModelStorageMod> ModAdded;
     }

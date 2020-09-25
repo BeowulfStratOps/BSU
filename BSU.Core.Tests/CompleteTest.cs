@@ -89,10 +89,10 @@ namespace BSU.Core.Tests
             var model = new Model.Model(state, worker, types, worker);
             model.Load();
             worker.DoWork();
-            var storageMod1 = model.Storages.Single(s => s.ToString() == "storage1").Mods
-                .Single(m => m.ToString() == "mod5");
-            var repoMod1 = model.Repositories.Single(s => s.ToString() == "repo1").Mods
-                .Single(m => m.ToString() == "mod1");
+            var storageMod1 = model.Storages.Single(s => s.Name == "storage1").Mods
+                .Single(m => m.Identifier == "mod5");
+            var repoMod1 = model.Repositories.Single(s => s.Name == "repo1").Mods
+                .Single(m => m.Identifier == "mod1");
             Assert.Equal(storageMod1, repoMod1.Selection.StorageMod);
         }
     }

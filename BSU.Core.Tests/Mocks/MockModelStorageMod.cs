@@ -42,6 +42,7 @@ namespace BSU.Core.Tests.Mocks
         }
 
         public bool CanWrite { get; }
+        public string Identifier { get; }
         public IStorageMod Implementation { get; }
     }
 }

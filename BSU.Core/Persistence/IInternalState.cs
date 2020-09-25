@@ -9,9 +9,9 @@ namespace BSU.Core.Persistence
     {
         IEnumerable<Tuple<IStorageEntry, IStorageState>> GetStorages();
         IEnumerable<Tuple<IRepositoryEntry, IRepositoryState>> GetRepositories();
-        void RemoveRepository(string repositoryIdentifier);
+        void RemoveRepository(Guid repositoryIdentifier);
         IRepositoryState AddRepo(string name, string url, string type);
-        void RemoveStorage(string storageIdentifiert);
+        void RemoveStorage(Guid storageIdentifier);
         IStorageState AddStorage(string name, DirectoryInfo directory, string type);
     }
 }

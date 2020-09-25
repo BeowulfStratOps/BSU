@@ -8,10 +8,10 @@ namespace BSU.Core.Persistence
         // TODO: might need a way to store download identifier?
         // TODO: make more explicit regarding DoNothing/Mod/Download
 
-        public string Storage { get; }
+        public Guid? Storage { get; }
         public string Mod { get; }
 
-        public PersistedSelection(string storage, string mod)
+        public PersistedSelection(Guid? storage, string mod)
         {
             Storage = storage;
             Mod = mod;

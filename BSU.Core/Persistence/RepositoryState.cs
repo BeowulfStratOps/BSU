@@ -6,6 +6,7 @@ namespace BSU.Core.Persistence
     internal interface IRepositoryState
     {
         IRepositoryModState GetMod(string identifier);
+        Guid Identifier { get; }
     }
 
     internal class RepositoryState : IRepositoryState
@@ -24,5 +25,7 @@ namespace BSU.Core.Persistence
         {
             return new RepositoryModState(_entry.UsedMods, _store, identifier);
         }
+
+        public Guid Identifier => _entry.Guid;
     }
 }

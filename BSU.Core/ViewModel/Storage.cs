@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using BSU.Core.Annotations;
@@ -21,6 +22,7 @@ namespace BSU.Core.ViewModel
         
         public DelegateCommand Delete { get; }
         public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
+        public Guid Identifier { get; }
 
         internal Storage(Model.Storage storage, IActionQueue dispatcher, IModel model)
         {
@@ -29,8 +31,9 @@ namespace BSU.Core.ViewModel
             ModelStorage = storage;
             _dispatcher = dispatcher;
             _model = model;
+            Identifier = storage.Identifier;
             _storage = storage;
-            Name = storage.Identifier;
+            Name = storage.Name;
             storage.ModAdded += mod => Mods.Add(new StorageMod(mod));
         }
 

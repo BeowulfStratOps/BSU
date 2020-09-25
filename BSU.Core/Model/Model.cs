@@ -111,7 +111,7 @@ namespace BSU.Core.Model
         {
             if (removeMods) throw new NotImplementedException();
             Repositories.Remove(repository);
-            PersistentState.RemoveRepository(repository.ToString());
+            PersistentState.RemoveRepository(repository.Identifier);
             RepositoryDeleted?.Invoke(repository);
         }
 
@@ -119,7 +119,7 @@ namespace BSU.Core.Model
         {
             if (removeMods) throw new NotImplementedException();
             Storages.Remove(storage);
-            PersistentState.RemoveStorage(storage.ToString());
+            PersistentState.RemoveStorage(storage.Identifier);
             StorageDeleted?.Invoke(storage);
         }
     }

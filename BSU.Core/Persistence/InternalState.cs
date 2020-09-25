@@ -35,10 +35,10 @@ namespace BSU.Core.Persistence
                 new Tuple<IRepositoryEntry, IRepositoryState>(entry, new RepositoryState(entry, _settings.Store)));
         }
         
-        public void RemoveRepository(string repositoryIdentifier)
+        public void RemoveRepository(Guid repositoryIdentifier)
         {
             Logger.Debug("Removing repo {0}", repositoryIdentifier);
-            var repoEntry = _settings.Repositories.Single(r => r.Name == repositoryIdentifier);
+            var repoEntry = _settings.Repositories.Single(r => r.Guid == repositoryIdentifier);
             _settings.Repositories.Remove(repoEntry);
             _settings.Store();
         }
@@ -55,16 +55,16 @@ namespace BSU.Core.Persistence
         public IStorageState AddStorage(string name, DirectoryInfo directory, string type)
         {
             if (_settings.Storages.Any(s => s.Name == name)) throw new ArgumentException("Name in use");
-            var storage = new StorageEntry(name, directory.FullName, type);
+            var storage = new StorageEntry(name, type, directory.FullName);
             _settings.Storages.Add(storage);
             _settings.Store();
             return new StorageState(storage, _settings.Store);
         }
         
-        public void RemoveStorage(string storageIdentifier)
+        public void RemoveStorage(Guid storageIdentifier)
         {
             Logger.Debug("Removing storage {0}", storageIdentifier);
-            var storageEntry = _settings.Storages.Single(s => s.Name == storageIdentifier);
+            var storageEntry = _settings.Storages.Single(s => s.Guid == storageIdentifier);
             _settings.Storages.Remove(storageEntry);
             _settings.Store();
         }

@@ -17,7 +17,7 @@ namespace BSU.Core.ViewModel
             var state = mod.GetState();
             mod.StateChanged += StateChanged;
             ModelStorageMod = mod;
-            Identifier = mod.ToString();
+            Identifier = mod.Identifier;
         }
 
         private void StateChanged()

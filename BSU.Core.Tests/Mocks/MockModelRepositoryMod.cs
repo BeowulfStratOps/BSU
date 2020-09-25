@@ -14,6 +14,7 @@ namespace BSU.Core.Tests.Mocks
         public bool AllModsLoaded { get; set; }
         public IRepositoryMod Implementation { get; }
         public string DownloadIdentifier { get; set; }
+        public string Identifier { get; }
         public event Action StateChanged;
         public RepositoryModState GetState()
         {

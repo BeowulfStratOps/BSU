@@ -19,7 +19,8 @@ namespace BSU.Core.Model
         private readonly RelatedActionsBag _relatedActionsBag;
         private readonly IModelStructure _modelStructure;
         public IRepository Implementation { get; }
-        public string Identifier { get; }
+        public string Name { get; }
+        public Guid Identifier { get; }
         public string Location { get; }
         public Uid Uid { get; } = new Uid();
 
@@ -29,7 +30,7 @@ namespace BSU.Core.Model
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        public Repository(IRepository implementation, string identifier, string location, IJobManager jobManager,
+        public Repository(IRepository implementation, string name, string location, IJobManager jobManager,
             IMatchMaker matchMaker, IRepositoryState internalState, IActionQueue actionQueue,
             RelatedActionsBag relatedActionsBag, IModelStructure modelStructure)
         {
@@ -41,7 +42,8 @@ namespace BSU.Core.Model
             _modelStructure = modelStructure;
             Location = location;
             Implementation = implementation;
-            Identifier = identifier;
+            Name = name;
+            Identifier = internalState.Identifier;
             var title = $"Load Repo {Identifier}";
             Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
             Loading.StartJob();
@@ -94,8 +96,6 @@ namespace BSU.Core.Model
         public bool IsLoading => Loading.IsActive();
 
         public event Action<IModelRepositoryMod> ModAdded;
-
-        public override string ToString() => Identifier;
 
         public void DoUpdate(RepositoryUpdate.SetUpDelegate setup, RepositoryUpdate.PreparedDelegate prepared, RepositoryUpdate.FinishedDelegate finished)
         {

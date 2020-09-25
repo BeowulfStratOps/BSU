@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace BSU.Core.Persistence
 {
     internal interface IStorageEntry
     {
+        Guid Guid { get; }
         string Name { get; }
         string Type { get; }
         string Path { get; }
@@ -11,6 +13,7 @@ namespace BSU.Core.Persistence
 
     internal class StorageEntry : IStorageEntry
     {
+        public Guid Guid { get; }
         public string Name { get; }
         public string Type { get; }
         public string Path { get; }
@@ -18,6 +21,7 @@ namespace BSU.Core.Persistence
 
         public StorageEntry(string name, string type, string path)
         {
+            Guid = Guid.NewGuid();
             Name = name;
             Type = type;
             Path = path;

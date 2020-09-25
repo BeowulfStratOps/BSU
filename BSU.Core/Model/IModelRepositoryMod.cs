@@ -13,6 +13,7 @@ namespace BSU.Core.Model
         bool AllModsLoaded { set; }
         IRepositoryMod Implementation { get; }
         string DownloadIdentifier { get; set; }
+        string Identifier { get; }
         event Action StateChanged;
         RepositoryModState GetState();
         void ChangeAction(IModelStorageMod target, ModActionEnum? newAction);

@@ -35,7 +35,7 @@ namespace BSU.Core.ViewModel
             model.RepositoryAdded += repository => Repositories.Add(new Repository(repository, model, dispatcher));
             model.RepositoryDeleted += repository =>
             {
-                var vmRepository = Repositories.Single(r => r.Name == repository.ToString());
+                var vmRepository = Repositories.Single(r => r.Identifier == repository.Identifier);
                 Repositories.Remove(vmRepository);
             };
             model.StorageAdded += storage =>
@@ -51,7 +51,7 @@ namespace BSU.Core.ViewModel
             };
             model.StorageDeleted += storage =>
             {
-                var vmStorage = Storages.Single(s => s.Name == storage.ToString());
+                var vmStorage = Storages.Single(s => s.Identifier == storage.Identifier);
                 Storages.Remove(vmStorage);
                 foreach (var repository in Repositories)
                 {

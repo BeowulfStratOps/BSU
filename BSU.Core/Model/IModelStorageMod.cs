@@ -13,5 +13,6 @@ namespace BSU.Core.Model
         void Abort();
         PersistedSelection GetStorageModIdentifiers();
         bool CanWrite { get; }
+        string Identifier { get; }
     }
 }
