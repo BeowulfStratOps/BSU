@@ -3,9 +3,9 @@ using System.Windows.Controls;
 
 namespace BSU.GUI.UserControls
 {
-    public partial class ModAction : UserControl
+    public partial class SelectStorage : UserControl
     {
-        public ModAction()
+        public SelectStorage()
         {
             InitializeComponent();
         }

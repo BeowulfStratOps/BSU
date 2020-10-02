@@ -5,60 +5,30 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class ModAction : ViewModelClass, IEquatable<ModAction>
+    public abstract class ModAction : ViewModelClass, IEquatable<ModAction>
     {
-        internal readonly RepositoryModActionSelection Selection;
-
-        private string _display;
-        public string Display
+        internal static ModAction Create(RepositoryModActionSelection selection, Dictionary<IModelStorageMod, Model.ModAction> actions)
         {
-            get => _display;
-            private set
-            {
-                if (value == _display) return;
-                _display = value;
-                OnPropertyChanged();
-            }
+            if (selection == null) return null;
+
+            if (selection.DoNothing) return new SelectDoNothing();
+            
+            if (selection.DownloadStorage != null) return new SelectStorage(selection.DownloadStorage);
+            
+            if (selection.StorageMod != null) return new SelectMod(selection.StorageMod, actions[selection.StorageMod]);
+            
+            throw new ArgumentException();
         }
 
-        internal ModAction(RepositoryModActionSelection selection, Dictionary<IModelStorageMod, Model.ModAction> actions)
-        {
-            Selection = selection;
-            if (selection == null)
-            {
-                Display = "--";
-                return;
-            }
 
-            if (selection.StorageMod != null)
-            {
-                var action = actions[selection.StorageMod];
-                Display = $"{action.ActionType}";
-                action.Updated += () => { Display = $"{action.ActionType}"; };
-            }
-            if (selection.DownloadStorage != null) Display = $"Download to {selection.DownloadStorage}";
-            if (selection.DoNothing) Display = "Do nothing";
-        }
-
-        public bool Equals(ModAction other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(Selection, other.Selection);
-        }
+        public abstract bool Equals(ModAction other);
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ModAction) obj);
+            return ReferenceEquals(this, obj) || obj is ModAction other && Equals(other);
         }
 
-        public override int GetHashCode()
-        {
-            return (Selection != null ? Selection.GetHashCode() : 0);
-        }
+        public abstract override int GetHashCode();
 
         public static bool operator ==(ModAction left, ModAction right)
         {
@@ -69,5 +39,73 @@ namespace BSU.Core.ViewModel
         {
             return !Equals(left, right);
         }
+
+        internal abstract RepositoryModActionSelection AsSelection { get; }
+    }
+
+    public class SelectDoNothing : ModAction
+    {
+        internal SelectDoNothing(){}
+        
+        public override bool Equals(ModAction other)
+        {
+            return other is SelectDoNothing;
+        }
+
+        public override int GetHashCode()
+        {
+            return 0;
+        }
+
+        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionSelection();
+    }
+
+    public class SelectMod : ModAction
+    {
+        internal IModelStorageMod StorageMod { get; }
+        internal Model.ModAction Action { get; }
+        public string ActionType => Action.ActionType.ToString();
+        public string Name => StorageMod.Identifier; // TODO: name
+
+        internal SelectMod(IModelStorageMod storageMod, Model.ModAction action)
+        {
+            StorageMod = storageMod;
+            Action = action;
+        }
+
+        public override bool Equals(ModAction other)
+        {
+            return other is SelectMod selectMod && selectMod.StorageMod == StorageMod;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(StorageMod);
+        }
+        
+        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionSelection(StorageMod);
+    }
+
+    public class SelectStorage : ModAction
+    {
+        internal IModelStorage DownloadStorage { get; }
+        public string Name => DownloadStorage.Name;
+
+        internal SelectStorage(IModelStorage downloadStorage)
+        {
+            DownloadStorage = downloadStorage;
+        }
+
+        public override bool Equals(ModAction other)
+        {
+            return other is SelectStorage selectMod && selectMod.DownloadStorage == DownloadStorage;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(DownloadStorage);
+        }
+        
+        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionSelection(DownloadStorage);
     }
 }

@@ -24,11 +24,17 @@
                             <i:InvokeCommandAction Command="{Binding SelectionChanged}"></i:InvokeCommandAction>
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <local:ModAction></local:ModAction>
+                    <ComboBox.Resources>
+                        <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
+                            <local:SelectDoNothing></local:SelectDoNothing>
                         </DataTemplate>
-                    </ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type viewModel:SelectMod}">
+                            <local:SelectMod></local:SelectMod>
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
+                            <local:SelectStorage></local:SelectStorage>
+                        </DataTemplate>
+                    </ComboBox.Resources>
                 </ComboBox>
                 <DockPanel Visibility="{Binding ShowDownloadIdentifier, Converter={StaticResource VisibleIfTrueConverter}}">
                     <TextBlock DockPanel.Dock="Left">Folder:</TextBlock>

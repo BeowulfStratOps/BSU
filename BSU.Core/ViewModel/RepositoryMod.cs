@@ -20,7 +20,7 @@ namespace BSU.Core.ViewModel
         private string _downloadIdentifier = "";
         private bool _showDownloadIdentifier;
 
-        public ObservableCollection<ModAction> Actions { get; } = new ObservableCollection<ModAction>();
+        public ModActionTree Actions { get; } = new ModActionTree();
 
         private ModAction _selection;
         public ModAction Selection
@@ -30,13 +30,8 @@ namespace BSU.Core.ViewModel
             {
                 if (_selection == value) return;
                 _selection = value;
-                _mod.Selection = value?.Selection;
-                if (_selection.Selection?.DownloadStorage != null)
-                {
-                    ShowDownloadIdentifier = true;
-                }
-                else
-                    ShowDownloadIdentifier = false;
+                _mod.Selection = value?.AsSelection;
+                ShowDownloadIdentifier = _selection is SelectStorage;
                 OnPropertyChanged();
                 UpdateErrorText();
             }
@@ -47,18 +42,17 @@ namespace BSU.Core.ViewModel
             IsLoading = mod.GetState().IsLoading;
             _mod = mod;
             Name = mod.Identifier;
-            Actions.Add(new ModAction(new RepositoryModActionSelection(), _mod.Actions));
             mod.ActionAdded += AddAction;
             foreach (var target in mod.Actions.Keys)
             {
                 AddAction(target);
             }
 
-            Selection = new ModAction(mod.Selection, mod.Actions);
+            Selection = ModAction.Create(mod.Selection, mod.Actions);
             DownloadIdentifier = mod.DownloadIdentifier;
             mod.SelectionChanged += () =>
             {
-                Selection = new ModAction(mod.Selection, mod.Actions);
+                Selection = ModAction.Create(mod.Selection, mod.Actions);
             };
             mod.DownloadIdentifierChanged += () =>
             {
@@ -80,19 +74,19 @@ namespace BSU.Core.ViewModel
 
         private void AddAction(IModelStorageMod storageMod)
         {
-            Actions.Add(new ModAction(new RepositoryModActionSelection(storageMod), _mod.Actions));
+            Actions.Add(new SelectMod(storageMod, _mod.Actions[storageMod]));
         }
 
         internal void AddStorage(IModelStorage storage)
         {
-            if (!storage.CanWrite) return;
-            Actions.Add(new ModAction(new RepositoryModActionSelection(storage), _mod.Actions));
+            if (!storage.CanWrite) return; // TODO
+            Actions.Add(new SelectStorage(storage));
         }
 
         internal void RemoveStorage(IModelStorage storage)
         {
             if (!storage.CanWrite) return;
-            var selection = Actions.Single(a => a.Selection.DownloadStorage == storage);
+            var selection = Actions.OfType<SelectStorage>().Single(s => s.DownloadStorage == storage);
             Actions.Remove(selection);
         }
 
