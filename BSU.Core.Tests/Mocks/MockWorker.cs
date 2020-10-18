@@ -41,16 +41,22 @@ namespace BSU.Core.Tests.Mocks
         
         public bool DoQueueStep()
         {
-            if (!_actionQueue.Any()) return false;
-            _actionQueue.Dequeue()();
-            return true;
+            lock (_actionQueue)
+            {
+                if (!_actionQueue.Any()) return false;
+                _actionQueue.Dequeue()();
+                return true;
+            }
         }
 
         public IReadOnlyList<IJob> GetActiveJobs() => _jobs.AsReadOnly();
         public IReadOnlyList<IJob> GetAllJobs() => _jobs.AsReadOnly();
         public void EnQueueAction(Action action)
         {
-            _actionQueue.Enqueue(action);
+            lock (_actionQueue)
+            {
+                _actionQueue.Enqueue(action);
+            }
         }
     }
 }

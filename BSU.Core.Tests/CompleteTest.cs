@@ -81,9 +81,9 @@ namespace BSU.Core.Tests
             types.AddRepoType("mock", CreateRepo);
             types.AddStorageType("mock", CreateStorage);
             var settings = new MockSettings();
-            settings.Repositories.Add(new RepositoryEntry("repo1", "mock", "r1"));
+            settings.Repositories.Add(new RepositoryEntry("repo1", "mock", "r1", Guid.NewGuid()));
             //settings.Repositories.Add(new RepositoryEntry("repo2", "mock", "r2"));
-            settings.Storages.Add(new StorageEntry("storage1", "mock", "s1"));
+            settings.Storages.Add(new StorageEntry("storage1", "mock", "s1", Guid.NewGuid()));
             //settings.Storages.Add(new StorageEntry("storage2", "mock", "s2"));
             var state = new InternalState(settings);
             var model = new Model.Model(state, worker, types, worker);

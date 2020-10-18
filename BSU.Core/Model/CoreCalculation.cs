@@ -47,7 +47,6 @@ namespace BSU.Core.Model
                         ? ModMatch.RequireHash
                         : ModMatch.NoMatch;
                 case StorageModStateEnum.Hashing:
-                    return ModMatch.Wait;
                 case StorageModStateEnum.Hashed:
                     return repoModState.MatchHash.IsMatch(storageModState.MatchHash)
                         ? ModMatch.Match

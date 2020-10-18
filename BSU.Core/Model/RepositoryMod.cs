@@ -140,7 +140,7 @@ namespace BSU.Core.Model
         private void DoAutoSelection()
         {
             // never change a selection once it was made. Would be clickjacking on the user
-            // TODO: check if a better option became available and notify user
+            // TODO: check if a better option became available and notify user (must only ever happen for old selections)
             if (Selection != null) return;
 
             Logger.Trace("Checking auto-selection for mod {0}", Identifier);

@@ -28,6 +28,7 @@ namespace BSU.Core.Model
 
         private void UpdateStorageMod(IModelStorageMod storageMod)
         {
+            Logger.Info("Update Storage Mod {0}", storageMod.Identifier);
             foreach (var repoMod in _modelStructure.GetAllRepositoryMods())
             {
                 CheckMatch(repoMod, storageMod);
@@ -49,6 +50,8 @@ namespace BSU.Core.Model
 
             _allModsLoaded = true;
 
+            Logger.Info("All Mods loaded");
+            
             NotifyAllModsLoaded();
 
         }
@@ -80,6 +83,7 @@ namespace BSU.Core.Model
 
         private void UpdateRepositoryMod(IModelRepositoryMod repositoryMod)
         {
+            Logger.Info("Update Repository Mod {0}", repositoryMod.Identifier);
             foreach (var storageMod in _modelStructure.GetAllStorageMods())
             {
                 CheckMatch(repositoryMod, storageMod);
@@ -93,7 +97,7 @@ namespace BSU.Core.Model
             var storageModState = storageMod.GetState();
 
             var match = CoreCalculation.IsMatch(repoModState, storageModState);
-            Logger.Debug($"Check Match on {repoMod} and {storageMod} -> {match}");
+            Logger.Debug($"Check Match on {repoMod.Identifier} and {storageMod.Identifier} -> {match}");
 
             if (match == CoreCalculation.ModMatch.RequireHash)
             {
@@ -105,7 +109,7 @@ namespace BSU.Core.Model
             if (match == CoreCalculation.ModMatch.NoMatch || match == CoreCalculation.ModMatch.Wait) return;
 
             var action = CoreCalculation.CalculateAction(repoModState, storageModState, storageMod.CanWrite);
-            Logger.Debug($"Calculate Action on {repoMod} and {storageMod} -> {action}");
+            Logger.Debug($"Calculate Action on {repoMod.Identifier} and {storageMod.Identifier} -> {action}");
 
             repoMod.ChangeAction(storageMod, action);
         }

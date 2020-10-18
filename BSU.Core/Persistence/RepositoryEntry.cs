@@ -22,9 +22,9 @@ namespace BSU.Core.Persistence
         
         public Dictionary<string, PersistedSelection> UsedMods = new Dictionary<string, PersistedSelection>();
 
-        public RepositoryEntry(string name, string type, string url)
+        public RepositoryEntry(string name, string type, string url, Guid guid)
         {
-            Guid = Guid.NewGuid();
+            Guid = guid;
             Name = name;
             Type = type;
             Url = url;

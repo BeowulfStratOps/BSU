@@ -44,12 +44,16 @@ namespace BSU.Core.Tests
             var changes = new List<ModActionEnum?>();
 
             repoMod.Setup(r => r.GetState()).Returns(repoState);
+            
+            repoMod.Setup(s => s.Identifier).Returns("repoMod");
 
             storageMod.Setup(s => s.GetState()).Returns(storageState);
 
             storageMod.Setup(s => s.RequireHash());
 
             storageMod.Setup(s => s.CanWrite).Returns(canWrite);
+
+            storageMod.Setup(s => s.Identifier).Returns("storageMod");
 
             repoMod.Setup(r => r.ChangeAction(storageMod.Object, It.IsAny<ModActionEnum?>())).Callback<IModelStorageMod, ModActionEnum?>(
                 (_, state) =>

@@ -19,9 +19,9 @@ namespace BSU.Core.Persistence
         public string Path { get; }
         public Dictionary<string, UpdateTarget> Updating = new Dictionary<string, UpdateTarget>();
 
-        public StorageEntry(string name, string type, string path)
+        public StorageEntry(string name, string type, string path, Guid guid)
         {
-            Guid = Guid.NewGuid();
+            Guid = guid;
             Name = name;
             Type = type;
             Path = path;
