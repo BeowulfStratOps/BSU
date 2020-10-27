@@ -3,120 +3,208 @@ using System.Threading;
 using BSU.Core.JobManager;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Model
 {
     internal class StorageModUpdateState : IUpdateState
     {
         private readonly IJobManager _jobManager;
+        private readonly IActionQueue _actionQueue;
         private readonly IRepositoryMod _repository;
-        private readonly StorageMod _storage;
+        private readonly Func<IUpdateState, StorageMod> _createStorageMod;
+        private StorageMod _storageMod;
         private RepoSync _syncJob;
-        private SimpleJob _prepareJob;
-        private UpdateStateEnum _state = UpdateStateEnum.Inactive;
-        private readonly Action _rollback;
+        
+        public UpdateTarget Target { get; }
+        public Exception Exception { get; private set; }
+        private Action _abort;
 
-        internal UpdateTarget Target { get; private set; }
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        
+        
+        private UpdateState _state;
 
-        public StorageModUpdateState(IJobManager jobManager, IRepositoryMod repository, StorageMod storage, UpdateTarget target, Action rollback = null)
+        public UpdateState State
+        {
+            get => _state;
+            private set
+            {
+                if (_state == value) return;
+                _state = value;
+                OnStateChange?.Invoke();
+            }
+        }
+
+        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repository, StorageMod storageMod, UpdateTarget target)
+        {
+            _jobManager = jobManager;
+            _actionQueue = actionQueue;
+            _repository = repository;
+            _storageMod = storageMod;
+            Target = target;
+            
+            _state = UpdateState.Created;
+            
+            _logger.Info("Creating Update State for mod {0}", storageMod.Identifier);
+        }
+
+        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repository, UpdateTarget target, Func<IUpdateState, StorageMod> createStorageMod)
         {
             Target = target;
             _jobManager = jobManager;
+            _actionQueue = actionQueue;
             _repository = repository;
-            _storage = storage;
-            _rollback = rollback;
+            _createStorageMod = createStorageMod;
+
+            _state = UpdateState.NotCreated;
+            
+            _logger.Info("Creating Download State");
         }
 
-        public void Prepare()
+        public void Continue()
         {
-            if (_state != UpdateStateEnum.Inactive) throw new InvalidOperationException();
-
-            var name = $"Preparing {_storage.Identifier} update";
-
-            _prepareJob = new SimpleJob(DoPrepare, name, 1);
-            _prepareJob.OnFinished += () =>
+            switch (State)
             {
-                var error = _prepareJob.Error;
-                if (error != null)
+                case UpdateState.NotCreated:
+                    Create();
+                    break;
+                case UpdateState.Created:
+                    Prepare();
+                    break;
+                case UpdateState.Prepared:
+                    Update();
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        private void Create()
+        {
+            _logger.Info("Create");
+            var job = new SimpleJob(_ =>
+            {
+                var storageMod = _createStorageMod(this);
+                _actionQueue.EnQueueAction(() =>
                 {
-                    _state = UpdateStateEnum.Done;
-                    IsFinished = true;
-                    Target = null;
-                    OnFinished?.Invoke(error);
-                    return;
-                }
-                _state = UpdateStateEnum.Prepared;
-                OnPrepared?.Invoke();
+                    _storageMod = storageMod;
+                });
+            }, "Create StorageMod", 1);
+            job.OnFinished += () =>
+            {
+                _actionQueue.EnQueueAction(() =>
+                {
+                    if (job.Error == null)
+                        State = UpdateState.Created;
+                    else
+                    {
+                        Exception = job.Error;
+                        State = UpdateState.Errored;
+                        OnEnded?.Invoke();
+                    }
+                });
             };
-            _state = UpdateStateEnum.Preparing;
-            _jobManager.QueueJob(_prepareJob);
+            _abort = job.Abort;
+            State = UpdateState.Creating;
+            _jobManager.QueueJob(job);
+        }
+
+        private void Prepare()
+        {
+            _logger.Info("Create {0}", _storageMod.Identifier);
+            var name = $"Preparing {_storageMod.Identifier} update";
+
+            var job = new SimpleJob(DoPrepare, name, 1);
+            job.OnFinished += () =>
+            {
+                _actionQueue.EnQueueAction(() =>
+                {
+                    if (job.Error == null)
+                        State = UpdateState.Prepared;
+                    else
+                    {
+                        Exception = job.Error;
+                        State = UpdateState.Errored;
+                        OnEnded?.Invoke();
+                    }
+                });
+            };
+            _abort = job.Abort;
+            State = UpdateState.Preparing;
+            _jobManager.QueueJob(job);
         }
 
         private void DoPrepare(CancellationToken cancellationToken)
         {
-            var name = $"Updating {_storage.Identifier}";
-            _syncJob = new RepoSync(_repository, _storage, Target, name, 0, cancellationToken);
+            var name = $"Updating {_storageMod.Identifier}";
+            _syncJob = new RepoSync(_repository, _storageMod, Target, name, 0, cancellationToken);
         }
 
-        public void Commit()
+        private void Update()
         {
-            if (_state != UpdateStateEnum.Prepared) throw new InvalidOperationException();
+            _logger.Info("Update {0}", _storageMod.Identifier);
             if (_syncJob.NothingToDo)
             {
-                Finished();
+                State = UpdateState.Updated;
+                OnEnded?.Invoke();
                 return;
             }
-            _state = UpdateStateEnum.Updating;
-            _syncJob.OnFinished += Finished;
-            _jobManager.QueueJob(_syncJob);
-        }
+            _syncJob.OnFinished += () =>
+            {
+                _actionQueue.EnQueueAction(() =>
+                {
+                    var error = _syncJob.GetError();
+                    if (error == null)
+                        State = UpdateState.Updated;
+                    else
+                    {
+                        Exception = error;
+                        State = UpdateState.Errored;
+                    }
 
-        private void Finished()
-        {
-            _state = UpdateStateEnum.Done;
-            IsFinished = true;
-            Target = null;
-            OnFinished?.Invoke(_syncJob.GetError());
+                    OnEnded?.Invoke();
+                });
+            };
+            IsIndeterminate = false;
+            _syncJob.OnProgress += () =>
+            {
+                Progress = _syncJob.GetProgress();
+                OnProgressChange?.Invoke();
+            };
+            _abort = _syncJob.Abort;
+            State = UpdateState.Updating;
+            _jobManager.QueueJob(_syncJob);
         }
 
         public void Abort()
         {
-            if (_state != UpdateStateEnum.Prepared) throw new InvalidOperationException();
-
-            Target = null;
-            _state = UpdateStateEnum.Inactive;
-            try
+            if (State == UpdateState.Creating || State == UpdateState.Preparing || State == UpdateState.Updating)
             {
-                _rollback?.Invoke();
-                OnFinished?.Invoke(null);
+                _abort();
             }
-            catch (Exception e)
+            else
             {
-                OnFinished?.Invoke(e);
+                if (State != UpdateState.Created && State != UpdateState.Prepared) throw  new InvalidOperationException();
             }
-
+            
+            State = UpdateState.Aborted;
+            OnEnded?.Invoke();
         }
 
-        public event Action OnPrepared;
-        public event Action<Exception> OnFinished;
+        public event Action OnStateChange;
+
+        public event Action OnEnded;
 
         public int GetPrepStats()
         {
-            if (_state != UpdateStateEnum.Prepared) throw new InvalidOperationException();
+            if (State != UpdateState.Prepared) throw new InvalidOperationException();
 
             return (int) (_syncJob.GetTotalBytesToDownload() + _syncJob.GetTotalBytesToUpdate());
         }
 
-        public bool IsPrepared => _state == UpdateStateEnum.Prepared;
-        public bool IsFinished { get; private set; }
-    }
-
-    internal enum UpdateStateEnum
-    {
-        Inactive,
-        Preparing,
-        Prepared,
-        Updating,
-        Done
+        public bool IsIndeterminate { get; private set; } = true;
+        public double Progress { get; private set; }
+        public event Action OnProgressChange;
     }
 }

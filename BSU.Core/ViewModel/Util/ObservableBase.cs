@@ -4,7 +4,7 @@ using BSU.Core.Annotations;
 
 namespace BSU.Core.ViewModel.Util
 {
-    public abstract class ViewModelClass : INotifyPropertyChanged
+    public abstract class ObservableBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

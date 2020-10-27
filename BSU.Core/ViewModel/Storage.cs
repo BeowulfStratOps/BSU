@@ -8,7 +8,7 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class Storage : ViewModelClass
+    public class Storage : ObservableBase
     {
         private readonly IActionQueue _dispatcher;
         private readonly IModelStorage _storage;

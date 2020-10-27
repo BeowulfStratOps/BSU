@@ -68,15 +68,21 @@ namespace BSU.Core.Tests
             var storageState = new MockStorageState();
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, worker, matchMaker, worker);
             worker.DoWork();
-            storage.PrepareDownload(repoMod.Implementation, repoMod.AsUpdateTarget, "mystoragemod", e => { }, update =>
+            var update = storage.PrepareDownload(repoMod.Implementation, repoMod.AsUpdateTarget, "mystoragemod");
+
+            update.OnStateChange += () =>
             {
-                update.OnPrepared += () =>
+                if (update.State == UpdateState.Created)
                 {
-                    Assert.True(update.GetPrepStats() > 0);
-                    update.Commit();
-                };
-                update.Prepare();
-            });
+                    update.Continue();
+                    return;
+                }
+                if (update.State != UpdateState.Prepared) return;
+                Assert.True(update.GetPrepStats() > 0);
+                update.Continue();
+            };
+            update.Continue();
+        
             worker.DoWork();
             var storageMod = storage.Mods[0];
             Assert.True(repoMod.Actions.ContainsKey(storageMod));
@@ -103,13 +109,14 @@ namespace BSU.Core.Tests
 
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
-            update.OnPrepared += () =>
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
+            update.OnStateChange += () =>
             {
+                if (update.State != UpdateState.Prepared) return;
                 Assert.True(update.GetPrepStats() > 0);
-                update.Commit();
+                update.Continue();
             };
-            update.Prepare();
+            update.Continue();
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
@@ -143,13 +150,14 @@ namespace BSU.Core.Tests
 
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
-            update.OnPrepared += () =>
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
+            update.OnStateChange += () =>
             {
+                if (update.State != UpdateState.Prepared) return;
                 Assert.True(update.GetPrepStats() > 0);
-                update.Commit();
+                update.Continue();
             };
-            update.Prepare();
+            update.Continue();
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
@@ -182,13 +190,14 @@ namespace BSU.Core.Tests
 
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
-            update.OnPrepared += () =>
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
+            update.OnStateChange += () =>
             {
+                if (update.State != UpdateState.Prepared) return;
                 Assert.Equal(0, update.GetPrepStats());
-                update.Commit();
+                update.Continue();
             };
-            update.Prepare();
+            update.Continue();
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Use, repoMod.Actions[storageMod].ActionType);
@@ -245,14 +254,22 @@ namespace BSU.Core.Tests
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", new MockStorageState(), worker, matchMaker, worker);
             worker.DoWork();
             var x = new List<MockStorageMod>();
-            storage.PrepareDownload(repoMod.Implementation, repoMod.AsUpdateTarget, "mystoragemod", e => {},
-                update =>
+            var update = storage.PrepareDownload(repoMod.Implementation, repoMod.AsUpdateTarget, "mystoragemod");
+                
+            update.OnStateChange += () =>
+            {
+                if (update.State == UpdateState.Created)
                 {
                     x.Add(mockStorage.Mods.Values.First());
-                    update.OnPrepared += update.Abort;
-                    update.Prepare();
-                });
-
+                    update.Continue();
+                    return;
+                }
+                if (update.State != UpdateState.Prepared) return;
+                Assert.True(update.GetPrepStats() > 0);
+                update.Abort();
+            };
+            
+            update.Continue();
             worker.DoWork();
 
             Assert.Empty(repoMod.Actions);
@@ -280,12 +297,13 @@ namespace BSU.Core.Tests
 
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
-            update.OnPrepared += () =>
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
+            update.OnStateChange += () =>
             {
+                if (update.State != UpdateState.Prepared) return;
                 update.Abort();
             };
-            update.Prepare();
+            update.Continue();
             worker.DoWork();
 
             Assert.Equal(ModActionEnum.Update, repoMod.Actions[storageMod].ActionType);
@@ -313,11 +331,11 @@ namespace BSU.Core.Tests
 
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
-            update.Prepare();
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
+            update.Continue();
             worker.DoWork();
-            Assert.True(update.IsPrepared);
-            update.Commit();
+            Assert.True(update.State == UpdateState.Prepared);
+            update.Continue();
             worker.DoJobStep();
             worker.GetActiveJobs().First().Abort();
             worker.DoWork();
@@ -348,16 +366,19 @@ namespace BSU.Core.Tests
             OutputHelper.WriteLine("Starting update...");
 
             var prepared = false;
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
-            update.OnPrepared += () => prepared = true;
-            update.Prepare();
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
+            update.OnStateChange += () =>
+            {
+                if (update.State == UpdateState.Prepared) prepared = true;
+            };
+            update.Continue();
             storageFiles.ThrowErrorOpen = true;
             worker.DoQueueStep(); // might ot be needed anymore due to Prepare()?
             worker.DoJobStep();
             storageFiles.ThrowErrorOpen = false;
             worker.DoWork();
 
-            Assert.False(update.IsPrepared);
+            Assert.NotEqual(UpdateState.Prepared, update.State);
             Assert.False(prepared);
 
             // TODO: make sure events fire
@@ -386,11 +407,11 @@ namespace BSU.Core.Tests
 
             OutputHelper.WriteLine("Starting update...");
 
-            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget, () => {});
-            update.Prepare();
+            var update = storageMod.PrepareUpdate(repoMod.Implementation, repoMod.AsUpdateTarget);
+            update.Continue();
             worker.DoWork();
-            Assert.True(update.IsPrepared);
-            update.Commit();
+            Assert.Equal(UpdateState.Prepared, update.State);
+            update.Continue();
             worker.DoJobStep();
             storageFiles.ThrowErrorOpen = true;
             worker.DoJobStep();

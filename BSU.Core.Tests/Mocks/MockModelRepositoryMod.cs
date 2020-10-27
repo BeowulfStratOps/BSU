@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using BSU.Core.Model;
-using BSU.Core.Model.Utility;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Tests.Mocks
 {
     internal class MockModelRepositoryMod : IModelRepositoryMod
     {
+        private IUpdateState _currentUpdate;
         public UpdateTarget AsUpdateTarget { get; }
         public RepositoryModActionSelection Selection { get; set; }
         public Dictionary<IModelStorageMod, ModAction> Actions { get; }
@@ -30,9 +30,13 @@ namespace BSU.Core.Tests.Mocks
         public event Action SelectionChanged;
         public event Action DownloadIdentifierChanged;
 
-        public ModUpdateInfo DoUpdate()
+        public void DoUpdate()
         {
             throw new NotImplementedException();
         }
+
+        IUpdateState IModelRepositoryMod.CurrentUpdate => _currentUpdate;
+
+        public event Action OnUpdateChange;
     }
 }

@@ -56,34 +56,19 @@ namespace BSU.Core.Model
             });
         }
 
-        public void PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier, Action<Exception> setupError, Action<IUpdateState> callback)
+        public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
         {
             if (Loading.IsActive()) throw new InvalidOperationException();
 
-            _actionQueue.EnQueueAction(() =>
+            return new StorageModUpdateState(_jobManager, _actionQueue, repositoryMod, target, update =>
             {
-                try
-                {
-                    var mod = Implementation.CreateMod(identifier);
-                    var storageMod = new StorageMod(_actionQueue, mod, identifier, target, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
-                    Mods.Add(storageMod);
-                    var update = storageMod.PrepareUpdate(repositoryMod, target, () => RollbackDownload(storageMod));
-                    ModAdded?.Invoke(storageMod);
-                    _matchMaker.AddStorageMod(storageMod);
-                    callback(update);
-                }
-                catch (Exception e)
-                {
-                    setupError(e);
-                }
-
+                var mod = Implementation.CreateMod(identifier);
+                var storageMod = new StorageMod(_actionQueue, mod, identifier, target, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite(), update);
+                Mods.Add(storageMod);
+                ModAdded?.Invoke(storageMod);
+                _matchMaker.AddStorageMod(storageMod);
+                return storageMod;
             });
-        }
-
-        private void RollbackDownload(StorageMod mod)
-        {
-            _matchMaker.RemoveStorageMod(mod);
-            Implementation.RemoveMod(mod.Identifier);
         }
 
         public bool CanWrite => Implementation.CanWrite();

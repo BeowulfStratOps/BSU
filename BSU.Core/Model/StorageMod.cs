@@ -51,7 +51,7 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(IActionQueue actionQueue, IStorageMod implementation, string identifier, UpdateTarget updateTarget,
-            IStorageModState internalState, IJobManager jobManager, Guid parentIdentifier, bool canWrite)
+            IStorageModState internalState, IJobManager jobManager, Guid parentIdentifier, bool canWrite, IUpdateState downloadState = null)
         {
             _internalState = internalState;
             _jobManager = jobManager;
@@ -97,8 +97,10 @@ namespace BSU.Core.Model
             }
             else
             {
+                if (downloadState == null) throw new ArgumentNullException(nameof(downloadState));
                 _versionHash = VersionHash.CreateEmpty();
                 UpdateTarget = updateTarget;
+                downloadState.OnEnded += () => UpdateStateEnd(downloadState);
                 _state = StorageModStateEnum.CreatedForDownload;
             }
         }
@@ -151,42 +153,41 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action rollback = null)
+        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target)
         {
             
             CheckState(StorageModStateEnum.CreatedForDownload, StorageModStateEnum.Hashed, StorageModStateEnum.CreatedWithUpdateTarget);
             if (_updating != null) throw new InvalidOperationException();
             
-            var update = new StorageModUpdateState(_jobManager, repositoryMod, this, target, rollback);
+            var update = new StorageModUpdateState(_jobManager, ActionQueue, repositoryMod, this, target);
                 
             UpdateTarget = target;
             _updating = update;
             _versionHash = null;
             _matchHash = null;
             State = StorageModStateEnum.Updating;
-            
-            update.OnFinished += error =>
-            {
-                ActionQueue.EnQueueAction(() =>
-                {
-                    _versionHash = null;
-                    _matchHash = null;
-                    _updating = null;
 
-                    if (error == null)
-                    {
-                        UpdateTarget = null;
-                        _loading.StartJob();
-                        State = StorageModStateEnum.Loading;
-                        return;
-                    }
-
-                    _error = error;
-                    State = StorageModStateEnum.ErrorUpdate;
-                });
-            };
+            update.OnEnded += () => UpdateStateEnd(update);
 
             return update;
+        }
+
+        private void UpdateStateEnd(IUpdateState update)
+        {
+            _versionHash = null;
+            _matchHash = null;
+            _updating = null;
+
+            if (update.Exception == null)
+            {
+                UpdateTarget = null;
+                _loading.StartJob();
+                State = StorageModStateEnum.Loading;
+                return;
+            }
+
+            _error = update.Exception;
+            State = StorageModStateEnum.ErrorUpdate;
         }
 
         public StorageModState GetState()

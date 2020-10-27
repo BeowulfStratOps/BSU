@@ -1,192 +1,117 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BSU.Core.Model.Utility;
+using NLog;
 
 namespace BSU.Core.Model
 {
     public class RepositoryUpdate
     {
-        // TODO: make sure events go through the workerQueue
-
         private readonly SetUpDelegate _setUpCallback;
         private readonly PreparedDelegate _preparedCallback;
         private readonly FinishedDelegate _finishedCallback;
+        
+        // TODO: create Logger with builtin Uid thing?
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private readonly List<DownloadInfo> _downloads = new List<DownloadInfo>();
-        private bool _doneAdding;
-        private List<IUpdateState> _updates = new List<IUpdateState>();
-        private Dictionary<IUpdateState, Exception> _exceptions = new Dictionary<IUpdateState, Exception>();
-        private bool _allPrepared;
+        public event Action OnEnded;
+
+        private List<IUpdateState> _workingSet = new List<IUpdateState>();
+        private UpdateState _nextStage = UpdateState.Created;
+        private bool _started;
 
         public RepositoryUpdate(SetUpDelegate setUpCallback, PreparedDelegate preparedCallback, FinishedDelegate finishedCallback)
         {
             _setUpCallback = setUpCallback;
             _preparedCallback = preparedCallback;
             _finishedCallback = finishedCallback;
-        }
-
-        internal void Add(DownloadInfo download)
-        {
-            if (_doneAdding) throw new InvalidOperationException();
-            download.Promise.OnValue += CheckAllSetUp;
-            download.Promise.OnError += CheckAllSetUp;
-            _downloads.Add(download);
+            _logger.Info("Creating");
         }
 
         internal void Add(IUpdateState updateState)
         {
-            _updates.Add(updateState);
+            _workingSet.Add(updateState);
+            updateState.OnStateChange += Check;
+            _logger.Trace("Added updateState with state {0}", updateState.State);
         }
 
-        internal void DoneAdding()
+        private void Check()
         {
-            if (_doneAdding) throw new InvalidOperationException();
-            _doneAdding = true;
-            CheckAllSetUp();
-        }
+            if (!_workingSet.All(u => u.State == _nextStage || u.State == UpdateState.Errored)) return;
+            
+            _logger.Info("Stage {0} done", _nextStage);
 
-        private void CheckAllSetUp()
-        {
-            if (!_downloads.All(p => p.Promise.HasError || p.Promise.HasValue)) return;
-            var failed = _downloads.Where(p => p.Promise.HasError).ToList();
-            var succeeded = _downloads.Where(p => !p.Promise.HasError).ToList();
-
-            foreach (var download in _downloads.Where(d => d.Promise.HasValue))
+            var succeeded = _workingSet.Where(u => u.State != UpdateState.Errored).ToList();
+            var failed = _workingSet.Where(u => u.State == UpdateState.Errored).ToList();
+            
+            _workingSet = new List<IUpdateState>(succeeded);
+            
+            var args = new StageCallbackArgs(succeeded, failed);
+            
+            switch (_nextStage)
             {
-                _updates.Add(download.Promise.Value);
+                case UpdateState.Created:
+                    _nextStage = UpdateState.Prepared;
+                    _setUpCallback(args, Callback);
+                    break;
+                case UpdateState.Prepared:
+                    _nextStage = UpdateState.Updated;
+                    _preparedCallback(args, Callback);
+                    break;
+                case UpdateState.Updated:
+                    _finishedCallback(args);
+                    OnEnded?.Invoke();
+                    break;
+                default:
+                    throw new InvalidOperationException();
             }
+        }
 
-            void Proceed(bool doContinue)
+        private void Callback(bool decision)
+        {
+            _logger.Info("Advance to stage {0}: {1}", _nextStage, decision);
+            foreach (var updateState in _workingSet)
             {
-                if (doContinue)
-                    Prepare();
+                if (decision)
+                    updateState.Continue();
                 else
-                    Abort();
+                    updateState.Abort();
             }
-
-            _setUpCallback(new SetUpArgs(succeeded, failed), Proceed);
         }
+        
+        public delegate void SetUpDelegate(StageCallbackArgs args, Action<bool> proceed);
+        public delegate void PreparedDelegate(StageCallbackArgs args, Action<bool> proceed);
+        public delegate void FinishedDelegate(StageCallbackArgs args);
 
-        private void Abort()
+        public void Start()
         {
-            foreach (var update in _updates)
+            if (_started) throw new InvalidOperationException();
+            _logger.Info("Start");
+            _started = true;
+            
+            // None that need to be created first
+            if (_workingSet.All(u => u.State != UpdateState.NotCreated))
+                _nextStage = UpdateState.Prepared; 
+            
+            
+            
+            foreach (var updateState in _workingSet)
             {
-                update.Abort();
+                if (_nextStage == UpdateState.Prepared || updateState.State == UpdateState.NotCreated)
+                    updateState.Continue();
             }
         }
-
-        private void Prepare()
-        {
-            if (_updates == null) throw new InvalidOperationException();
-            foreach (var update in _updates)
-            {
-                update.OnPrepared += CheckAllPrepared;
-                update.OnFinished += e =>
-                {
-                    if (e != null) _exceptions[update] = e;
-                    CheckAllPrepared();
-                };
-                update.Prepare();
-            }
-        }
-
-        private void CheckAllPrepared()
-        {
-            if (_allPrepared) return;
-            if (!_updates.All(u => u.IsPrepared || u.IsFinished)) return;
-            _allPrepared = true;
-            var errored = _updates.Where(u => u.IsFinished)
-                .Select(u => new Tuple<IUpdateState, Exception>(u, _exceptions[u])).ToList();
-            var succeeded = _updates.Where(u => u.IsPrepared).ToList();
-
-            void Proceed(bool doContinue)
-            {
-                if (doContinue)
-                    Commit();
-                else
-                    Abort();
-            }
-
-            _preparedCallback(new PreparedArgs(succeeded, errored), Proceed);
-        }
-
-        private void Commit()
-        {
-            // rollback failed ones
-            foreach (var update in _updates.Where(u => !u.IsPrepared))
-            {
-                update.Abort();
-            }
-            _updates = _updates.Where(u => u.IsPrepared).ToList();
-            foreach (var update in _updates)
-            {
-                update.OnFinished += _ => CheckAllFinished();
-                update.Commit();
-            }
-        }
-
-        private void CheckAllFinished()
-        {
-            if (!_updates.All(u => u.IsFinished)) return;
-            var errored = _updates.Where(u => _exceptions.ContainsKey(u))
-                .Select(u => new Tuple<IUpdateState, Exception>(u, _exceptions[u])).ToList();
-            var succeeded = _updates.Where(u => !_exceptions.ContainsKey(u)).ToList();
-            _finishedCallback(new FinishedArgs(succeeded, errored));
-        }
-
-        public delegate void SetUpDelegate(SetUpArgs args, Action<bool> proceed);
-        public delegate void PreparedDelegate(PreparedArgs args, Action<bool> proceed);
-        public delegate void FinishedDelegate(FinishedArgs args);
     }
 
-    public class FinishedArgs
+    public class StageCallbackArgs
     {
         public List<IUpdateState> Succeeded { get; }
-        public List<Tuple<IUpdateState, Exception>> Failed { get; }
+        public List<IUpdateState> Failed { get; }
 
-        public FinishedArgs(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed)
+        public StageCallbackArgs(List<IUpdateState> succeeded, List<IUpdateState> failed)
         {
             Succeeded = succeeded;
             Failed = failed;
         }
-    }
-
-    public class PreparedArgs
-    {
-        public List<IUpdateState> Succeeded { get; }
-        public List<Tuple<IUpdateState, Exception>> Failed { get; }
-
-        public PreparedArgs(List<IUpdateState> succeeded, List<Tuple<IUpdateState, Exception>> failed)
-        {
-            Succeeded = succeeded;
-            Failed = failed;
-        }
-    }
-
-    public class SetUpArgs
-    {
-        public List<DownloadInfo> Succeeded { get; }
-        public List<DownloadInfo> Failed { get; }
-
-        public SetUpArgs(List<DownloadInfo> succeeded, List<DownloadInfo> failed)
-        {
-            Succeeded = succeeded;
-            Failed = failed;
-        }
-    }
-
-    public class DownloadInfo
-    {
-        internal DownloadInfo(IModelRepositoryMod repositoryMod, string identifier, Promise<IUpdateState> promise)
-        {
-            RepositoryMod = repositoryMod;
-            Identifier = identifier;
-            Promise = promise;
-        }
-
-        internal IModelRepositoryMod RepositoryMod { get; }
-        internal string Identifier { get; }
-        internal Promise<IUpdateState> Promise { get; }
     }
 }

@@ -5,7 +5,7 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public abstract class ModAction : ViewModelClass, IEquatable<ModAction>
+    public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
         internal static ModAction Create(RepositoryModActionSelection selection, Dictionary<IModelStorageMod, Model.ModAction> actions)
         {

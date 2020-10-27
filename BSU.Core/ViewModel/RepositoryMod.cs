@@ -1,14 +1,10 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using BSU.Core.Annotations;
+﻿using System.Linq;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class RepositoryMod : ViewModelClass
+    public class RepositoryMod : ObservableBase
     {
         private readonly IModelRepositoryMod _mod;
 
@@ -69,7 +65,15 @@ namespace BSU.Core.ViewModel
             {
                 AddStorage(storage);
             }
-            SelectionChanged = new DelegateCommand(ChangeSelection);
+
+            // TODO
+            /*mod.OnUpdateChange += () =>
+            {
+                if (mod.CurrentUpdate == null)
+                    UpdateProgress = null;
+                else
+                    UpdateProgress = mod.CurrentUpdate.Progress;
+            };*/
         }
 
         private void AddAction(IModelStorageMod storageMod)
@@ -90,13 +94,10 @@ namespace BSU.Core.ViewModel
             Actions.Remove(selection);
         }
 
-        private void ChangeSelection()
-        {
-            //_mod.Selection = _selection?.Selection;
-        }
-
         private void UpdateErrorText()
         {
+            // TODO: make sure it updates itself when e.g. conflict states change
+            
             if (_mod.Selection == null)
             {
                 ErrorText = "Select an action";
@@ -123,12 +124,10 @@ namespace BSU.Core.ViewModel
                     return;
                 }
 
-                var conflicts = action.Conflicts.Select(c => $"{c.Parent}:{c}"); // TODO: include repo identifier
+                var conflicts = action.Conflicts.Select(c => $"{c.Parent}:{c}");
                 ErrorText = "Conflicts: " + string.Join(", ", conflicts);
             }
         }
-
-        public DelegateCommand SelectionChanged { get; }
 
         // TODO: validate folder name: invalid chars, leading '@'
         public string DownloadIdentifier
@@ -155,7 +154,20 @@ namespace BSU.Core.ViewModel
             }
         }
 
+        public UpdateProgress UpdateProgress
+        {
+            get => _updateProgress;
+            private set
+            {
+                if (value == _updateProgress) return;
+                _updateProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
         private string _errorText;
+        private UpdateProgress _updateProgress;
+
         public string ErrorText
         {
             get => _errorText;
@@ -163,6 +175,53 @@ namespace BSU.Core.ViewModel
             {
                 if (value == _errorText) return;
                 _errorText = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public class UpdateProgress : ObservableBase
+    {
+        private string _stage;
+        private bool _isIndeterminate;
+        private double _progress;
+
+        public UpdateProgress(string stage, bool isIndeterminate, double progress = 0)
+        {
+            _stage = stage;
+            _isIndeterminate = isIndeterminate;
+            _progress = progress;
+        }
+        
+        public string Stage
+        {
+            get => _stage;
+            internal set
+            {
+                if (value == _stage) return;
+                _stage = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool IsIndeterminate
+        {
+            get => _isIndeterminate;
+            internal set
+            {
+                if (value == _isIndeterminate) return;
+                _isIndeterminate = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public double Progress
+        {
+            get => _progress;
+            internal set
+            {
+                if (value == _progress) return;
+                _progress = value;
                 OnPropertyChanged();
             }
         }

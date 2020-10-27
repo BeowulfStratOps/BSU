@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
-using BSU.Core.Model.Utility;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -29,6 +28,21 @@ namespace BSU.Core.Model
         private Exception _error;
 
         private RepositoryModActionSelection _selection;
+
+        public event Action OnUpdateChange;
+        private IUpdateState _currentUpdate;
+
+        public IUpdateState CurrentUpdate
+        {
+            get => _currentUpdate;
+            private set
+            {
+                if (value == _currentUpdate) return;
+                _currentUpdate = value;
+                OnUpdateChange?.Invoke();
+            }
+        }
+
         public RepositoryModActionSelection Selection
         {
             get => _selection;
@@ -44,8 +58,6 @@ namespace BSU.Core.Model
 
         public Dictionary<IModelStorageMod, ModAction> Actions { get; } = new Dictionary<IModelStorageMod, ModAction>();
 
-        private readonly JobSlot<SimpleJob> _loading;
-
         public RepositoryMod(IActionQueue actionQueue, IRepositoryMod implementation, string identifier,
             IJobManager jobManager, IRepositoryModState internalState, RelatedActionsBag relatedActionsBag,
             IModelStructure modelStructure)
@@ -58,8 +70,8 @@ namespace BSU.Core.Model
             Identifier = identifier;
             DownloadIdentifier = identifier;
             var title = $"Load RepoMod {Identifier}";
-            _loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
-            _loading.OnFinished += error =>
+            var loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
+            loading.OnFinished += error =>
             {
                 if (error == null) return;
                 actionQueue.EnQueueAction(() =>
@@ -68,7 +80,7 @@ namespace BSU.Core.Model
                 });
             };
 
-            _loading.StartJob();
+            loading.StartJob();
         }
 
         private void Load(CancellationToken cancellationToken)
@@ -153,29 +165,32 @@ namespace BSU.Core.Model
             Selection = selection;
         }
 
-        public ModUpdateInfo DoUpdate()
+        public void DoUpdate()
         {
+            if (CurrentUpdate != null) throw new InvalidOperationException();
             if (Selection == null) throw new InvalidOperationException();
 
             // TODO: switch
 
-            if (Selection.DoNothing) return null;
+            if (Selection.DoNothing) return;
 
             if (Selection.StorageMod != null)
             {
                 var action = Actions[Selection.StorageMod];
-                if (action.ActionType != ModActionEnum.Update && action.ActionType != ModActionEnum.ContinueUpdate) return null;
+                if (action.ActionType != ModActionEnum.Update && action.ActionType != ModActionEnum.ContinueUpdate) return;
+                
                 var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget);
-                return new ModUpdateInfo(update);
+                update.OnEnded += () => CurrentUpdate = null;
+                CurrentUpdate = update;
+                return;
             }
 
             if (Selection.DownloadStorage != null)
             {
-                var promise = new Promise<IUpdateState>();
-                Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier,
-                    promise.Error, promise.Set);
-                var downloadInfo = new DownloadInfo(this, DownloadIdentifier, promise);
-                return new ModUpdateInfo(downloadInfo);
+                var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier);
+                update.OnEnded += () => CurrentUpdate = null;
+                CurrentUpdate = update;
+                return;
             }
 
             throw new InvalidOperationException();
@@ -198,21 +213,5 @@ namespace BSU.Core.Model
         public event Action SelectionChanged;
 
         public event Action DownloadIdentifierChanged;
-    }
-
-    internal class ModUpdateInfo
-    {
-        public DownloadInfo DownloadInfo { get; }
-        public IUpdateState UpdateState { get; }
-
-        public ModUpdateInfo(DownloadInfo downloadInfo)
-        {
-            DownloadInfo = downloadInfo;
-        }
-
-        public ModUpdateInfo(IUpdateState updateState)
-        {
-            UpdateState = updateState;
-        }
     }
 }

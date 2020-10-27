@@ -9,8 +9,7 @@ namespace BSU.Core.Model
     {
         List<IModelStorageMod> Mods { get; } // TODO: readonly
 
-        void PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
-            Action<Exception> setupError, Action<IUpdateState> callback);
+        IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier);
         event Action<IModelStorageMod> ModAdded;
         bool CanWrite { get; }
         bool IsLoading { get; }

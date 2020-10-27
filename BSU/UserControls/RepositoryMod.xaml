@@ -19,11 +19,6 @@
             </StackPanel>
             <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Width="200">
                 <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Path=Actions}" SelectedItem="{Binding Selection}">
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="SelectionChanged">
-                            <i:InvokeCommandAction Command="{Binding SelectionChanged}"></i:InvokeCommandAction>
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
                     <ComboBox.Resources>
                         <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
                             <local:SelectDoNothing></local:SelectDoNothing>

@@ -6,7 +6,7 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class StorageMod : ViewModelClass
+    public class StorageMod : ObservableBase
     {
         internal IModelStorageMod ModelStorageMod { get; }
         

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BSU.Core.Model.Utility;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -20,6 +19,8 @@ namespace BSU.Core.Model
         event Action<IModelStorageMod> ActionAdded;
         event Action SelectionChanged;
         event Action DownloadIdentifierChanged;
-        ModUpdateInfo DoUpdate();
+        void DoUpdate();
+        IUpdateState CurrentUpdate { get; }
+        event Action OnUpdateChange;
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using BSU.Core.Model;
-using BSU.Core.Model.Utility;
 using BSU.Core.Tests.Mocks;
 using Xunit;
 using Xunit.Abstractions;
@@ -29,7 +28,7 @@ namespace BSU.Core.Tests
             public RepositoryUpdate.SetUpDelegate GetSetUp(int succeeded, int errored, bool proceed)
             {
                 _calls.Remove(nameof(RepositoryUpdate.SetUpDelegate));
-                void Func(SetUpArgs args, Action<bool> _proceed)
+                void Func(StageCallbackArgs args, Action<bool> _proceed)
                 {
                     Assert.Equal(succeeded, args.Succeeded.Count);
                     Assert.Equal(errored, args.Failed.Count);
@@ -41,7 +40,7 @@ namespace BSU.Core.Tests
 
             public RepositoryUpdate.SetUpDelegate GetSetUp()
             {
-                void Func(SetUpArgs args, Action<bool> _proceed)
+                void Func(StageCallbackArgs args, Action<bool> _proceed)
                 {
                     Assert.False(true);
                 }
@@ -51,7 +50,7 @@ namespace BSU.Core.Tests
             public RepositoryUpdate.PreparedDelegate GetPrepared(int succeeded, int errored, bool proceed)
             {
                 _calls.Add(nameof(RepositoryUpdate.PreparedDelegate));
-                void Func(PreparedArgs args, Action<bool> _proceed)
+                void Func(StageCallbackArgs args, Action<bool> _proceed)
                 {
                     Assert.Equal(succeeded, args.Succeeded.Count);
                     Assert.Equal(errored, args.Failed.Count);
@@ -63,7 +62,7 @@ namespace BSU.Core.Tests
 
             public RepositoryUpdate.PreparedDelegate GetPrepared()
             {
-                void Func(PreparedArgs args, Action<bool> _proceed)
+                void Func(StageCallbackArgs args, Action<bool> _proceed)
                 {
                     Assert.False(true);
                 }
@@ -73,7 +72,7 @@ namespace BSU.Core.Tests
             public RepositoryUpdate.FinishedDelegate GetFinished(int succeeded, int errored)
             {
                 _calls.Add(nameof(RepositoryUpdate.FinishedDelegate));
-                void Func(FinishedArgs args)
+                void Func(StageCallbackArgs args)
                 {
                     Assert.Equal(succeeded, args.Succeeded.Count);
                     Assert.Equal(errored, args.Failed.Count);
@@ -84,7 +83,7 @@ namespace BSU.Core.Tests
 
             public RepositoryUpdate.FinishedDelegate GetFinished()
             {
-                void Func(FinishedArgs args)
+                void Func(StageCallbackArgs args)
                 {
                     Assert.False(true);
                 }
@@ -101,13 +100,13 @@ namespace BSU.Core.Tests
         private void Success()
         {
             var repoUpdate = new RepositoryUpdate(
-                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetSetUp(),
                 _funcCheck.GetPrepared(1, 0, true),
                 _funcCheck.GetFinished(1, 0));
             var updateState = new MockUpdateState(false, false);
 
             repoUpdate.Add(updateState);
-            repoUpdate.DoneAdding();
+            repoUpdate.Start();
 
             Assert.True(updateState.CommitCalled);
         }
@@ -116,13 +115,13 @@ namespace BSU.Core.Tests
         private void PrepAbort()
         {
             var repoUpdate = new RepositoryUpdate(
-                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetSetUp(),
                 _funcCheck.GetPrepared(1, 0, false),
                 _funcCheck.GetFinished());
 
             var updateState = new MockUpdateState(false, false);
             repoUpdate.Add(updateState);
-            repoUpdate.DoneAdding();
+            repoUpdate.Start();
 
             Assert.True(updateState.AbortCalled);
         }
@@ -135,25 +134,21 @@ namespace BSU.Core.Tests
                 _funcCheck.GetPrepared(),
                 _funcCheck.GetFinished());
 
-            var p = new Promise<IUpdateState>();
-            var info = new DownloadInfo(null, "", p);
-            repoUpdate.Add(info);
-            repoUpdate.DoneAdding();
-
-            p.Error(new TestException());
+            repoUpdate.Add(new MockUpdateState(true, false, false));
+            repoUpdate.Start();
         }
 
         [Fact]
         private void PrepError()
         {
             var repoUpdate = new RepositoryUpdate(
-                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetSetUp(),
                 _funcCheck.GetPrepared(0, 1, false),
                 _funcCheck.GetFinished());
 
             var updateState = new MockUpdateState(true, false);
             repoUpdate.Add(updateState);
-            repoUpdate.DoneAdding();
+            repoUpdate.Start();
 
             Assert.False(updateState.CommitCalled);
         }
@@ -162,13 +157,13 @@ namespace BSU.Core.Tests
         private void UpdateError()
         {
             var repoUpdate = new RepositoryUpdate(
-                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetSetUp(),
                 _funcCheck.GetPrepared(1, 0, true),
                 _funcCheck.GetFinished(0, 1));
 
             var updateState = new MockUpdateState(false, true);
             repoUpdate.Add(updateState);
-            repoUpdate.DoneAdding();
+            repoUpdate.Start();
 
             Assert.True(updateState.CommitCalled);
         }
@@ -177,20 +172,15 @@ namespace BSU.Core.Tests
         private void SetupError_KeepGoing()
         {
             var repoUpdate = new RepositoryUpdate(
-                _funcCheck.GetSetUp(0, 1, true),
+                _funcCheck.GetSetUp(1, 1, true),
                 _funcCheck.GetPrepared(1, 0, true),
                 _funcCheck.GetFinished(1, 0));
 
             var updateState = new MockUpdateState(false, false);
             repoUpdate.Add(updateState);
+            repoUpdate.Add(new MockUpdateState(true, false, false));
 
-            var pFail = new Promise<IUpdateState>();
-            var info = new DownloadInfo(null, "", pFail);
-            repoUpdate.Add(info);
-
-            repoUpdate.DoneAdding();
-
-            pFail.Error(new TestException());
+            repoUpdate.Start();
 
             Assert.True(updateState.CommitCalled);
         }
@@ -199,7 +189,7 @@ namespace BSU.Core.Tests
         private void PrepareError_KeepGoing()
         {
             var repoUpdate = new RepositoryUpdate(
-                _funcCheck.GetSetUp(0, 0, true),
+                _funcCheck.GetSetUp(),
                 _funcCheck.GetPrepared(1, 1, true),
                 _funcCheck.GetFinished(1, 0));
 
@@ -207,10 +197,9 @@ namespace BSU.Core.Tests
             repoUpdate.Add(updateState);
             var updateStateFail = new MockUpdateState(true, false);
             repoUpdate.Add(updateStateFail);
-            repoUpdate.DoneAdding();
+            repoUpdate.Start();
 
             Assert.True(updateState.CommitCalled);
-            Assert.True(updateStateFail.AbortCalled);
         }
     }
 }

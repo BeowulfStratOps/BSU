@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.JobManager;
 using BSU.Core.Model;
+using NLog;
 
 namespace BSU.Core.Tests.Mocks
 {
@@ -10,9 +11,11 @@ namespace BSU.Core.Tests.Mocks
     {
         private readonly List<IJob> _jobs = new List<IJob>();
         private readonly Queue<Action> _actionQueue = new Queue<Action>();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public void QueueJob(IJob job)
         {
+            _logger.Debug("Queueing job {0}: {1}", job.GetUid(), job.GetTitle());
             _jobs.Add(job);
         }
 
@@ -36,6 +39,7 @@ namespace BSU.Core.Tests.Mocks
             var job = _jobs[0];
             if (job.DoWork()) return true;
             _jobs.Remove(job);
+            _logger.Debug("Removed job {0}: {1}", job.GetUid(), job.GetTitle());
             return true;
         }
         

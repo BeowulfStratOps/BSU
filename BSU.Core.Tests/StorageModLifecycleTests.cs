@@ -24,7 +24,12 @@ namespace BSU.Core.Tests
             }
 
             var state = new MockStorageModState {UpdateTarget = stateTarget};
-            var storageMod = new StorageMod(worker, mockStorage, "mystorage", updateTarget, state, worker, Guid.Empty, true);
+            IUpdateState downloadState = null;
+
+            if (updateTarget != null)
+                downloadState = new MockUpdateState(false, false, false);
+            
+            var storageMod = new StorageMod(worker, mockStorage, "mystorage", updateTarget, state, worker, Guid.Empty, true, downloadState);
             return (mockStorage, storageMod, worker);
         }
 
@@ -129,7 +134,7 @@ namespace BSU.Core.Tests
             var (implementation, storageMod, worker) = CreateStorageMod(updateTarget: target);
 
             var repo = CreateRepoMod();
-            storageMod.PrepareUpdate(repo, target, () => { });
+            storageMod.PrepareUpdate(repo, target);
             worker.DoQueueStep();
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState().State);
@@ -150,9 +155,13 @@ namespace BSU.Core.Tests
             var (implementation, storageMod, worker) = CreateStorageMod(updateTarget: target);
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target, () => { });
-            update.OnPrepared += update.Commit;
-            update.Prepare();
+            var update = storageMod.PrepareUpdate(repo, target);
+            update.OnStateChange += () =>
+            {
+                if (update.State == UpdateState.Prepared)
+                    update.Continue();
+            };
+            update.Continue();
             worker.DoWork();
 
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
@@ -190,7 +199,7 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             var repo = CreateRepoMod();
-            storageMod.PrepareUpdate(repo, target, () => { });
+            storageMod.PrepareUpdate(repo, target);
             worker.DoQueueStep();
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState().State);
@@ -215,10 +224,14 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target, () => { });
-            update.OnPrepared += update.Commit;
+            var update = storageMod.PrepareUpdate(repo, target);
+            update.OnStateChange += () =>
+            {
+                if (update.State == UpdateState.Prepared)
+                    update.Continue();
+            };
 
-            update.Prepare();
+            update.Continue();
             worker.DoWork();
 
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
@@ -241,10 +254,14 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), () => { });
-            update.OnPrepared += update.Abort;
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
+            update.OnStateChange += () =>
+            {
+                if (update.State == UpdateState.Prepared)
+                    update.Abort();
+            };
 
-            update.Prepare();
+            update.Continue();
             worker.DoWork();
 
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
@@ -292,13 +309,14 @@ namespace BSU.Core.Tests
             worker.DoWork();
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), () => { });
-            update.OnPrepared += () =>
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
+            update.OnStateChange += () =>
             {
+                if (update.State != UpdateState.Prepared) return;
                 implementation.ThrowErrorOpen = true;
-                update.Commit();
+                update.Continue();
             };
-            update.Prepare();
+            update.Continue();
 
             worker.DoWork();
 
@@ -319,9 +337,13 @@ namespace BSU.Core.Tests
             var repo = CreateRepoMod();
             Exception error = null;
             implementation.ThrowErrorOpen = true;
-            var update = storageMod.PrepareUpdate(repo, target, () => { });
-            update.OnFinished += e => { error = e; };
-            update.Prepare();
+            var update = storageMod.PrepareUpdate(repo, target);
+            update.OnStateChange += () =>
+            {
+                if (update.State != UpdateState.Errored) return;
+                error = update.Exception;
+            };
+            update.Continue();
             worker.DoWork();
 
             Assert.NotNull(error);

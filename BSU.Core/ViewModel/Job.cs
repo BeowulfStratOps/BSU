@@ -7,7 +7,7 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class Job : ViewModelClass
+    public class Job : ObservableBase
     {
         public string Title { get; }
         internal IJob BackingJob;

@@ -10,7 +10,7 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class ViewModel : ViewModelClass
+    public class ViewModel : ObservableBase
     {
         private readonly IActionQueue _dispatcher;
         

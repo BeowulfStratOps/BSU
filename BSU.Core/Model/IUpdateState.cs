@@ -4,15 +4,32 @@ namespace BSU.Core.Model
 {
     public interface IUpdateState
     {
-        // TODO: Improve interface. use either events with state information, or state from the object. not both
-
-        void Prepare();
-        void Commit();
+        void Continue();
         void Abort();
-        event Action OnPrepared;
-        event Action<Exception> OnFinished;
+        
+        UpdateState State { get; }
+        Exception Exception { get; }
+        
+        event Action OnStateChange;
+        event Action OnEnded;
+        
         int GetPrepStats();
-        bool IsPrepared { get; }
-        bool IsFinished { get; }
+        
+        bool IsIndeterminate { get; }
+        double Progress { get; }
+        event Action OnProgressChange;
+    }
+
+    public enum UpdateState
+    {
+        NotCreated,
+        Creating,
+        Created,
+        Preparing,
+        Prepared,
+        Updating,
+        Updated,
+        Aborted,
+        Errored
     }
 }

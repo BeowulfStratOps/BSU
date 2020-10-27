@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using BSU.Core.JobManager;
-using BSU.Core.Model.Utility;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -29,6 +27,8 @@ namespace BSU.Core.Model
         public JobSlot<SimpleJob> Loading { get; }
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        
+        public RepositoryUpdate CurrentUpdate { get; internal set; }
 
         public Repository(IRepository implementation, string name, string location, IJobManager jobManager,
             IMatchMaker matchMaker, IRepositoryState internalState, IActionQueue actionQueue,
@@ -99,18 +99,21 @@ namespace BSU.Core.Model
 
         public void DoUpdate(RepositoryUpdate.SetUpDelegate setup, RepositoryUpdate.PreparedDelegate prepared, RepositoryUpdate.FinishedDelegate finished)
         {
+            if (CurrentUpdate != null) throw new InvalidOperationException();
+            
             var repoUpdate = new RepositoryUpdate(setup, prepared, finished);
 
             foreach (var mod in Mods)
             {
-                var updateInfo = mod.DoUpdate();
+                mod.DoUpdate();
+                var updateInfo = mod.CurrentUpdate;
                 if (updateInfo == null) continue; // Do nothing
-                if (updateInfo.UpdateState != null)
-                    repoUpdate.Add(updateInfo.UpdateState);
-                else
-                    repoUpdate.Add(updateInfo.DownloadInfo);
+                repoUpdate.Add(updateInfo);
             }
-            repoUpdate.DoneAdding();
+
+            repoUpdate.OnEnded += () => CurrentUpdate = null;
+            repoUpdate.Start();
+            CurrentUpdate = repoUpdate;
         }
     }
 }
