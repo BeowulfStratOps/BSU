@@ -47,13 +47,10 @@ No - Keep mods
 Cancel - Do not remove this storage";
             
             var context = new MsgPopupContext(text, "Remove Storage");
-            _dispatcher.EnQueueAction(() =>
+            DeleteInteraction.Raise(context, b =>
             {
-                DeleteInteraction.Raise(context, b =>
-                {
-                    if (b == null) return;
-                    _model.DeleteStorage(_storage, (bool) b);
-                });
+                if (b == null) return;
+                _model.DeleteStorage(_storage, (bool) b);
             });
         }
     }

@@ -9,7 +9,7 @@ namespace BSU.Core.Model
     internal class SimpleJob : IJob
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        
+
         private readonly Action<CancellationToken> _action;
         private readonly string _title;
         private readonly int _priority;
@@ -17,7 +17,8 @@ namespace BSU.Core.Model
         public Exception Error { get; private set; }
         private readonly  Uid _uid = new Uid();
         private bool _done = false;
-        private object _lock = new object();
+        private readonly object _lock = new object();
+        private bool _wasShutdownCold = false;
 
         public SimpleJob(Action<CancellationToken> action, string title, int priority)
         {
@@ -26,14 +27,15 @@ namespace BSU.Core.Model
             _priority = priority;
         }
 
-        public void Abort()
+        public void Abort(bool coldShutdown = false)
         {
             _tokenSource.Cancel();
+            _wasShutdownCold |= coldShutdown;
         }
 
         public Uid GetUid() => _uid;
 
-        public bool DoWork()
+        public bool DoWork(IActionQueue actionQueue)
         {
             lock (_lock)
             {
@@ -49,7 +51,8 @@ namespace BSU.Core.Model
                 Error = e;
                 Logger.Error(e);
             }
-            OnFinished?.Invoke();
+            if (!_wasShutdownCold)
+                actionQueue.EnQueueAction(() => OnFinished?.Invoke());
             return false;
         }
 

@@ -110,7 +110,7 @@ namespace BSU.Core.Sync
 
         public int GetTotalNewFilesCount() => _allActions.OfType<DownloadAction>().Count();
 
-        public bool DoWork()
+        public bool DoWork(IActionQueue actionQueue)
         {
             if (_cancellationTokenSource.IsCancellationRequested) return false;
             SyncWorkUnit work;
@@ -130,9 +130,13 @@ namespace BSU.Core.Sync
                 Errors.Add(e);
                 Logger.Error(e);
             }
-            
-            OnProgress?.Invoke();
-            if (_workCounter.Dec()) Finished();
+
+            actionQueue.EnQueueAction(() => OnProgress?.Invoke());
+            if (_workCounter.Dec())
+            {
+                Logger.Debug("Sync done");
+                actionQueue.EnQueueAction(() => OnFinished?.Invoke());
+            }
             
             lock (_actionsTodo)
             {
@@ -145,16 +149,11 @@ namespace BSU.Core.Sync
         /// <summary>
         /// Signals to abort this job. Does not wait.
         /// </summary>
-        public void Abort()
+        public void Abort(bool coldShutdown = false)
         {
             _cancellationTokenSource.Cancel();
-            OnFinished?.Invoke();
-        }
-
-        private void Finished()
-        {
-            Logger.Debug("Sync done");
-            OnFinished?.Invoke();
+            if (!coldShutdown)
+                OnFinished?.Invoke();
         }
 
         public Exception GetError()

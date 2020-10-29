@@ -38,11 +38,6 @@ namespace BSU.Core.Model
 
         public void Load()
         {
-            _dispatcher.EnQueueAction(LoadInternal);
-        }
-
-        private void LoadInternal()
-        {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
                 var implementation = _types.GetRepoImplementation(repositoryEntry.Type, repositoryEntry.Url);

@@ -61,13 +61,10 @@ No - Keep local mods
 Cancel - Do not remove this repository";
             
             var context = new MsgPopupContext(text, "Remove Repository");
-            _dispatcher.EnQueueAction(() =>
+            DeleteInteraction.Raise(context, b =>
             {
-                DeleteInteraction.Raise(context, b =>
-                {
-                    if (b == null) return;
-                    _model.DeleteRepository(_repository, (bool) b);
-                });
+                if (b == null) return;
+                _model.DeleteRepository(_repository, (bool) b);
             });
         }
 
@@ -86,10 +83,7 @@ Cancel - Do not remove this repository";
         {
             var text = $"{args.Succeeded.Count} Mods updated. {args.Failed.Count} Mods failed.";
             var context = new MsgPopupContext(text, "Update Finished");
-            _dispatcher.EnQueueAction(() =>
-            {
-                UpdateFinished.Raise(context, o => { });
-            });
+            UpdateFinished.Raise(context, o => { });
         }
 
         private void Prepared(StageCallbackArgs args, Action<bool> proceed)
@@ -97,17 +91,14 @@ Cancel - Do not remove this repository";
             var bytes = args.Succeeded.Sum(s => s.GetPrepStats());
             var text = $"{bytes} Bytes from {args.Succeeded.Count} mods to download. {args.Failed.Count} mods failed. Proceed?";
             var context = new MsgPopupContext(text, "Update Prepared");
-            _dispatcher.EnQueueAction(() =>
-            {
-                UpdatePrepared.Raise(context, proceed);
-            });
+            UpdatePrepared.Raise(context, proceed);
         }
 
         private void SetUp(StageCallbackArgs args, Action<bool> proceed)
         {
             if (!args.Failed.Any())
             {
-                _dispatcher.EnQueueAction(() => proceed(true));
+                proceed(true);
                 return;
             }
 
@@ -115,10 +106,7 @@ Cancel - Do not remove this repository";
             var folders = "TODO";
             var text = $"There were errors while creating mod folders: {folders}. Proceed?";
             var context = new MsgPopupContext(text, "Proceed with Update?");
-            _dispatcher.EnQueueAction(() =>
-            {
-                UpdateSetup.Raise(context, proceed);
-            });
+            UpdateSetup.Raise(context, proceed);
         }
 
         public DelegateCommand Update { get; }

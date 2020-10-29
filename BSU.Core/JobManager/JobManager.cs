@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using BSU.Core.Model;
 using NLog;
 
 namespace BSU.Core.JobManager
@@ -15,7 +16,9 @@ namespace BSU.Core.JobManager
     internal class JobManager : IJobManager
     {
         private const int MAX_THREADS = 5;
-
+        
+        private readonly IActionQueue _actionQueue;
+        
         // ReSharper disable once StaticMemberInGenericType
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -24,8 +27,9 @@ namespace BSU.Core.JobManager
         private bool _shutdown;
         private readonly List<Thread> _workerThreads = new List<Thread>();
 
-        public JobManager()
+        public JobManager(IActionQueue actionQueue)
         {
+            _actionQueue = actionQueue;
             for (int i = 0; i < MAX_THREADS; i++)
             {
                 var thread = new Thread(DoWork);
@@ -55,7 +59,7 @@ namespace BSU.Core.JobManager
             {
                 _jobsTodo.Add(job);
             }
-            JobAdded?.Invoke(job);
+            _actionQueue.EnQueueAction(() => JobAdded?.Invoke(job));
         }
 
         /// <summary>
@@ -99,7 +103,7 @@ namespace BSU.Core.JobManager
                     continue;
                 }
 
-                var moreToDo = job.DoWork();
+                var moreToDo = job.DoWork(_actionQueue);
 
                 lock (_jobsTodo)
                 {
@@ -121,7 +125,7 @@ namespace BSU.Core.JobManager
             {
                 foreach (var job in _jobsTodo)
                 {
-                    job.Abort();
+                    job.Abort(true);
                 }
             }
 

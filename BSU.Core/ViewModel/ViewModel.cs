@@ -63,8 +63,8 @@ namespace BSU.Core.ViewModel
             };
             jobManager.JobAdded += job =>
             {
-                _dispatcher.EnQueueAction(() => JobAdded(job));
-                job.OnFinished += () => _dispatcher.EnQueueAction(() => JobFinished(job));
+                JobAdded(job);
+                job.OnFinished += () => JobFinished(job);
             };
 
         }

@@ -26,11 +26,11 @@ namespace BSU.Core
         /// Create a new core instance. Should be used in a using block.
         /// </summary>
         /// <param name="settingsPath">Location to store local settings, including repo/storage data.</param>
-        public Core(FileInfo settingsPath, Action<Action> dispatch) : this(Settings.Load(settingsPath), new JobManager.JobManager(), dispatch)
+        public Core(FileInfo settingsPath, Action<Action> dispatch) : this(Settings.Load(settingsPath), dispatch)
         {
         }
 
-        internal Core(ISettings settings, Action<Action> dispatch) : this(settings, new JobManager.JobManager(), dispatch)
+        internal Core(ISettings settings, Action<Action> dispatch) : this(settings, null, dispatch)
         {
         }
 
@@ -38,10 +38,12 @@ namespace BSU.Core
         internal Core(ISettings settings, IJobManager jobManager, Action<Action> dispatch)
         {
             Logger.Info("Creating new core instance");
+            var dispatcher = new Dispatcher(dispatch);
+            jobManager ??= new JobManager.JobManager(dispatcher);
             JobManager = jobManager;
             Types = new Types();
             var state = new InternalState(settings);
-            var dispatcher = new Dispatcher(dispatch);
+            
             Model = new Model.Model(state, jobManager, Types, dispatcher);
             ViewModel = new ViewModel.ViewModel(Model, jobManager, dispatcher);
         }

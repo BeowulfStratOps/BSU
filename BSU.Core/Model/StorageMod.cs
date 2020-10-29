@@ -66,21 +66,15 @@ namespace BSU.Core.Model
             _hashing = new JobSlot<SimpleJob>(() => new SimpleJob(HashJob, title2, 1), title2, jobManager);
             _loading.OnFinished += error =>
             {
-                if (error == null) return; // Handled in job
-                ActionQueue.EnQueueAction(() =>
-                {
-                    _error = error;
-                    State = StorageModStateEnum.ErrorLoad;
-                });
+                if (error == null) return;
+                _error = error;
+                State = StorageModStateEnum.ErrorLoad;
             };
             _hashing.OnFinished += error =>
             {
-                if (error == null) return; // Handled in job
-                ActionQueue.EnQueueAction(() =>
-                {
-                    _error = error;
-                    State = StorageModStateEnum.ErrorLoad;
-                });
+                if (error == null) return;
+                _error = error;
+                State = StorageModStateEnum.ErrorLoad;
             };
             if (updateTarget == null)
             {

@@ -73,11 +73,7 @@ namespace BSU.Core.Model
             var loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
             loading.OnFinished += error =>
             {
-                if (error == null) return;
-                actionQueue.EnQueueAction(() =>
-                {
-                    _error = error;
-                });
+                _error = error;
             };
 
             loading.StartJob();

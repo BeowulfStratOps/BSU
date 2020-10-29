@@ -11,7 +11,7 @@ namespace BSU.Core.Model
     {
         private readonly IJobManager _jobManager;
         private readonly IActionQueue _actionQueue;
-        private readonly IRepositoryMod _repository;
+        private readonly IRepositoryMod _repositoryMod;
         private readonly Func<IUpdateState, StorageMod> _createStorageMod;
         private StorageMod _storageMod;
         private RepoSync _syncJob;
@@ -36,11 +36,11 @@ namespace BSU.Core.Model
             }
         }
 
-        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repository, StorageMod storageMod, UpdateTarget target)
+        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repositoryMod, StorageMod storageMod, UpdateTarget target)
         {
             _jobManager = jobManager;
             _actionQueue = actionQueue;
-            _repository = repository;
+            _repositoryMod = repositoryMod;
             _storageMod = storageMod;
             Target = target;
             
@@ -49,12 +49,12 @@ namespace BSU.Core.Model
             _logger.Info("Creating Update State for mod {0}", storageMod.Identifier);
         }
 
-        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repository, UpdateTarget target, Func<IUpdateState, StorageMod> createStorageMod)
+        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repositoryMod, UpdateTarget target, Func<IUpdateState, StorageMod> createStorageMod)
         {
             Target = target;
             _jobManager = jobManager;
             _actionQueue = actionQueue;
-            _repository = repository;
+            _repositoryMod = repositoryMod;
             _createStorageMod = createStorageMod;
 
             _state = UpdateState.NotCreated;
@@ -93,19 +93,16 @@ namespace BSU.Core.Model
             }, "Create StorageMod", 1);
             job.OnFinished += () =>
             {
-                _actionQueue.EnQueueAction(() =>
+                if (job.Error == null)
+                    State = UpdateState.Created;
+                else
                 {
-                    if (job.Error == null)
-                        State = UpdateState.Created;
-                    else
-                    {
-                        Exception = job.Error;
-                        State = UpdateState.Errored;
-                        OnEnded?.Invoke();
-                    }
-                });
+                    Exception = job.Error;
+                    State = UpdateState.Errored;
+                    OnEnded?.Invoke();
+                }
             };
-            _abort = job.Abort;
+            _abort = () => job.Abort();
             State = UpdateState.Creating;
             _jobManager.QueueJob(job);
         }
@@ -118,19 +115,16 @@ namespace BSU.Core.Model
             var job = new SimpleJob(DoPrepare, name, 1);
             job.OnFinished += () =>
             {
-                _actionQueue.EnQueueAction(() =>
+                if (job.Error == null)
+                    State = UpdateState.Prepared;
+                else
                 {
-                    if (job.Error == null)
-                        State = UpdateState.Prepared;
-                    else
-                    {
-                        Exception = job.Error;
-                        State = UpdateState.Errored;
-                        OnEnded?.Invoke();
-                    }
-                });
+                    Exception = job.Error;
+                    State = UpdateState.Errored;
+                    OnEnded?.Invoke();
+                }
             };
-            _abort = job.Abort;
+            _abort = () => job.Abort();
             State = UpdateState.Preparing;
             _jobManager.QueueJob(job);
         }
@@ -138,7 +132,7 @@ namespace BSU.Core.Model
         private void DoPrepare(CancellationToken cancellationToken)
         {
             var name = $"Updating {_storageMod.Identifier}";
-            _syncJob = new RepoSync(_repository, _storageMod, Target, name, 0, cancellationToken);
+            _syncJob = new RepoSync(_repositoryMod, _storageMod, Target, name, 0, cancellationToken);
         }
 
         private void Update()
@@ -152,19 +146,16 @@ namespace BSU.Core.Model
             }
             _syncJob.OnFinished += () =>
             {
-                _actionQueue.EnQueueAction(() =>
+                var error = _syncJob.GetError();
+                if (error == null)
+                    State = UpdateState.Updated;
+                else
                 {
-                    var error = _syncJob.GetError();
-                    if (error == null)
-                        State = UpdateState.Updated;
-                    else
-                    {
-                        Exception = error;
-                        State = UpdateState.Errored;
-                    }
+                    Exception = error;
+                    State = UpdateState.Errored;
+                }
 
-                    OnEnded?.Invoke();
-                });
+                OnEnded?.Invoke();
             };
             IsIndeterminate = false;
             _syncJob.OnProgress += () =>
@@ -172,7 +163,7 @@ namespace BSU.Core.Model
                 Progress = _syncJob.GetProgress();
                 OnProgressChange?.Invoke();
             };
-            _abort = _syncJob.Abort;
+            _abort = () => _syncJob.Abort();
             State = UpdateState.Updating;
             _jobManager.QueueJob(_syncJob);
         }
@@ -206,5 +197,10 @@ namespace BSU.Core.Model
         public bool IsIndeterminate { get; private set; } = true;
         public double Progress { get; private set; }
         public event Action OnProgressChange;
+
+        public override string ToString()
+        {
+            return (_storageMod?.Identifier ?? "??") + ": " + State;
+        }
     }
 }

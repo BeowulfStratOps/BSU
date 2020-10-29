@@ -1,5 +1,6 @@
 ﻿using System;
 using BSU.Core.JobManager;
+using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.Model
@@ -14,6 +15,8 @@ namespace BSU.Core.Model
         private readonly string _title;
         private readonly IJobManager _jobManager;
         private T _job;
+        private readonly object _lock = new object();
+        private readonly Uid _uid = new Uid();
 
         internal JobSlot(Func<T> starter, string title, IJobManager jobManager)
         {
@@ -23,28 +26,32 @@ namespace BSU.Core.Model
         }
         
         public bool IsActive() => _job != null;
-
+        
         public void StartJob()
         {
-            // TODO: It should never not be null. that would indicate an issue with the statemachine
-            if (_job == null) RestartJob();
-        }
-
-        public void RestartJob()
-        {
-            //TODO: use locks
-            _job?.Abort();
-            Logger.Debug($"Creating Simple Job {_title}");
-            _job = _starter();
-            _job.OnFinished += () =>
+            lock (_lock)
             {
-                var error = _job.GetError();
-                _job = null;
-                Logger.Debug($"Ended Job {_title}");
-                OnFinished?.Invoke(error);
-            };
-            Logger.Debug($"Queueing Job {_title}");
-            _jobManager.QueueJob(_job);
+                if (_job != null) throw new InvalidOperationException();
+                _job?.Abort();
+                Logger.Debug($"Creating Simple Job {_title}");
+                _job = _starter();
+                Logger.Trace("Starting job {0} from slot {1}", _job.GetUid(), _uid);
+                if (_job == null) throw new NullReferenceException("reeee2");
+                _job.OnFinished += () =>
+                {
+                    lock (_lock)
+                    {
+                        Logger.Debug($"Ended1 Job {_title}");
+                        if (_job == null) throw new NullReferenceException("reeee " + _uid);
+                        var error = _job.GetError();
+                        _job = null;
+                        Logger.Debug($"Ended Job {_title}");
+                        OnFinished?.Invoke(error);
+                    }
+                };
+                Logger.Debug($"Queueing Job {_title}");
+                _jobManager.QueueJob(_job);
+            }
         }
 
         public T GetJob() => _job;
