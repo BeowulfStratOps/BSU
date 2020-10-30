@@ -10,7 +10,6 @@ namespace BSU.Core.ViewModel
 {
     public class Storage : ObservableBase
     {
-        private readonly IActionQueue _dispatcher;
         private readonly IModelStorage _storage;
         private readonly IModel _model;
         public string Name { get; }
@@ -24,12 +23,11 @@ namespace BSU.Core.ViewModel
         public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
         public Guid Identifier { get; }
 
-        internal Storage(Model.Storage storage, IActionQueue dispatcher, IModel model)
+        internal Storage(Model.Storage storage,IModel model)
         {
             Delete = new DelegateCommand(DoDelete);
             IsLoading = storage.Loading.IsActive();
             ModelStorage = storage;
-            _dispatcher = dispatcher;
             _model = model;
             Identifier = storage.Identifier;
             _storage = storage;

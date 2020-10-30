@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using BSU.Core.JobManager;
+using BSU.Core.Model.Utility;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
 using NLog;
@@ -24,6 +25,7 @@ namespace BSU.Core.Model
         
         
         private UpdateState _state;
+        private readonly ProgressProvider _progressProvider = new ProgressProvider();
 
         public UpdateState State
         {
@@ -157,11 +159,10 @@ namespace BSU.Core.Model
 
                 OnEnded?.Invoke();
             };
-            IsIndeterminate = false;
+            _progressProvider.IsIndeterminate = false;
             _syncJob.OnProgress += () =>
             {
-                Progress = _syncJob.GetProgress();
-                OnProgressChange?.Invoke();
+                _progressProvider.Value = _syncJob.GetProgress();
             };
             _abort = () => _syncJob.Abort();
             State = UpdateState.Updating;
@@ -194,9 +195,7 @@ namespace BSU.Core.Model
             return (int) (_syncJob.GetTotalBytesToDownload() + _syncJob.GetTotalBytesToUpdate());
         }
 
-        public bool IsIndeterminate { get; private set; } = true;
-        public double Progress { get; private set; }
-        public event Action OnProgressChange;
+        public IProgressProvider ProgressProvider => _progressProvider;
 
         public override string ToString()
         {

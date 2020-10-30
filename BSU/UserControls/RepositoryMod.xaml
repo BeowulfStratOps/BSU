@@ -17,7 +17,7 @@
                 <TextBlock FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
                 <TextBlock Text="{Binding Path=DisplayName}"></TextBlock>
             </StackPanel>
-            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Width="200">
+            <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Width="200">
                 <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Path=Actions}" SelectedItem="{Binding Selection}">
                     <ComboBox.Resources>
                         <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
@@ -37,6 +37,7 @@
                 </DockPanel>
                 <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
             </StackPanel>
+            <ProgressBar Minimum="0" Maximum="1" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
         </DockPanel>
     </Border>
 </UserControl>

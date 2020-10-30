@@ -1,4 +1,5 @@
 ﻿using System;
+using BSU.Core.Model.Utility;
 
 namespace BSU.Core.Model
 {
@@ -14,10 +15,8 @@ namespace BSU.Core.Model
         event Action OnEnded;
         
         int GetPrepStats();
-        
-        bool IsIndeterminate { get; }
-        double Progress { get; }
-        event Action OnProgressChange;
+
+        IProgressProvider ProgressProvider { get; }
     }
 
     public enum UpdateState

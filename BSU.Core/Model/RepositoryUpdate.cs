@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BSU.Core.Model.Utility;
 using NLog;
 
 namespace BSU.Core.Model
@@ -28,11 +29,20 @@ namespace BSU.Core.Model
             _logger.Info("Creating");
         }
 
+        public ProgressProvider ProgressProvider { get; private set; } = new ProgressProvider();
+
         internal void Add(IUpdateState updateState)
         {
             _workingSet.Add(updateState);
             updateState.OnStateChange += Check;
+            updateState.ProgressProvider.PropertyChanged += (sender, args) => UpdateProgress();
             _logger.Trace("Added updateState with state {0}", updateState.State);
+        }
+
+        private void UpdateProgress()
+        {
+            ProgressProvider.IsIndeterminate = _workingSet.Any(u => u.ProgressProvider.IsIndeterminate);
+            ProgressProvider.Value = _workingSet.Sum(u => u.ProgressProvider.Value) / _workingSet.Count;
         }
 
         private void Check()
@@ -52,10 +62,12 @@ namespace BSU.Core.Model
             {
                 case UpdateState.Created:
                     _nextStage = UpdateState.Prepared;
+                    ProgressProvider.Stage = UpdateState.Preparing.ToString();
                     _setUpCallback(args, Callback);
                     break;
                 case UpdateState.Prepared:
                     _nextStage = UpdateState.Updated;
+                    ProgressProvider.Stage = UpdateState.Updating.ToString();
                     _preparedCallback(args, Callback);
                     break;
                 case UpdateState.Updated:

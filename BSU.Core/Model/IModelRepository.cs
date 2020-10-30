@@ -15,5 +15,7 @@ namespace BSU.Core.Model
 
         void DoUpdate(RepositoryUpdate.SetUpDelegate setup, RepositoryUpdate.PreparedDelegate prepared,
             RepositoryUpdate.FinishedDelegate finished);
+        RepositoryUpdate CurrentUpdate { get; }
+        event Action OnUpdateChange;
     }
 }

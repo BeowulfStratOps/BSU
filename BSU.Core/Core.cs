@@ -45,7 +45,7 @@ namespace BSU.Core
             var state = new InternalState(settings);
             
             Model = new Model.Model(state, jobManager, Types, dispatcher);
-            ViewModel = new ViewModel.ViewModel(Model, jobManager, dispatcher);
+            ViewModel = new ViewModel.ViewModel(Model);
         }
 
         public void Dispose() => Dispose(false);

@@ -27,8 +27,19 @@ namespace BSU.Core.Model
         public JobSlot<SimpleJob> Loading { get; }
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-        
-        public RepositoryUpdate CurrentUpdate { get; internal set; }
+
+        public RepositoryUpdate CurrentUpdate
+        {
+            get => _currentUpdate;
+            private set
+            {
+                if (_currentUpdate == value) return;
+                _currentUpdate = value;
+                OnUpdateChange?.Invoke();
+            }
+        }
+
+        public event Action OnUpdateChange;
 
         public Repository(IRepository implementation, string name, string location, IJobManager jobManager,
             IMatchMaker matchMaker, IRepositoryState internalState, IActionQueue actionQueue,
@@ -72,6 +83,7 @@ namespace BSU.Core.Model
         }
 
         private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
+        private RepositoryUpdate _currentUpdate;
 
         public CalculatedRepositoryState CalculatedState
         {

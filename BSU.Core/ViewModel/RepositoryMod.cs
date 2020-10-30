@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using BSU.Core.Model;
+using BSU.Core.Model.Utility;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -66,14 +68,10 @@ namespace BSU.Core.ViewModel
                 AddStorage(storage);
             }
 
-            // TODO
-            /*mod.OnUpdateChange += () =>
+            mod.OnUpdateChange += () =>
             {
-                if (mod.CurrentUpdate == null)
-                    UpdateProgress = null;
-                else
-                    UpdateProgress = mod.CurrentUpdate.Progress;
-            };*/
+                UpdateProgress = mod.CurrentUpdate?.ProgressProvider;
+            };
         }
 
         private void AddAction(IModelStorageMod storageMod)
@@ -154,7 +152,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public UpdateProgress UpdateProgress
+        public IProgressProvider UpdateProgress
         {
             get => _updateProgress;
             private set
@@ -165,8 +163,10 @@ namespace BSU.Core.ViewModel
             }
         }
 
+        public double Progress { get; private set; }
+
         private string _errorText;
-        private UpdateProgress _updateProgress;
+        private IProgressProvider _updateProgress;
 
         public string ErrorText
         {
@@ -175,53 +175,6 @@ namespace BSU.Core.ViewModel
             {
                 if (value == _errorText) return;
                 _errorText = value;
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    public class UpdateProgress : ObservableBase
-    {
-        private string _stage;
-        private bool _isIndeterminate;
-        private double _progress;
-
-        public UpdateProgress(string stage, bool isIndeterminate, double progress = 0)
-        {
-            _stage = stage;
-            _isIndeterminate = isIndeterminate;
-            _progress = progress;
-        }
-        
-        public string Stage
-        {
-            get => _stage;
-            internal set
-            {
-                if (value == _stage) return;
-                _stage = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public bool IsIndeterminate
-        {
-            get => _isIndeterminate;
-            internal set
-            {
-                if (value == _isIndeterminate) return;
-                _isIndeterminate = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public double Progress
-        {
-            get => _progress;
-            internal set
-            {
-                if (value == _progress) return;
-                _progress = value;
                 OnPropertyChanged();
             }
         }

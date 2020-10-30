@@ -15,11 +15,6 @@
         <TaskbarItemInfo></TaskbarItemInfo>
     </Window.TaskbarItemInfo>
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"></RowDefinition>
-            <RowDefinition Height="5"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-        </Grid.RowDefinitions>
         <i:Interaction.Triggers>
             <i:EventTrigger EventName="Raised" SourceObject="{Binding AddRepositoryInteraction}">
                 <actions:AddRepositoryAction></actions:AddRepositoryAction>
@@ -59,21 +54,5 @@
                 </StackPanel>
             </ScrollViewer>
         </DockPanel>
-        <Expander Grid.Row="2" Grid.Column="0">
-            <Expander.Header>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock><Run>123</Run> Jobs </TextBlock>
-                    <ProgressBar Margin="5,0" Value="40" Minimum="0" Maximum="100" Width="150"></ProgressBar>
-                </StackPanel>
-            </Expander.Header>
-            <ListBox MinHeight="100" ItemsSource="{Binding Path=Jobs}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <local:Job></local:Job>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Expander>
-        <GridSplitter Grid.Row="1" Height="5" VerticalAlignment="Center" HorizontalAlignment="Stretch"></GridSplitter>
     </Grid>
 </Window>

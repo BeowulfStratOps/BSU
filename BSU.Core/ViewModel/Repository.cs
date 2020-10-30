@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using BSU.Core.Model;
+using BSU.Core.Model.Utility;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -11,7 +12,6 @@ namespace BSU.Core.ViewModel
     {
         private readonly IModelRepository _repository;
         private readonly IModel _model;
-        private readonly IActionQueue _dispatcher;
         public string Name { get; }
 
         public InteractionRequest<MsgPopupContext, bool> UpdatePrepared { get; } = new InteractionRequest<MsgPopupContext, bool>();
@@ -19,6 +19,7 @@ namespace BSU.Core.ViewModel
         public InteractionRequest<MsgPopupContext, object> UpdateFinished { get; } = new InteractionRequest<MsgPopupContext, object>();
 
         private CalculatedRepositoryState _calculatedState;
+        private IProgressProvider _updateProgress;
 
         public CalculatedRepositoryState CalculatedState
         {
@@ -34,11 +35,10 @@ namespace BSU.Core.ViewModel
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new ObservableCollection<RepositoryMod>();
 
-        internal Repository(IModelRepository repository, IModel model, IActionQueue dispatcher)
+        internal Repository(IModelRepository repository, IModel model)
         {
             _repository = repository;
             _model = model;
-            _dispatcher = dispatcher;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
@@ -49,6 +49,10 @@ namespace BSU.Core.ViewModel
             };
             Name = repository.Name;
             repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model));
+            repository.OnUpdateChange += () =>
+            {
+                UpdateProgress = repository.CurrentUpdate?.ProgressProvider;
+            };
         }
 
         private void DoDelete()
@@ -114,5 +118,16 @@ Cancel - Do not remove this repository";
         public DelegateCommand Delete { get; }
         public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
         public Guid Identifier { get; }
+
+        public IProgressProvider UpdateProgress
+        {
+            get => _updateProgress;
+            private set
+            {
+                if (_updateProgress == value) return;
+                _updateProgress = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }
