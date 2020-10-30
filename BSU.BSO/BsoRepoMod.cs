@@ -116,6 +116,7 @@ namespace BSU.BSO
         /// <param name="token">Can be used to cancel this operation.</param>
         public void DownloadTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
         {
+            // TODO: use cancellation token
             var url = _url + GetRealPath(path);
 
             using var client = new WebClient();
@@ -124,7 +125,6 @@ namespace BSU.BSO
             using var sourceStream = client.OpenRead(url);
             sourceStream.CopyTo(fileStream);
             fileStream.SetLength(fileStream.Position);
-            token.Register(client.CancelAsync);
             Logger.Debug("{0} Finished downloading content {1} / {2}", _uid, _url, path);
         }
 

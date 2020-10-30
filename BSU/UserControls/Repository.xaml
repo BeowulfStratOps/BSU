@@ -8,9 +8,13 @@
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:gui="clr-namespace:BSU.GUI"
              xmlns:actions="clr-namespace:BSU.GUI.Actions"
+             xmlns:converters="clr-namespace:BSU.GUI.Converters"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
+        <Border.Resources>
+            <converters:NullToVisibilityConverter x:Key="VisibleIfNotNullConverter" />
+        </Border.Resources>
         <i:Interaction.Triggers>
             <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdatePrepared}">
                 <actions:YesNoPopupAction></actions:YesNoPopupAction>
@@ -37,7 +41,7 @@
                     <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xEDB5;" Margin="2" IsEnabled="False"></Button>
                 </StackPanel>
             </DockPanel>
-            <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
+            <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress, Converter={StaticResource VisibleIfNotNullConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
             <Expander>
                 <Expander.Header>
                     <TextBlock>Mods</TextBlock>

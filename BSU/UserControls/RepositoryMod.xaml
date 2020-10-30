@@ -6,11 +6,13 @@
              xmlns:local="clr-namespace:BSU.GUI.UserControls"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:converters="clr-namespace:BSU.GUI.Converters"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
     <Border Margin="5">
         <Border.Resources>
             <BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter" />
+            <converters:NullToVisibilityConverter x:Key="VisibleIfNotNullConverter" />
         </Border.Resources>
         <DockPanel>
             <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
@@ -37,7 +39,7 @@
                 </DockPanel>
                 <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
             </StackPanel>
-            <ProgressBar Minimum="0" Maximum="1" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
+            <ProgressBar Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress, Converter={StaticResource VisibleIfNotNullConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
         </DockPanel>
     </Border>
 </UserControl>
