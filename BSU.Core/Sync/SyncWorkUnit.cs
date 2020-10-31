@@ -13,6 +13,7 @@ namespace BSU.Core.Sync
         protected readonly StorageMod Storage;
         protected readonly string Path;
         private bool _done;
+        public event Action OnProgress;
 
         protected SyncWorkUnit(StorageMod storage, string path, RepoSync sync)
         {
@@ -20,7 +21,7 @@ namespace BSU.Core.Sync
             Path = path;
         }
         
-        public virtual void Work(CancellationToken cancellationToken)
+        public void Work(CancellationToken cancellationToken)
         {
             DoWork(cancellationToken);
             _done = true;
@@ -28,5 +29,10 @@ namespace BSU.Core.Sync
 
         protected abstract void DoWork(CancellationToken token);
         public bool IsDone() => _done;
+
+        protected void SignalProgress()
+        {
+            OnProgress?.Invoke();
+        }
     }
 }

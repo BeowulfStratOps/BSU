@@ -123,6 +123,7 @@ namespace BSU.Core.Sync
 
             try
             {
+                work.OnProgress += () => actionQueue.EnQueueAction(() => OnProgress?.Invoke());
                 work.Work(_cancellationTokenSource.Token);
             }
             catch (Exception e)
@@ -167,8 +168,12 @@ namespace BSU.Core.Sync
 
         public event Action OnProgress;
 
-        public float GetProgress() => (_totalCount - _workCounter.Remaining) / (float) _totalCount;
-        
+        public float GetProgress()
+        {
+            return 1f - (GetRemainingBytesToDownload() + GetRemainingBytesToUpdate()) /
+                   (float)(GetTotalBytesToDownload() + GetTotalBytesToUpdate());
+        }
+
         public int GetPriority() => _priority;
     }
 

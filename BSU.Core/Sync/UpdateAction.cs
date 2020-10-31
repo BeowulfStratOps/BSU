@@ -39,6 +39,7 @@ namespace BSU.Core.Sync
         private void UpdateRemaining(long bytesDownloaded)
         {
             _sizeTodo -= bytesDownloaded;
+            SignalProgress();
         }
     }
 }

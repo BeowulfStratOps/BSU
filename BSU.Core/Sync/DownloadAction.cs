@@ -33,13 +33,14 @@ namespace BSU.Core.Sync
             Logger.Trace("{0}, {1} Downloading {2}", _repository.GetUid(), _repository.GetUid(), Path);
             using var target = Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.Write);
             _repository.DownloadTo(Path, target, UpdateRemaining, token);
-            Thread.Sleep(2000);
             _sizeTodo = 0;
         }
 
         private void UpdateRemaining(long bytesDownloaded)
         {
             _sizeTodo -= bytesDownloaded;
+            // TODO: rate-limit?
+            SignalProgress();
         }
     }
 }
