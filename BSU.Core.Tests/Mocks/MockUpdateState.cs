@@ -1,5 +1,6 @@
 ﻿using System;
 using BSU.Core.Model;
+using BSU.Core.Model.Utility;
 using BSU.Core.ViewModel;
 
 namespace BSU.Core.Tests.Mocks
@@ -92,6 +93,8 @@ namespace BSU.Core.Tests.Mocks
         {
             throw new NotImplementedException();
         }
+
+        public IProgressProvider ProgressProvider { get; } = new ProgressProvider();
 
         public bool IsIndeterminate { get; }
         public double Progress { get; }

@@ -95,8 +95,8 @@ namespace BSU.Core.Tests
         [Fact]
         private void LoadUsed1_Shortcircuit()
         {
-            var backgroundWorker = new JobManager.JobManager();
             var worker = new MockWorker();
+            var backgroundWorker = new JobManager.JobManager(worker);
             var types = new Types();
             types.AddRepoType("mock", url => new MockRepository(repo =>
             {

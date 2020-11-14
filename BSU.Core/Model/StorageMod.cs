@@ -158,7 +158,6 @@ namespace BSU.Core.Model
             UpdateTarget = target;
             _updating = update;
             _versionHash = null;
-            _matchHash = null;
             State = StorageModStateEnum.Updating;
 
             update.OnEnded += () => UpdateStateEnd(update);

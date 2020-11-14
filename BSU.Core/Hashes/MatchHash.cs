@@ -94,6 +94,8 @@ namespace BSU.Core.Hashes
             // TODO: do fuzzy name matching
             // TODO: do some ~machine learning~ statistics on existing mods
             // TODO: figure out how to handle false positives / false negatives as user
+            // TODO: mod.cpp should be near identical for same mod
+            // TODO: check config for common names?
             if (_name != null && other._name != null) return _name == other._name;
 
             var all = new HashSet<string>(_pboNames);

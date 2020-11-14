@@ -263,6 +263,7 @@ namespace BSU.Core.Tests
         [Fact]
         private void AbortAndUpdate()
         {
+            // TODO: this requires some better match-hash lifecycle. like downloading the relevant files and creating the expected match-hash before the remainder of the update is done 
             var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("2"), null);
 
             var updateTarget = new UpdateTarget(GetVersionHash("4").GetHashString(), "asdf");

@@ -64,9 +64,12 @@ namespace BSU.Core.Model
             {
                 var mod = Implementation.CreateMod(identifier);
                 var storageMod = new StorageMod(_actionQueue, mod, identifier, target, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite(), update);
-                Mods.Add(storageMod);
-                ModAdded?.Invoke(storageMod);
-                _matchMaker.AddStorageMod(storageMod);
+                _actionQueue.EnQueueAction(() =>
+                {
+                    Mods.Add(storageMod);
+                    ModAdded?.Invoke(storageMod);
+                    _matchMaker.AddStorageMod(storageMod);                    
+                });
                 return storageMod;
             });
         }

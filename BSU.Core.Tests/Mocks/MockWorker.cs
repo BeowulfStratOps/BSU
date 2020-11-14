@@ -37,7 +37,7 @@ namespace BSU.Core.Tests.Mocks
         {
             if (!_jobs.Any()) return false;
             var job = _jobs[0];
-            if (job.DoWork()) return true;
+            if (job.DoWork(this)) return true;
             _jobs.Remove(job);
             _logger.Debug("Removed job {0}: {1}", job.GetUid(), job.GetTitle());
             return true;
