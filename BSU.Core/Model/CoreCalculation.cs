@@ -8,18 +8,7 @@ using BSU.Core.Persistence;
 namespace BSU.Core.Model
 {
     public static class CoreCalculation
-    {
-        /*
-         * Update,
-        ContinueUpdate,
-        Await,
-        Use,
-        AbortAndUpdate,
-        Unusable, // should never reach the user
-        Loading,
-        Error // should never reach the user
-         */
-        
+    {   
         internal static async Task<ModActionEnum?> GetModAction(MatchHash repoHash, VersionHash repoVersion,
             IModelStorageMod storageMod)
         {

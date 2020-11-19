@@ -15,7 +15,6 @@ namespace BSU.Core.Model
         private readonly string _title;
         private readonly int _priority;
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
-        public Exception Error { get; private set; }
         private readonly  Uid _uid = new Uid();
         private bool _done = false;
         private readonly object _lock = new object();
@@ -49,9 +48,8 @@ namespace BSU.Core.Model
             }
             catch (Exception e)
             {
-                Error = e; // TODO: should be replaced by tcs
-                _tcs.SetException(e);
                 Logger.Error(e);
+                _tcs.SetException(e);
             }
             return false;
         }

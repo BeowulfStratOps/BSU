@@ -13,7 +13,6 @@ namespace BSU.Core.Model
     {
         private readonly IStorageState _internalState;
         private readonly IJobManager _jobManager;
-        private readonly IMatchMaker _matchMaker;
         public IStorage Implementation { get; }
         public string Name { get; }
         public Guid Identifier { get; }
@@ -25,11 +24,10 @@ namespace BSU.Core.Model
 
         private readonly IActionQueue _actionQueue;
 
-        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IJobManager jobManager, IMatchMaker matchMaker, IActionQueue actionQueue)
+        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IJobManager jobManager, IActionQueue actionQueue)
         {
             _internalState = internalState;
             _jobManager = jobManager;
-            _matchMaker = matchMaker;
             _actionQueue = actionQueue;
             Implementation = implementation;
             Name = name;

@@ -20,8 +20,8 @@ namespace BSU.Core.JobManager
         // ReSharper disable once StaticMemberInGenericType
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly List<WorkItem> _jobsTodo = new List<WorkItem>();
-        private readonly List<WorkItem> _allJobs = new List<WorkItem>();
+        private readonly List<IJob> _jobsTodo = new List<IJob>();
+        private readonly List<IJob> _allJobs = new List<IJob>();
         private bool _shutdown;
         private readonly List<Thread> _workerThreads = new List<Thread>();
 
@@ -36,8 +36,6 @@ namespace BSU.Core.JobManager
             }
         }
 
-        public event Action<IJob> JobAdded;
-
         /// <summary>
         /// Queue a job. Starts execution immediately
         /// </summary>
@@ -48,18 +46,15 @@ namespace BSU.Core.JobManager
             Logger.Debug("Queueing job {0}: {1}", job.GetUid(), job.GetTitle());
 
             if (_shutdown) throw new InvalidOperationException("JobManager is shutting down! Come back tomorrow.");
-            
-            var workItem = new WorkItem(job);
 
             lock (_allJobs)
             {
-                _allJobs.Add(workItem);                
+                _allJobs.Add(job);                
             }
             lock (_jobsTodo)
             {
-                _jobsTodo.Add(workItem);
+                _jobsTodo.Add(job);
             }
-            _actionQueue.EnQueueAction(() => JobAdded?.Invoke(job));
         }
 
         /// <summary>
@@ -70,7 +65,7 @@ namespace BSU.Core.JobManager
         {
             lock (_allJobs)
             {
-                return _allJobs.Select(w => w.Job).ToList();
+                return _allJobs.ToList();
             }
         }
 
@@ -82,7 +77,7 @@ namespace BSU.Core.JobManager
         {
             lock (_jobsTodo)
             {
-                return _jobsTodo.Select(w => w.Job).ToList();
+                return _jobsTodo.ToList();
             }
         }
 
@@ -91,10 +86,10 @@ namespace BSU.Core.JobManager
             Logger.Debug("Worker thread starting");
             while (!_shutdown)
             {
-                WorkItem job;
+                IJob job;
                 lock (_jobsTodo)
                 {
-                    job = _jobsTodo.OrderBy(j => -j.Job.GetPriority()).FirstOrDefault();
+                    job = _jobsTodo.OrderBy(j => -j.GetPriority()).FirstOrDefault();
                 }
 
                 if (job == null)
@@ -103,15 +98,14 @@ namespace BSU.Core.JobManager
                     continue;
                 }
 
-                var moreToDo = job.Job.DoWork(_actionQueue);
+                var moreToDo = job.DoWork(_actionQueue);
 
                 lock (_jobsTodo)
                 {
                     if (moreToDo) continue;
                     if (_jobsTodo.Remove(job)) // TODO: shouldn't that be an error otherwise?
                     {
-                        job.TaskCompletionSource.SetResult(null);
-                        Logger.Debug("Removed job {0}: {1}", job.Job.GetUid(), job.Job.GetTitle());
+                        Logger.Debug("Removed job {0}: {1}", job.GetUid(), job.GetTitle());
                     }
                 }
             }
@@ -130,7 +124,7 @@ namespace BSU.Core.JobManager
                 foreach (var job in _jobsTodo)
                 {
                     // TODO: set tcs
-                    job.Job.Abort();
+                    job.Abort();
                 }
             }
 
@@ -143,17 +137,6 @@ namespace BSU.Core.JobManager
                     thread.Join(500);
                     if (!thread.IsAlive) _workerThreads.Remove(thread);
                 }
-            }
-        }
-        
-        private class WorkItem
-        {
-            public readonly IJob Job;
-            public readonly TaskCompletionSource<object> TaskCompletionSource = new TaskCompletionSource<object>();
-
-            public WorkItem(IJob job)
-            {
-                Job = job;
             }
         }
     }

@@ -50,7 +50,7 @@ namespace BSU.Core.Model
         }
 
         public Repository(IRepository implementation, string name, string location, IJobManager jobManager,
-            IMatchMaker matchMaker, IRepositoryState internalState, IActionQueue actionQueue,
+            IRepositoryState internalState, IActionQueue actionQueue,
             RelatedActionsBag relatedActionsBag, IModelStructure modelStructure)
         {
             _jobManager = jobManager;

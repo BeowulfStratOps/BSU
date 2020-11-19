@@ -61,12 +61,14 @@ namespace BSU.Core.Model
             var job = new SimpleResultJob<StorageMod>(_ => _createStorageMod(this), "Create StorageMod", 1);
             _abort = () => job.Abort();
             State = UpdateState.Creating;
-            _storageMod = await job.Do(_jobManager);
-            if (job.Error == null)
-                State = UpdateState.Created;
-            else
+            try
             {
-                Exception = job.Error;
+                _storageMod = await job.Do(_jobManager);
+                State = UpdateState.Created;
+            }
+            catch (Exception e)
+            {
+                Exception = e;
                 State = UpdateState.Errored;
             }
         }
@@ -78,12 +80,14 @@ namespace BSU.Core.Model
             var job = new SimpleJob(DoPrepare, name, 1);
             _abort = () => job.Abort();
             State = UpdateState.Preparing;
-            await job.Do(_jobManager);
-            if (job.Error == null)
-                State = UpdateState.Prepared;
-            else
+            try
             {
-                Exception = job.Error;
+                await job.Do(_jobManager);
+                State = UpdateState.Prepared;
+            }
+            catch (Exception e)
+            {
+                Exception = e;
                 State = UpdateState.Errored;
             }
         }
