@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BSU.Core.Model
 {
@@ -6,7 +7,7 @@ namespace BSU.Core.Model
     {
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();
-        IEnumerable<IModelStorageMod> GetAllStorageMods();
-        IEnumerable<IModelRepositoryMod> GetAllRepositoryMods();
+        Task<IEnumerable<IModelStorageMod>> GetAllStorageMods();
+        Task<IEnumerable<IModelRepositoryMod>> GetAllRepositoryMods();
     }
 }

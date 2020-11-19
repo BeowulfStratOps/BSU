@@ -7,11 +7,11 @@ using NLog;
 
 namespace BSU.Core.Model
 {
-    internal class SimpleJob : IJob
+    internal class SimpleResultJob<T> : IJob
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Action<CancellationToken> _action;
+        private readonly Func<CancellationToken, T> _action;
         private readonly string _title;
         private readonly int _priority;
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
@@ -19,9 +19,11 @@ namespace BSU.Core.Model
         private readonly  Uid _uid = new Uid();
         private bool _done = false;
         private readonly object _lock = new object();
-        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
+        private T _result = default(T);
+        
+        private readonly TaskCompletionSource<T> _tcs = new TaskCompletionSource<T>(); 
 
-        public SimpleJob(Action<CancellationToken> action, string title, int priority)
+        public SimpleResultJob(Func<CancellationToken, T> action, string title, int priority)
         {
             _action = action;
             _title = title;
@@ -44,19 +46,19 @@ namespace BSU.Core.Model
             }
             try
             {
-                _action(_tokenSource.Token);
-                _tcs.SetResult(null);
+                var result = _action(_tokenSource.Token);
+                _tcs.SetResult(result);
             }
             catch (Exception e)
             {
-                Error = e; // TODO: should be replaced by tcs
+                Error = e; // TODO: replace with tcs
                 _tcs.SetException(e);
-                Logger.Error(e);
+                _logger.Error(e);
             }
             return false;
         }
-        
-        public Task Do(IJobManager jobManager)
+
+        public Task<T> Do(IJobManager jobManager)
         {
             jobManager.QueueJob(this);
             return _tcs.Task;

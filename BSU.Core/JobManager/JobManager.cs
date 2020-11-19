@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using NLog;
 
 namespace BSU.Core.JobManager
 {
-    // TO--nvm-do: replace with tasks. use TaskCreationOptions.LongRunning where applicable (heavy IO). But then how to limit threads to 5??
-    // TODO: use normal threadpool for quick stuff / high prio stuff
-    
     /// <summary>
     /// Schedules and does work in a multi-threaded main-thread independent manner
     /// </summary>
@@ -22,8 +20,8 @@ namespace BSU.Core.JobManager
         // ReSharper disable once StaticMemberInGenericType
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly List<IJob> _jobsTodo = new List<IJob>();
-        private readonly List<IJob> _allJobs = new List<IJob>();
+        private readonly List<WorkItem> _jobsTodo = new List<WorkItem>();
+        private readonly List<WorkItem> _allJobs = new List<WorkItem>();
         private bool _shutdown;
         private readonly List<Thread> _workerThreads = new List<Thread>();
 
@@ -50,14 +48,16 @@ namespace BSU.Core.JobManager
             Logger.Debug("Queueing job {0}: {1}", job.GetUid(), job.GetTitle());
 
             if (_shutdown) throw new InvalidOperationException("JobManager is shutting down! Come back tomorrow.");
+            
+            var workItem = new WorkItem(job);
 
             lock (_allJobs)
             {
-                _allJobs.Add(job);                
+                _allJobs.Add(workItem);                
             }
             lock (_jobsTodo)
             {
-                _jobsTodo.Add(job);
+                _jobsTodo.Add(workItem);
             }
             _actionQueue.EnQueueAction(() => JobAdded?.Invoke(job));
         }
@@ -70,7 +70,7 @@ namespace BSU.Core.JobManager
         {
             lock (_allJobs)
             {
-                return _allJobs.AsReadOnly();
+                return _allJobs.Select(w => w.Job).ToList();
             }
         }
 
@@ -82,7 +82,7 @@ namespace BSU.Core.JobManager
         {
             lock (_jobsTodo)
             {
-                return _jobsTodo.AsReadOnly();   
+                return _jobsTodo.Select(w => w.Job).ToList();
             }
         }
 
@@ -91,10 +91,10 @@ namespace BSU.Core.JobManager
             Logger.Debug("Worker thread starting");
             while (!_shutdown)
             {
-                IJob job;
+                WorkItem job;
                 lock (_jobsTodo)
                 {
-                    job = _jobsTodo.OrderBy(j => -j.GetPriority()).FirstOrDefault();
+                    job = _jobsTodo.OrderBy(j => -j.Job.GetPriority()).FirstOrDefault();
                 }
 
                 if (job == null)
@@ -103,12 +103,16 @@ namespace BSU.Core.JobManager
                     continue;
                 }
 
-                var moreToDo = job.DoWork(_actionQueue);
+                var moreToDo = job.Job.DoWork(_actionQueue);
 
                 lock (_jobsTodo)
                 {
                     if (moreToDo) continue;
-                    if (_jobsTodo.Remove(job)) Logger.Debug("Removed job {0}: {1}", job.GetUid(), job.GetTitle());
+                    if (_jobsTodo.Remove(job)) // TODO: shouldn't that be an error otherwise?
+                    {
+                        job.TaskCompletionSource.SetResult(null);
+                        Logger.Debug("Removed job {0}: {1}", job.Job.GetUid(), job.Job.GetTitle());
+                    }
                 }
             }
             Logger.Debug("Worker thread ending");
@@ -125,7 +129,8 @@ namespace BSU.Core.JobManager
             {
                 foreach (var job in _jobsTodo)
                 {
-                    job.Abort(true);
+                    // TODO: set tcs
+                    job.Job.Abort();
                 }
             }
 
@@ -138,6 +143,17 @@ namespace BSU.Core.JobManager
                     thread.Join(500);
                     if (!thread.IsAlive) _workerThreads.Remove(thread);
                 }
+            }
+        }
+        
+        private class WorkItem
+        {
+            public readonly IJob Job;
+            public readonly TaskCompletionSource<object> TaskCompletionSource = new TaskCompletionSource<object>();
+
+            public WorkItem(IJob job)
+            {
+                Job = job;
             }
         }
     }

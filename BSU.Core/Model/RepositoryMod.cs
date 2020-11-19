@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
@@ -12,14 +13,17 @@ namespace BSU.Core.Model
     internal class RepositoryMod : IModelRepositoryMod
     {
         private readonly IActionQueue _actionQueue;
+        private readonly IJobManager _jobManager;
         private readonly IRepositoryModState _internalState;
         private readonly RelatedActionsBag _relatedActionsBag;
         private readonly IModelStructure _modelStructure;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        public IRepositoryMod Implementation { get; }
+        public IRepositoryMod Implementation { get; } // TODO: make private
         public string Identifier { get; }
         public Uid Uid { get; } = new Uid();
 
+        private readonly JobSlot _loading;
+        
         private MatchHash _matchHash;
         private VersionHash _versionHash;
 
@@ -30,6 +34,7 @@ namespace BSU.Core.Model
         private RepositoryModActionSelection _selection;
 
         public event Action OnUpdateChange;
+
         private IUpdateState _currentUpdate;
 
         public IUpdateState CurrentUpdate
@@ -63,42 +68,66 @@ namespace BSU.Core.Model
             IModelStructure modelStructure)
         {
             _actionQueue = actionQueue;
+            _jobManager = jobManager;
             _internalState = internalState;
             _relatedActionsBag = relatedActionsBag;
             _modelStructure = modelStructure;
             Implementation = implementation;
             Identifier = identifier;
             DownloadIdentifier = identifier;
-            var title = $"Load RepoMod {Identifier}";
-            var loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
-            loading.OnFinished += error =>
+            
+            _loading = new JobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
+        }
+        
+        public async Task ProcessMods(List<IModelStorage> storages)
+        {
+            var tasks = new List<Task>(); 
+            foreach (var storage in storages)
             {
-                _error = error;
-            };
+                foreach (var mod in await storage.GetMods())
+                {
+                    tasks.Add(ProcessMod(mod));
+                }
+            }
 
-            loading.StartJob();
+            await Task.WhenAll(tasks);
+            DoAutoSelection(true);
         }
 
-        private void Load(CancellationToken cancellationToken)
+        private Task Load() => _loading.Do();
+
+        public async Task<string> GetDisplayName()
+        {
+            await Load();
+            return Implementation.GetDisplayName();
+        }
+
+        private async Task ProcessMod(IModelStorageMod mod)
+        {
+            await Load();
+
+            var actionType = await CoreCalculation.GetModAction(_matchHash, _versionHash, mod);
+            if (actionType == null) return;
+
+            Actions[mod] = new ModAction((ModActionEnum) actionType, this, _versionHash,
+                _relatedActionsBag.GetBag(mod));
+            ActionAdded?.Invoke(mod);
+            // TODO: stuff
+            DoAutoSelection(false);
+        }
+
+        private void LoadInternal(CancellationToken cancellationToken)
         {
             // TODO: use cancellationToken
             Implementation.Load();
-            var match = new MatchHash(Implementation);
-            var version = new VersionHash(Implementation);
-            _actionQueue.EnQueueAction(() =>
-            {
-                _matchHash = match;
-                _versionHash = version;
-                AsUpdateTarget =
-                    new UpdateTarget(GetState().VersionHash.GetHashString(), Implementation.GetDisplayName());
-                StateChanged?.Invoke();
-            });
+            _matchHash = new MatchHash(Implementation);
+            _versionHash = new VersionHash(Implementation);
+            AsUpdateTarget = new UpdateTarget(_versionHash.GetHashString(), Implementation.GetDisplayName());
         }
 
-        public event Action StateChanged;
-
-        public RepositoryModState GetState()
+        public async Task<RepositoryModState> GetState()
         {
+            await Load();
             return new RepositoryModState(_matchHash, _versionHash, _error);
         }
 
@@ -127,25 +156,12 @@ namespace BSU.Core.Model
                 Actions[target] = new ModAction((ModActionEnum) newAction, this, _versionHash, _relatedActionsBag.GetBag(target));
                 ActionAdded?.Invoke(target);
             }
-            DoAutoSelection();
+            DoAutoSelection(false);
         }
 
-        private bool _allModsLoaded;
         private string _downloadIdentifier;
 
-        public bool AllModsLoaded
-        {
-            private get => _allModsLoaded;
-            set
-            {
-                if (value == _allModsLoaded) return;
-                _allModsLoaded = value;
-                Logger.Trace("Mod {0}: AllModsLoaded changed to {1}", Identifier, value);
-                if (_allModsLoaded) DoAutoSelection();
-            }
-        }
-
-        private void DoAutoSelection()
+        private void DoAutoSelection(bool allModsLoaded)
         {
             // never change a selection once it was made. Would be clickjacking on the user
             // TODO: check if a better option became available and notify user (must only ever happen for old selections)
@@ -153,7 +169,7 @@ namespace BSU.Core.Model
 
             Logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
-            var selection = CoreCalculation.AutoSelect(AllModsLoaded, Actions, _modelStructure, _internalState.Selection);
+            var selection = CoreCalculation.AutoSelect(allModsLoaded, Actions, _modelStructure, _internalState.Selection);
             if (selection == Selection) return;
 
             Logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
@@ -161,7 +177,7 @@ namespace BSU.Core.Model
             Selection = selection;
         }
 
-        public void DoUpdate()
+        public async Task DoUpdate()
         {
             if (CurrentUpdate != null) throw new InvalidOperationException();
             if (Selection == null) throw new InvalidOperationException();
@@ -183,7 +199,7 @@ namespace BSU.Core.Model
 
             if (Selection.DownloadStorage != null)
             {
-                var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier);
+                var update = await Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier);
                 update.OnEnded += () => CurrentUpdate = null;
                 CurrentUpdate = update;
                 return;

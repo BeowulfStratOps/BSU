@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Model.Utility;
 using BSU.Core.ViewModel.Util;
@@ -12,8 +13,6 @@ namespace BSU.Core.ViewModel
 
         public string Name { get; }
         public string DisplayName { private set; get; }
-
-        public bool IsLoading { private set; get; }
 
         private string _downloadIdentifier = "";
         private bool _showDownloadIdentifier;
@@ -37,7 +36,7 @@ namespace BSU.Core.ViewModel
 
         internal RepositoryMod(IModelRepositoryMod mod, IModelStructure structure)
         {
-            IsLoading = mod.GetState().IsLoading;
+            //IsLoading = mod.GetState().IsLoading;
             _mod = mod;
             Name = mod.Identifier;
             mod.ActionAdded += AddAction;
@@ -56,13 +55,11 @@ namespace BSU.Core.ViewModel
             {
                 DownloadIdentifier = mod.DownloadIdentifier;
             };
-            mod.StateChanged += () =>
+            mod.GetDisplayName().ContinueWith(async name =>
             {
-                DisplayName = mod.Implementation.GetDisplayName();
+                DisplayName = await name;
                 OnPropertyChanged(nameof(DisplayName));
-                IsLoading = mod.GetState().IsLoading;
-                OnPropertyChanged(nameof(IsLoading));
-            };
+            });
             foreach (var storage in structure.GetStorages())
             {
                 AddStorage(storage);
@@ -109,8 +106,9 @@ namespace BSU.Core.ViewModel
 
             if (_mod.Selection.DownloadStorage != null)
             {
-                var inUse = _mod.Selection.DownloadStorage.HasMod(DownloadIdentifier);
-                ErrorText = inUse ? "Name in use" : "";
+                _mod.Selection.DownloadStorage.HasMod(DownloadIdentifier)
+                    .ContinueWith(async inUse => ErrorText = await inUse ? "Name in use" : "");
+
             }
             
             if (_mod.Selection.StorageMod != null)

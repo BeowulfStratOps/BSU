@@ -1,26 +1,29 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace BSU.Core.ViewModel.Util
 {
-    public class InteractionRequest<TViewModel, TCallback>
+    public class InteractionRequest<TViewModel, TResult>
     {
-        public event EventHandler<InteractionRequestArgs<TViewModel, TCallback>> Raised;
+        public event EventHandler<InteractionRequestArgs<TViewModel, TResult>> Raised;
 
-        public void Raise(TViewModel viewModel, Action<TCallback> callback)
+        public Task<TResult> Raise(TViewModel viewModel)
         {
-            Raised?.Invoke(viewModel, new InteractionRequestArgs<TViewModel, TCallback>(viewModel, callback));
+            var tcs = new TaskCompletionSource<TResult>();
+            Raised?.Invoke(viewModel, new InteractionRequestArgs<TViewModel, TResult>(viewModel, tcs));
+            return tcs.Task;
         }
     }
     
-    public class InteractionRequestArgs<TViewModel, TCallback> : EventArgs
+    public class InteractionRequestArgs<TViewModel, TResult> : EventArgs
     {
         public TViewModel ViewModel { get; }
-        public Action<TCallback> Callback { get; }
+        public TaskCompletionSource<TResult> TaskCompletionSource { get; }
 
-        public InteractionRequestArgs(TViewModel viewModel, Action<TCallback> callback)
+        public InteractionRequestArgs(TViewModel viewModel, TaskCompletionSource<TResult> taskCompletionSource)
         {
             ViewModel = viewModel;
-            Callback = callback;
+            TaskCompletionSource = taskCompletionSource;
         }
     }
 }

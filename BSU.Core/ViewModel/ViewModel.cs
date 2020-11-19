@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
@@ -56,24 +57,21 @@ namespace BSU.Core.ViewModel
 
         }
 
-        private void DoAddRepository()
+        private async Task DoAddRepository()
         {
             var vm = new AddRepository();
-            AddRepositoryInteraction.Raise(vm, b =>
-            {
-                if (b != true) return;
-                Model.AddRepository("BSO", vm.Url, vm.Name);
-            });
+            var doAdd = await AddRepositoryInteraction.Raise(vm);
+                
+            if (doAdd != true) return;
+            Model.AddRepository("BSO", vm.Url, vm.Name);
         }
 
-        private void DoAddStorage()
+        private async Task DoAddStorage()
         {
             var vm = new AddStorage();
-            AddStorageInteraction.Raise(vm, b =>
-            {
-                if (b != true) return;
-                Model.AddStorage("DIRECTORY", new DirectoryInfo(vm.Path), vm.Name);
-            });
+            var doAdd = await AddStorageInteraction.Raise(vm);
+            if (doAdd != true) return;
+            Model.AddStorage("DIRECTORY", new DirectoryInfo(vm.Path), vm.Name);
         }
     }
 }

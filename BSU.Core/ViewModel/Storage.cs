@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
@@ -26,7 +27,7 @@ namespace BSU.Core.ViewModel
         internal Storage(Model.Storage storage,IModel model)
         {
             Delete = new DelegateCommand(DoDelete);
-            IsLoading = storage.Loading.IsActive();
+            //IsLoading = storage.Loading.IsActive();
             ModelStorage = storage;
             _model = model;
             Identifier = storage.Identifier;
@@ -35,7 +36,7 @@ namespace BSU.Core.ViewModel
             storage.ModAdded += mod => Mods.Add(new StorageMod(mod));
         }
 
-        private void DoDelete()
+        private async Task DoDelete()
         {
             // TODO: this doesn't look like it belongs here
             var text = $@"Removing storage {Name}. Do you want to delete the files?
@@ -45,11 +46,9 @@ No - Keep mods
 Cancel - Do not remove this storage";
             
             var context = new MsgPopupContext(text, "Remove Storage");
-            DeleteInteraction.Raise(context, b =>
-            {
-                if (b == null) return;
-                _model.DeleteStorage(_storage, (bool) b);
-            });
+            var removeMods = await DeleteInteraction.Raise(context);
+            if (removeMods == null) return;
+            _model.DeleteStorage(_storage, (bool) removeMods);
         }
     }
 }

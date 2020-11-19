@@ -1,78 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.Persistence;
 
 namespace BSU.Core.Model
 {
     public static class CoreCalculation
     {
-        internal static ModActionEnum CalculateAction(RepositoryModState repoModState, StorageModState storageModState, bool storageWritable)
+        /*
+         * Update,
+        ContinueUpdate,
+        Await,
+        Use,
+        AbortAndUpdate,
+        Unusable, // should never reach the user
+        Loading,
+        Error // should never reach the user
+         */
+        
+        internal static async Task<ModActionEnum?> GetModAction(MatchHash repoHash, VersionHash repoVersion,
+            IModelStorageMod storageMod)
         {
-            switch (storageModState.State)
+            switch (storageMod.GetState())
             {
-                case StorageModStateEnum.CreatedForDownload:
-                    return ModActionEnum.Await;
-                case StorageModStateEnum.Loading:
-                    throw new InvalidCastException();
-                case StorageModStateEnum.Loaded:
-                case StorageModStateEnum.Hashing:
-                    return ModActionEnum.Loading;
-                case StorageModStateEnum.Hashed:
-                    if (repoModState.VersionHash.IsMatch(storageModState.VersionHash)) return ModActionEnum.Use;
-                    return storageWritable ? ModActionEnum.Update : ModActionEnum.Unusable;
-                case StorageModStateEnum.Updating:
-                    return storageModState.JobTarget.Hash == repoModState.VersionHash.GetHashString() ? ModActionEnum.Await : ModActionEnum.AbortAndUpdate;
                 case StorageModStateEnum.CreatedWithUpdateTarget:
-                    if (repoModState.VersionHash.GetHashString() != storageModState.UpdateTarget.Hash) throw new InvalidOperationException();
-                    return ModActionEnum.ContinueUpdate;
-                case StorageModStateEnum.ErrorUpdate:
-                    return ModActionEnum.Error;
+                    if (repoVersion.IsMatch(await storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
+                    if (repoHash.IsMatch(await storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate;
+                    return null;
+                case StorageModStateEnum.Created:
+                    if (!repoHash.IsMatch(await storageMod.GetMatchHash())) return null;
+                    return repoVersion.IsMatch(await storageMod.GetVersionHash()) ? ModActionEnum.Use : ModActionEnum.Update;
+                case StorageModStateEnum.Updating:
+                    throw new NotImplementedException();
+                case StorageModStateEnum.Error:
+                    return null;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
-
-        internal static ModMatch IsMatch(RepositoryModState repoModState, StorageModState storageModState)
-        {
-            if (repoModState.IsLoading) return ModMatch.Wait;
-            if (repoModState.Error != null) return ModMatch.NoMatch;
-
-            switch (storageModState.State)
-            {
-                case StorageModStateEnum.Loading:
-                    return ModMatch.Wait;
-                case StorageModStateEnum.Loaded:
-                    return repoModState.MatchHash.IsMatch(storageModState.MatchHash)
-                        ? ModMatch.RequireHash
-                        : ModMatch.NoMatch;
-                case StorageModStateEnum.Hashing:
-                case StorageModStateEnum.Hashed:
-                    return repoModState.MatchHash.IsMatch(storageModState.MatchHash)
-                        ? ModMatch.Match
-                        : ModMatch.NoMatch;
-                case StorageModStateEnum.Updating:
-                case StorageModStateEnum.CreatedWithUpdateTarget:
-                case StorageModStateEnum.CreatedForDownload:
-                case StorageModStateEnum.ErrorUpdate:
-                    return storageModState.UpdateTarget.Hash == repoModState.VersionHash.GetHashString()
-                        ? ModMatch.Match
-                        : ModMatch.NoMatch;
-                case StorageModStateEnum.ErrorLoad:
-                    return ModMatch.NoMatch;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        internal enum ModMatch
-        {
-            Wait,
-            NoMatch,
-            RequireHash,
-            Match
-        }
-
+        
         internal static RepositoryModActionSelection AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
             IModelStructure modelStructure, PersistedSelection usedMod)
         {

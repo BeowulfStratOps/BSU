@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 
@@ -7,15 +8,14 @@ namespace BSU.Core.Model
 {
     internal interface IModelStorage
     {
-        List<IModelStorageMod> Mods { get; } // TODO: readonly
+        Task<List<IModelStorageMod>> GetMods();
 
-        IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier);
+        Task<IUpdateState> PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier);
         event Action<IModelStorageMod> ModAdded;
         bool CanWrite { get; }
-        bool IsLoading { get; }
         Guid Identifier { get; }
         string Name { get; }
         PersistedSelection GetStorageIdentifier();
-        bool HasMod(string downloadIdentifier);
+        Task<bool> HasMod(string downloadIdentifier);
     }
 }

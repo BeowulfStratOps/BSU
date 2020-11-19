@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
@@ -28,7 +29,7 @@ namespace BSU.Core.Model
 
         public Model(InternalState persistentState, IJobManager jobManager, Types types, IActionQueue dispatcher)
         {
-            _matchMaker = new MatchMaker(this);
+            //_matchMaker = new MatchMaker(this);
             _jobManager = jobManager;
             _types = types;
             _dispatcher = dispatcher;
@@ -36,7 +37,7 @@ namespace BSU.Core.Model
             PersistentState = persistentState;
         }
 
-        public void Load()
+        public async Task Load()
         {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
@@ -61,6 +62,8 @@ namespace BSU.Core.Model
                 Storages.Add(storage);
                 StorageAdded?.Invoke(storage);
             }
+            
+            await Task.WhenAll(Repositories.Select(r => r.ProcessMods(Storages)));
         }
 
         public event Action<Repository> RepositoryAdded;
@@ -92,14 +95,24 @@ namespace BSU.Core.Model
 
         public IEnumerable<IModelRepository> GetRepositories() => Repositories;
 
-        public IEnumerable<IModelStorageMod> GetAllStorageMods()
+        public async Task<IEnumerable<IModelStorageMod>> GetAllStorageMods()
         {
-            return Storages.SelectMany(storage => storage.Mods);
+            var mods = new List<IModelStorageMod>();
+            foreach (var storage in Storages)
+            {
+                mods.AddRange(await storage.GetMods());
+            }
+            return mods;
         }
 
-        public IEnumerable<IModelRepositoryMod> GetAllRepositoryMods()
+        public async Task<IEnumerable<IModelRepositoryMod>> GetAllRepositoryMods()
         {
-            return Repositories.SelectMany(repository => repository.Mods);
+            var mods = new List<IModelRepositoryMod>();
+            foreach (var repository in Repositories)
+            {
+                mods.AddRange(await repository.GetMods());
+            }
+            return mods;
         }
 
         public void DeleteRepository(IModelRepository repository, bool removeMods)

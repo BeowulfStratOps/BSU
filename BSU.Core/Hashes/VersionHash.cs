@@ -20,6 +20,7 @@ namespace BSU.Core.Hashes
 
         private readonly byte[] _hash;
 
+        // TODO: use more specialized interface to get files
         internal VersionHash(IStorageMod mod)
         {
             Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
@@ -38,6 +39,7 @@ namespace BSU.Core.Hashes
             _hash = hash;
         }
 
+        // TODO: use more specialized interface to get files
         internal VersionHash(IRepositoryMod mod)
         {
             Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());

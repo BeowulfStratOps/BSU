@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BSU.Core.JobManager
 {
@@ -27,7 +28,5 @@ namespace BSU.Core.JobManager
         /// Shutdown all threads. Does not wait.
         /// </summary>
         void Shutdown(bool blocking);
-
-        event Action<IJob> JobAdded;
     }
 }

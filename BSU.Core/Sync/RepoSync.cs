@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Model;
 using BSU.CoreCommon;
@@ -31,6 +32,8 @@ namespace BSU.Core.Sync
         private readonly ReferenceCounter _workCounter;
         private readonly int _totalCount;
         public readonly bool NothingToDo;
+
+        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
 
         public Uid GetUid() => _uid;
 
@@ -136,7 +139,7 @@ namespace BSU.Core.Sync
             if (_workCounter.Dec())
             {
                 Logger.Debug("Sync done");
-                actionQueue.EnQueueAction(() => OnFinished?.Invoke());
+                _tcs.SetResult(null);
             }
             
             lock (_actionsTodo)
@@ -150,19 +153,15 @@ namespace BSU.Core.Sync
         /// <summary>
         /// Signals to abort this job. Does not wait.
         /// </summary>
-        public void Abort(bool coldShutdown = false)
+        public void Abort()
         {
             _cancellationTokenSource.Cancel();
-            if (!coldShutdown)
-                OnFinished?.Invoke();
         }
 
         public Exception GetError()
         {
             return Errors.Any() ? new CombinedException(Errors) : null;
         }
-
-        public event Action OnFinished;
 
         public string GetTitle() => _title;
 
@@ -175,6 +174,12 @@ namespace BSU.Core.Sync
         }
 
         public int GetPriority() => _priority;
+
+        public Task Do(IJobManager jobManager)
+        {
+            jobManager.QueueJob(this);
+            return _tcs.Task;
+        }
     }
 
     internal class CombinedException : Exception

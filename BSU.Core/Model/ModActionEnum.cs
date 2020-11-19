@@ -7,8 +7,8 @@
         Await,
         Use,
         AbortAndUpdate,
-        Unusable,
+        Unusable, // should never reach the user
         Loading,
-        Error
+        Error // should never reach the user
     }
 }

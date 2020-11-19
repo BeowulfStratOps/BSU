@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
@@ -18,9 +19,9 @@ namespace BSU.Core.Model
         public Guid Identifier { get; }
         public string Location { get; }
         public Uid Uid { get; } = new Uid();
-        public List<IModelStorageMod> Mods { private set; get; } = new List<IModelStorageMod>(); // TODO: readonly
+        private readonly List<IModelStorageMod> _mods = new List<IModelStorageMod>();
 
-        public JobSlot<SimpleJob> Loading { get; }
+        private readonly JobSlot _loading;
 
         private readonly IActionQueue _actionQueue;
 
@@ -34,57 +35,55 @@ namespace BSU.Core.Model
             Name = name;
             Identifier = internalState.Identifier;
             Location = location;
-            var title = $"Load Storage {Identifier}";
-            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
-            Loading.StartJob();
+            _loading = new JobSlot(Load, $"Load Storage {Identifier}", jobManager);
         }
 
         private void Load(CancellationToken cancellationToken)
         {
             // TODO: use cancellationToken
             Implementation.Load();
-            _actionQueue.EnQueueAction(() =>
+            foreach (KeyValuePair<string, IStorageMod> mod in Implementation.GetMods())
             {
-                foreach (KeyValuePair<string, IStorageMod> mod in Implementation.GetMods())
-                {
-                    var modelMod = new StorageMod(_actionQueue, mod.Value, mod.Key, null, _internalState.GetMod(mod.Key),
-                        _jobManager, Identifier, Implementation.CanWrite());
-                    Mods.Add(modelMod);
-                    ModAdded?.Invoke(modelMod);
-                    _matchMaker.AddStorageMod(modelMod);
-                }
-            });
+                var modelMod = new StorageMod(_actionQueue, mod.Value, mod.Key, _internalState.GetMod(mod.Key),
+                    _jobManager, Identifier, Implementation.CanWrite());
+                _mods.Add(modelMod);
+            }
         }
 
-        public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
+        public async Task<List<IModelStorageMod>> GetMods()
         {
-            if (Loading.IsActive()) throw new InvalidOperationException();
+            await _loading.Do();
+            return new List<IModelStorageMod>(_mods);
+        }
 
+        public async Task<IUpdateState> PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
+        {
+            await _loading.Do();
+            
             return new StorageModUpdateState(_jobManager, _actionQueue, repositoryMod, target, update =>
             {
                 var mod = Implementation.CreateMod(identifier);
-                var storageMod = new StorageMod(_actionQueue, mod, identifier, target, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite(), update);
+                var storageMod = new StorageMod(_actionQueue, mod, identifier, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite(), update);
                 _actionQueue.EnQueueAction(() =>
                 {
-                    Mods.Add(storageMod);
-                    ModAdded?.Invoke(storageMod);
-                    _matchMaker.AddStorageMod(storageMod);                    
+                    _mods.Add(storageMod);
+                    ModAdded?.Invoke(storageMod);                   
                 });
                 return storageMod;
             });
         }
 
         public bool CanWrite => Implementation.CanWrite();
-        public bool IsLoading => Loading.IsActive();
         public PersistedSelection GetStorageIdentifier()
         {
             return new PersistedSelection(Identifier, null);
         }
 
-        public bool HasMod(string downloadIdentifier)
+        public async Task<bool> HasMod(string downloadIdentifier)
         {
+            await _loading.Do();
             // TODO: meh?
-            return Mods.Any(m => m.GetStorageModIdentifiers().Mod == downloadIdentifier);
+            return _mods.Any(m => m.GetStorageModIdentifiers().Mod == downloadIdentifier);
         }
 
         public event Action<IModelStorageMod> ModAdded;

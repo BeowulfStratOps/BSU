@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using BSU.Core.ViewModel;
 using BSU.GUI.Dialogs;
 
@@ -6,10 +7,10 @@ namespace BSU.GUI.Actions
 {
     public class AddStorageAction : Interaction<AddStorage, bool?>
     {
-        protected override void Invoke(AddStorage viewModel, Action<bool?> callback)
+        protected override void Invoke(AddStorage viewModel, TaskCompletionSource<bool?> tcs)
         {
             var result = new AddStorageDialog(viewModel).ShowDialog();
-            callback(result);
+            tcs.SetResult(result);
         }
     }
 }

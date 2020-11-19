@@ -14,7 +14,7 @@ namespace BSU.Core.ViewModel
         
         internal StorageMod(IModelStorageMod mod)
         {
-            var state = mod.GetState();
+            //var state = mod.GetState();
             mod.StateChanged += StateChanged;
             ModelStorageMod = mod;
             Identifier = mod.Identifier;
@@ -22,7 +22,7 @@ namespace BSU.Core.ViewModel
 
         private void StateChanged()
         {
-            var state = ModelStorageMod.GetState();
+            //var state = ModelStorageMod.GetState();
         }
     }
 }

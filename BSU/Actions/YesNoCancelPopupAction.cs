@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using BSU.Core.ViewModel;
 
@@ -6,15 +7,15 @@ namespace BSU.GUI.Actions
 {
     public class YesNoCancelPopupAction : Interaction<MsgPopupContext, bool?>
     {
-        protected override void Invoke(MsgPopupContext context, Action<bool?> callback)
+        protected override void Invoke(MsgPopupContext context, TaskCompletionSource<bool?> tcs)
         {
             var q = MessageBox.Show(context.Message, context.Title, MessageBoxButton.YesNoCancel);
             if (q == MessageBoxResult.Cancel)
             {
-                callback(null);
+                tcs.SetResult(null);
                 return;
             }
-            callback(q == MessageBoxResult.Yes);
+            tcs.SetResult(q == MessageBoxResult.Yes);
         }
     }
 }

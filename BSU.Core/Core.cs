@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
 using NLog;
@@ -55,9 +56,9 @@ namespace BSU.Core
             JobManager.Shutdown(blocking);
         }
 
-        public void Start()
+        public async Task Start()
         {
-            Model.Load();
+            await Model.Load();
         }
     }
 }

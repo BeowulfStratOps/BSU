@@ -1,22 +1,24 @@
 ﻿using System;
+using System.Threading.Tasks;
 using BSU.Core.Model.Utility;
 
 namespace BSU.Core.Model
 {
     public interface IUpdateState
     {
-        void Continue();
+        Task Create();
+        Task Prepare();
+        Task Update();
         void Abort();
         
         UpdateState State { get; }
         Exception Exception { get; }
         
-        event Action OnStateChange;
-        event Action OnEnded;
-        
         int GetPrepStats();
 
         IProgressProvider ProgressProvider { get; }
+
+        event Action OnEnded;
     }
 
     public enum UpdateState

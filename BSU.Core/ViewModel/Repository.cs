@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Model.Utility;
 using BSU.Core.ViewModel.Util;
@@ -55,7 +56,7 @@ namespace BSU.Core.ViewModel
             };
         }
 
-        private void DoDelete()
+        private async Task DoDelete()
         {
             // TODO: this doesn't look like it belongs here
             var text = $@"Removing repository {Name}. Do you want to remove mods used by this repository?
@@ -65,11 +66,9 @@ No - Keep local mods
 Cancel - Do not remove this repository";
             
             var context = new MsgPopupContext(text, "Remove Repository");
-            DeleteInteraction.Raise(context, b =>
-            {
-                if (b == null) return;
-                _model.DeleteRepository(_repository, (bool) b);
-            });
+            var removeData = await DeleteInteraction.Raise(context);
+            if (removeData != null) // not canceled
+                _model.DeleteRepository(_repository, (bool)removeData);
         }
 
         private bool CanUpdate()
@@ -78,39 +77,35 @@ Cancel - Do not remove this repository";
                    CalculatedState.State == CalculatedRepositoryStateEnum.NeedsUpdate;
         }
 
-        private void DoUpdate()
+        private async Task DoUpdate()
         {
-            _repository.DoUpdate(SetUp, Prepared, Finished);
-        }
-
-        private void Finished(StageCallbackArgs args)
-        {
-            var text = $"{args.Succeeded.Count} Mods updated. {args.Failed.Count} Mods failed.";
-            var context = new MsgPopupContext(text, "Update Finished");
-            UpdateFinished.Raise(context, o => { });
-        }
-
-        private void Prepared(StageCallbackArgs args, Action<bool> proceed)
-        {
-            var bytes = args.Succeeded.Sum(s => s.GetPrepStats());
-            var text = $"{bytes} Bytes from {args.Succeeded.Count} mods to download. {args.Failed.Count} mods failed. Proceed?";
-            var context = new MsgPopupContext(text, "Update Prepared");
-            UpdatePrepared.Raise(context, proceed);
-        }
-
-        private void SetUp(StageCallbackArgs args, Action<bool> proceed)
-        {
-            if (!args.Failed.Any())
+            var update = _repository.DoUpdate();
+            var created = await update.Create();
+            if (created.Failed.Any())
             {
-                proceed(true);
+                var folders = string.Join(", ", created.Failed.Select(f => "smth"));
+                var createdText = $"There were errors while creating mod folders: {folders}. Proceed?";
+                var createdContext = new MsgPopupContext(createdText, "Proceed with Update?");
+                if (!await UpdateSetup.Raise(createdContext))
+                {
+                    update.Abort();
+                    return;
+                }
+            }
+            var prepared = await update.Prepare();
+            var bytes = prepared.Succeeded.Sum(s => s.GetPrepStats());
+            var preparedText = $"{bytes} Bytes from {prepared.Succeeded.Count} mods to download. {prepared.Failed.Count} mods failed. Proceed?";
+            var preparedContext = new MsgPopupContext(preparedText, "Update Prepared");
+            if (!await UpdatePrepared.Raise(preparedContext))
+            {
+                update.Abort();
                 return;
             }
 
-            //var folders = string.Join(", ", args.Failed.Select(f => f.Identifier));
-            var folders = "TODO";
-            var text = $"There were errors while creating mod folders: {folders}. Proceed?";
-            var context = new MsgPopupContext(text, "Proceed with Update?");
-            UpdateSetup.Raise(context, proceed);
+            var updated = await update.Update();
+            var updatedText = $"{updated.Succeeded.Count} Mods updated. {updated.Failed.Count} Mods failed.";
+            var updatedContext = new MsgPopupContext(updatedText, "Update Finished");
+            await UpdateFinished.Raise(updatedContext);
         }
 
         public DelegateCommand Update { get; }

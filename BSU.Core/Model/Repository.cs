@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
@@ -11,20 +13,20 @@ namespace BSU.Core.Model
     internal class Repository : IModelRepository
     {
         private readonly IJobManager _jobManager;
-        private readonly IMatchMaker _matchMaker;
         private readonly IRepositoryState _internalState;
         private readonly IActionQueue _actionQueue;
         private readonly RelatedActionsBag _relatedActionsBag;
         private readonly IModelStructure _modelStructure;
         public IRepository Implementation { get; }
         public string Name { get; }
+        public event Action<IModelRepositoryMod> ModAdded;
         public Guid Identifier { get; }
         public string Location { get; }
         public Uid Uid { get; } = new Uid();
 
-        public List<IModelRepositoryMod> Mods { get; } = new List<IModelRepositoryMod>();
+        private readonly List<IModelRepositoryMod> _mods  = new List<IModelRepositoryMod>();
 
-        public JobSlot<SimpleJob> Loading { get; }
+        private readonly JobSlot _loading;
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
@@ -40,13 +42,18 @@ namespace BSU.Core.Model
         }
 
         public event Action OnUpdateChange;
+        public async Task ProcessMods(List<IModelStorage> storages)
+        {
+            var mods = await GetMods();
+            await Task.WhenAll(mods.Select(m => m.ProcessMods(storages)));
+            // TODO: calculate state
+        }
 
         public Repository(IRepository implementation, string name, string location, IJobManager jobManager,
             IMatchMaker matchMaker, IRepositoryState internalState, IActionQueue actionQueue,
             RelatedActionsBag relatedActionsBag, IModelStructure modelStructure)
         {
             _jobManager = jobManager;
-            _matchMaker = matchMaker;
             _internalState = internalState;
             _actionQueue = actionQueue;
             _relatedActionsBag = relatedActionsBag;
@@ -56,34 +63,43 @@ namespace BSU.Core.Model
             Name = name;
             Identifier = internalState.Identifier;
             var title = $"Load Repo {Identifier}";
-            Loading = new JobSlot<SimpleJob>(() => new SimpleJob(Load, title, 1), title, jobManager);
-            Loading.StartJob();
+            _loading = new JobSlot(LoadInternal, title, jobManager);
         }
 
-        private void Load(CancellationToken cancellationToken)
+        private async Task Load()
+        {
+            await _loading.Do();
+        }
+
+        private void LoadInternal(CancellationToken cancellationToken)
         {
             // TODO: use cancellationToken
             Implementation.Load();
-            _actionQueue.EnQueueAction(() =>
+            foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
             {
-                foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
+                var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _relatedActionsBag, _modelStructure);
+                modelMod.ActionAdded += storageMod =>
                 {
-                    var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _relatedActionsBag, _modelStructure);
-                    modelMod.ActionAdded += storageMod =>
-                    {
-                        modelMod.Actions[storageMod].Updated += ReCalculateState;
-                        ReCalculateState();
-                    };
-                    modelMod.SelectionChanged += ReCalculateState;
-                    Mods.Add(modelMod);
+                    modelMod.Actions[storageMod].Updated += ReCalculateState;
+                    ReCalculateState();
+                };
+                modelMod.SelectionChanged += ReCalculateState;
+                _mods.Add(modelMod);
+                _actionQueue.EnQueueAction(() =>
+                {
                     ModAdded?.Invoke(modelMod);
-                    _matchMaker.AddRepositoryMod(modelMod);
-                }
-            });
+                });
+            }
         }
 
         private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
         private RepositoryUpdate _currentUpdate;
+
+        public async Task<List<IModelRepositoryMod>> GetMods()
+        {
+            await Load();
+            return new List<IModelRepositoryMod>(_mods);
+        }
 
         public CalculatedRepositoryState CalculatedState
         {
@@ -99,23 +115,19 @@ namespace BSU.Core.Model
 
         private void ReCalculateState()
         {
-            CalculatedState = CoreCalculation.CalculateRepositoryState(Mods);
+            CalculatedState = CoreCalculation.CalculateRepositoryState(_mods);
             _logger.Trace("Repo {0} calculated state: {1}", Identifier, CalculatedState);
         }
 
         public event Action CalculatedStateChanged;
 
-        public bool IsLoading => Loading.IsActive();
-
-        public event Action<IModelRepositoryMod> ModAdded;
-
-        public void DoUpdate(RepositoryUpdate.SetUpDelegate setup, RepositoryUpdate.PreparedDelegate prepared, RepositoryUpdate.FinishedDelegate finished)
+        public RepositoryUpdate DoUpdate()
         {
             if (CurrentUpdate != null) throw new InvalidOperationException();
             
-            var repoUpdate = new RepositoryUpdate(setup, prepared, finished);
+            var repoUpdate = new RepositoryUpdate();
 
-            foreach (var mod in Mods)
+            foreach (var mod in _mods)
             {
                 mod.DoUpdate();
                 var updateInfo = mod.CurrentUpdate;
@@ -124,8 +136,8 @@ namespace BSU.Core.Model
             }
 
             repoUpdate.OnEnded += () => CurrentUpdate = null;
-            repoUpdate.Start();
             CurrentUpdate = repoUpdate;
+            return repoUpdate;
         }
     }
 }

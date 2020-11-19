@@ -26,6 +26,7 @@ namespace BSU.Core.Hashes
         private readonly string _name;
         private readonly HashSet<string> _pboNames;
 
+        // TODO: use more specialized interface to get files
         public MatchHash(IStorageMod mod)
         {
             Logger.Debug("Building match hash for storage mod {0}", mod.GetUid());
@@ -64,6 +65,7 @@ namespace BSU.Core.Hashes
                 .ToLowerInvariant(); // TODO: get some holy water
         }
 
+        // TODO: use more specialized interface to get files
         public MatchHash(IRepositoryMod mod)
         {
             Logger.Debug("Building match hash for repo mod {0}", mod.GetUid());

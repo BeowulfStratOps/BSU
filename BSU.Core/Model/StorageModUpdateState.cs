@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Model.Utility;
 using BSU.Core.Sync;
@@ -22,21 +23,11 @@ namespace BSU.Core.Model
         private Action _abort;
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-        
-        
-        private UpdateState _state;
+
+
         private readonly ProgressProvider _progressProvider = new ProgressProvider();
 
-        public UpdateState State
-        {
-            get => _state;
-            private set
-            {
-                if (_state == value) return;
-                _state = value;
-                OnStateChange?.Invoke();
-            }
-        }
+        public UpdateState State { get; private set; }
 
         public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repositoryMod, StorageMod storageMod, UpdateTarget target)
         {
@@ -46,7 +37,7 @@ namespace BSU.Core.Model
             _storageMod = storageMod;
             Target = target;
             
-            _state = UpdateState.Created;
+            State = UpdateState.Created;
             
             _logger.Info("Creating Update State for mod {0}", storageMod.Identifier);
         }
@@ -59,76 +50,42 @@ namespace BSU.Core.Model
             _repositoryMod = repositoryMod;
             _createStorageMod = createStorageMod;
 
-            _state = UpdateState.NotCreated;
+            State = UpdateState.NotCreated;
             
             _logger.Info("Creating Download State");
         }
 
-        public void Continue()
+        public async Task Create()
         {
-            switch (State)
+            _logger.Info("Create");
+            var job = new SimpleResultJob<StorageMod>(_ => _createStorageMod(this), "Create StorageMod", 1);
+            _abort = () => job.Abort();
+            State = UpdateState.Creating;
+            _storageMod = await job.Do(_jobManager);
+            if (job.Error == null)
+                State = UpdateState.Created;
+            else
             {
-                case UpdateState.NotCreated:
-                    Create();
-                    break;
-                case UpdateState.Created:
-                    Prepare();
-                    break;
-                case UpdateState.Prepared:
-                    Update();
-                    break;
-                default:
-                    throw new InvalidOperationException();
+                Exception = job.Error;
+                State = UpdateState.Errored;
             }
         }
 
-        private void Create()
-        {
-            _logger.Info("Create");
-            var job = new SimpleJob(_ =>
-            {
-                var storageMod = _createStorageMod(this);
-                _actionQueue.EnQueueAction(() =>
-                {
-                    _storageMod = storageMod;
-                });
-            }, "Create StorageMod", 1);
-            job.OnFinished += () =>
-            {
-                if (job.Error == null)
-                    State = UpdateState.Created;
-                else
-                {
-                    Exception = job.Error;
-                    State = UpdateState.Errored;
-                    OnEnded?.Invoke();
-                }
-            };
-            _abort = () => job.Abort();
-            State = UpdateState.Creating;
-            _jobManager.QueueJob(job);
-        }
-
-        private void Prepare()
+        public async Task Prepare()
         {
             _logger.Info("Create {0}", _storageMod.Identifier);
             var name = $"Preparing {_storageMod.Identifier} update";
-
             var job = new SimpleJob(DoPrepare, name, 1);
-            job.OnFinished += () =>
-            {
-                if (job.Error == null)
-                    State = UpdateState.Prepared;
-                else
-                {
-                    Exception = job.Error;
-                    State = UpdateState.Errored;
-                    OnEnded?.Invoke();
-                }
-            };
             _abort = () => job.Abort();
             State = UpdateState.Preparing;
-            _jobManager.QueueJob(job);
+            await job.Do(_jobManager);
+            if (job.Error == null)
+                State = UpdateState.Prepared;
+            else
+            {
+                Exception = job.Error;
+                State = UpdateState.Errored;
+            }
         }
 
         private void DoPrepare(CancellationToken cancellationToken)
@@ -137,28 +94,14 @@ namespace BSU.Core.Model
             _syncJob = new RepoSync(_repositoryMod, _storageMod, Target, name, 0, cancellationToken);
         }
 
-        private void Update()
+        public async Task Update()
         {
             _logger.Info("Update {0}", _storageMod.Identifier);
             if (_syncJob.NothingToDo)
             {
                 State = UpdateState.Updated;
-                OnEnded?.Invoke();
                 return;
             }
-            _syncJob.OnFinished += () =>
-            {
-                var error = _syncJob.GetError();
-                if (error == null)
-                    State = UpdateState.Updated;
-                else
-                {
-                    Exception = error;
-                    State = UpdateState.Errored;
-                }
-
-                OnEnded?.Invoke();
-            };
             _progressProvider.IsIndeterminate = false;
             _syncJob.OnProgress += () =>
             {
@@ -166,7 +109,18 @@ namespace BSU.Core.Model
             };
             _abort = () => _syncJob.Abort();
             State = UpdateState.Updating;
-            _jobManager.QueueJob(_syncJob);
+
+            try
+            {
+                await _syncJob.Do(_jobManager);
+                State = UpdateState.Updated;
+            }
+            catch (Exception e)
+            {
+                
+                Exception = e;
+                State = UpdateState.Errored;
+            }
         }
 
         public void Abort()
@@ -181,12 +135,7 @@ namespace BSU.Core.Model
             }
             
             State = UpdateState.Aborted;
-            OnEnded?.Invoke();
         }
-
-        public event Action OnStateChange;
-
-        public event Action OnEnded;
 
         public int GetPrepStats()
         {
@@ -196,6 +145,7 @@ namespace BSU.Core.Model
         }
 
         public IProgressProvider ProgressProvider => _progressProvider;
+        public event Action OnEnded; // TODO: use
 
         public override string ToString()
         {

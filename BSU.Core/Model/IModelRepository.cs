@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BSU.Core.Model
 {
     internal interface IModelRepository
     {
-        List<IModelRepositoryMod> Mods { get; }
+        Task<List<IModelRepositoryMod>> GetMods();
         CalculatedRepositoryState CalculatedState { get; }
         event Action CalculatedStateChanged;
         event Action<IModelRepositoryMod> ModAdded;
-        bool IsLoading { get; }
         Guid Identifier { get; }
         string Name { get; }
 
-        void DoUpdate(RepositoryUpdate.SetUpDelegate setup, RepositoryUpdate.PreparedDelegate prepared,
-            RepositoryUpdate.FinishedDelegate finished);
+        RepositoryUpdate DoUpdate();
         RepositoryUpdate CurrentUpdate { get; }
         event Action OnUpdateChange;
+        Task ProcessMods(List<IModelStorage> mods);
     }
 }

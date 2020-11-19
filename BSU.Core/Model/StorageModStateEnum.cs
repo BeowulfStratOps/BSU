@@ -3,13 +3,8 @@
     internal enum StorageModStateEnum
     {
         CreatedWithUpdateTarget,
-        CreatedForDownload,
-        Loading,
-        Loaded,
-        Hashing,
-        Hashed,
+        Created,
         Updating,
-        ErrorLoad,
-        ErrorUpdate
+        Error
     }
 }
