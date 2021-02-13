@@ -78,9 +78,9 @@ namespace BSU.Core.Model
             foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
             {
                 var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _relatedActionsBag, _modelStructure);
-                modelMod.ActionAdded += storageMod =>
+                modelMod.LocalModAdded += storageMod =>
                 {
-                    modelMod.Actions[storageMod].Updated += ReCalculateState;
+                    modelMod.LocalMods[storageMod].Updated += ReCalculateState;
                     ReCalculateState();
                 };
                 modelMod.SelectionChanged += ReCalculateState;
@@ -109,7 +109,7 @@ namespace BSU.Core.Model
                 if (value == _calculatedState) return;
                 _logger.Trace("Repo {0} State changing from {1} to {2}", Identifier, _calculatedState, value);
                 _calculatedState = value;
-                CalculatedStateChanged?.Invoke();
+                CalculatedStateChanged?.Invoke(value);
             }
         }
 
@@ -119,7 +119,7 @@ namespace BSU.Core.Model
             _logger.Trace("Repo {0} calculated state: {1}", Identifier, CalculatedState);
         }
 
-        public event Action CalculatedStateChanged;
+        public event Action<CalculatedRepositoryState> CalculatedStateChanged;
 
         public RepositoryUpdate DoUpdate()
         {

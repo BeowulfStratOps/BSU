@@ -54,14 +54,14 @@ namespace BSU.Core.Model
             return new List<IModelStorageMod>(_mods);
         }
 
-        public async Task<IUpdateState> PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
+        public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
         {
-            await _loading.Do();
+            if (_loading.IsRunning) throw new InvalidOperationException(); // TODO: check it is finished. i.e. started and not running
             
             return new StorageModUpdateState(_jobManager, _actionQueue, repositoryMod, target, update =>
             {
                 var mod = Implementation.CreateMod(identifier);
-                var storageMod = new StorageMod(_actionQueue, mod, identifier, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite(), update);
+                var storageMod = new StorageMod(_actionQueue, mod, identifier, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
                 _actionQueue.EnQueueAction(() =>
                 {
                     _mods.Add(storageMod);

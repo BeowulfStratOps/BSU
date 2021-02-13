@@ -14,7 +14,7 @@ namespace BSU.Core.Model
     {
         private readonly IActionQueue _actionQueue;
         private readonly IJobManager _jobManager;
-        private readonly IRepositoryModState _internalState;
+        private readonly IPersistedRepositoryModState _internalState;
         private readonly RelatedActionsBag _relatedActionsBag;
         private readonly IModelStructure _modelStructure;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -23,7 +23,7 @@ namespace BSU.Core.Model
         public Uid Uid { get; } = new Uid();
 
         private readonly JobSlot _loading;
-        
+
         private MatchHash _matchHash;
         private VersionHash _versionHash;
 
@@ -61,10 +61,10 @@ namespace BSU.Core.Model
             }
         }
 
-        public Dictionary<IModelStorageMod, ModAction> Actions { get; } = new Dictionary<IModelStorageMod, ModAction>();
+        public Dictionary<IModelStorageMod, ModAction> LocalMods { get; } = new Dictionary<IModelStorageMod, ModAction>();
 
         public RepositoryMod(IActionQueue actionQueue, IRepositoryMod implementation, string identifier,
-            IJobManager jobManager, IRepositoryModState internalState, RelatedActionsBag relatedActionsBag,
+            IJobManager jobManager, IPersistedRepositoryModState internalState, RelatedActionsBag relatedActionsBag,
             IModelStructure modelStructure)
         {
             _actionQueue = actionQueue;
@@ -75,13 +75,13 @@ namespace BSU.Core.Model
             Implementation = implementation;
             Identifier = identifier;
             DownloadIdentifier = identifier;
-            
+
             _loading = new JobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
         }
-        
+
         public async Task ProcessMods(List<IModelStorage> storages)
         {
-            var tasks = new List<Task>(); 
+            var tasks = new List<Task>();
             foreach (var storage in storages)
             {
                 foreach (var mod in await storage.GetMods())
@@ -109,9 +109,9 @@ namespace BSU.Core.Model
             var actionType = await CoreCalculation.GetModAction(_matchHash, _versionHash, mod);
             if (actionType == null) return;
 
-            Actions[mod] = new ModAction((ModActionEnum) actionType, this, _versionHash,
+            LocalMods[mod] = new ModAction((ModActionEnum) actionType, this, _versionHash,
                 _relatedActionsBag.GetBag(mod));
-            ActionAdded?.Invoke(mod);
+            LocalModAdded?.Invoke(mod);
             // TODO: stuff
             DoAutoSelection(false);
         }
@@ -125,42 +125,6 @@ namespace BSU.Core.Model
             AsUpdateTarget = new UpdateTarget(_versionHash.GetHashString(), Implementation.GetDisplayName());
         }
 
-        public async Task<RepositoryModState> GetState()
-        {
-            await Load();
-            return new RepositoryModState(_matchHash, _versionHash, _error);
-        }
-
-        public void ChangeAction(IModelStorageMod target, ModActionEnum? newAction)
-        {
-            Logger.Trace("RepoMod {0} changed action for {1} to {2}", Identifier, target, newAction);
-
-            var existing = Actions.ContainsKey(target);
-            if (newAction == null)
-            {
-                if (!existing) return;
-                Actions[target].Remove();
-                Actions.Remove(target);
-                if (Selection?.StorageMod == target)
-                {
-                    Selection = null;
-                }
-                return;
-            }
-            if (existing)
-            {
-                Actions[target].Update((ModActionEnum) newAction);
-            }
-            else
-            {
-                Actions[target] = new ModAction((ModActionEnum) newAction, this, _versionHash, _relatedActionsBag.GetBag(target));
-                ActionAdded?.Invoke(target);
-            }
-            DoAutoSelection(false);
-        }
-
-        private string _downloadIdentifier;
-
         private void DoAutoSelection(bool allModsLoaded)
         {
             // never change a selection once it was made. Would be clickjacking on the user
@@ -169,7 +133,7 @@ namespace BSU.Core.Model
 
             Logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
-            var selection = CoreCalculation.AutoSelect(allModsLoaded, Actions, _modelStructure, _internalState.Selection);
+            var selection = CoreCalculation.AutoSelect(allModsLoaded, LocalMods, _modelStructure, _internalState.Selection);
             if (selection == Selection) return;
 
             Logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
@@ -177,53 +141,42 @@ namespace BSU.Core.Model
             Selection = selection;
         }
 
-        public async Task DoUpdate()
+        public IUpdateState DoUpdate()
         {
             if (CurrentUpdate != null) throw new InvalidOperationException();
             if (Selection == null) throw new InvalidOperationException();
 
             // TODO: switch
 
-            if (Selection.DoNothing) return;
+            if (Selection.DoNothing) return null;
 
             if (Selection.StorageMod != null)
             {
-                var action = Actions[Selection.StorageMod];
-                if (action.ActionType != ModActionEnum.Update && action.ActionType != ModActionEnum.ContinueUpdate) return;
-                
-                var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget);
+                var action = LocalMods[Selection.StorageMod];
+                if (action.ActionType != ModActionEnum.Update && action.ActionType != ModActionEnum.ContinueUpdate) return null;
+
+                var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget, _matchHash, _versionHash);
                 update.OnEnded += () => CurrentUpdate = null;
                 CurrentUpdate = update;
-                return;
+                return update;
             }
 
             if (Selection.DownloadStorage != null)
             {
-                var update = await Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier);
+                var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier);
                 update.OnEnded += () => CurrentUpdate = null;
                 CurrentUpdate = update;
-                return;
+                return update;
             }
 
             throw new InvalidOperationException();
         }
 
-        public string DownloadIdentifier
-        {
-            get => _downloadIdentifier;
-            set
-            {
-                if (value == _downloadIdentifier) return;
-                _downloadIdentifier = value;
-                DownloadIdentifierChanged?.Invoke();
-            }
-        }
+        public string DownloadIdentifier { get; set; }
 
         public override string ToString() => Identifier;
 
-        public event Action<IModelStorageMod> ActionAdded;
+        public event Action<IModelStorageMod> LocalModAdded;
         public event Action SelectionChanged;
-
-        public event Action DownloadIdentifierChanged;
     }
 }

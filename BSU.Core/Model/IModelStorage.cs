@@ -10,7 +10,7 @@ namespace BSU.Core.Model
     {
         Task<List<IModelStorageMod>> GetMods();
 
-        Task<IUpdateState> PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier);
+        IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier);
         event Action<IModelStorageMod> ModAdded;
         bool CanWrite { get; }
         Guid Identifier { get; }

@@ -4,14 +4,14 @@ namespace BSU.Core.Model
 {
     internal class RelatedActionsBag
     {
-        private readonly Dictionary<IModelStorageMod, HashSet<ModAction>> _bag =
-            new Dictionary<IModelStorageMod, HashSet<ModAction>>();
+        private readonly Dictionary<object, HashSet<ModAction>> _bag =
+            new Dictionary<object, HashSet<ModAction>>();
 
-        public HashSet<ModAction> GetBag(IModelStorageMod storageMod)
+        public HashSet<ModAction> GetBag(object key)
         {
-            if (_bag.TryGetValue(storageMod, out var bag)) return bag;
+            if (_bag.TryGetValue(key, out var bag)) return bag;
             var newBag = new HashSet<ModAction>();
-            _bag[storageMod] = newBag;
+            _bag[key] = newBag;
             return newBag;
         }
     }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
@@ -13,9 +15,9 @@ namespace BSU.Core.Tests
         {
         }
 
-        internal static (MockStorageMod, StorageMod, MockWorker) CreateStorageMod(UpdateTarget stateTarget = null, UpdateTarget updateTarget = null)
+        internal static (MockStorageMod, StorageMod, MockWorker) CreateStorageMod(UpdateTarget stateTarget = null)
         {
-            var worker = new MockWorker();
+            var worker = new MockWorker(true);
 
             var mockStorage = new MockStorageMod();
             for (int i = 0; i < 3; i++)
@@ -23,13 +25,9 @@ namespace BSU.Core.Tests
                 mockStorage.SetFile($"/addons/asdf_{i}.pbo", "qwe");
             }
 
-            var state = new MockStorageModState {UpdateTarget = stateTarget};
-            IUpdateState downloadState = null;
+            var state = new MockPersistedStorageModState {UpdateTarget = stateTarget};
 
-            if (updateTarget != null)
-                downloadState = new MockUpdateState(false, false, false);
-            
-            var storageMod = new StorageMod(worker, mockStorage, "mystorage", updateTarget, state, worker, Guid.Empty, true, downloadState);
+            var storageMod = new StorageMod(worker, mockStorage, "mystorage", state, worker, Guid.Empty, true);
             return (mockStorage, storageMod, worker);
         }
 
@@ -45,172 +43,40 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void Loading()
+        private void Created()
         {
             var (implementation, storageMod, worker) = CreateStorageMod();
 
-            Assert.Equal(StorageModStateEnum.Loading, storageMod.GetState().State);
-            var state = storageMod.GetState();
-            Assert.Null(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.Null(state.UpdateTarget);
-            Assert.Null(state.JobTarget);
+            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
         }
 
         [Fact]
-        private void Loaded()
+        private void CreatedWithTarget()
         {
-            var (implementation, storageMod, worker) = CreateStorageMod();
-            worker.DoWork();
-            var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.Loaded, state.State);
-            Assert.NotNull(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.Null(state.UpdateTarget);
-            Assert.Null(state.JobTarget);
-            Assert.True(state.MatchHash.IsMatch(new MatchHash(implementation)));
+            var target = new UpdateTarget("1234", "LeMod");
+            var (implementation, storageMod, worker) = CreateStorageMod(target);
+
+            Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
+            //Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
         }
 
         [Fact]
-        private void Hashing()
-        {
-            var (implementation, storageMod, worker) = CreateStorageMod();
-            worker.DoWork();
-            storageMod.RequireHash();
-            while (worker.DoQueueStep())
-            {
-            }
-
-            var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.Hashing, state.State);
-            Assert.NotNull(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.Null(state.UpdateTarget);
-            Assert.Null(state.JobTarget);
-        }
-
-        [Fact]
-        private void Hashed()
-        {
-            var (implementation, storageMod, worker) = CreateStorageMod();
-            worker.DoWork();
-            storageMod.RequireHash();
-            worker.DoWork();
-
-            var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.Hashed, state.State);
-            Assert.NotNull(state.MatchHash);
-            Assert.NotNull(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.Null(state.UpdateTarget);
-            Assert.Null(state.JobTarget);
-            Assert.True(state.VersionHash.IsMatch(new VersionHash(implementation)));
-        }
-
-        [Fact]
-        private void CreatedForDownload()
+        private void Prepared()
         {
             var target = new UpdateTarget("123", "LeMod");
-            var (implementation, storageMod, worker) = CreateStorageMod(updateTarget: target);
-
-            Assert.Equal(StorageModStateEnum.CreatedForDownload, storageMod.GetState().State);
-            var state = storageMod.GetState();
-            Assert.Null(state.MatchHash);
-            Assert.NotNull(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.NotNull(state.UpdateTarget);
-            Assert.Equal(state.UpdateTarget.Hash, target.Hash);
-            Assert.Null(state.JobTarget);
-            Assert.True(state.VersionHash.IsMatch(VersionHash.CreateEmpty()));
-        }
-
-        [Fact]
-        private void Downloading()
-        {
-            var target = new UpdateTarget("123", "LeMod");
-            var (implementation, storageMod, worker) = CreateStorageMod(updateTarget: target);
+            var (implementation, storageMod, worker) = CreateStorageMod();
 
             var repo = CreateRepoMod();
-            storageMod.PrepareUpdate(repo, target);
-            worker.DoQueueStep();
+            var update = storageMod.PrepareUpdate(repo, target, new MatchHash(new string[] { }),
+                new VersionHash(new byte[] { }));
+            update.Prepare().Wait();
 
-            Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState().State);
-            var state = storageMod.GetState();
-            Assert.Null(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.NotNull(state.UpdateTarget);
-            Assert.Equal(state.UpdateTarget.Hash, target.Hash);
-            Assert.NotNull(state.JobTarget);
-            Assert.Equal(state.JobTarget.Hash, target.Hash);
-        }
-
-        [Fact]
-        private void Downloaded()
-        {
-            var target = new UpdateTarget("123", "LeMod");
-            var (implementation, storageMod, worker) = CreateStorageMod(updateTarget: target);
-
-            var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target);
-            update.OnStateChange += () =>
-            {
-                if (update.State == UpdateState.Prepared)
-                    update.Continue();
-            };
-            update.Continue();
-            worker.DoWork();
-
-            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
-            var state = storageMod.GetState();
-            Assert.NotNull(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.Null(state.UpdateTarget);
-            Assert.Null(state.JobTarget);
-            Assert.True(state.MatchHash.IsMatch(new MatchHash(repo)));
-        }
-
-        [Fact]
-        private void WithTarget()
-        {
-            var (implementation, storageMod, worker) = CreateStorageMod();
-
-            Assert.Equal(StorageModStateEnum.Loading, storageMod.GetState().State);
-            var state = storageMod.GetState();
-            Assert.Null(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.Null(state.UpdateTarget);
-            Assert.Null(state.JobTarget);
-        }
-
-        [Fact]
-        private void Updating()
-        {
-            var target = new UpdateTarget("123", "LeMod");
-            var (implementation, storageMod, worker) = CreateStorageMod();
-
-            worker.DoWork();
-            storageMod.RequireHash();
-            worker.DoWork();
-
-            var repo = CreateRepoMod();
-            storageMod.PrepareUpdate(repo, target);
-            worker.DoQueueStep();
-
-            Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState().State);
-            var state = storageMod.GetState();
-            Assert.Null(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.NotNull(state.UpdateTarget);
-            Assert.Equal(state.UpdateTarget.Hash, target.Hash);
-            Assert.NotNull(state.JobTarget);
-            Assert.Equal(state.JobTarget.Hash, target.Hash);
+            Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
+            Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
         }
 
         [Fact]
@@ -219,29 +85,17 @@ namespace BSU.Core.Tests
             var target = new UpdateTarget("123", "LeMod");
             var (implementation, storageMod, worker) = CreateStorageMod();
 
-            worker.DoWork();
-            storageMod.RequireHash();
-            worker.DoWork();
-
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target);
-            update.OnStateChange += () =>
-            {
-                if (update.State == UpdateState.Prepared)
-                    update.Continue();
-            };
+            var update = storageMod.PrepareUpdate(repo, target, new MatchHash(new string[] { }),
+                new VersionHash(new byte[] { }));
 
-            update.Continue();
-            worker.DoWork();
+            update.Create().Wait();
+            update.Prepare().Wait();
+            update.Update().Wait();
 
-            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
-            var state = storageMod.GetState();
-            Assert.NotNull(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.Null(state.UpdateTarget);
-            Assert.Null(state.JobTarget);
-            Assert.True(state.MatchHash.IsMatch(new MatchHash(repo)));
+            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
         }
 
         [Fact]
@@ -249,28 +103,18 @@ namespace BSU.Core.Tests
         {
             var (implementation, storageMod, worker) = CreateStorageMod();
 
-            worker.DoWork();
-            storageMod.RequireHash();
-            worker.DoWork();
-
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
-            update.OnStateChange += () =>
-            {
-                if (update.State == UpdateState.Prepared)
-                    update.Abort();
-            };
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
+                new VersionHash(new byte[] { }));
 
-            update.Continue();
-            worker.DoWork();
 
-            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState().State);
-            var state = storageMod.GetState();
-            Assert.NotNull(state.MatchHash);
-            Assert.Null(state.VersionHash);
-            Assert.Null(state.Error);
-            Assert.Null(state.UpdateTarget);
-            Assert.Null(state.JobTarget);
+            update.Create().Wait();
+            update.Prepare().Wait();
+            update.Abort();
+
+            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
         }
 
         [Fact]
@@ -279,24 +123,18 @@ namespace BSU.Core.Tests
             var (implementation, storageMod, worker) = CreateStorageMod();
 
             implementation.ThrowErrorLoad = true;
-            worker.DoWork();
 
-            var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.ErrorLoad, state.State);
-        }
+            try
+            {
+                storageMod.GetMatchHash().Wait();
+                Assert.False(true);
+            }
+            catch (AggregateException e)
+            {
+                if (!(e.InnerExceptions.Single() is TestException)) throw;
+            }
 
-        [Fact]
-        private void ErrorHash()
-        {
-            var (implementation, storageMod, worker) = CreateStorageMod();
-
-            worker.DoWork();
-            storageMod.RequireHash();
-            implementation.ThrowErrorOpen = true;
-            worker.DoWork();
-
-            var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.ErrorLoad, state.State);
+            Assert.Equal(StorageModStateEnum.Error, storageMod.GetState());
         }
 
         [Fact]
@@ -304,50 +142,42 @@ namespace BSU.Core.Tests
         {
             var (implementation, storageMod, worker) = CreateStorageMod();
 
-            worker.DoWork();
-            storageMod.RequireHash();
-            worker.DoWork();
-
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"));
-            update.OnStateChange += () =>
-            {
-                if (update.State != UpdateState.Prepared) return;
-                implementation.ThrowErrorOpen = true;
-                update.Continue();
-            };
-            update.Continue();
-
-            worker.DoWork();
-
-            var state = storageMod.GetState();
-            Assert.Equal(StorageModStateEnum.ErrorUpdate, state.State);
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
+                new VersionHash(new byte[] { }));
+            update.Create().Wait();
+            update.Prepare().Wait();
+            implementation.ThrowErrorOpen = true;
+            update.Update().Wait();
+            Assert.NotNull(update.Exception);
+            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            implementation.ThrowErrorOpen = false;
+            Assert.NotNull(storageMod.GetMatchHash().Result);
+            Assert.NotNull(storageMod.GetVersionHash().Result);
         }
 
         [Fact]
         private void ErrorPrepareUpdate()
         {
-            var target = new UpdateTarget("123", "LeMod");
             var (implementation, storageMod, worker) = CreateStorageMod();
 
-            worker.DoWork();
-            storageMod.RequireHash();
-            worker.DoWork();
-
             var repo = CreateRepoMod();
-            Exception error = null;
+            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
+                new VersionHash(new byte[] { }));
+            update.Create().Wait();
             implementation.ThrowErrorOpen = true;
-            var update = storageMod.PrepareUpdate(repo, target);
-            update.OnStateChange += () =>
+            try
             {
-                if (update.State != UpdateState.Errored) return;
-                error = update.Exception;
-            };
-            update.Continue();
-            worker.DoWork();
+                update.Prepare().Wait();
+                Assert.False(true);
+            }
+            catch (TestException)
+            {
+            }
 
-            Assert.NotNull(error);
-            Assert.IsType<TestException>(error);
+            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.NotNull(storageMod.GetMatchHash().Result);
+            Assert.NotNull(storageMod.GetVersionHash().Result);
         }
     }
 }

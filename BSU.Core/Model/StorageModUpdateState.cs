@@ -58,6 +58,12 @@ namespace BSU.Core.Model
         public async Task Create()
         {
             _logger.Info("Create");
+            if (State == UpdateState.Created)
+            {
+                _logger.Info("Create - Nothing To Do");
+                return;
+            }
+            if (State != UpdateState.NotCreated) throw new InvalidOperationException();
             var job = new SimpleResultJob<StorageMod>(_ => _createStorageMod(this), "Create StorageMod", 1);
             _abort = () => job.Abort();
             State = UpdateState.Creating;
@@ -75,7 +81,8 @@ namespace BSU.Core.Model
 
         public async Task Prepare()
         {
-            _logger.Info("Create {0}", _storageMod.Identifier);
+            if (State != UpdateState.Created) throw new InvalidOperationException();
+            _logger.Info("Prepare {0}", _storageMod.Identifier);
             var name = $"Preparing {_storageMod.Identifier} update";
             var job = new SimpleJob(DoPrepare, name, 1);
             _abort = () => job.Abort();
@@ -100,6 +107,7 @@ namespace BSU.Core.Model
 
         public async Task Update()
         {
+            if (State != UpdateState.Prepared) throw new InvalidOperationException();
             _logger.Info("Update {0}", _storageMod.Identifier);
             if (_syncJob.NothingToDo)
             {
@@ -117,6 +125,7 @@ namespace BSU.Core.Model
             try
             {
                 await _syncJob.Do(_jobManager);
+                Exception = _syncJob.GetError();
                 State = UpdateState.Updated;
             }
             catch (Exception e)
@@ -125,6 +134,7 @@ namespace BSU.Core.Model
                 Exception = e;
                 State = UpdateState.Errored;
             }
+            OnEnded?.Invoke();
         }
 
         public void Abort()
@@ -139,6 +149,7 @@ namespace BSU.Core.Model
             }
             
             State = UpdateState.Aborted;
+            OnEnded?.Invoke();
         }
 
         public int GetPrepStats()
@@ -149,7 +160,7 @@ namespace BSU.Core.Model
         }
 
         public IProgressProvider ProgressProvider => _progressProvider;
-        public event Action OnEnded; // TODO: use
+        public event Action OnEnded;
 
         public override string ToString()
         {

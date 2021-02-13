@@ -65,7 +65,11 @@ namespace BSU.Core.Model
 
         public void Abort()
         {
-            throw new NotImplementedException();
+            // TODO: set state
+            foreach (var updateState in _workingSet)
+            {
+                updateState.Abort();
+            }
         }
     }
 

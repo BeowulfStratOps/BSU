@@ -2,7 +2,7 @@
 
 namespace BSU.Core.Tests.Mocks
 {
-    internal class MockStorageModState : IStorageModState
+    internal class MockPersistedStorageModState : IPersistedStorageModState
     {
         public UpdateTarget UpdateTarget { get; set; }
     }

@@ -44,9 +44,9 @@ namespace BSU.Core.ViewModel
             Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
             CalculatedState = repository.CalculatedState;
-            repository.CalculatedStateChanged += () =>
+            repository.CalculatedStateChanged += state =>
             {
-                CalculatedState = repository.CalculatedState;
+                CalculatedState = state;
             };
             Name = repository.Name;
             repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model));

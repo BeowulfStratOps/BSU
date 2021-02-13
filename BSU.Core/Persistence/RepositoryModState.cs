@@ -3,18 +3,18 @@ using System.Collections.Generic;
 
 namespace BSU.Core.Persistence
 {
-    internal interface IRepositoryModState
+    internal interface IPersistedRepositoryModState
     {
         PersistedSelection Selection { get; set; }
     }
 
-    internal class RepositoryModState : IRepositoryModState
+    internal class PersistedRepositoryModState : IPersistedRepositoryModState
     {
         private readonly Dictionary<string, PersistedSelection> _usedMods;
         private readonly Action _store;
         private readonly string _identifier;
 
-        public RepositoryModState(Dictionary<string, PersistedSelection> usedMods, Action store, string identifier)
+        public PersistedRepositoryModState(Dictionary<string, PersistedSelection> usedMods, Action store, string identifier)
         {
             _usedMods = usedMods;
             _store = store;

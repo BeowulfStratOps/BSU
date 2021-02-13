@@ -84,5 +84,10 @@ namespace BSU.Core.Hashes
         }
 
         public override string ToString() => GetHashString();
+
+        public static VersionHash FromDigest(string hashString)
+        {
+            return new VersionHash(Utils.FromHexString(hashString));
+        }
     }
 }

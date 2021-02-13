@@ -160,7 +160,7 @@ namespace BSU.Core.Sync
 
         public Exception GetError()
         {
-            return Errors.Any() ? new CombinedException(Errors) : null;
+            return Errors.Any() ? new AggregateException(Errors) : null;
         }
 
         public string GetTitle() => _title;
@@ -179,16 +179,6 @@ namespace BSU.Core.Sync
         {
             jobManager.QueueJob(this);
             return _tcs.Task;
-        }
-    }
-
-    internal class CombinedException : Exception
-    {
-        public readonly List<Exception> Exceptions;
-
-        public CombinedException(List<Exception> exceptions)
-        {
-            Exceptions = exceptions;
         }
     }
 }

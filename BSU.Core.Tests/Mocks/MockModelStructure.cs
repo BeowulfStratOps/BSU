@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 
 namespace BSU.Core.Tests.Mocks
@@ -16,10 +17,12 @@ namespace BSU.Core.Tests.Mocks
         
         public List<IModelStorageMod> StorageMods { get; } = new List<IModelStorageMod>();
 
-        public IEnumerable<IModelStorageMod> GetAllStorageMods() => StorageMods;
+        public Task<IEnumerable<IModelStorageMod>> GetAllStorageMods() =>
+            Task.FromResult((IEnumerable<IModelStorageMod>) StorageMods);
         
         public List<IModelRepositoryMod> RepositoryMods { get; } = new List<IModelRepositoryMod>();
 
-        public IEnumerable<IModelRepositoryMod> GetAllRepositoryMods() => RepositoryMods;
+        public Task<IEnumerable<IModelRepositoryMod>> GetAllRepositoryMods() =>
+            Task.FromResult((IEnumerable<IModelRepositoryMod>) RepositoryMods);
     }
 }

@@ -4,7 +4,7 @@ namespace BSU.Core.Persistence
 {
     internal interface IStorageState
     {
-        IStorageModState GetMod(string identifier);
+        IPersistedStorageModState GetMod(string identifier);
         Guid Identifier { get; }
     }
     
@@ -19,9 +19,9 @@ namespace BSU.Core.Persistence
             _store = store;
         }
 
-        public IStorageModState GetMod(string identifier)
+        public IPersistedStorageModState GetMod(string identifier)
         {
-            return new StorageModState(_entry.Updating, _store, identifier);
+            return new PersistedStorageModState(_entry.Updating, _store, identifier);
         }
 
         public Guid Identifier => _entry.Guid;

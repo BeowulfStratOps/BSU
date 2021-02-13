@@ -14,7 +14,7 @@ namespace BSU.Core.Tests
     {
         public MatchMakerTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-        }
+        }/*
 
         private static MatchHash GetMatchHash(string match)
         {
@@ -36,7 +36,7 @@ namespace BSU.Core.Tests
             return new VersionHash(mockRepo);
         }
 
-        private (Mock<IModelStorageMod>, ModActionEnum?, bool wasCalled) DoCheck(RepositoryModState repoState, StorageModState storageState, bool canWrite = true)
+        private ModActionEnum? DoCheck(IRepositoryModState repoState, IStorageModState storageState, bool canWrite = true)
         {
             var repoMod = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
@@ -55,12 +55,6 @@ namespace BSU.Core.Tests
 
             storageMod.Setup(s => s.Identifier).Returns("storageMod");
 
-            repoMod.Setup(r => r.ChangeAction(storageMod.Object, It.IsAny<ModActionEnum?>())).Callback<IModelStorageMod, ModActionEnum?>(
-                (_, state) =>
-                {
-                    changes.Add(state);
-                });
-
             var structure = new MockModelStructure();
             var matchMaker = new MatchMaker(structure);
 
@@ -74,139 +68,61 @@ namespace BSU.Core.Tests
             Assert.True(changes.Count() <= 1);
 
             return (storageMod, changes.FirstOrDefault(), changes.Any());
+
+            return CoreCalculation.GetModAction().Result;
         }
 
         [Fact]
-        private void RepoLoading()
-        {
-            var repoState = new RepositoryModState(null, null, null);
-
-            var storageState =
-                new StorageModState(GetMatchHash("1"), null, null, null, StorageModStateEnum.Loaded, null);
-
-            var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
-            Assert.False(wasCalled);
-        }
-
-        [Fact]
-        private void StorageLoading()
+        private void NoMatch()
         {
             var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("1"), null);
 
             var storageState =
-                new StorageModState(null, null, null, null, StorageModStateEnum.Loading, null);
+                new StorageModState(GetMatchHash("2"), null, null, null, StorageModStateEnum.Created, null);
 
-            var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
+            var action = DoCheck(repoState, storageState);
 
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
-            Assert.False(wasCalled);
+            Assert.Null(action);
         }
 
         [Fact]
-        private void StorageLoaded_Match()
+        private void Use()
         {
             var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("1"), null);
 
             var storageState =
-                new StorageModState(GetMatchHash("1"), null, null, null, StorageModStateEnum.Loaded, null);
+                new StorageModState(GetMatchHash("1"), GetVersionHash("1"), null, null, StorageModStateEnum.Created, null);
 
             var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
 
-            storageMod.Verify(s => s.RequireHash(), Times.Once);
-            Assert.True(wasCalled);
-            Assert.Equal(ModActionEnum.Loading, action);
-        }
-
-        [Fact]
-        private void StorageLoaded_NoMatch()
-        {
-            var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("1"), null);
-
-            var storageState =
-                new StorageModState(GetMatchHash("2"), null, null, null, StorageModStateEnum.Loaded, null);
-
-            var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
-            Assert.False(wasCalled);
-        }
-
-        [Fact]
-        private void StorageHashing()
-        {
-            var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("1"), null);
-
-            var storageState =
-                new StorageModState(GetMatchHash("1"), null, null, null, StorageModStateEnum.Hashing, null);
-
-            var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
-            Assert.True(wasCalled);
-            Assert.Equal(ModActionEnum.Loading, action);
-        }
-
-        [Fact]
-        private void Hashed_Use()
-        {
-            var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("1"), null);
-
-            var storageState =
-                new StorageModState(GetMatchHash("1"), GetVersionHash("1"), null, null, StorageModStateEnum.Hashed, null);
-
-            var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
             Assert.True(wasCalled);
             Assert.Equal(ModActionEnum.Use, action);
         }
 
         [Fact]
-        private void Hashed_Update()
+        private void Update()
         {
             var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("2"), null);
 
             var storageState =
-                new StorageModState(GetMatchHash("1"), GetVersionHash("1"), null, null, StorageModStateEnum.Hashed, null);
+                new StorageModState(GetMatchHash("1"), GetVersionHash("1"), null, null, StorageModStateEnum.Created, null);
 
             var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
 
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
             Assert.True(wasCalled);
             Assert.Equal(ModActionEnum.Update, action);
         }
 
         [Fact]
-        private void ErrorLoad()
+        private void Error()
         {
             var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("1"), null);
 
             var storageState =
-                new StorageModState(null, null, null, null, StorageModStateEnum.ErrorLoad, null);
+                new StorageModState(null, null, null, null, StorageModStateEnum.Error, null);
 
             var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
             Assert.False(wasCalled);
-        }
-
-        [Fact]
-        private void ErroUpdate()
-        {
-            var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("2"), null);
-
-            var updateTarget = new UpdateTarget(repoState.VersionHash.GetHashString(), "asdf");
-
-            var storageState =
-                new StorageModState(GetMatchHash("1"), null, updateTarget, null, StorageModStateEnum.ErrorUpdate, null);
-
-            var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
-            Assert.True(wasCalled);
-            Assert.Equal(ModActionEnum.Error, action);
         }
 
         [Fact]
@@ -220,27 +136,8 @@ namespace BSU.Core.Tests
                 new StorageModState(GetMatchHash("1"), GetVersionHash("3"), updateTarget, null, StorageModStateEnum.CreatedWithUpdateTarget, null);
 
             var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
             Assert.True(wasCalled);
             Assert.Equal(ModActionEnum.ContinueUpdate, action);
-        }
-
-        [Fact]
-        private void ContinueDownload()
-        {
-            var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("2"), null);
-
-            var updateTarget = new UpdateTarget(repoState.VersionHash.GetHashString(), "asdf");
-
-            var storageState =
-                new StorageModState(GetMatchHash("1"), GetVersionHash("3"), updateTarget, null, StorageModStateEnum.CreatedForDownload, null);
-
-            var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
-            Assert.True(wasCalled);
-            Assert.Equal(ModActionEnum.Await, action);
         }
 
         [Fact]
@@ -254,8 +151,6 @@ namespace BSU.Core.Tests
                 new StorageModState(GetMatchHash("1"), GetVersionHash("3"), updateTarget, updateTarget, StorageModStateEnum.Updating, null);
 
             var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
             Assert.True(wasCalled);
             Assert.Equal(ModActionEnum.Await, action);
         }
@@ -272,25 +167,8 @@ namespace BSU.Core.Tests
                 new StorageModState(GetMatchHash("1"), GetVersionHash("3"), updateTarget, updateTarget, StorageModStateEnum.Updating, null);
 
             var (storageMod, action, wasCalled) = DoCheck(repoState, storageState);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
             Assert.True(wasCalled);
             Assert.Equal(ModActionEnum.AbortAndUpdate, action);
-        }
-
-        [Fact]
-        private void Unusable()
-        {
-            var repoState = new RepositoryModState(GetMatchHash("1"), GetVersionHash("2"), null);
-
-            var storageState =
-                new StorageModState(GetMatchHash("1"), GetVersionHash("1"), null, null, StorageModStateEnum.Hashed, null);
-
-            var (storageMod, action, wasCalled) = DoCheck(repoState, storageState, false);
-
-            storageMod.Verify(s => s.RequireHash(), Times.Never);
-            Assert.True(wasCalled);
-            Assert.Equal(ModActionEnum.Unusable, action);
-        }
+        }*/
     }
 }

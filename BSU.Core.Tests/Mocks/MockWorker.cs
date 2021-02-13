@@ -12,11 +12,18 @@ namespace BSU.Core.Tests.Mocks
         private readonly List<IJob> _jobs = new List<IJob>();
         private readonly Queue<Action> _actionQueue = new Queue<Action>();
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly bool _processImmediately;
+
+        public MockWorker(bool processImmediately = false)
+        {
+            _processImmediately = processImmediately;
+        }
 
         public void QueueJob(IJob job)
         {
             _logger.Debug("Queueing job {0}: {1}", job.GetUid(), job.GetTitle());
             _jobs.Add(job);
+            if (_processImmediately) DoWork();
         }
 
         public void Shutdown(bool blocking)
@@ -43,7 +50,7 @@ namespace BSU.Core.Tests.Mocks
             return true;
         }
         
-        public bool DoQueueStep()
+        private bool DoQueueStep()
         {
             lock (_actionQueue)
             {

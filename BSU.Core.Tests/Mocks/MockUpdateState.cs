@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Model.Utility;
-using BSU.Core.ViewModel;
 
 namespace BSU.Core.Tests.Mocks
 {
@@ -28,32 +28,39 @@ namespace BSU.Core.Tests.Mocks
             _state = UpdateState.NotCreated;
         }
 
-        public void Continue()
+        public Task Create()
         {
-            switch (State)
+            if (State != UpdateState.NotCreated) throw new InvalidOperationException();
+            if (_errorCreate)
+                Error();
+            else
+                State = UpdateState.Created;
+            return Task.CompletedTask;
+        }
+
+        public Task Prepare()
+        {
+            if (State != UpdateState.Created) throw new InvalidOperationException();
+            if (_errorPrepare)
+                Error();
+            else
+                State = UpdateState.Prepared;
+            return Task.CompletedTask;
+        }
+        
+        public Task Update()
+        {
+            if (State != UpdateState.Prepared) throw new InvalidOperationException();
+            CommitCalled = true;
+            if (_errorUpdate)
+                Error();
+            else
             {
-                case UpdateState.NotCreated:
-                    if (_errorCreate)
-                        Error();
-                    else
-                        State = UpdateState.Created;
-                    break;
-                case UpdateState.Created:
-                    if (_errorPrepare)
-                        Error();
-                    else
-                        State = UpdateState.Prepared;
-                    break;
-                case UpdateState.Prepared:
-                    CommitCalled = true;
-                    if (_errorUpdate)
-                        Error();
-                    else
-                        State = UpdateState.Updated;
-                    break;
-                default:
-                    throw new InvalidOperationException();
+                State = UpdateState.Updated;
+                OnEnded?.Invoke();
             }
+
+            return Task.CompletedTask;
         }
 
         private void Error()

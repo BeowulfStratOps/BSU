@@ -4,19 +4,19 @@ using NLog;
 
 namespace BSU.Core.Persistence
 {
-    internal interface IStorageModState
+    internal interface IPersistedStorageModState
     {
         UpdateTarget UpdateTarget { get; set; }
     }
     
-    internal class StorageModState : IStorageModState
+    internal class PersistedStorageModState : IPersistedStorageModState
     {
         private readonly Dictionary<string, UpdateTarget> _updating;
         private readonly Action _store;
         private readonly string _identifier;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public StorageModState(Dictionary<string, UpdateTarget> updating, Action store, string identifier)
+        public PersistedStorageModState(Dictionary<string, UpdateTarget> updating, Action store, string identifier)
         {
             _updating = updating;
             _store = store;

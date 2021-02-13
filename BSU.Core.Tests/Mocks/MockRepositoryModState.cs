@@ -2,7 +2,7 @@
 
 namespace BSU.Core.Tests.Mocks
 {
-    internal class MockRepositoryModState : IRepositoryModState
+    internal class MockPersistedRepositoryModState : IPersistedRepositoryModState
     {
         public PersistedSelection Selection { get; set; }
     }

@@ -39,20 +39,17 @@ namespace BSU.Core.ViewModel
             //IsLoading = mod.GetState().IsLoading;
             _mod = mod;
             Name = mod.Identifier;
-            mod.ActionAdded += AddAction;
-            foreach (var target in mod.Actions.Keys)
+            mod.LocalModAdded += AddAction;
+            foreach (var target in mod.LocalMods.Keys)
             {
                 AddAction(target);
             }
 
-            Selection = ModAction.Create(mod.Selection, mod.Actions);
+            Selection = ModAction.Create(mod.Selection, mod.LocalMods);
             DownloadIdentifier = mod.DownloadIdentifier;
             mod.SelectionChanged += () =>
             {
-                Selection = ModAction.Create(mod.Selection, mod.Actions);
-            };
-            mod.DownloadIdentifierChanged += () =>
-            {
+                Selection = ModAction.Create(mod.Selection, mod.LocalMods);
                 DownloadIdentifier = mod.DownloadIdentifier;
             };
             mod.GetDisplayName().ContinueWith(async name =>
@@ -73,7 +70,7 @@ namespace BSU.Core.ViewModel
 
         private void AddAction(IModelStorageMod storageMod)
         {
-            Actions.Add(new SelectMod(storageMod, _mod.Actions[storageMod]));
+            Actions.Add(new SelectMod(storageMod, _mod.LocalMods[storageMod]));
         }
 
         internal void AddStorage(IModelStorage storage)
@@ -113,7 +110,7 @@ namespace BSU.Core.ViewModel
             
             if (_mod.Selection.StorageMod != null)
             {
-                var action = _mod.Actions[_mod.Selection.StorageMod];
+                var action = _mod.LocalMods[_mod.Selection.StorageMod];
                 if (!action.Conflicts.Any())
                 {
                     ErrorText = "";

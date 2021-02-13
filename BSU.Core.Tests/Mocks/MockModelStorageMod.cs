@@ -1,32 +1,32 @@
 ﻿using System;
+using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
-using StorageModState = BSU.Core.Model.StorageModState;
 
 namespace BSU.Core.Tests.Mocks
 {
     internal class MockModelStorageMod : IModelStorageMod
     {
-        public void RequireHash()
-        {
-            throw new NotImplementedException();
-        }
-
         public event Action StateChanged;
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, Action<Exception> setupError,
-            Action rollback = null)
+        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch, VersionHash targetVersion)
         {
             throw new NotImplementedException();
         }
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target)
+        public Task<VersionHash> GetVersionHash()
         {
             throw new NotImplementedException();
         }
 
-        public StorageModState GetState()
+        public Task<MatchHash> GetMatchHash()
+        {
+            throw new NotImplementedException();
+        }
+
+        public StorageModStateEnum GetState()
         {
             throw new NotImplementedException();
         }

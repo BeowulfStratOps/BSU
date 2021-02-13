@@ -14,8 +14,8 @@ namespace BSU.Core.Model
     internal class StorageMod : IModelStorageMod
     {
         // TODO: come up with a proper state machine implementation
-        
-        private readonly IStorageModState _internalState;
+
+        private readonly IPersistedStorageModState _internalState;
         private readonly IJobManager _jobManager;
         private readonly Guid _parentIdentifier;
         public bool CanWrite { get; }
@@ -29,6 +29,9 @@ namespace BSU.Core.Model
         private readonly FuncSlot<VersionHash> _versionHashJob;
 
         private UpdateTarget _updateTarget;
+
+        private MatchHash _updateMatchHash;
+        private VersionHash _updateVersionHash;
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
@@ -49,7 +52,7 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(IActionQueue actionQueue, IStorageMod implementation, string identifier,
-            IStorageModState internalState, IJobManager jobManager, Guid parentIdentifier, bool canWrite, IUpdateState downloadState = null)
+            IPersistedStorageModState internalState, IJobManager jobManager, Guid parentIdentifier, bool canWrite)
         {
             _internalState = internalState;
             _jobManager = jobManager;
@@ -58,17 +61,17 @@ namespace BSU.Core.Model
             ActionQueue = actionQueue;
             Implementation = implementation;
             Identifier = identifier;
-            var title1 = $"Load StorageMod {Identifier}";
             _loading = new JobSlot(_ => Implementation.Load(), $"Loading storageMod {identifier}", jobManager);
             _matchHashJob = new FuncSlot<MatchHash>(_ => new MatchHash(implementation),
                 $"Creating MatchHash for storageMod {identifier}", jobManager);
             _versionHashJob = new FuncSlot<VersionHash>(_ => new VersionHash(implementation),
                 $"Creating MatchHash for storageMod {identifier}", jobManager);
-            
+
             _updateTarget = _internalState.UpdateTarget;
             if (_updateTarget != null)
             {
-                //_state = StorageModStateEnum.CreatedWithUpdateTarget;
+                _state = StorageModStateEnum.CreatedWithUpdateTarget;
+                _updateVersionHash = VersionHash.FromDigest(_updateTarget.Hash);
             }
         }
 
@@ -85,15 +88,27 @@ namespace BSU.Core.Model
                 await _loading.Do();
                 return await _versionHashJob.Do();
             }
+            if (_state == StorageModStateEnum.Updating)
+            {
+                return _updateVersionHash;
+            }
+            if (_state == StorageModStateEnum.CreatedWithUpdateTarget)
+            {
+                return _updateVersionHash;
+            }
             throw new NotImplementedException();
         }
-        
+
         public async Task<MatchHash> GetMatchHash()
         {
             if (_state == StorageModStateEnum.Created)
             {
                 await _loading.Do();
                 return await _matchHashJob.Do();
+            }
+            if (_state == StorageModStateEnum.Updating)
+            {
+                return _updateMatchHash;
             }
             throw new NotImplementedException();
         }
@@ -112,15 +127,18 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target)
+        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch, VersionHash targetVersion)
         {
-            
             CheckState(StorageModStateEnum.Created, StorageModStateEnum.CreatedWithUpdateTarget);
-            
+
             if (_loading.IsRunning || _matchHashJob.IsRunning || _versionHashJob.IsRunning) throw new InvalidOperationException();
-            
+
+            // TODO: bit of redundancy between those hashes and update target?
+            _updateMatchHash = targetMatch;
+            _updateVersionHash = targetVersion;
+
             var update = new StorageModUpdateState(_jobManager, ActionQueue, repositoryMod, this, target);
-            
+
             UpdateTarget = target;
             State = StorageModStateEnum.Updating;
 

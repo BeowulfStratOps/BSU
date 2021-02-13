@@ -30,7 +30,7 @@ namespace BSU.Core.Tests
                         new ModAction((ModActionEnum) selectedModAction, null, null, new HashSet<ModAction>())
                     }
                 };
-                result.Setup(m => m.Actions).Returns(actions);
+                result.Setup(m => m.LocalMods).Returns(actions);
                 return result.Object;
             }
 
@@ -39,7 +39,7 @@ namespace BSU.Core.Tests
                 var download = new Mock<IModelStorage>(MockBehavior.Strict);
                 var selection = new RepositoryModActionSelection(download.Object);
                 result.Setup(m => m.Selection).Returns(selection);
-                result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
+                result.Setup(m => m.LocalMods).Returns(new Dictionary<IModelStorageMod, ModAction>());
                 return result.Object;
             }
 
@@ -47,11 +47,11 @@ namespace BSU.Core.Tests
             {
                 var selection = new RepositoryModActionSelection();
                 result.Setup(m => m.Selection).Returns(selection);
-                result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
+                result.Setup(m => m.LocalMods).Returns(new Dictionary<IModelStorageMod, ModAction>());
                 return result.Object;
             }
 
-            result.Setup(m => m.Actions).Returns(new Dictionary<IModelStorageMod, ModAction>());
+            result.Setup(m => m.LocalMods).Returns(new Dictionary<IModelStorageMod, ModAction>());
             result.Setup(m => m.Selection).Returns((RepositoryModActionSelection)null);
 
             return result.Object;

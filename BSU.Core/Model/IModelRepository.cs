@@ -8,7 +8,7 @@ namespace BSU.Core.Model
     {
         Task<List<IModelRepositoryMod>> GetMods();
         CalculatedRepositoryState CalculatedState { get; }
-        event Action CalculatedStateChanged;
+        event Action<CalculatedRepositoryState> CalculatedStateChanged;
         event Action<IModelRepositoryMod> ModAdded;
         Guid Identifier { get; }
         string Name { get; }

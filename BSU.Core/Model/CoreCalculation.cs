@@ -8,7 +8,7 @@ using BSU.Core.Persistence;
 namespace BSU.Core.Model
 {
     public static class CoreCalculation
-    {   
+    {
         internal static async Task<ModActionEnum?> GetModAction(MatchHash repoHash, VersionHash repoVersion,
             IModelStorageMod storageMod)
         {
@@ -16,7 +16,8 @@ namespace BSU.Core.Model
             {
                 case StorageModStateEnum.CreatedWithUpdateTarget:
                     if (repoVersion.IsMatch(await storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
-                    if (repoHash.IsMatch(await storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate;
+                    return null;
+                    if (repoHash.IsMatch(await storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate; // TODO: not implemented!
                     return null;
                 case StorageModStateEnum.Created:
                     if (!repoHash.IsMatch(await storageMod.GetMatchHash())) return null;
@@ -29,7 +30,7 @@ namespace BSU.Core.Model
                     throw new ArgumentOutOfRangeException();
             }
         }
-        
+
         internal static RepositoryModActionSelection AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
             IModelStructure modelStructure, PersistedSelection usedMod)
         {
@@ -91,7 +92,7 @@ namespace BSU.Core.Model
             mods = mods.Where(m => !(m.Selection?.DoNothing ?? false)).ToList();
 
             if (mods.All(mod =>
-                mod.Selection?.StorageMod != null && mod.Actions[mod.Selection?.StorageMod].ActionType == ModActionEnum.Use))
+                mod.Selection?.StorageMod != null && mod.LocalMods[mod.Selection?.StorageMod].ActionType == ModActionEnum.Use))
             {
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Ready, partial);
             }
@@ -100,7 +101,7 @@ namespace BSU.Core.Model
             {
                 // No internal conflicts
                 if (mods.Where(mod => mod.Selection?.StorageMod != null).All(mod =>
-                    mod.Actions[mod.Selection?.StorageMod].Conflicts.All(conflict => !mods.Contains(conflict.Parent))))
+                    mod.LocalMods[mod.Selection?.StorageMod].Conflicts.All(conflict => !mods.Contains(conflict.Parent))))
                 {
                     if (mods.Count(mod => mod.Selection?.DownloadStorage != null) > 0.5 * mods.Count)
                         return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsDownload, partial);
@@ -110,7 +111,7 @@ namespace BSU.Core.Model
 
             if (mods.All(mod =>
                 mod.Selection?.StorageMod == null && mod.Selection?.DownloadStorage == null &&
-                mod.Actions.Any(kv => kv.Value.ActionType == ModActionEnum.Loading)))
+                mod.LocalMods.Any(kv => kv.Value.ActionType == ModActionEnum.Loading)))
             {
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, partial);
             }

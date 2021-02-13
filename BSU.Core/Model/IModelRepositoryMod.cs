@@ -9,16 +9,12 @@ namespace BSU.Core.Model
     {
         UpdateTarget AsUpdateTarget { get; }
         public RepositoryModActionSelection Selection { get; set; }
-        Dictionary<IModelStorageMod, ModAction> Actions { get; }
-        IRepositoryMod Implementation { get; }
+        Dictionary<IModelStorageMod, ModAction> LocalMods { get; }
         string DownloadIdentifier { get; set; }
         string Identifier { get; }
-        Task<RepositoryModState> GetState();
-        void ChangeAction(IModelStorageMod target, ModActionEnum? newAction);
-        event Action<IModelStorageMod> ActionAdded;
+        event Action<IModelStorageMod> LocalModAdded;
         event Action SelectionChanged;
-        event Action DownloadIdentifierChanged;
-        Task DoUpdate();
+        IUpdateState DoUpdate();
         IUpdateState CurrentUpdate { get; }
         event Action OnUpdateChange;
         Task ProcessMods(List<IModelStorage> mods);
