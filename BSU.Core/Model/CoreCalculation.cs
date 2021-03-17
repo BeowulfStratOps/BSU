@@ -38,7 +38,7 @@ namespace BSU.Core.Model
             {
                 if (usedMod.Mod == null && usedMod.Storage == null) return new RepositoryModActionSelection();
 
-                var storage = modelStructure.GetStorages().FirstOrDefault(s => s.GetStorageIdentifier() == usedMod);
+                var storage = modelStructure.GetStorages().FirstOrDefault(s => s.AsStorageIdentifier() == usedMod);
                 if (storage != null) return new RepositoryModActionSelection(storage);
 
                 var storageMod = actions.Keys.FirstOrDefault(mod => mod.GetStorageModIdentifiers() == usedMod);

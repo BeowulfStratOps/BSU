@@ -17,7 +17,7 @@ namespace BSU.Core.Model
         private readonly Func<IUpdateState, StorageMod> _createStorageMod;
         private StorageMod _storageMod;
         private RepoSync _syncJob;
-        
+
         public UpdateTarget Target { get; }
         public Exception Exception { get; private set; }
         private Action _abort;
@@ -36,9 +36,9 @@ namespace BSU.Core.Model
             _repositoryMod = repositoryMod;
             _storageMod = storageMod;
             Target = target;
-            
+
             State = UpdateState.Created;
-            
+
             _logger.Info("Creating Update State for mod {0}", storageMod.Identifier);
         }
 
@@ -51,7 +51,7 @@ namespace BSU.Core.Model
             _createStorageMod = createStorageMod;
 
             State = UpdateState.NotCreated;
-            
+
             _logger.Info("Creating Download State");
         }
 
@@ -130,7 +130,7 @@ namespace BSU.Core.Model
             }
             catch (Exception e)
             {
-                
+
                 Exception = e;
                 State = UpdateState.Errored;
             }
@@ -147,7 +147,7 @@ namespace BSU.Core.Model
             {
                 if (State != UpdateState.Created && State != UpdateState.Prepared) throw  new InvalidOperationException();
             }
-            
+
             State = UpdateState.Aborted;
             OnEnded?.Invoke();
         }
@@ -161,6 +161,7 @@ namespace BSU.Core.Model
 
         public IProgressProvider ProgressProvider => _progressProvider;
         public event Action OnEnded;
+        IModelStorageMod IUpdateState.GetStorageMod() => _storageMod ?? throw new InvalidOperationException();
 
         public override string ToString()
         {

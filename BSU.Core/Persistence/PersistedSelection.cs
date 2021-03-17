@@ -21,7 +21,7 @@ namespace BSU.Core.Persistence
         {
             if (storage.DoNothing) return new PersistedSelection(null, null);
             if (storage.StorageMod != null) return storage.StorageMod.GetStorageModIdentifiers();
-            if (storage.DownloadStorage != null) return storage.DownloadStorage.GetStorageIdentifier();
+            if (storage.DownloadStorage != null) return storage.DownloadStorage.AsStorageIdentifier();
             throw new ArgumentException();
         }
 

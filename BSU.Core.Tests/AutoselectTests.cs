@@ -174,13 +174,13 @@ namespace BSU.Core.Tests
             var structure = new MockModelStructure();
 
             var storage = new Mock<IModelStorage>(MockBehavior.Strict);
-            storage.Setup(s => s.GetStorageIdentifier()).Returns(new PersistedSelection(Guid.Empty, null));
+            storage.Setup(s => s.AsStorageIdentifier()).Returns(new PersistedSelection(Guid.Empty, null));
 
             storage.Setup(s => s.CanWrite).Returns(true);
             structure.Storages.Add(storage.Object);
 
             var selection = CoreCalculation.AutoSelect(true, mods, structure,
-                storage.Object.GetStorageIdentifier());
+                storage.Object.AsStorageIdentifier());
 
             Assert.Equal(storage.Object, selection?.DownloadStorage);
             Assert.Null(selection?.StorageMod);

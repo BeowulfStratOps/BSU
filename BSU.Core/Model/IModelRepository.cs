@@ -14,8 +14,6 @@ namespace BSU.Core.Model
         string Name { get; }
 
         RepositoryUpdate DoUpdate();
-        RepositoryUpdate CurrentUpdate { get; }
-        event Action OnUpdateChange;
-        Task ProcessMods(List<IModelStorage> mods);
+        Task ProcessMods();
     }
 }

@@ -30,22 +30,11 @@ namespace BSU.Core.Model
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        public RepositoryUpdate CurrentUpdate
-        {
-            get => _currentUpdate;
-            private set
-            {
-                if (_currentUpdate == value) return;
-                _currentUpdate = value;
-                OnUpdateChange?.Invoke();
-            }
-        }
-
         public event Action OnUpdateChange;
-        public async Task ProcessMods(List<IModelStorage> storages)
+        public async Task ProcessMods()
         {
             var mods = await GetMods();
-            await Task.WhenAll(mods.Select(m => m.ProcessMods(storages)));
+            await Task.WhenAll(mods.Select(m => m.ProcessMods()));
             // TODO: calculate state
         }
 
@@ -93,7 +82,6 @@ namespace BSU.Core.Model
         }
 
         private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
-        private RepositoryUpdate _currentUpdate;
 
         public async Task<List<IModelRepositoryMod>> GetMods()
         {
@@ -123,20 +111,14 @@ namespace BSU.Core.Model
 
         public RepositoryUpdate DoUpdate()
         {
-            if (CurrentUpdate != null) throw new InvalidOperationException();
-            
             var repoUpdate = new RepositoryUpdate();
 
             foreach (var mod in _mods)
             {
-                mod.DoUpdate();
-                var updateInfo = mod.CurrentUpdate;
+                var updateInfo = mod.DoUpdate();
                 if (updateInfo == null) continue; // Do nothing
                 repoUpdate.Add(updateInfo);
             }
-
-            repoUpdate.OnEnded += () => CurrentUpdate = null;
-            CurrentUpdate = repoUpdate;
             return repoUpdate;
         }
     }

@@ -10,15 +10,16 @@ namespace BSU.Core.Model
         Task Prepare();
         Task Update();
         void Abort();
-        
+
         UpdateState State { get; }
         Exception Exception { get; }
-        
+
         int GetPrepStats();
 
         IProgressProvider ProgressProvider { get; }
 
         event Action OnEnded;
+        internal IModelStorageMod GetStorageMod();
     }
 
     public enum UpdateState

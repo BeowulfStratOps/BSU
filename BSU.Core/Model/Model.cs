@@ -23,7 +23,7 @@ namespace BSU.Core.Model
 
         private InternalState PersistentState { get; }
 
-        private RelatedActionsBag _relatedActionsBag;
+        private readonly RelatedActionsBag _relatedActionsBag;
 
         public Model(InternalState persistentState, IJobManager jobManager, Types types, IActionQueue dispatcher)
         {
@@ -56,11 +56,12 @@ namespace BSU.Core.Model
                     continue;
                 }
                 var storage = new Storage(implementation, storageEntry.Name, storageEntry.Path, storageState, _jobManager, _dispatcher);
+                storage.ModAdded += mod => StorageModChanged?.Invoke(mod);
                 Storages.Add(storage);
                 StorageAdded?.Invoke(storage);
             }
-            
-            await Task.WhenAll(Repositories.Select(r => r.ProcessMods(Storages)));
+
+            await Task.WhenAll(Repositories.Select(r => r.ProcessMods()));
         }
 
         public event Action<Repository> RepositoryAdded;
@@ -84,6 +85,7 @@ namespace BSU.Core.Model
             var storageState = PersistentState.AddStorage(name, dir, type);
             var implementation = _types.GetStorageImplementation(type, dir.FullName);
             var storage = new Storage(implementation, name, dir.FullName, storageState, _jobManager, _dispatcher);
+            storage.ModAdded += mod => StorageModChanged?.Invoke(mod);
             Storages.Add(storage);
             StorageAdded?.Invoke(storage);
         }
@@ -111,6 +113,8 @@ namespace BSU.Core.Model
             }
             return mods;
         }
+
+        public event Action<IModelStorageMod> StorageModChanged;
 
         public void DeleteRepository(IModelRepository repository, bool removeMods)
         {

@@ -19,7 +19,7 @@ namespace BSU.Core.Tests.Mocks
             _errorUpdate = errorUpdate;
             _state = UpdateState.Created;
         }
-        
+
         public MockUpdateState(bool errorCreate, bool errorPrepare, bool errorUpdate)
         {
             _errorCreate = errorCreate;
@@ -47,7 +47,7 @@ namespace BSU.Core.Tests.Mocks
                 State = UpdateState.Prepared;
             return Task.CompletedTask;
         }
-        
+
         public Task Update()
         {
             if (State != UpdateState.Prepared) throw new InvalidOperationException();
@@ -95,6 +95,10 @@ namespace BSU.Core.Tests.Mocks
         public Exception Exception { get; private set; }
         public event Action OnStateChange;
         public event Action OnEnded;
+        IModelStorageMod IUpdateState.GetStorageMod()
+        {
+            throw new NotImplementedException();
+        }
 
         public int GetPrepStats()
         {

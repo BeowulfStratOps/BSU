@@ -15,7 +15,7 @@ namespace BSU.Core.Model
         private List<IUpdateState> _workingSet = new List<IUpdateState>();
 
         public ProgressProvider ProgressProvider { get; private set; } = new ProgressProvider();
-        public event Action OnEnded; // TODO: use it
+        public event Action OnEnded;
 
         internal void Add(IUpdateState updateState)
         {
@@ -40,7 +40,7 @@ namespace BSU.Core.Model
             _workingSet = _workingSet.Where(s => s.Exception == null).ToList();
             return ret;
         }
-        
+
         public async Task<StageCallbackArgs> Prepare()
         {
             // TODO: check current state
@@ -51,7 +51,7 @@ namespace BSU.Core.Model
             _workingSet = _workingSet.Where(s => s.Exception == null).ToList();
             return ret;
         }
-        
+
         public async Task<StageCallbackArgs> Update()
         {
             // TODO: check current state
@@ -60,6 +60,7 @@ namespace BSU.Core.Model
             // TODO: use tasks for this?
             var ret = new StageCallbackArgs(_workingSet.Where(s => s.Exception == null).ToList(), _workingSet.Where(s => s.Exception != null).ToList());
             _workingSet = _workingSet.Where(s => s.Exception == null).ToList();
+            OnEnded?.Invoke();
             return ret;
         }
 
@@ -70,6 +71,7 @@ namespace BSU.Core.Model
             {
                 updateState.Abort();
             }
+            OnEnded?.Invoke();
         }
     }
 

@@ -15,9 +15,7 @@ namespace BSU.Core.Model
         event Action<IModelStorageMod> LocalModAdded;
         event Action SelectionChanged;
         IUpdateState DoUpdate();
-        IUpdateState CurrentUpdate { get; }
-        event Action OnUpdateChange;
-        Task ProcessMods(List<IModelStorage> mods);
+        Task ProcessMods();
         Task<string> GetDisplayName();
     }
 }

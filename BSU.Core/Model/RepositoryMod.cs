@@ -35,19 +35,6 @@ namespace BSU.Core.Model
 
         public event Action OnUpdateChange;
 
-        private IUpdateState _currentUpdate;
-
-        public IUpdateState CurrentUpdate
-        {
-            get => _currentUpdate;
-            private set
-            {
-                if (value == _currentUpdate) return;
-                _currentUpdate = value;
-                OnUpdateChange?.Invoke();
-            }
-        }
-
         public RepositoryModActionSelection Selection
         {
             get => _selection;
@@ -79,17 +66,15 @@ namespace BSU.Core.Model
             _loading = new JobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
         }
 
-        public async Task ProcessMods(List<IModelStorage> storages)
+        public async Task ProcessMods()
         {
             var tasks = new List<Task>();
-            foreach (var storage in storages)
+            foreach (var mod in await _modelStructure.GetAllStorageMods())
             {
-                foreach (var mod in await storage.GetMods())
-                {
-                    tasks.Add(ProcessMod(mod));
-                }
+                tasks.Add(ProcessMod(mod));
             }
 
+            _modelStructure.StorageModChanged += async mod => await ProcessMod(mod);
             await Task.WhenAll(tasks);
             DoAutoSelection(true);
         }
@@ -143,7 +128,6 @@ namespace BSU.Core.Model
 
         public IUpdateState DoUpdate()
         {
-            if (CurrentUpdate != null) throw new InvalidOperationException();
             if (Selection == null) throw new InvalidOperationException();
 
             // TODO: switch
@@ -156,16 +140,12 @@ namespace BSU.Core.Model
                 if (action.ActionType != ModActionEnum.Update && action.ActionType != ModActionEnum.ContinueUpdate) return null;
 
                 var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget, _matchHash, _versionHash);
-                update.OnEnded += () => CurrentUpdate = null;
-                CurrentUpdate = update;
                 return update;
             }
 
             if (Selection.DownloadStorage != null)
             {
                 var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier);
-                update.OnEnded += () => CurrentUpdate = null;
-                CurrentUpdate = update;
                 return update;
             }
 

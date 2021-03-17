@@ -72,7 +72,7 @@ namespace BSU.Core.Model
         }
 
         public bool CanWrite => Implementation.CanWrite();
-        public PersistedSelection GetStorageIdentifier()
+        public PersistedSelection AsStorageIdentifier()
         {
             return new PersistedSelection(Identifier, null);
         }

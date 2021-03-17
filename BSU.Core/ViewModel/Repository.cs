@@ -50,10 +50,6 @@ namespace BSU.Core.ViewModel
             };
             Name = repository.Name;
             repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model));
-            repository.OnUpdateChange += () =>
-            {
-                UpdateProgress = repository.CurrentUpdate?.ProgressProvider;
-            };
         }
 
         private async Task DoDelete()
@@ -64,7 +60,7 @@ namespace BSU.Core.ViewModel
 Yes - Delete mods if they are not in use by any other repository
 No - Keep local mods
 Cancel - Do not remove this repository";
-            
+
             var context = new MsgPopupContext(text, "Remove Repository");
             var removeData = await DeleteInteraction.Raise(context);
             if (removeData != null) // not canceled
@@ -79,7 +75,7 @@ Cancel - Do not remove this repository";
 
         private async Task DoUpdate()
         {
-            var update = _repository.DoUpdate();
+            var update = _repository.DoUpdate(); // TODO: use it with using, to make sure it's cleaned up
             var created = await update.Create();
             if (created.Failed.Any())
             {
@@ -109,7 +105,7 @@ Cancel - Do not remove this repository";
         }
 
         public DelegateCommand Update { get; }
-        
+
         public DelegateCommand Delete { get; }
         public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
         public Guid Identifier { get; }

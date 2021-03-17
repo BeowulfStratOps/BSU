@@ -32,7 +32,10 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        IUpdateState IModelRepositoryMod.CurrentUpdate => _currentUpdate;
+        public Task ProcessMods()
+        {
+            throw new NotImplementedException();
+        }
 
         public event Action OnUpdateChange;
         public Task ProcessMods(List<IModelStorage> mods)
