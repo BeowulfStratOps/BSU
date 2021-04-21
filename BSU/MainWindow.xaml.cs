@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -16,18 +17,10 @@ namespace BSU.GUI
     public partial class MainWindow : Window
     {
         private readonly Core.Core _core;
-        
+
         public MainWindow()
         {
-            var config = new LoggingConfiguration();
-            var logfile = new FileTarget("logfile") // TODO: use nlog.config
-            {
-                FileName = "C:\\arma3\\BSU\\log.log",
-                DeleteOldFileOnStartup = true
-            };
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, logfile);
-            LogManager.Configuration = config;
-            
+            Thread.CurrentThread.Name = "main";
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             _core = new Core.Core(settingsFile, action => Dispatcher.BeginInvoke(DispatcherPriority.Background, action));
             DataContext = _core.ViewModel;

@@ -7,7 +7,7 @@ namespace BSU.CLI
 {
     class Program
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private Core.Core _core;
         static int Main(string[] args)

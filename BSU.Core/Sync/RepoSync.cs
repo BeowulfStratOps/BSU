@@ -15,12 +15,10 @@ namespace BSU.Core.Sync
     /// </summary>
     internal class RepoSync : IJob, IJobProgress
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly List<SyncWorkUnit> _allActions, _actionsTodo;
         private readonly List<Exception> Errors = new List<Exception>();
-
-        private readonly Uid _uid = new Uid();
 
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -35,8 +33,6 @@ namespace BSU.Core.Sync
 
         private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
 
-        public Uid GetUid() => _uid;
-
         public RepoSync(IRepositoryMod repository, StorageMod storage, UpdateTarget target, string title, int priority, CancellationToken cancellationToken)
         {
             // TODO: use cancellationToken
@@ -47,7 +43,7 @@ namespace BSU.Core.Sync
             _priority = priority;
             RepositoryMod = repository;
 
-            Logger.Debug("Building sync actions {0} to {1}: {2}", storage.Uid, repository.GetUid(), _uid);
+            _logger.Debug("Building sync actions {0} to {1}", storage.GetUid(), repository.GetUid());
 
             _allActions = new List<SyncWorkUnit>();
             var repositoryList = repository.GetFileList();
@@ -78,10 +74,10 @@ namespace BSU.Core.Sync
             }
 
             _actionsTodo = new List<SyncWorkUnit>(_allActions);
-            Logger.Debug("Download actions: {0}", _actionsTodo.OfType<DownloadAction>().Count());
-            Logger.Debug("Update actions: {0}", _actionsTodo.OfType<UpdateAction>().Count());
-            Logger.Debug("Delete actions: {0}", _actionsTodo.OfType<DeleteAction>().Count());
-            
+            _logger.Debug("Download actions: {0}", _actionsTodo.OfType<DownloadAction>().Count());
+            _logger.Debug("Update actions: {0}", _actionsTodo.OfType<UpdateAction>().Count());
+            _logger.Debug("Delete actions: {0}", _actionsTodo.OfType<DeleteAction>().Count());
+
             _totalCount = _actionsTodo.Count;
             _workCounter = new ReferenceCounter(_actionsTodo.Count);
 
@@ -132,16 +128,16 @@ namespace BSU.Core.Sync
             catch (Exception e)
             {
                 Errors.Add(e);
-                Logger.Error(e);
+                _logger.Error(e);
             }
 
             actionQueue.EnQueueAction(() => OnProgress?.Invoke());
             if (_workCounter.Dec())
             {
-                Logger.Debug("Sync done");
+                _logger.Debug("Sync done");
                 _tcs.SetResult(null);
             }
-            
+
             lock (_actionsTodo)
             {
                 return _actionsTodo.Count > 0;
@@ -174,6 +170,7 @@ namespace BSU.Core.Sync
         }
 
         public int GetPriority() => _priority;
+        public int GetUid() => _logger.GetId();
 
         public Task Do(IJobManager jobManager)
         {

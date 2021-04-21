@@ -22,7 +22,6 @@ namespace BSU.Core.Model
         public string Identifier { get; }
         private IActionQueue ActionQueue { get; }
         public IStorageMod Implementation { get; }
-        public Uid Uid { get; } = new Uid();
 
         private readonly JobSlot _loading;
         private readonly FuncSlot<MatchHash> _matchHashJob;
@@ -33,7 +32,7 @@ namespace BSU.Core.Model
         private MatchHash _updateMatchHash;
         private VersionHash _updateVersionHash;
 
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private StorageModStateEnum _state = StorageModStateEnum.Created; // TODO: should not be directly accessible
 
@@ -164,5 +163,7 @@ namespace BSU.Core.Model
         }
 
         public override string ToString() => Identifier;
+
+        public object GetUid() => _logger.GetId();
     }
 }

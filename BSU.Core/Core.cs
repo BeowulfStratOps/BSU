@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
+using BSU.CoreCommon;
 using NLog;
 
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
@@ -14,10 +15,10 @@ namespace BSU.Core
 {
     public class Core : IDisposable
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         internal readonly IJobManager JobManager;
-        
+
         internal readonly Model.Model Model;
         public readonly Types Types;
         public readonly ViewModel.ViewModel ViewModel;
@@ -38,13 +39,13 @@ namespace BSU.Core
 
         internal Core(ISettings settings, IJobManager jobManager, Action<Action> dispatch)
         {
-            Logger.Info("Creating new core instance");
+            _logger.Info("Creating new core instance");
             var dispatcher = new Dispatcher(dispatch);
             jobManager ??= new JobManager.JobManager(dispatcher);
             JobManager = jobManager;
             Types = new Types();
             var state = new InternalState(settings);
-            
+
             Model = new Model.Model(state, jobManager, Types, dispatcher);
             ViewModel = new ViewModel.ViewModel(Model);
         }

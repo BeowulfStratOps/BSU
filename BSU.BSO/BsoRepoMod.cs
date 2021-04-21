@@ -17,13 +17,11 @@ namespace BSU.BSO
     /// </summary>
     internal class BsoRepoMod : IRepositoryMod
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly string _url;
         private HashFile _hashFile;
         private string _displayName;
-
-        private readonly Uid _uid = new Uid();
 
         public List<string> GetFileList() => _hashFile.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
 
@@ -35,9 +33,9 @@ namespace BSU.BSO
         public byte[] GetFile(string path)
         {
             using var client = new WebClient();
-            Logger.Debug("{0} Downloading file from {1} / {2}", _uid, _url, path);
+            _logger.Debug("Downloading file from {0} / {1}", _url, path);
             var data = client.DownloadData(_url + GetRealPath(path));
-            Logger.Debug("{0} Finsihed downloading {1} / {2}", _uid, _url, path);
+            _logger.Debug("Finsihed downloading {0} / {1}", _url, path);
             return data;
         }
 
@@ -54,9 +52,9 @@ namespace BSU.BSO
         public void Load()
         {
             using var client = new WebClient();
-            Logger.Debug("{0} Downloading hash file from {1}", _uid, _url);
+            _logger.Debug("Downloading hash file from {0}", _url);
             var hashFileJson = client.DownloadString(_url + "/hash.json");
-            Logger.Debug("{0} Finished downloading hash file", _uid);
+            _logger.Debug("Finished downloading hash file");
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
             GetDisplayName();
         }
@@ -75,7 +73,7 @@ namespace BSU.BSO
             if (modCppEntry != null)
             {
                 using var client = new WebClient();
-                Logger.Debug("{0} Downloading mod.cpp from {1}", _uid, _url);
+                _logger.Debug("Downloading mod.cpp from {0}", _url);
                 modCpp = client.DownloadString(_url + modCppEntry.FileName);
             }
 
@@ -120,8 +118,8 @@ namespace BSU.BSO
             // TODO: use FileStream
             var url = _url + GetRealPath(path);
 
-            Logger.Debug("{0} Downloading content {1} / {2}", _uid, _url, path);
-            
+            _logger.Debug("Downloading content {0} / {1}", _url, path);
+
             var req = WebRequest.CreateHttp(url);
             using var resp = req.GetResponse();
             using var stream = resp.GetResponseStream();
@@ -137,12 +135,12 @@ namespace BSU.BSO
 
             if (token.IsCancellationRequested)
             {
-                Logger.Debug("{0} Aborted downloading content {1} / {2}", _uid, _url, path);
+                _logger.Debug("Aborted downloading content {0} / {1}", _url, path);
                 throw new OperationCanceledException();
             }
-            
+
             fileStream.SetLength(fileStream.Position);
-            Logger.Debug("{0} Finished downloading content {1} / {2}", _uid, _url, path);
+            _logger.Debug("Finished downloading content {0} / {1}", _url, path);
         }
 
         /// <summary>
@@ -156,6 +154,6 @@ namespace BSU.BSO
             DownloadTo(path, fileStream, updateCallback, token);
         }
 
-        public Uid GetUid() => _uid;
+        public int GetUid() => _logger.GetId();
     }
 }

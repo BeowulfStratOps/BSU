@@ -33,6 +33,6 @@ namespace BSU.CoreCommon
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         void DeleteFile(string path);
         public void Load();
-        public Uid GetUid();
+        int GetUid();
     }
 }

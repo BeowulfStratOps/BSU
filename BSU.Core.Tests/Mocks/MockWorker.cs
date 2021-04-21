@@ -11,7 +11,7 @@ namespace BSU.Core.Tests.Mocks
     {
         private readonly List<IJob> _jobs = new List<IJob>();
         private readonly Queue<Action> _actionQueue = new Queue<Action>();
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
         private readonly bool _processImmediately;
 
         public MockWorker(bool processImmediately = false)

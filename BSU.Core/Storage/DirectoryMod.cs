@@ -15,15 +15,11 @@ namespace BSU.Core.Storage
     /// </summary>
     public class DirectoryMod : IStorageMod
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly DirectoryInfo _dir;
         private readonly IStorage _parentStorage;
         private string _displayName;
-
-        private readonly Uid _uid = new Uid();
-
-        public Uid GetUid() => _uid;
 
         public DirectoryMod(DirectoryInfo dir, IStorage parentStorage)
         {
@@ -35,6 +31,8 @@ namespace BSU.Core.Storage
         {
             GetDisplayName();
         }
+
+        public int GetUid() => _logger.GetId();
 
         /// <summary>
         /// Attempts to retrieve a display name for this mod folder.
@@ -67,11 +65,11 @@ namespace BSU.Core.Storage
         {
             try
             {
-                Logger.Trace("{0} Reading file {1}", _uid, path);
+                _logger.Trace("Reading file {1}", path);
                 if (access.HasFlag(FileAccess.Write))
                 {
                     if (!_parentStorage.CanWrite()) throw new NotSupportedException();
-                    
+
                     // TODO: looks ugly
                     Directory.CreateDirectory(new FileInfo(GetFullFilePath(path)).Directory.FullName);
                 }
@@ -121,7 +119,7 @@ namespace BSU.Core.Storage
         /// <exception cref="NotSupportedException">Not supported for read-only locations.</exception>
         public void DeleteFile(string path)
         {
-            Logger.Trace("Deleting file {0}", path);
+            _logger.Trace("Deleting file {0}", path);
             if (!_parentStorage.CanWrite()) throw new NotSupportedException();
             File.Delete(GetFullFilePath(path));
         }

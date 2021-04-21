@@ -9,13 +9,12 @@ namespace BSU.Core.Model
 {
     internal class JobSlot
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly Action<CancellationToken> _action;
         private readonly string _title;
         private readonly IJobManager _jobManager;
         private Task _job;
-        private readonly Uid _uid = new Uid();
 
         internal JobSlot(Action<CancellationToken> action, string title, IJobManager jobManager)
         {
@@ -31,11 +30,11 @@ namespace BSU.Core.Model
                 await _job;
                 return;
             }
-            Logger.Debug($"Creating Simple Job {_title}");
+            _logger.Debug($"Creating Simple Job {_title}");
             _job = new SimpleJob(_action, _title, 1).Do(_jobManager);
             await _job;
         }
-        
+
         public bool IsRunning => _job != null && !_job.IsCompleted;
     }
 }

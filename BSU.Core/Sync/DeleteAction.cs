@@ -10,7 +10,7 @@ namespace BSU.Core.Sync
     /// </summary>
     internal class DeleteAction : SyncWorkUnit
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         public DeleteAction(StorageMod storage, string path, RepoSync sync) : base(storage, path, sync)
         {
@@ -18,7 +18,7 @@ namespace BSU.Core.Sync
 
         protected override void DoWork(CancellationToken token)
         {
-            Logger.Trace("{0} Deleting {1}", Storage.Uid, Path);
+            _logger.Trace("{0} Deleting {1}", Storage.GetUid(), Path);
             Storage.Implementation.DeleteFile(Path);
         }
     }

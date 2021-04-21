@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BSU.Core.Model.Utility;
+using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.Model
@@ -10,7 +11,7 @@ namespace BSU.Core.Model
     public class RepositoryUpdate
     {
         // TODO: create Logger with builtin Uid thing?
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private List<IUpdateState> _workingSet = new List<IUpdateState>();
 

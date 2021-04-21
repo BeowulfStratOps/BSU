@@ -9,17 +9,16 @@ namespace BSU.Core.Model
 {
     internal class SimpleResultJob<T> : IJob
     {
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly Func<CancellationToken, T> _action;
         private readonly string _title;
         private readonly int _priority;
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
-        private readonly  Uid _uid = new Uid();
         private bool _done = false;
         private readonly object _lock = new object();
-        
-        private readonly TaskCompletionSource<T> _tcs = new TaskCompletionSource<T>(); 
+
+        private readonly TaskCompletionSource<T> _tcs = new TaskCompletionSource<T>();
 
         public SimpleResultJob(Func<CancellationToken, T> action, string title, int priority)
         {
@@ -32,8 +31,6 @@ namespace BSU.Core.Model
         {
             _tokenSource.Cancel();
         }
-
-        public Uid GetUid() => _uid;
 
         public bool DoWork(IActionQueue actionQueue)
         {
@@ -60,8 +57,9 @@ namespace BSU.Core.Model
             jobManager.QueueJob(this);
             return _tcs.Task;
         }
-        
+
         public string GetTitle() => _title;
         public int GetPriority() => _priority;
+        public int GetUid() => _logger.GetId();
     }
 }

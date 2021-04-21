@@ -10,11 +10,10 @@ namespace BSU.Core.JobManager
     /// </summary>
     internal interface IJob
     {
-        Uid GetUid();
-
         void Abort();
         bool DoWork(IActionQueue actionQueue); // provide action queue to keep events out of threading hell
         string GetTitle();
         int GetPriority();
+        int GetUid();
     }
 }

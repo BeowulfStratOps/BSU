@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BSU.Core.Model;
+using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.Persistence
@@ -13,13 +14,13 @@ namespace BSU.Core.Persistence
     /// </summary>
     internal class InternalState : IInternalState
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly ISettings _settings;
 
         internal InternalState(ISettings settings)
         {
-            Logger.Info("Creating new internal state");
+            _logger.Info("Creating new internal state");
             _settings = settings;
         }
 
@@ -34,10 +35,10 @@ namespace BSU.Core.Persistence
             return _settings.Repositories.Select(entry =>
                 new Tuple<IRepositoryEntry, IRepositoryState>(entry, new RepositoryState(entry, _settings.Store)));
         }
-        
+
         public void RemoveRepository(Guid repositoryIdentifier)
         {
-            Logger.Debug("Removing repo {0}", repositoryIdentifier);
+            _logger.Debug("Removing repo {0}", repositoryIdentifier);
             var repoEntry = _settings.Repositories.Single(r => r.Guid == repositoryIdentifier);
             _settings.Repositories.Remove(repoEntry);
             _settings.Store();
@@ -60,10 +61,10 @@ namespace BSU.Core.Persistence
             _settings.Store();
             return new StorageState(storage, _settings.Store);
         }
-        
+
         public void RemoveStorage(Guid storageIdentifier)
         {
-            Logger.Debug("Removing storage {0}", storageIdentifier);
+            _logger.Debug("Removing storage {0}", storageIdentifier);
             var storageEntry = _settings.Storages.Single(s => s.Guid == storageIdentifier);
             _settings.Storages.Remove(storageEntry);
             _settings.Store();

@@ -11,7 +11,7 @@ namespace BSU.Core.Sync
     /// </summary>
     internal class DownloadAction : SyncWorkUnit
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly IRepositoryMod _repository;
         private readonly long _sizeTotal;
@@ -30,7 +30,7 @@ namespace BSU.Core.Sync
 
         protected override void DoWork(CancellationToken token)
         {
-            Logger.Trace("{0}, {1} Downloading {2}", _repository.GetUid(), _repository.GetUid(), Path);
+            _logger.Trace("{0}, {1} Downloading {2}", _repository.GetUid(), _repository.GetUid(), Path);
             using var target = Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.Write);
             _repository.DownloadTo(Path, target, UpdateRemaining, token);
             _sizeTodo = 0;

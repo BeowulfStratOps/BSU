@@ -22,7 +22,7 @@ namespace BSU.Core.Model
         public Exception Exception { get; private set; }
         private Action _abort;
 
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
 
         private readonly ProgressProvider _progressProvider = new ProgressProvider();

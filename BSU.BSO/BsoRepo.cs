@@ -14,12 +14,10 @@ namespace BSU.BSO
     /// </summary>
     public class BsoRepo : IRepository
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly string _url;
         private Dictionary<string, IRepositoryMod> _mods;
-
-        private readonly Uid _uid = new Uid();
 
         public BsoRepo(string url)
         {
@@ -29,7 +27,7 @@ namespace BSU.BSO
         public void Load()
         {
             using var client = new WebClient();
-            Logger.Debug("{0} Downloading server file from {1}", _uid, _url);
+            _logger.Debug("Downloading server file from {0}", _url);
             var serverFileJson = client.DownloadString(_url);
             var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
 
@@ -46,6 +44,5 @@ namespace BSU.BSO
         }
 
         public string GetLocation() => _url;
-        public Uid GetUid() => _uid;
     }
 }

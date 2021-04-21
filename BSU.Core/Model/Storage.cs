@@ -17,7 +17,6 @@ namespace BSU.Core.Model
         public string Name { get; }
         public Guid Identifier { get; }
         public string Location { get; }
-        public Uid Uid { get; } = new Uid();
         private readonly List<IModelStorageMod> _mods = new List<IModelStorageMod>();
 
         private readonly JobSlot _loading;
@@ -57,7 +56,7 @@ namespace BSU.Core.Model
         public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
         {
             if (_loading.IsRunning) throw new InvalidOperationException(); // TODO: check it is finished. i.e. started and not running
-            
+
             return new StorageModUpdateState(_jobManager, _actionQueue, repositoryMod, target, update =>
             {
                 var mod = Implementation.CreateMod(identifier);
@@ -65,7 +64,7 @@ namespace BSU.Core.Model
                 _actionQueue.EnQueueAction(() =>
                 {
                     _mods.Add(storageMod);
-                    ModAdded?.Invoke(storageMod);                   
+                    ModAdded?.Invoke(storageMod);
                 });
                 return storageMod;
             });

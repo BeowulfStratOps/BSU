@@ -17,10 +17,9 @@ namespace BSU.Core.Model
         private readonly IPersistedRepositoryModState _internalState;
         private readonly RelatedActionsBag _relatedActionsBag;
         private readonly IModelStructure _modelStructure;
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
         public IRepositoryMod Implementation { get; } // TODO: make private
         public string Identifier { get; }
-        public Uid Uid { get; } = new Uid();
 
         private readonly JobSlot _loading;
 
@@ -41,7 +40,7 @@ namespace BSU.Core.Model
             set
             {
                 if (value == _selection) return;
-                Logger.Trace("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
+                _logger.Trace("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
                 _selection = value;
                 _internalState.Selection = PersistedSelection.Create(value);
                 SelectionChanged?.Invoke();
@@ -64,6 +63,8 @@ namespace BSU.Core.Model
             DownloadIdentifier = identifier;
 
             _loading = new JobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
+
+            _logger.Info($"Created with iddentifier {identifier}");
         }
 
         public async Task ProcessMods()

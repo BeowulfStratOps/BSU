@@ -58,6 +58,7 @@ namespace BSU.CoreCommon
         /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
         void UpdateTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token);
-        public Uid GetUid();
+
+        int GetUid();
     }
 }

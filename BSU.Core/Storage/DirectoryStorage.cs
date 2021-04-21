@@ -14,14 +14,11 @@ namespace BSU.Core.Storage
     // TODO: document that this is (aggressively) using normalized (=lower case) paths!
     public class DirectoryStorage : IStorage
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly string _path;
-        private readonly Uid _uid = new Uid();
 
         private Dictionary<string, IStorageMod> _mods;
-
-        public Uid GetUid() => _uid;
 
         public DirectoryStorage(string path)
         {
@@ -44,7 +41,7 @@ namespace BSU.Core.Storage
 
         public IStorageMod CreateMod(string identifier)
         {
-            Logger.Debug("Creating mod {0}", identifier);
+            _logger.Debug("Creating mod {0}", identifier);
             var dir = new DirectoryInfo(Path.Combine(_path, identifier));
             if (dir.Exists) throw new InvalidOperationException("Path exists");
             dir.Create();

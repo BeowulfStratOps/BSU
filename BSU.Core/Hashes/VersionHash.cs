@@ -16,14 +16,14 @@ namespace BSU.Core.Hashes
     /// </summary>
     public class VersionHash
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly byte[] _hash;
 
         // TODO: use more specialized interface to get files
         internal VersionHash(IStorageMod mod)
         {
-            Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
+            _logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
             var hashes = new Dictionary<string, FileHash>();
             foreach (var file in mod.GetFileList())
             {
@@ -42,7 +42,7 @@ namespace BSU.Core.Hashes
         // TODO: use more specialized interface to get files
         internal VersionHash(IRepositoryMod mod)
         {
-            Logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
+            _logger.Debug("Building version hash from repository mod {0}", mod.GetUid());
             _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
         }
 

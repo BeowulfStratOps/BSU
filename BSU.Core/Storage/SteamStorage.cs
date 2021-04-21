@@ -14,10 +14,6 @@ namespace BSU.Core.Storage
         private readonly DirectoryInfo _basePath;
         private Dictionary<string, IStorageMod> _mods;
 
-        private readonly Uid _uid = new Uid();
-
-        public Uid GetUid() => _uid;
-
         public SteamStorage(string path)
         {
             // C:\Program Files (x86)\Steam\steamapps\workshop\content\107410

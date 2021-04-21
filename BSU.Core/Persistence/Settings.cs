@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using BSU.CoreCommon;
 using Newtonsoft.Json;
 using NLog;
 
@@ -10,7 +11,7 @@ namespace BSU.Core.Persistence
     /// </summary>
     internal class Settings : ISettings
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly FileInfo _path;
         private readonly SettingsData _data;
@@ -24,7 +25,7 @@ namespace BSU.Core.Persistence
         public static Settings Load(FileInfo path)
         {
             path.Refresh();
-            Logger.Debug("Loading settings from {0}", path.FullName);
+            LogManager.GetCurrentClassLogger().Debug("Loading settings from {0}", path.FullName);
             if (!path.Exists) return new Settings(path, new SettingsData());
             var json = File.ReadAllText(path.FullName);
             var data = JsonConvert.DeserializeObject<SettingsData>(json);
@@ -35,7 +36,7 @@ namespace BSU.Core.Persistence
         {
             lock (_path)
             {
-                Logger.Debug("Saving settings");
+                _logger.Debug("Saving settings");
                 var json = JsonConvert.SerializeObject(_data);
                 File.WriteAllText(_path.FullName, json);
             }

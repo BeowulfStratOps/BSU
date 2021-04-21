@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.JobManager
@@ -14,11 +15,11 @@ namespace BSU.Core.JobManager
     internal class JobManager : IJobManager
     {
         private const int MAX_THREADS = 5;
-        
+
         private readonly IActionQueue _actionQueue;
-        
+
         // ReSharper disable once StaticMemberInGenericType
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly List<IJob> _jobsTodo = new List<IJob>();
         private readonly List<IJob> _allJobs = new List<IJob>();
@@ -30,7 +31,7 @@ namespace BSU.Core.JobManager
             _actionQueue = actionQueue;
             for (int i = 0; i < MAX_THREADS; i++)
             {
-                var thread = new Thread(DoWork);
+                var thread = new Thread(DoWork) {Name = $"worker_{i}"};
                 _workerThreads.Add(thread);
                 thread.Start();
             }
@@ -43,13 +44,13 @@ namespace BSU.Core.JobManager
         /// <exception cref="InvalidOperationException">Thrown if the manager is shutting down.</exception>
         public void QueueJob(IJob job)
         {
-            Logger.Debug("Queueing job {0}: {1}", job.GetUid(), job.GetTitle());
+            _logger.Debug("Queueing job {0}: {1}", job.GetUid(), job.GetTitle());
 
             if (_shutdown) throw new InvalidOperationException("JobManager is shutting down! Come back tomorrow.");
 
             lock (_allJobs)
             {
-                _allJobs.Add(job);                
+                _allJobs.Add(job);
             }
             lock (_jobsTodo)
             {
@@ -83,7 +84,7 @@ namespace BSU.Core.JobManager
 
         private void DoWork()
         {
-            Logger.Debug("Worker thread starting");
+            _logger.Debug("Worker thread starting");
             while (!_shutdown)
             {
                 IJob job;
@@ -105,11 +106,11 @@ namespace BSU.Core.JobManager
                     if (moreToDo) continue;
                     if (_jobsTodo.Remove(job)) // TODO: shouldn't that be an error otherwise?
                     {
-                        Logger.Debug("Removed job {0}: {1}", job.GetUid(), job.GetTitle());
+                        _logger.Debug("Removed job {0}: {1}", job.GetUid(), job.GetTitle());
                     }
                 }
             }
-            Logger.Debug("Worker thread ending");
+            _logger.Debug("Worker thread ending");
         }
 
         /// <summary>
@@ -117,7 +118,7 @@ namespace BSU.Core.JobManager
         /// </summary>
         public void Shutdown(bool blocking)
         {
-            Logger.Info("JobManager shutting down");
+            _logger.Info("JobManager shutting down");
             _shutdown = true;
             lock (_jobsTodo)
             {
@@ -129,7 +130,7 @@ namespace BSU.Core.JobManager
             }
 
             if (!blocking) return;
-            
+
             while (_workerThreads.Any())
             {
                 foreach (var thread in new List<Thread>(_workerThreads))
