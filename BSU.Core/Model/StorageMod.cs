@@ -138,6 +138,8 @@ namespace BSU.Core.Model
             // Don't actually need to save it. just handle when it's done
             update.OnEnded += () =>
             {
+                _versionHashJob.Reset();
+                _matchHashJob.Reset();
                 UpdateTarget = null;
                 State = StorageModStateEnum.Created;
             };

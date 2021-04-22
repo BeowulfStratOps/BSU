@@ -31,6 +31,11 @@ namespace BSU.Core.Model
             return await _job;
         }
 
+        public void Reset()
+        {
+            _job = null;
+        }
+
         public bool IsRunning => _job != null && !_job.IsCompleted;
     }
 }

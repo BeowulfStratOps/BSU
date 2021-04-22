@@ -115,6 +115,7 @@ namespace BSU.Core.Model
                 mod.StateChanged += async () => await ProcessMod(mod); // TODO: potential memory leak
             LocalMods[mod] = new ModAction((ModActionEnum) actionType, this, _versionHash,
                 _relatedActionsBag.GetBag(mod));
+            _logger.Info("Set action for {0} to {1}", mod, actionType.ToString());
             LocalModUpdated?.Invoke(mod);
             if (mod.GetStorageModIdentifiers() == _internalState.Selection)
                 Selection = new RepositoryModActionSelection(mod);

@@ -27,7 +27,8 @@ namespace BSU.Core.ViewModel
             {
                 if (_selection == value) return;
                 _selection = value;
-                _mod.Selection = value?.AsSelection;
+                if (value == null) return; // can't be done by user.
+                _mod.Selection = value.AsSelection;
                 ShowDownloadIdentifier = _selection is SelectStorage;
                 OnPropertyChanged();
                 UpdateErrorText();
@@ -65,7 +66,11 @@ namespace BSU.Core.ViewModel
 
         private void UpdateAction(IModelStorageMod storageMod)
         {
-            Actions.Update(new SelectMod(storageMod, _mod.LocalMods[storageMod]));
+            var reSelect = Selection?.AsSelection?.StorageMod == storageMod;
+            var selection = new SelectMod(storageMod, _mod.LocalMods[storageMod]);
+            Actions.Update(selection);
+            if (reSelect)
+                Selection = selection;
         }
 
         internal void AddStorage(IModelStorage storage)
