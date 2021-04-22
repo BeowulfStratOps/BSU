@@ -12,7 +12,7 @@ namespace BSU.CoreCommon
         public static Logger GetLogger()
         {
             var callingClass = GetTypeOfCallingClass();
-            var logger = LogManager.GetLogger(callingClass.FullName, callingClass);
+            var logger = LogManager.GetLogger(callingClass.FullName);
             var id = Interlocked.Increment(ref _nextId);
             logger.SetProperty("uid", id);
             return logger;

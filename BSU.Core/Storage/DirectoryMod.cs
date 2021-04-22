@@ -65,7 +65,7 @@ namespace BSU.Core.Storage
         {
             try
             {
-                _logger.Trace("Reading file {1}", path);
+                _logger.Trace("Reading file {0}", path);
                 if (access.HasFlag(FileAccess.Write))
                 {
                     if (!_parentStorage.CanWrite()) throw new NotSupportedException();

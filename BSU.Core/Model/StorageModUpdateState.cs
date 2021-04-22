@@ -130,10 +130,10 @@ namespace BSU.Core.Model
             }
             catch (Exception e)
             {
-
                 Exception = e;
                 State = UpdateState.Errored;
             }
+            _logger.Info("Done {0}", _storageMod.Identifier);
             OnEnded?.Invoke();
         }
 
@@ -148,6 +148,7 @@ namespace BSU.Core.Model
                 if (State != UpdateState.Created && State != UpdateState.Prepared) throw  new InvalidOperationException();
             }
 
+            _logger.Info("Aborted {0}", _storageMod.Identifier);
             State = UpdateState.Aborted;
             OnEnded?.Invoke();
         }
@@ -160,6 +161,7 @@ namespace BSU.Core.Model
         }
 
         public IProgressProvider ProgressProvider => _progressProvider;
+
         public event Action OnEnded;
         IModelStorageMod IUpdateState.GetStorageMod() => _storageMod ?? throw new InvalidOperationException();
 

@@ -10,6 +10,5 @@ namespace BSU.Core.Model
         IEnumerable<IModelRepository> GetRepositories();
         Task<IEnumerable<IModelStorageMod>> GetAllStorageMods();
         Task<IEnumerable<IModelRepositoryMod>> GetAllRepositoryMods();
-        event Action<IModelStorageMod> StorageModChanged;
     }
 }

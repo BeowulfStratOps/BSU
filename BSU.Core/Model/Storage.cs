@@ -47,24 +47,37 @@ namespace BSU.Core.Model
             }
         }
 
+        public async Task Load()
+        {
+            var mods = await GetMods();
+            foreach (var mod in mods)
+            {
+                ModAdded?.Invoke(mod);
+            }
+        }
+
         public async Task<List<IModelStorageMod>> GetMods()
         {
             await _loading.Do();
             return new List<IModelStorageMod>(_mods);
         }
 
-        public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier)
+        public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
+            Func<IModelStorageMod, Task> createdCallback)
         {
             if (_loading.IsRunning) throw new InvalidOperationException(); // TODO: check it is finished. i.e. started and not running
 
             return new StorageModUpdateState(_jobManager, _actionQueue, repositoryMod, target, update =>
             {
                 var mod = Implementation.CreateMod(identifier);
-                var storageMod = new StorageMod(_actionQueue, mod, identifier, _internalState.GetMod(identifier), _jobManager, Identifier, Implementation.CanWrite());
-                _actionQueue.EnQueueAction(() =>
+                var state = _internalState.GetMod(identifier);
+                state.UpdateTarget = target;
+                var storageMod = new StorageMod(_actionQueue, mod, identifier, state, _jobManager, Identifier, Implementation.CanWrite(), update);
+                _actionQueue.EnQueueAction(async () =>
                 {
                     _mods.Add(storageMod);
                     ModAdded?.Invoke(storageMod);
+                    await createdCallback(storageMod);
                 });
                 return storageMod;
             });

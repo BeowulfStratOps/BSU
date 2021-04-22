@@ -22,21 +22,12 @@ namespace BSU.Core.Model
         public event Action<IModelRepositoryMod> ModAdded;
         public Guid Identifier { get; }
         public string Location { get; }
-        public Uid Uid { get; } = new Uid();
 
         private readonly List<IModelRepositoryMod> _mods  = new List<IModelRepositoryMod>();
 
         private readonly JobSlot _loading;
 
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-
-        public event Action OnUpdateChange;
-        public async Task ProcessMods()
-        {
-            var mods = await GetMods();
-            await Task.WhenAll(mods.Select(m => m.ProcessMods()));
-            // TODO: calculate state
-        }
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         public Repository(IRepository implementation, string name, string location, IJobManager jobManager,
             IRepositoryState internalState, IActionQueue actionQueue,
@@ -55,29 +46,45 @@ namespace BSU.Core.Model
             _loading = new JobSlot(LoadInternal, title, jobManager);
         }
 
-        private async Task Load()
+        public async Task Load()
         {
-            await _loading.Do();
+            try
+            {
+                await _loading.Do();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         private void LoadInternal(CancellationToken cancellationToken)
         {
-            // TODO: use cancellationToken
-            Implementation.Load();
-            foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
+            try
             {
-                var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _relatedActionsBag, _modelStructure);
-                modelMod.LocalModAdded += storageMod =>
+                // TODO: use cancellationToken
+                Implementation.Load();
+                foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
                 {
-                    modelMod.LocalMods[storageMod].Updated += ReCalculateState;
-                    ReCalculateState();
-                };
-                modelMod.SelectionChanged += ReCalculateState;
-                _mods.Add(modelMod);
-                _actionQueue.EnQueueAction(() =>
-                {
-                    ModAdded?.Invoke(modelMod);
-                });
+                    var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _relatedActionsBag, _modelStructure);
+                    modelMod.LocalModUpdated += storageMod =>
+                    {
+                        modelMod.LocalMods[storageMod].Updated += ReCalculateState;
+                        ReCalculateState();
+                    };
+                    modelMod.SelectionChanged += ReCalculateState;
+                    _mods.Add(modelMod);
+                    _actionQueue.EnQueueAction(() =>
+                    {
+                        ModAdded?.Invoke(modelMod);
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
         }
 

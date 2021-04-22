@@ -22,7 +22,7 @@ namespace BSU.GUI
         {
             Thread.CurrentThread.Name = "main";
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
-            _core = new Core.Core(settingsFile, action => Dispatcher.BeginInvoke(DispatcherPriority.Background, action));
+            _core = new Core.Core(settingsFile, new CoreDispatcher(Dispatcher));
             DataContext = _core.ViewModel;
             InitializeComponent();
             Dispatcher.InvokeAsync(Run);

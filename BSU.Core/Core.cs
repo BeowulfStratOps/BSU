@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BSU.Core.JobManager;
+using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -28,19 +29,18 @@ namespace BSU.Core
         /// Create a new core instance. Should be used in a using block.
         /// </summary>
         /// <param name="settingsPath">Location to store local settings, including repo/storage data.</param>
-        public Core(FileInfo settingsPath, Action<Action> dispatch) : this(Settings.Load(settingsPath), dispatch)
+        public Core(FileInfo settingsPath, IActionQueue dispatcher) : this(Settings.Load(settingsPath), dispatcher)
         {
         }
 
-        internal Core(ISettings settings, Action<Action> dispatch) : this(settings, null, dispatch)
+        internal Core(ISettings settings, IActionQueue dispatcher) : this(settings, null, dispatcher)
         {
         }
 
 
-        internal Core(ISettings settings, IJobManager jobManager, Action<Action> dispatch)
+        internal Core(ISettings settings, IJobManager jobManager, IActionQueue dispatcher)
         {
             _logger.Info("Creating new core instance");
-            var dispatcher = new Dispatcher(dispatch);
             jobManager ??= new JobManager.JobManager(dispatcher);
             JobManager = jobManager;
             Types = new Types();

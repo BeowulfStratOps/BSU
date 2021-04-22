@@ -23,7 +23,9 @@ namespace BSU.Core.Model
                     if (!repoHash.IsMatch(await storageMod.GetMatchHash())) return null;
                     return repoVersion.IsMatch(await storageMod.GetVersionHash()) ? ModActionEnum.Use : ModActionEnum.Update;
                 case StorageModStateEnum.Updating:
-                    throw new NotImplementedException();
+                    if (repoVersion.IsMatch(await storageMod.GetVersionHash())) return ModActionEnum.Await;
+                    if (repoHash.IsMatch(await storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate;
+                    return null;
                 case StorageModStateEnum.Error:
                     return null;
                 default:
@@ -31,25 +33,12 @@ namespace BSU.Core.Model
             }
         }
 
-        internal static RepositoryModActionSelection AutoSelect(bool allModsLoaded, Dictionary<IModelStorageMod, ModAction> actions,
-            IModelStructure modelStructure, PersistedSelection usedMod)
+        internal static async Task<RepositoryModActionSelection> AutoSelect(Dictionary<IModelStorageMod, ModAction> actions,
+            IModelStructure modelStructure)
         {
-            if (usedMod != null)
-            {
-                if (usedMod.Mod == null && usedMod.Storage == null) return new RepositoryModActionSelection();
-
-                var storage = modelStructure.GetStorages().FirstOrDefault(s => s.AsStorageIdentifier() == usedMod);
-                if (storage != null) return new RepositoryModActionSelection(storage);
-
-                var storageMod = actions.Keys.FirstOrDefault(mod => mod.GetStorageModIdentifiers() == usedMod);
-                if (storageMod != null)
-                {
-                    return new RepositoryModActionSelection(storageMod);
-                }
-            }
+            // TODO: async-ify
 
             // Still loading
-            if (!allModsLoaded) return null;
             if (actions.Values.Any(action => action.ActionType == ModActionEnum.Loading)) return null;
 
             // Order of precedence

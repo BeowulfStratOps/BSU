@@ -16,7 +16,7 @@ namespace BSU.Core.Tests.Mocks
         public IRepositoryMod Implementation { get; }
         public string DownloadIdentifier { get; set; }
         public string Identifier { get; }
-        public event Action<IModelStorageMod> LocalModAdded;
+        public event Action<IModelStorageMod> LocalModUpdated;
 
         public void ChangeAction(IModelStorageMod target, ModActionEnum? newAction)
         {

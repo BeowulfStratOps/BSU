@@ -10,7 +10,6 @@ namespace BSU.Core.Model
 {
     public class RepositoryUpdate
     {
-        // TODO: create Logger with builtin Uid thing?
         private readonly Logger _logger = EntityLogger.GetLogger();
 
         private List<IUpdateState> _workingSet = new List<IUpdateState>();

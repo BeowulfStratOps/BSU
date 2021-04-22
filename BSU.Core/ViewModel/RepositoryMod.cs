@@ -39,10 +39,10 @@ namespace BSU.Core.ViewModel
             //IsLoading = mod.GetState().IsLoading;
             _mod = mod;
             Name = mod.Identifier;
-            mod.LocalModAdded += AddAction;
+            mod.LocalModUpdated += UpdateAction;
             foreach (var target in mod.LocalMods.Keys)
             {
-                AddAction(target);
+                UpdateAction(target);
             }
 
             Selection = ModAction.Create(mod.Selection, mod.LocalMods);
@@ -61,22 +61,17 @@ namespace BSU.Core.ViewModel
             {
                 AddStorage(storage);
             }
-
-            mod.OnUpdateChange += () =>
-            {
-                UpdateProgress = mod.CurrentUpdate?.ProgressProvider;
-            };
         }
 
-        private void AddAction(IModelStorageMod storageMod)
+        private void UpdateAction(IModelStorageMod storageMod)
         {
-            Actions.Add(new SelectMod(storageMod, _mod.LocalMods[storageMod]));
+            Actions.Update(new SelectMod(storageMod, _mod.LocalMods[storageMod]));
         }
 
         internal void AddStorage(IModelStorage storage)
         {
             if (!storage.CanWrite) return; // TODO
-            Actions.Add(new SelectStorage(storage));
+            Actions.Update(new SelectStorage(storage));
         }
 
         internal void RemoveStorage(IModelStorage storage)
@@ -89,13 +84,13 @@ namespace BSU.Core.ViewModel
         private void UpdateErrorText()
         {
             // TODO: make sure it updates itself when e.g. conflict states change
-            
+
             if (_mod.Selection == null)
             {
                 ErrorText = "Select an action";
                 return;
             }
-            
+
             if (_mod.Selection.DoNothing)
             {
                 ErrorText = "";
@@ -107,7 +102,7 @@ namespace BSU.Core.ViewModel
                     .ContinueWith(async inUse => ErrorText = await inUse ? "Name in use" : "");
 
             }
-            
+
             if (_mod.Selection.StorageMod != null)
             {
                 var action = _mod.LocalMods[_mod.Selection.StorageMod];

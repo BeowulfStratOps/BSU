@@ -40,7 +40,7 @@ namespace BSU.Core.Model
             set
             {
                 if (value == _selection) return;
-                _logger.Trace("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
+                _logger.Debug("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
                 _selection = value;
                 _internalState.Selection = PersistedSelection.Create(value);
                 SelectionChanged?.Invoke();
@@ -67,20 +67,18 @@ namespace BSU.Core.Model
             _logger.Info($"Created with iddentifier {identifier}");
         }
 
-        public async Task ProcessMods()
+        private async Task Load()
         {
-            var tasks = new List<Task>();
-            foreach (var mod in await _modelStructure.GetAllStorageMods())
+            if (_error != null) return;
+            try
             {
-                tasks.Add(ProcessMod(mod));
+                await _loading.Do();
             }
-
-            _modelStructure.StorageModChanged += async mod => await ProcessMod(mod);
-            await Task.WhenAll(tasks);
-            DoAutoSelection(true);
+            catch (Exception e)
+            {
+                _error = e;
+            }
         }
-
-        private Task Load() => _loading.Do();
 
         public async Task<string> GetDisplayName()
         {
@@ -88,43 +86,47 @@ namespace BSU.Core.Model
             return Implementation.GetDisplayName();
         }
 
-        private async Task ProcessMod(IModelStorageMod mod)
+        public async Task SignalAllStorageModsLoaded()
         {
-            await Load();
+            _logger.Info("all mods loaded.");
+            // never change a selection once it was made. Would be clickjacking on the user
+            // TODO: check if a better option became available and notify user (must only ever happen for old selections)
+            if (Selection != null) return;
 
+            _logger.Trace("Checking auto-selection for mod {0}", Identifier);
+
+            var selection = await CoreCalculation.AutoSelect(LocalMods, _modelStructure);
+            if (selection == Selection) return;
+
+            _logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
+
+            Selection = selection;
+        }
+
+        public async Task ProcessMod(IModelStorageMod mod)
+        {
+            _logger.Info("added local mod.");
+            await Load();
+            if (_error != null) return;
             var actionType = await CoreCalculation.GetModAction(_matchHash, _versionHash, mod);
             if (actionType == null) return;
 
+            if (!LocalMods.ContainsKey(mod))
+                mod.StateChanged += async () => await ProcessMod(mod); // TODO: potential memory leak
             LocalMods[mod] = new ModAction((ModActionEnum) actionType, this, _versionHash,
                 _relatedActionsBag.GetBag(mod));
-            LocalModAdded?.Invoke(mod);
-            // TODO: stuff
-            DoAutoSelection(false);
+            LocalModUpdated?.Invoke(mod);
+            if (mod.GetStorageModIdentifiers() == _internalState.Selection)
+                Selection = new RepositoryModActionSelection(mod);
         }
 
         private void LoadInternal(CancellationToken cancellationToken)
-        {
+    {
             // TODO: use cancellationToken
             Implementation.Load();
             _matchHash = new MatchHash(Implementation);
             _versionHash = new VersionHash(Implementation);
             AsUpdateTarget = new UpdateTarget(_versionHash.GetHashString(), Implementation.GetDisplayName());
-        }
-
-        private void DoAutoSelection(bool allModsLoaded)
-        {
-            // never change a selection once it was made. Would be clickjacking on the user
-            // TODO: check if a better option became available and notify user (must only ever happen for old selections)
-            if (Selection != null) return;
-
-            Logger.Trace("Checking auto-selection for mod {0}", Identifier);
-
-            var selection = CoreCalculation.AutoSelect(allModsLoaded, LocalMods, _modelStructure, _internalState.Selection);
-            if (selection == Selection) return;
-
-            Logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
-
-            Selection = selection;
         }
 
         public IUpdateState DoUpdate()
@@ -146,7 +148,11 @@ namespace BSU.Core.Model
 
             if (Selection.DownloadStorage != null)
             {
-                var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier);
+                var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier, async mod =>
+                {
+                    await ProcessMod(mod);
+                    Selection = new RepositoryModActionSelection(mod);
+                });
                 return update;
             }
 
@@ -157,7 +163,7 @@ namespace BSU.Core.Model
 
         public override string ToString() => Identifier;
 
-        public event Action<IModelStorageMod> LocalModAdded;
+        public event Action<IModelStorageMod> LocalModUpdated;
         public event Action SelectionChanged;
     }
 }

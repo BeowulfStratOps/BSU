@@ -45,13 +45,14 @@ namespace BSU.Core.Model
             {
                 var old = _state;
                 _state = value;
-                _logger.Trace("State of '{0}' changed from {1} to {2}.", Identifier, old, value);
+                _logger.Debug("State of '{0}' changed from {1} to {2}.", Identifier, old, value);
                 StateChanged?.Invoke();
             }
         }
 
         public StorageMod(IActionQueue actionQueue, IStorageMod implementation, string identifier,
-            IPersistedStorageModState internalState, IJobManager jobManager, Guid parentIdentifier, bool canWrite)
+            IPersistedStorageModState internalState, IJobManager jobManager, Guid parentIdentifier, bool canWrite,
+            IUpdateState updateState = null)
         {
             _internalState = internalState;
             _jobManager = jobManager;
@@ -71,6 +72,12 @@ namespace BSU.Core.Model
             {
                 _state = StorageModStateEnum.CreatedWithUpdateTarget;
                 _updateVersionHash = VersionHash.FromDigest(_updateTarget.Hash);
+            }
+
+            if (updateState != null)
+            {
+                _state = StorageModStateEnum.Updating;
+                SetCurrentUpdate(updateState);
             }
         }
 
@@ -126,6 +133,16 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
+        private void SetCurrentUpdate(IUpdateState update)
+        {
+            // Don't actually need to save it. just handle when it's done
+            update.OnEnded += () =>
+            {
+                UpdateTarget = null;
+                State = StorageModStateEnum.Created;
+            };
+        }
+
         public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch, VersionHash targetVersion)
         {
             CheckState(StorageModStateEnum.Created, StorageModStateEnum.CreatedWithUpdateTarget);
@@ -141,11 +158,7 @@ namespace BSU.Core.Model
             UpdateTarget = target;
             State = StorageModStateEnum.Updating;
 
-            update.OnEnded += () =>
-            {
-                UpdateTarget = null;
-                State = StorageModStateEnum.Created;
-            };
+            SetCurrentUpdate(update);
 
             return update;
         }

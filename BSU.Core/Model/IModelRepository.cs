@@ -12,8 +12,7 @@ namespace BSU.Core.Model
         event Action<IModelRepositoryMod> ModAdded;
         Guid Identifier { get; }
         string Name { get; }
-
         RepositoryUpdate DoUpdate();
-        Task ProcessMods();
+        Task Load();
     }
 }

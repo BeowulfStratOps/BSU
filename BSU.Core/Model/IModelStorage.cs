@@ -10,12 +10,14 @@ namespace BSU.Core.Model
     {
         Task<List<IModelStorageMod>> GetMods();
 
-        IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier);
+        IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
+            Func<IModelStorageMod, Task> createdCallback);
         bool CanWrite { get; }
         Guid Identifier { get; }
         string Name { get; }
         PersistedSelection AsStorageIdentifier();
         Task<bool> HasMod(string downloadIdentifier);
         event Action<IModelStorageMod> ModAdded;
+        Task Load();
     }
 }

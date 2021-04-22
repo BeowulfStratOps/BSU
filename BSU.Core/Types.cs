@@ -12,7 +12,8 @@ namespace BSU.Core
         private readonly Dictionary<string, Func<string, IRepository>> _repoTypes =
             new Dictionary<string, Func<string, IRepository>>
             {
-                {"BSO", url => new BsoRepo(url)}
+                {"BSO", url => new BsoRepo(url)},
+                {"FILE", path => new FileRepository(path)}
             };
 
         private readonly Dictionary<string, Func<string, IStorage>> _storageTypes =
@@ -38,7 +39,7 @@ namespace BSU.Core
                 throw new NotSupportedException($"Repo type {repoType} is not supported.");
             return create(repoUrl);
         }
-        
+
         internal IStorage GetStorageImplementation(string stroageType, string path)
         {
             if (!_storageTypes.TryGetValue(stroageType, out var create))
