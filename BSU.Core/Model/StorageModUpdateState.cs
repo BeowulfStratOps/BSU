@@ -84,7 +84,7 @@ namespace BSU.Core.Model
             if (State != UpdateState.Created) throw new InvalidOperationException();
             _logger.Info("Prepare {0}", _storageMod.Identifier);
             var name = $"Preparing {_storageMod.Identifier} update";
-            var job = new SimpleJob(DoPrepare, name, 1);
+            var job = new SimpleAsyncJob(DoPrepare, name, 1);
             _abort = () => job.Abort();
             State = UpdateState.Preparing;
             try

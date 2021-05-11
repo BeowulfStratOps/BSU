@@ -11,7 +11,7 @@ namespace BSU.Core.Model
         Task<List<IModelStorageMod>> GetMods();
 
         IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
-            Func<IModelStorageMod, Task> createdCallback);
+            Action<IModelStorageMod> createdCallback);
         bool CanWrite { get; }
         Guid Identifier { get; }
         string Name { get; }

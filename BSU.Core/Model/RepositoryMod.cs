@@ -20,8 +20,10 @@ namespace BSU.Core.Model
         private readonly Logger _logger = EntityLogger.GetLogger();
         public IRepositoryMod Implementation { get; } // TODO: make private
         public string Identifier { get; }
+        public bool IsLoaded { get; private set; }
+        public event Action OnLoaded;
 
-        private readonly JobSlot _loading;
+        private readonly AsyncJobSlot _loading;
 
         private MatchHash _matchHash;
         private VersionHash _versionHash;
@@ -62,7 +64,11 @@ namespace BSU.Core.Model
             Identifier = identifier;
             DownloadIdentifier = identifier;
 
-            _loading = new JobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
+            // TODO: WTF.
+            if (_internalState.Selection == PersistedSelection.Create(new RepositoryModActionSelection()))
+                Selection = new RepositoryModActionSelection();
+
+            _loading = new AsyncJobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
 
             _logger.Info($"Created with iddentifier {identifier}");
         }
@@ -73,6 +79,8 @@ namespace BSU.Core.Model
             try
             {
                 await _loading.Do();
+                IsLoaded = true;
+                OnLoaded?.Invoke();
             }
             catch (Exception e)
             {
@@ -86,7 +94,7 @@ namespace BSU.Core.Model
             return Implementation.GetDisplayName();
         }
 
-        public async Task SignalAllStorageModsLoaded()
+        public void SignalAllStorageModsLoaded()
         {
             _logger.Info("all mods loaded.");
             // never change a selection once it was made. Would be clickjacking on the user
@@ -95,7 +103,7 @@ namespace BSU.Core.Model
 
             _logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
-            var selection = await CoreCalculation.AutoSelect(LocalMods, _modelStructure);
+            var selection = CoreCalculation.AutoSelect(LocalMods, _modelStructure);
             if (selection == Selection) return;
 
             _logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
@@ -103,19 +111,26 @@ namespace BSU.Core.Model
             Selection = selection;
         }
 
-        public async Task ProcessMod(IModelStorageMod mod)
+        public void ProcessMod(IModelStorageMod mod)
         {
             _logger.Info("added local mod.");
-            await Load();
             if (_error != null) return;
-            var actionType = await CoreCalculation.GetModAction(_matchHash, _versionHash, mod);
-            if (actionType == null) return;
+            var actionType = CoreCalculation.GetModAction(_matchHash, _versionHash, mod);
+            if (actionType == null)
+            {
+                LocalMods.Remove(mod);
+                return;
+            }
 
             if (!LocalMods.ContainsKey(mod))
-                mod.StateChanged += async () => await ProcessMod(mod); // TODO: potential memory leak
+                mod.StateChanged += () => ProcessMod(mod); // TODO: potential memory leak
+
             LocalMods[mod] = new ModAction((ModActionEnum) actionType, this, _versionHash,
                 _relatedActionsBag.GetBag(mod));
             _logger.Info("Set action for {0} to {1}", mod, actionType.ToString());
+
+            if (actionType == ModActionEnum.LoadingMatch) return;
+
             LocalModUpdated?.Invoke(mod);
             if (mod.GetStorageModIdentifiers() == _internalState.Selection)
                 Selection = new RepositoryModActionSelection(mod);
@@ -149,9 +164,9 @@ namespace BSU.Core.Model
 
             if (Selection.DownloadStorage != null)
             {
-                var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier, async mod =>
+                var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier, mod =>
                 {
-                    await ProcessMod(mod);
+                    ProcessMod(mod);
                     Selection = new RepositoryModActionSelection(mod);
                 });
                 return update;

@@ -12,11 +12,13 @@ namespace BSU.Core.Model
         Dictionary<IModelStorageMod, ModAction> LocalMods { get; }
         string DownloadIdentifier { get; set; }
         string Identifier { get; }
+        bool IsLoaded { get; }
+        event Action OnLoaded;
         event Action<IModelStorageMod> LocalModUpdated;
         event Action SelectionChanged;
         IUpdateState DoUpdate();
-        Task ProcessMod(IModelStorageMod storageMod);
+        void ProcessMod(IModelStorageMod storageMod);
         Task<string> GetDisplayName();
-        Task SignalAllStorageModsLoaded();
+        void SignalAllStorageModsLoaded();
     }
 }

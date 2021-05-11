@@ -4,6 +4,8 @@
     {
         CreatedWithUpdateTarget,
         Created,
+        Matched,
+        Versioned,
         Updating,
         Error
     }

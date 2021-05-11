@@ -14,7 +14,7 @@ namespace BSU.Core.Model
         private readonly Action<CancellationToken> _action;
         private readonly string _title;
         private readonly IJobManager _jobManager;
-        private Task _job;
+        private SimpleJob _job;
 
         internal JobSlot(Action<CancellationToken> action, string title, IJobManager jobManager)
         {
@@ -23,18 +23,23 @@ namespace BSU.Core.Model
             _jobManager = jobManager;
         }
 
-        public async Task Do()
+        public event Action Done;
+
+        public void Request()
         {
-            if (_job != null)
-            {
-                await _job;
-                return;
-            }
+            if (_job != null) return;
             _logger.Debug($"Creating Simple Job {_title}");
-            _job = new SimpleJob(_action, _title, 1).Do(_jobManager);
-            await _job;
+            _job = new SimpleJob(_action, _title, 1);
+            _job.Done += () => Done?.Invoke();  // TODO: memory leak
+            _jobManager.QueueJob(_job);
         }
 
-        public bool IsRunning => _job != null && !_job.IsCompleted;
+        public void Reset()
+        {
+            if (IsRunning) throw new InvalidOperationException();
+            _job = null;
+        }
+
+        public bool IsRunning => _job is {IsDone: false};
     }
 }

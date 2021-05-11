@@ -7,18 +7,19 @@ using NLog;
 
 namespace BSU.Core.Model
 {
-    internal class SimpleJob : IJob
+    internal class SimpleAsyncJob : IJob
     {
         private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly Action<CancellationToken> _action;
         private readonly string _title;
         private readonly int _priority;
-        private readonly CancellationTokenSource _tokenSource = new();
-        private readonly object _lock = new ();
-        private bool _workAssgined;
+        private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private bool _done = false;
+        private readonly object _lock = new object();
+        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
 
-        public SimpleJob(Action<CancellationToken> action, string title, int priority)
+        public SimpleAsyncJob(Action<CancellationToken> action, string title, int priority)
         {
             _action = action;
             _title = title;
@@ -34,24 +35,27 @@ namespace BSU.Core.Model
         {
             lock (_lock)
             {
-                if (_workAssgined) return false;
-                _workAssgined = true;
+                if (_done) return false;
+                _done = true;
             }
             try
             {
                 _action(_tokenSource.Token);
+                _tcs.SetResult(null);
             }
             catch (Exception e)
             {
                 _logger.Error(e);
+                _tcs.SetException(e);
             }
-            IsDone = true;
-            Done?.Invoke();
             return false;
         }
 
-        public bool IsDone { get; private set; }
-        public event Action Done;
+        public Task Do(IJobManager jobManager)
+        {
+            jobManager.QueueJob(this);
+            return _tcs.Task;
+        }
 
         public string GetTitle() => _title;
         public int GetPriority() => _priority;

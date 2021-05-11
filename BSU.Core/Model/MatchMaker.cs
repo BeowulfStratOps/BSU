@@ -9,31 +9,36 @@ namespace BSU.Core.Model
         private readonly List<IModelStorageMod> _storageMods = new();
         private bool _storageModsCreated;
 
-        public async Task AddRepoMod(IModelRepositoryMod repositoryMod)
+        public void AddRepoMod(IModelRepositoryMod repositoryMod)
         {
+            if (!repositoryMod.IsLoaded)
+            {
+                repositoryMod.OnLoaded += () => AddRepoMod(repositoryMod);
+                return;
+            }
             _repositoryMods.Add(repositoryMod);
             foreach (var storageMod in _storageMods)
             {
-                await repositoryMod.ProcessMod(storageMod);
+                repositoryMod.ProcessMod(storageMod);
             }
-            if (_storageModsCreated) await repositoryMod.SignalAllStorageModsLoaded();
+            if (_storageModsCreated) repositoryMod.SignalAllStorageModsLoaded();
         }
 
-        public async Task AddStorageMod(IModelStorageMod storageMod)
+        public void AddStorageMod(IModelStorageMod storageMod)
         {
             _storageMods.Add(storageMod);
             foreach (var repositoryMod in _repositoryMods)
             {
-                await repositoryMod.ProcessMod(storageMod);
+                repositoryMod.ProcessMod(storageMod);
             }
         }
 
-        public async Task SignalAllStorageModsLoaded()
+        public void SignalAllStorageModsLoaded()
         {
             _storageModsCreated = true;
             foreach (var repositoryMod in _repositoryMods)
             {
-                await repositoryMod.SignalAllStorageModsLoaded();
+                repositoryMod.SignalAllStorageModsLoaded();
             }
         }
     }

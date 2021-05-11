@@ -32,18 +32,19 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        public Task ProcessMods()
+        public void ProcessMod(IModelStorageMod storageMod)
         {
             throw new NotImplementedException();
         }
 
         public event Action OnUpdateChange;
-        public Task ProcessMods(List<IModelStorage> mods)
+
+        public Task<string> GetDisplayName()
         {
             throw new NotImplementedException();
         }
 
-        public Task<string> GetDisplayName()
+        public void SignalAllStorageModsLoaded()
         {
             throw new NotImplementedException();
         }

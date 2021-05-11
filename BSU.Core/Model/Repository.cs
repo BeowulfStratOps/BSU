@@ -25,7 +25,7 @@ namespace BSU.Core.Model
 
         private readonly List<IModelRepositoryMod> _mods  = new List<IModelRepositoryMod>();
 
-        private readonly JobSlot _loading;
+        private readonly AsyncJobSlot _loading;
 
         private readonly Logger _logger = EntityLogger.GetLogger();
 
@@ -43,7 +43,7 @@ namespace BSU.Core.Model
             Name = name;
             Identifier = internalState.Identifier;
             var title = $"Load Repo {Identifier}";
-            _loading = new JobSlot(LoadInternal, title, jobManager);
+            _loading = new AsyncJobSlot(LoadInternal, title, jobManager);
         }
 
         public async Task Load()

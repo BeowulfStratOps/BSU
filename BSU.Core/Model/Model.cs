@@ -12,7 +12,6 @@ namespace BSU.Core.Model
     public interface IActionQueue
     {
         void EnQueueAction(Action action);
-        void EnQueueAction(Func<Task> action);
     }
     internal class Model : IModel
     {
@@ -43,7 +42,7 @@ namespace BSU.Core.Model
             {
                 var implementation = _types.GetRepoImplementation(repositoryEntry.Type, repositoryEntry.Url);
                 var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, repositoryState, _dispatcher, _relatedActionsBag, this);
-                repository.ModAdded += async mod => await _matchMaker.AddRepoMod(mod);
+                repository.ModAdded += mod => _matchMaker.AddRepoMod(mod);
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
             }
@@ -60,13 +59,13 @@ namespace BSU.Core.Model
                     continue;
                 }
                 var storage = new Storage(implementation, storageEntry.Name, storageEntry.Path, storageState, _jobManager, _dispatcher);
-                storage.ModAdded += async mod => await _matchMaker.AddStorageMod(mod);
+                storage.ModAdded += mod => _matchMaker.AddStorageMod(mod);
                 Storages.Add(storage);
                 StorageAdded?.Invoke(storage);
             }
 
             await Task.WhenAll(Storages.Select(s => s.Load()));
-            await _matchMaker.SignalAllStorageModsLoaded(); // TODO: make sure this actually happens AFTER the previous line??
+            _matchMaker.SignalAllStorageModsLoaded(); // TODO: make sure this actually happens AFTER the previous line??
             await Task.WhenAll(Repositories.Select(r => r.Load()));
         }
 
@@ -81,7 +80,7 @@ namespace BSU.Core.Model
             var repoState = PersistentState.AddRepo(name, url, type);
             var implementation = _types.GetRepoImplementation(type, url);
             var repository = new Repository(implementation, name, url, _jobManager, repoState, _dispatcher, _relatedActionsBag, this);
-            repository.ModAdded += async mod => await _matchMaker.AddRepoMod(mod);
+            repository.ModAdded += mod => _matchMaker.AddRepoMod(mod);
             Repositories.Add(repository);
             RepositoryAdded?.Invoke(repository);
         }
@@ -92,7 +91,7 @@ namespace BSU.Core.Model
             var storageState = PersistentState.AddStorage(name, dir, type);
             var implementation = _types.GetStorageImplementation(type, dir.FullName);
             var storage = new Storage(implementation, name, dir.FullName, storageState, _jobManager, _dispatcher);
-            storage.ModAdded += async mod => await _matchMaker.AddStorageMod(mod);
+            storage.ModAdded += mod => _matchMaker.AddStorageMod(mod);
             Storages.Add(storage);
             StorageAdded?.Invoke(storage);
         }

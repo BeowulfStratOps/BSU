@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BSU.Core.JobManager;
 using BSU.Core.Model;
+using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.Tests.Mocks
@@ -49,7 +50,7 @@ namespace BSU.Core.Tests.Mocks
             _logger.Debug("Removed job {0}: {1}", job.GetUid(), job.GetTitle());
             return true;
         }
-        
+
         private bool DoQueueStep()
         {
             lock (_actionQueue)

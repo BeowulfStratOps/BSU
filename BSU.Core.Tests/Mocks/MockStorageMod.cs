@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using BSU.CoreCommon;
 using BSU.Hashes;
+using NLog;
 
 namespace BSU.Core.Tests.Mocks
 {
@@ -16,6 +17,7 @@ namespace BSU.Core.Tests.Mocks
         public bool ThrowErrorLoad = false;
         public bool ThrowErrorOpen = false;
         private readonly Action<MockStorageMod> _load;
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
 
@@ -28,7 +30,7 @@ namespace BSU.Core.Tests.Mocks
         {
             return Files.ToDictionary(kv => kv.Key, kv => Encoding.UTF8.GetString(kv.Value));
         }
-        
+
         public void SetFile(string key, string data)
         {
             if (Locked) throw new IOException("File in use");
@@ -84,14 +86,14 @@ namespace BSU.Core.Tests.Mocks
             return "";
         }
 
-        public Uid GetUid() => new Uid();
-
         public void Load()
         {
             if (ThrowErrorLoad) throw new TestException();
             _load?.Invoke(this);
         }
-        
+
+        public int GetUid() => _logger.GetId();
+
         private sealed class MockStream : MemoryStream
         {
             private readonly Action<byte[]> _save;

@@ -34,8 +34,6 @@ namespace BSU.Core.Tests.Mocks
             Mods.Remove(identifier);
         }
 
-        public Uid GetUid() => new Uid();
-
         public void Load()
         {
             _load?.Invoke(this);

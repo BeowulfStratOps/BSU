@@ -19,7 +19,7 @@ namespace BSU.Core.Model
         public string Location { get; }
         private readonly List<IModelStorageMod> _mods = new List<IModelStorageMod>();
 
-        private readonly JobSlot _loading;
+        private readonly AsyncJobSlot _loading;
 
         private readonly IActionQueue _actionQueue;
 
@@ -32,7 +32,7 @@ namespace BSU.Core.Model
             Name = name;
             Identifier = internalState.Identifier;
             Location = location;
-            _loading = new JobSlot(Load, $"Load Storage {Identifier}", jobManager);
+            _loading = new AsyncJobSlot(Load, $"Load Storage {Identifier}", jobManager);
         }
 
         private void Load(CancellationToken cancellationToken)
@@ -63,7 +63,7 @@ namespace BSU.Core.Model
         }
 
         public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
-            Func<IModelStorageMod, Task> createdCallback)
+            Action<IModelStorageMod> createdCallback)
         {
             if (_loading.IsRunning) throw new InvalidOperationException(); // TODO: check it is finished. i.e. started and not running
 
@@ -73,11 +73,11 @@ namespace BSU.Core.Model
                 var state = _internalState.GetMod(identifier);
                 state.UpdateTarget = target;
                 var storageMod = new StorageMod(_actionQueue, mod, identifier, state, _jobManager, Identifier, Implementation.CanWrite(), update);
-                _actionQueue.EnQueueAction(async () =>
+                _actionQueue.EnQueueAction(() =>
                 {
                     _mods.Add(storageMod);
                     ModAdded?.Invoke(storageMod);
-                    await createdCallback(storageMod);
+                    createdCallback(storageMod);
                 });
                 return storageMod;
             });

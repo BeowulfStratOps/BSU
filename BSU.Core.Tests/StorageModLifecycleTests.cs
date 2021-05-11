@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
@@ -46,10 +44,36 @@ namespace BSU.Core.Tests
         private void Created()
         {
             var (implementation, storageMod, worker) = CreateStorageMod();
-
+            worker.DoWork();
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
-            Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
-            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
+        }
+
+        [Fact]
+        private void Matched()
+        {
+            var (implementation, storageMod, worker) = CreateStorageMod();
+            worker.DoWork();
+            storageMod.RequireMatchHash();
+            worker.DoWork();
+            Assert.Equal(StorageModStateEnum.Matched, storageMod.GetState());
+            Assert.NotNull(storageMod.GetMatchHash());
+            Assert.True(storageMod.GetMatchHash().IsMatch(new MatchHash(implementation)));
+        }
+
+        [Fact]
+        private void Versioned()
+        {
+            var (implementation, storageMod, worker) = CreateStorageMod();
+            worker.DoWork();
+            storageMod.RequireMatchHash();
+            worker.DoWork();
+            storageMod.RequireVersionHash();
+            worker.DoWork();
+            Assert.Equal(StorageModStateEnum.Versioned, storageMod.GetState());
+            Assert.NotNull(storageMod.GetMatchHash());
+            Assert.True(storageMod.GetMatchHash().IsMatch(new MatchHash(implementation)));
+            Assert.NotNull(storageMod.GetVersionHash());
+            Assert.True(storageMod.GetVersionHash().IsMatch(new VersionHash(implementation)));
         }
 
         [Fact]
@@ -57,10 +81,10 @@ namespace BSU.Core.Tests
         {
             var target = new UpdateTarget("1234", "LeMod");
             var (implementation, storageMod, worker) = CreateStorageMod(target);
-
+            worker.DoWork();
             Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
-            //Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
-            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetVersionHash());
+            Assert.True(storageMod.GetVersionHash().IsMatch(VersionHash.FromDigest("1234")));
         }
 
         [Fact]
@@ -75,8 +99,10 @@ namespace BSU.Core.Tests
             update.Prepare().Wait();
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
-            Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
-            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetMatchHash());
+            Assert.True(storageMod.GetMatchHash().IsMatch(new MatchHash(new string[] { })));
+            Assert.NotNull(storageMod.GetVersionHash());
+            Assert.True(storageMod.GetVersionHash().IsMatch(new VersionHash(new byte[] { })));
         }
 
         [Fact]
@@ -94,8 +120,10 @@ namespace BSU.Core.Tests
             update.Update().Wait();
 
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
-            Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
-            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetMatchHash());
+            Assert.True(storageMod.GetMatchHash().IsMatch(new MatchHash(new string[] { })));
+            Assert.NotNull(storageMod.GetVersionHash());
+            Assert.True(storageMod.GetVersionHash().IsMatch(new VersionHash(new byte[] { })));
         }
 
         [Fact]
@@ -113,8 +141,10 @@ namespace BSU.Core.Tests
             update.Abort();
 
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
-            Assert.NotNull(storageMod.GetMatchHash().Result); // TODO: check exact value
-            Assert.NotNull(storageMod.GetVersionHash().Result); // TODO: check exact value
+            Assert.NotNull(storageMod.GetMatchHash());
+            Assert.True(storageMod.GetMatchHash().IsMatch(new MatchHash(new string[] { })));
+            Assert.NotNull(storageMod.GetVersionHash());
+            Assert.True(storageMod.GetVersionHash().IsMatch(new VersionHash(new byte[] { })));
         }
 
         [Fact]
@@ -124,22 +154,15 @@ namespace BSU.Core.Tests
 
             implementation.ThrowErrorLoad = true;
 
-            try
-            {
-                storageMod.GetMatchHash().Wait();
-                Assert.False(true);
-            }
-            catch (AggregateException e)
-            {
-                if (!(e.InnerExceptions.Single() is TestException)) throw;
-            }
-
+            storageMod.RequireMatchHash();
+            worker.DoWork();
             Assert.Equal(StorageModStateEnum.Error, storageMod.GetState());
         }
 
         [Fact]
         private void ErrorUpdateDo()
         {
+            // TODO: ???
             var (implementation, storageMod, worker) = CreateStorageMod();
 
             var repo = CreateRepoMod();
@@ -152,8 +175,8 @@ namespace BSU.Core.Tests
             Assert.NotNull(update.Exception);
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
             implementation.ThrowErrorOpen = false;
-            Assert.NotNull(storageMod.GetMatchHash().Result);
-            Assert.NotNull(storageMod.GetVersionHash().Result);
+            Assert.NotNull(storageMod.GetMatchHash());
+            Assert.NotNull(storageMod.GetVersionHash());
         }
 
         [Fact]
@@ -176,8 +199,8 @@ namespace BSU.Core.Tests
             }
 
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
-            Assert.NotNull(storageMod.GetMatchHash().Result);
-            Assert.NotNull(storageMod.GetVersionHash().Result);
+            Assert.NotNull(storageMod.GetMatchHash());
+            Assert.NotNull(storageMod.GetVersionHash());
         }
     }
 }

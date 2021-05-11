@@ -23,14 +23,14 @@ namespace BSU.Core.Model
         private IActionQueue ActionQueue { get; }
         public IStorageMod Implementation { get; }
 
-        private readonly JobSlot _loading;
-        private readonly FuncSlot<MatchHash> _matchHashJob;
-        private readonly FuncSlot<VersionHash> _versionHashJob;
+        private readonly AsyncJobSlot _loading;
+        private readonly JobSlot _matchHashJob;
+        private readonly JobSlot _versionHashJob;
 
         private UpdateTarget _updateTarget;
 
-        private MatchHash _updateMatchHash;
-        private VersionHash _updateVersionHash;
+        private MatchHash _matchHash;
+        private VersionHash _versionHash;
 
         private readonly Logger _logger = EntityLogger.GetLogger();
 
@@ -61,17 +61,17 @@ namespace BSU.Core.Model
             ActionQueue = actionQueue;
             Implementation = implementation;
             Identifier = identifier;
-            _loading = new JobSlot(_ => Implementation.Load(), $"Loading storageMod {identifier}", jobManager);
-            _matchHashJob = new FuncSlot<MatchHash>(_ => new MatchHash(implementation),
+            _loading = new AsyncJobSlot(_ => Implementation.Load(), $"Loading storageMod {identifier}", jobManager);
+            _matchHashJob = new JobSlot(_ => CreateMatchHash(),
                 $"Creating MatchHash for storageMod {identifier}", jobManager);
-            _versionHashJob = new FuncSlot<VersionHash>(_ => new VersionHash(implementation),
-                $"Creating MatchHash for storageMod {identifier}", jobManager);
+            _versionHashJob = new JobSlot(_ => CreateVersionHash(),
+                $"Creating VersionHash for storageMod {identifier}", jobManager);
 
             _updateTarget = _internalState.UpdateTarget;
             if (_updateTarget != null)
             {
                 _state = StorageModStateEnum.CreatedWithUpdateTarget;
-                _updateVersionHash = VersionHash.FromDigest(_updateTarget.Hash);
+                _versionHash = VersionHash.FromDigest(_updateTarget.Hash);
             }
 
             if (updateState != null)
@@ -81,43 +81,59 @@ namespace BSU.Core.Model
             }
         }
 
+        private void CreateVersionHash()
+        {
+            try
+            {
+                _versionHash = new VersionHash(Implementation);
+
+                ActionQueue.EnQueueAction(() =>
+                {
+                    State = StorageModStateEnum.Versioned;
+                });
+            }
+            catch (Exception e)
+            {
+                _error = e;
+
+                ActionQueue.EnQueueAction(() =>
+                {
+                    State = StorageModStateEnum.Error;
+                });
+            }
+        }
+
+        private void CreateMatchHash()
+        {
+            try
+            {
+                _matchHash = new MatchHash(Implementation);
+
+                ActionQueue.EnQueueAction(() =>
+                {
+                    State = StorageModStateEnum.Matched;
+                });
+            }
+            catch (Exception e)
+            {
+                _error = e;
+
+                ActionQueue.EnQueueAction(() =>
+                {
+                    State = StorageModStateEnum.Error;
+                });
+            }
+        }
+
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private void CheckState(params StorageModStateEnum[] expected)
         {
             if (!expected.Contains(State)) throw new InvalidOperationException(State.ToString());
         }
 
-        public async Task<VersionHash> GetVersionHash()
-        {
-            if (_state == StorageModStateEnum.Created)
-            {
-                await _loading.Do();
-                return await _versionHashJob.Do();
-            }
-            if (_state == StorageModStateEnum.Updating)
-            {
-                return _updateVersionHash;
-            }
-            if (_state == StorageModStateEnum.CreatedWithUpdateTarget)
-            {
-                return _updateVersionHash;
-            }
-            throw new NotImplementedException();
-        }
+        public VersionHash GetVersionHash() => _versionHash;
 
-        public async Task<MatchHash> GetMatchHash()
-        {
-            if (_state == StorageModStateEnum.Created)
-            {
-                await _loading.Do();
-                return await _matchHashJob.Do();
-            }
-            if (_state == StorageModStateEnum.Updating)
-            {
-                return _updateMatchHash;
-            }
-            throw new NotImplementedException();
-        }
+        public MatchHash GetMatchHash() => _matchHash;
 
         public StorageModStateEnum GetState() => State;
 
@@ -152,8 +168,8 @@ namespace BSU.Core.Model
             if (_loading.IsRunning || _matchHashJob.IsRunning || _versionHashJob.IsRunning) throw new InvalidOperationException();
 
             // TODO: bit of redundancy between those hashes and update target?
-            _updateMatchHash = targetMatch;
-            _updateVersionHash = targetVersion;
+            _matchHash = targetMatch;
+            _versionHash = targetVersion;
 
             var update = new StorageModUpdateState(_jobManager, ActionQueue, repositoryMod, this, target);
 
@@ -180,5 +196,15 @@ namespace BSU.Core.Model
         public override string ToString() => Identifier;
 
         public object GetUid() => _logger.GetId();
+
+        public void RequireMatchHash()
+        {
+            _matchHashJob.Request();
+        }
+
+        public void RequireVersionHash()
+        {
+            _versionHashJob.Request();
+        }
     }
 }

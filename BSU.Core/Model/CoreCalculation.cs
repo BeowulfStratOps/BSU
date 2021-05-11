@@ -9,35 +9,39 @@ namespace BSU.Core.Model
 {
     public static class CoreCalculation
     {
-        internal static async Task<ModActionEnum?> GetModAction(MatchHash repoHash, VersionHash repoVersion,
+        internal static ModActionEnum? GetModAction(MatchHash repoHash, VersionHash repoVersion,
             IModelStorageMod storageMod)
         {
             switch (storageMod.GetState())
             {
+                case StorageModStateEnum.Matched:
+                    if (!repoHash.IsMatch(storageMod.GetMatchHash())) return null;
+                    storageMod.RequireVersionHash();
+                    return ModActionEnum.Loading;
                 case StorageModStateEnum.CreatedWithUpdateTarget:
-                    if (repoVersion.IsMatch(await storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
-                    return null;
-                    if (repoHash.IsMatch(await storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate; // TODO: not implemented!
+                    if (repoVersion.IsMatch(storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
+                    if (repoHash.IsMatch(storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate; // TODO: not implemented!
                     return null;
                 case StorageModStateEnum.Created:
-                    if (!repoHash.IsMatch(await storageMod.GetMatchHash())) return null;
-                    return repoVersion.IsMatch(await storageMod.GetVersionHash()) ? ModActionEnum.Use : ModActionEnum.Update;
+                    storageMod.RequireMatchHash();
+                    return ModActionEnum.LoadingMatch;
                 case StorageModStateEnum.Updating:
-                    if (repoVersion.IsMatch(await storageMod.GetVersionHash())) return ModActionEnum.Await;
-                    if (repoHash.IsMatch(await storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate;
+                    if (repoVersion.IsMatch(storageMod.GetVersionHash())) return ModActionEnum.Await;
+                    if (repoHash.IsMatch(storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate;
                     return null;
                 case StorageModStateEnum.Error:
                     return null;
+                case StorageModStateEnum.Versioned:
+                    if (!repoHash.IsMatch(storageMod.GetMatchHash())) return null;
+                    return repoVersion.IsMatch(storageMod.GetVersionHash()) ? ModActionEnum.Use : ModActionEnum.Update;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        internal static async Task<RepositoryModActionSelection> AutoSelect(Dictionary<IModelStorageMod, ModAction> actions,
+        internal static RepositoryModActionSelection AutoSelect(Dictionary<IModelStorageMod, ModAction> actions,
             IModelStructure modelStructure)
         {
-            // TODO: async-ify
-
             // Still loading
             if (actions.Values.Any(action => action.ActionType == ModActionEnum.Loading)) return null;
 

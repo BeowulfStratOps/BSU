@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using BSU.CoreCommon;
 using BSU.Hashes;
+using NLog;
 
 namespace BSU.Core.Tests.Mocks
 {
@@ -21,6 +22,7 @@ namespace BSU.Core.Tests.Mocks
         public string Identifier, DisplayName;
         public bool ThrowErrorLoad;
         private readonly Action<MockRepositoryMod> _load;
+        private readonly Logger _logger = EntityLogger.GetLogger();
 
         public void SetFile(string key, string data)
         {
@@ -76,6 +78,6 @@ namespace BSU.Core.Tests.Mocks
             DownloadTo(path, fileStream, updateCallback, token);
         }
 
-        public Uid GetUid() => new Uid();
+        public int GetUid() => _logger.GetId();
     }
 }

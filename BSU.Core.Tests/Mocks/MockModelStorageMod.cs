@@ -16,12 +16,12 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        public Task<VersionHash> GetVersionHash()
+        public VersionHash GetVersionHash()
         {
             throw new NotImplementedException();
         }
 
-        public Task<MatchHash> GetMatchHash()
+        public MatchHash GetMatchHash()
         {
             throw new NotImplementedException();
         }

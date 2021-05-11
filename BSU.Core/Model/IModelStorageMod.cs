@@ -14,8 +14,10 @@ namespace BSU.Core.Model
         PersistedSelection GetStorageModIdentifiers();
         bool CanWrite { get; }
         string Identifier { get; }
-        Task<VersionHash> GetVersionHash();
-        Task<MatchHash> GetMatchHash();
+        VersionHash GetVersionHash();
+        MatchHash GetMatchHash();
         StorageModStateEnum GetState();
+        void RequireMatchHash();
+        void RequireVersionHash();
     }
 }

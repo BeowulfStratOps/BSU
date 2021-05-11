@@ -18,14 +18,5 @@ namespace BSU.GUI
         {
             _dispatcher.BeginInvoke(DispatcherPriority.Background, action);
         }
-
-        public void EnQueueAction(Func<Task> action)
-        {
-            // TODO: this doesn't seem right.
-            EnQueueAction(() =>
-            {
-                action().Wait();
-            });
-        }
     }
 }
