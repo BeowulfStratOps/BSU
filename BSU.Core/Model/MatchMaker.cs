@@ -41,5 +41,9 @@ namespace BSU.Core.Model
                 repositoryMod.SignalAllStorageModsLoaded();
             }
         }
+
+        public IEnumerable<IModelStorageMod> GetStorageMods() => _storageMods;
+
+        public IEnumerable<IModelRepositoryMod> GetRepositoryMods() => _repositoryMods;
     }
 }

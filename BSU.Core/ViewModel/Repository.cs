@@ -21,6 +21,7 @@ namespace BSU.Core.ViewModel
 
         private CalculatedRepositoryState _calculatedState;
         private IProgressProvider _updateProgress;
+        private readonly IModelStructure _modelStructure;
 
         public CalculatedRepositoryState CalculatedState
         {
@@ -36,20 +37,21 @@ namespace BSU.Core.ViewModel
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new ObservableCollection<RepositoryMod>();
 
-        internal Repository(IModelRepository repository, IModel model)
+        internal Repository(IModelRepository repository, IModel model, IModelStructure modelStructure)
         {
             _repository = repository;
             _model = model;
+            _modelStructure = modelStructure;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
-            CalculatedState = repository.CalculatedState;
+            CalculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
             repository.CalculatedStateChanged += state =>
             {
                 CalculatedState = state;
             };
             Name = repository.Name;
-            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model));
+            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model, _modelStructure));
         }
 
         private async Task DoDelete()

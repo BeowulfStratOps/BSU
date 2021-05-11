@@ -15,7 +15,6 @@ namespace BSU.Core.Model
         private readonly IJobManager _jobManager;
         private readonly IRepositoryState _internalState;
         private readonly IActionQueue _actionQueue;
-        private readonly RelatedActionsBag _relatedActionsBag;
         private readonly IModelStructure _modelStructure;
         public IRepository Implementation { get; }
         public string Name { get; }
@@ -30,13 +29,11 @@ namespace BSU.Core.Model
         private readonly Logger _logger = EntityLogger.GetLogger();
 
         public Repository(IRepository implementation, string name, string location, IJobManager jobManager,
-            IRepositoryState internalState, IActionQueue actionQueue,
-            RelatedActionsBag relatedActionsBag, IModelStructure modelStructure)
+            IRepositoryState internalState, IActionQueue actionQueue, IModelStructure modelStructure)
         {
             _jobManager = jobManager;
             _internalState = internalState;
             _actionQueue = actionQueue;
-            _relatedActionsBag = relatedActionsBag;
             _modelStructure = modelStructure;
             Location = location;
             Implementation = implementation;
@@ -67,12 +64,8 @@ namespace BSU.Core.Model
                 Implementation.Load();
                 foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
                 {
-                    var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _relatedActionsBag, _modelStructure);
-                    modelMod.LocalModUpdated += storageMod =>
-                    {
-                        modelMod.LocalMods[storageMod].Updated += ReCalculateState;
-                        ReCalculateState();
-                    };
+                    var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _modelStructure);
+                    modelMod.LocalModUpdated += _ => ReCalculateState();
                     modelMod.SelectionChanged += ReCalculateState;
                     _mods.Add(modelMod);
                     _actionQueue.EnQueueAction(() =>
@@ -88,30 +81,17 @@ namespace BSU.Core.Model
             }
         }
 
-        private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
-
         public async Task<List<IModelRepositoryMod>> GetMods()
         {
             await Load();
             return new List<IModelRepositoryMod>(_mods);
         }
 
-        public CalculatedRepositoryState CalculatedState
-        {
-            get => _calculatedState;
-            private set
-            {
-                if (value == _calculatedState) return;
-                _logger.Trace("Repo {0} State changing from {1} to {2}", Identifier, _calculatedState, value);
-                _calculatedState = value;
-                CalculatedStateChanged?.Invoke(value);
-            }
-        }
-
         private void ReCalculateState()
         {
-            CalculatedState = CoreCalculation.CalculateRepositoryState(_mods);
-            _logger.Trace("Repo {0} calculated state: {1}", Identifier, CalculatedState);
+            var calculatedState = CoreCalculation.CalculateRepositoryState(_mods, _modelStructure);
+            _logger.Trace("Repo {0} calculated state: {1}", Identifier, calculatedState);
+            CalculatedStateChanged?.Invoke(calculatedState);
         }
 
         public event Action<CalculatedRepositoryState> CalculatedStateChanged;

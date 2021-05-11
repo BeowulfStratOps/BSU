@@ -12,10 +12,11 @@ namespace BSU.Core.Tests.Mocks
         public UpdateTarget AsUpdateTarget { get; }
         public RepositoryModActionSelection Selection { get; set; }
         public Dictionary<IModelStorageMod, ModAction> LocalMods { get; }
-        public bool AllModsLoaded { get; set; }
         public IRepositoryMod Implementation { get; }
         public string DownloadIdentifier { get; set; }
         public string Identifier { get; }
+        public bool IsLoaded { get; }
+        public event Action OnLoaded;
         public event Action<IModelStorageMod> LocalModUpdated;
 
         public void ChangeAction(IModelStorageMod target, ModActionEnum? newAction)

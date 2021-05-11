@@ -15,7 +15,6 @@ namespace BSU.Core.Model
         private readonly IActionQueue _actionQueue;
         private readonly IJobManager _jobManager;
         private readonly IPersistedRepositoryModState _internalState;
-        private readonly RelatedActionsBag _relatedActionsBag;
         private readonly IModelStructure _modelStructure;
         private readonly Logger _logger = EntityLogger.GetLogger();
         public IRepositoryMod Implementation { get; } // TODO: make private
@@ -49,16 +48,13 @@ namespace BSU.Core.Model
             }
         }
 
-        public Dictionary<IModelStorageMod, ModAction> LocalMods { get; } = new Dictionary<IModelStorageMod, ModAction>();
-
         public RepositoryMod(IActionQueue actionQueue, IRepositoryMod implementation, string identifier,
-            IJobManager jobManager, IPersistedRepositoryModState internalState, RelatedActionsBag relatedActionsBag,
+            IJobManager jobManager, IPersistedRepositoryModState internalState,
             IModelStructure modelStructure)
         {
             _actionQueue = actionQueue;
             _jobManager = jobManager;
             _internalState = internalState;
-            _relatedActionsBag = relatedActionsBag;
             _modelStructure = modelStructure;
             Implementation = implementation;
             Identifier = identifier;
@@ -70,7 +66,7 @@ namespace BSU.Core.Model
 
             _loading = new AsyncJobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
 
-            _logger.Info($"Created with iddentifier {identifier}");
+            _logger.Info($"Created with identifier {identifier}");
         }
 
         private async Task Load()
@@ -103,7 +99,7 @@ namespace BSU.Core.Model
 
             _logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
-            var selection = CoreCalculation.AutoSelect(LocalMods, _modelStructure);
+            var selection = CoreCalculation.AutoSelect(this, _modelStructure);
             if (selection == Selection) return;
 
             _logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
@@ -111,27 +107,30 @@ namespace BSU.Core.Model
             Selection = selection;
         }
 
+        public MatchHash GetMatchHash() => _matchHash;
+
+        public VersionHash GetVersionHash() => _versionHash;
+
         public void ProcessMod(IModelStorageMod mod)
         {
             _logger.Info("added local mod.");
             if (_error != null) return;
-            var actionType = CoreCalculation.GetModAction(_matchHash, _versionHash, mod);
+            var actionType = CoreCalculation.GetModAction(this, mod);
+
             if (actionType == null)
             {
-                LocalMods.Remove(mod);
+                // TODO: unsubscribe from mod.StateChanged
                 return;
             }
 
-            if (!LocalMods.ContainsKey(mod))
-                mod.StateChanged += () => ProcessMod(mod); // TODO: potential memory leak
+            mod.StateChanged += () => ProcessMod(mod); // TODO: only do this once. delete it when not needed anymore.
 
-            LocalMods[mod] = new ModAction((ModActionEnum) actionType, this, _versionHash,
-                _relatedActionsBag.GetBag(mod));
             _logger.Info("Set action for {0} to {1}", mod, actionType.ToString());
 
             if (actionType == ModActionEnum.LoadingMatch) return;
 
-            LocalModUpdated?.Invoke(mod);
+            LocalModUpdated?.Invoke(mod);  // TODO: add action?
+
             if (mod.GetStorageModIdentifiers() == _internalState.Selection)
                 Selection = new RepositoryModActionSelection(mod);
         }
@@ -155,8 +154,8 @@ namespace BSU.Core.Model
 
             if (Selection.StorageMod != null)
             {
-                var action = LocalMods[Selection.StorageMod];
-                if (action.ActionType != ModActionEnum.Update && action.ActionType != ModActionEnum.ContinueUpdate) return null;
+                var action = CoreCalculation.GetModAction(this, Selection.StorageMod);
+                if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate) return null;
 
                 var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget, _matchHash, _versionHash);
                 return update;

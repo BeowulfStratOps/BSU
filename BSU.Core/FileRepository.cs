@@ -35,6 +35,8 @@ namespace BSU.Core
     {
         private readonly DirectoryInfo _directory;
         private readonly Logger _logger = EntityLogger.GetLogger();
+
+        // TODO: terrible performance
         private readonly Dictionary<string, byte[]> _files = new();
 
         public FileRepositoryMod(DirectoryInfo directory)

@@ -31,6 +31,16 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
+        public void RequireMatchHash()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RequireVersionHash()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Abort()
         {
             throw new NotImplementedException();

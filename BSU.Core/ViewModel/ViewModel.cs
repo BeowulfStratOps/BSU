@@ -12,20 +12,20 @@ namespace BSU.Core.ViewModel
     {
         public DelegateCommand AddRepository { get; }
         public DelegateCommand AddStorage { get; }
-        
-        private Model.Model Model { get; }
-        public ObservableCollection<Repository> Repositories { get; } = new ObservableCollection<Repository>();
-        public ObservableCollection<Storage> Storages { get; } = new ObservableCollection<Storage>();
 
-        public InteractionRequest<AddRepository, bool?> AddRepositoryInteraction { get; } = new InteractionRequest<AddRepository, bool?>();
-        public InteractionRequest<AddStorage, bool?> AddStorageInteraction { get; } = new InteractionRequest<AddStorage, bool?>();
+        private Model.Model Model { get; }
+        public ObservableCollection<Repository> Repositories { get; } = new();
+        public ObservableCollection<Storage> Storages { get; } = new();
+
+        public InteractionRequest<AddRepository, bool?> AddRepositoryInteraction { get; } = new();
+        public InteractionRequest<AddStorage, bool?> AddStorageInteraction { get; } = new();
 
         internal ViewModel(Model.Model model)
         {
             AddRepository = new DelegateCommand(DoAddRepository);
             AddStorage = new DelegateCommand(DoAddStorage);
             Model = model;
-            model.RepositoryAdded += repository => Repositories.Add(new Repository(repository, model));
+            model.RepositoryAdded += repository => Repositories.Add(new Repository(repository, model, model));
             model.RepositoryDeleted += repository =>
             {
                 var vmRepository = Repositories.Single(r => r.Identifier == repository.Identifier);
@@ -61,7 +61,7 @@ namespace BSU.Core.ViewModel
         {
             var vm = new AddRepository();
             var doAdd = await AddRepositoryInteraction.Raise(vm);
-                
+
             if (doAdd != true) return;
             Model.AddRepository("BSO", vm.Url, vm.Name);
         }

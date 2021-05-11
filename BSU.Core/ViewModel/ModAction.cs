@@ -7,16 +7,18 @@ namespace BSU.Core.ViewModel
 {
     public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
-        internal static ModAction Create(RepositoryModActionSelection selection, Dictionary<IModelStorageMod, Model.ModAction> actions)
+        internal static ModAction Create(RepositoryModActionSelection selection, IModelRepositoryMod parent)
         {
             if (selection == null) return null;
 
             if (selection.DoNothing) return new SelectDoNothing();
-            
+
             if (selection.DownloadStorage != null) return new SelectStorage(selection.DownloadStorage);
-            
-            if (selection.StorageMod != null) return new SelectMod(selection.StorageMod, actions[selection.StorageMod]);
-            
+
+            if (selection.StorageMod != null)
+                return new SelectMod(selection.StorageMod,
+                    (ModActionEnum) CoreCalculation.GetModAction(parent, selection.StorageMod));
+
             throw new ArgumentException();
         }
 
@@ -46,7 +48,7 @@ namespace BSU.Core.ViewModel
     public class SelectDoNothing : ModAction
     {
         internal SelectDoNothing(){}
-        
+
         public override bool Equals(ModAction other)
         {
             return other is SelectDoNothing;
@@ -63,14 +65,13 @@ namespace BSU.Core.ViewModel
     public class SelectMod : ModAction
     {
         internal IModelStorageMod StorageMod { get; }
-        internal Model.ModAction Action { get; }
-        public string ActionType => Action.ActionType.ToString();
+        public string ActionType { get; }
         public string Name => StorageMod.Identifier; // TODO: name
 
-        internal SelectMod(IModelStorageMod storageMod, Model.ModAction action)
+        internal SelectMod(IModelStorageMod storageMod, ModActionEnum actionType)
         {
             StorageMod = storageMod;
-            Action = action;
+            ActionType = actionType.ToString();
         }
 
         public override bool Equals(ModAction other)
@@ -82,7 +83,7 @@ namespace BSU.Core.ViewModel
         {
             return HashCode.Combine(StorageMod);
         }
-        
+
         internal override RepositoryModActionSelection AsSelection => new RepositoryModActionSelection(StorageMod);
     }
 
@@ -105,7 +106,7 @@ namespace BSU.Core.ViewModel
         {
             return HashCode.Combine(DownloadStorage);
         }
-        
+
         internal override RepositoryModActionSelection AsSelection => new RepositoryModActionSelection(DownloadStorage);
     }
 }

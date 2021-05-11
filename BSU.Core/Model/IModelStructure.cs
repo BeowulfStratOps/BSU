@@ -8,7 +8,7 @@ namespace BSU.Core.Model
     {
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();
-        Task<IEnumerable<IModelStorageMod>> GetAllStorageMods();
-        Task<IEnumerable<IModelRepositoryMod>> GetAllRepositoryMods();
+        IEnumerable<IModelStorageMod> GetAllStorageMods();
+        IEnumerable<IModelRepositoryMod> GetAllRepositoryMods();
     }
 }

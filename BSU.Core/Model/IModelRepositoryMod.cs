@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -9,7 +10,6 @@ namespace BSU.Core.Model
     {
         UpdateTarget AsUpdateTarget { get; }
         public RepositoryModActionSelection Selection { get; set; }
-        Dictionary<IModelStorageMod, ModAction> LocalMods { get; }
         string DownloadIdentifier { get; set; }
         string Identifier { get; }
         bool IsLoaded { get; }
@@ -20,5 +20,7 @@ namespace BSU.Core.Model
         void ProcessMod(IModelStorageMod storageMod);
         Task<string> GetDisplayName();
         void SignalAllStorageModsLoaded();
+        MatchHash GetMatchHash();
+        VersionHash GetVersionHash();
     }
 }

@@ -35,22 +35,19 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        internal RepositoryMod(IModelRepositoryMod mod, IModelStructure structure)
+        internal RepositoryMod(IModelRepositoryMod mod, IModelStructure structure, IModelStructure modelStructure)
         {
             //IsLoading = mod.GetState().IsLoading;
             _mod = mod;
+            _modelStructure = modelStructure;
             Name = mod.Identifier;
             mod.LocalModUpdated += UpdateAction;
-            foreach (var target in mod.LocalMods.Keys)
-            {
-                UpdateAction(target);
-            }
 
-            Selection = ModAction.Create(mod.Selection, mod.LocalMods);
+            Selection = ModAction.Create(mod.Selection, mod);
             DownloadIdentifier = mod.DownloadIdentifier;
             mod.SelectionChanged += () =>
             {
-                Selection = ModAction.Create(mod.Selection, mod.LocalMods);
+                Selection = ModAction.Create(mod.Selection, mod);
                 DownloadIdentifier = mod.DownloadIdentifier;
             };
             mod.GetDisplayName().ContinueWith(async name =>
@@ -67,10 +64,10 @@ namespace BSU.Core.ViewModel
         private void UpdateAction(IModelStorageMod storageMod)
         {
             var reSelect = Selection?.AsSelection?.StorageMod == storageMod;
-            var selection = new SelectMod(storageMod, _mod.LocalMods[storageMod]);
+            var selection = new SelectMod(storageMod, (ModActionEnum) CoreCalculation.GetModAction(_mod, storageMod));
             Actions.Update(selection);
             if (reSelect)
-                Selection = selection;
+                Selection = selection; // TODO: not working.
         }
 
         internal void AddStorage(IModelStorage storage)
@@ -110,14 +107,14 @@ namespace BSU.Core.ViewModel
 
             if (_mod.Selection.StorageMod != null)
             {
-                var action = _mod.LocalMods[_mod.Selection.StorageMod];
-                if (!action.Conflicts.Any())
+                var conflicts = CoreCalculation.GetConflicts(_mod, _mod.Selection.StorageMod, _modelStructure);
+                if (!conflicts.Any())
                 {
                     ErrorText = "";
                     return;
                 }
 
-                var conflicts = action.Conflicts.Select(c => $"{c.Parent}:{c}");
+                var conflictNames = conflicts.Select(c => $"{c}");
                 ErrorText = "Conflicts: " + string.Join(", ", conflicts);
             }
         }
@@ -162,6 +159,7 @@ namespace BSU.Core.ViewModel
 
         private string _errorText;
         private IProgressProvider _updateProgress;
+        private readonly  IModelStructure _modelStructure;
 
         public string ErrorText
         {

@@ -23,8 +23,6 @@ namespace BSU.Core.Model
 
         private InternalState PersistentState { get; }
 
-        private readonly RelatedActionsBag _relatedActionsBag;
-
         private readonly MatchMaker _matchMaker = new();
 
         public Model(InternalState persistentState, IJobManager jobManager, Types types, IActionQueue dispatcher)
@@ -32,7 +30,6 @@ namespace BSU.Core.Model
             _jobManager = jobManager;
             _types = types;
             _dispatcher = dispatcher;
-            _relatedActionsBag = new RelatedActionsBag();
             PersistentState = persistentState;
         }
 
@@ -41,7 +38,7 @@ namespace BSU.Core.Model
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
                 var implementation = _types.GetRepoImplementation(repositoryEntry.Type, repositoryEntry.Url);
-                var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, repositoryState, _dispatcher, _relatedActionsBag, this);
+                var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, repositoryState, _dispatcher, this);
                 repository.ModAdded += mod => _matchMaker.AddRepoMod(mod);
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
@@ -79,7 +76,7 @@ namespace BSU.Core.Model
             if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
             var repoState = PersistentState.AddRepo(name, url, type);
             var implementation = _types.GetRepoImplementation(type, url);
-            var repository = new Repository(implementation, name, url, _jobManager, repoState, _dispatcher, _relatedActionsBag, this);
+            var repository = new Repository(implementation, name, url, _jobManager, repoState, _dispatcher, this);
             repository.ModAdded += mod => _matchMaker.AddRepoMod(mod);
             Repositories.Add(repository);
             RepositoryAdded?.Invoke(repository);
@@ -99,26 +96,9 @@ namespace BSU.Core.Model
         public IEnumerable<IModelStorage> GetStorages() => Storages;
 
         public IEnumerable<IModelRepository> GetRepositories() => Repositories;
+        public IEnumerable<IModelStorageMod> GetAllStorageMods() => _matchMaker.GetStorageMods();
 
-        public async Task<IEnumerable<IModelStorageMod>> GetAllStorageMods()
-        {
-            var mods = new List<IModelStorageMod>();
-            foreach (var storage in Storages)
-            {
-                mods.AddRange(await storage.GetMods());
-            }
-            return mods;
-        }
-
-        public async Task<IEnumerable<IModelRepositoryMod>> GetAllRepositoryMods()
-        {
-            var mods = new List<IModelRepositoryMod>();
-            foreach (var repository in Repositories)
-            {
-                mods.AddRange(await repository.GetMods());
-            }
-            return mods;
-        }
+        public IEnumerable<IModelRepositoryMod> GetAllRepositoryMods() => _matchMaker.GetRepositoryMods();
 
         public void DeleteRepository(IModelRepository repository, bool removeMods)
         {
