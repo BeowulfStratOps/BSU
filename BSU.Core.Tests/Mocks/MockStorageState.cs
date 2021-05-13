@@ -5,8 +5,11 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorageState : IStorageState
     {
-        private readonly MockPersistedStorageModState _modState = new MockPersistedStorageModState();
-        public IPersistedStorageModState GetMod(string identifier) => _modState;
+        public IPersistedStorageModState GetMod(string identifier)
+        {
+            throw new NotImplementedException();
+        }
+
         public Guid Identifier { get; }
     }
 }

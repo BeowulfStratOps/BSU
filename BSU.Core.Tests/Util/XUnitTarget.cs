@@ -2,7 +2,7 @@
 using NLog.Targets;
 using Xunit.Abstractions;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.Util
 {
     public sealed class XUnitTarget : TargetWithLayout
     {

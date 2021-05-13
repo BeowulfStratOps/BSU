@@ -2,7 +2,7 @@
 using NLog.Config;
 using Xunit.Abstractions;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.Util
 {
     public class LoggedTest
     {

@@ -33,8 +33,6 @@ namespace BSU.Core.Model
 
         private RepositoryModActionSelection _selection;
 
-        public event Action OnUpdateChange;
-
         public RepositoryModActionSelection Selection
         {
             get => _selection;

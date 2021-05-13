@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.Core.Persistence;
 
 namespace BSU.Core.Model

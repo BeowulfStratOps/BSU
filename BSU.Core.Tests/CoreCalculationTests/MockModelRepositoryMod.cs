@@ -1,33 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.Model;
-using BSU.CoreCommon;
+using BSU.Core.Tests.Util;
 
-namespace BSU.Core.Tests.Mocks
+namespace BSU.Core.Tests.CoreCalculationTests
 {
     internal class MockModelRepositoryMod : IModelRepositoryMod
     {
-        private IUpdateState _currentUpdate;
+        private readonly MatchHash _matchHash;
+        private readonly VersionHash _versionHash;
+
+        public MockModelRepositoryMod(int? match, int? version)
+        {
+            _matchHash = TestUtils.GetMatchHash(match);
+            _versionHash = TestUtils.GetVersionHash(version);
+        }
+
         public UpdateTarget AsUpdateTarget { get; }
         public RepositoryModActionSelection Selection { get; set; }
-        public Dictionary<IModelStorageMod, ModAction> LocalMods { get; }
-        public IRepositoryMod Implementation { get; }
         public string DownloadIdentifier { get; set; }
         public string Identifier { get; }
         public bool IsLoaded { get; }
         public event Action OnLoaded;
         public event Action<IModelStorageMod> LocalModUpdated;
-
-        public void ChangeAction(IModelStorageMod target, ModActionEnum? newAction)
-        {
-            throw new NotImplementedException();
-        }
-
-        public event Action<IModelStorageMod> ActionAdded;
         public event Action SelectionChanged;
-        public event Action DownloadIdentifierChanged;
-
         public IUpdateState DoUpdate()
         {
             throw new NotImplementedException();
@@ -38,8 +35,6 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        public event Action OnUpdateChange;
-
         public Task<string> GetDisplayName()
         {
             throw new NotImplementedException();
@@ -49,5 +44,9 @@ namespace BSU.Core.Tests.Mocks
         {
             throw new NotImplementedException();
         }
+
+        public MatchHash GetMatchHash() => _matchHash;
+
+        public VersionHash GetVersionHash() => _versionHash;
     }
 }

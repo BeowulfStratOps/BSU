@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using BSU.Core.Persistence;
 using BSU.Core.Tests.Mocks;
+using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
 using Xunit;
 using Xunit.Abstractions;
@@ -27,7 +28,7 @@ namespace BSU.Core.Tests
                 }
             });
         }
-        
+
         private MockStorageMod CreateStorageMod(string match, string version)
         {
             return new MockStorageMod(mod =>

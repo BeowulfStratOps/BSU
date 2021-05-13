@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
+using BSU.Core.Tests.Util;
 using Xunit;
 using Xunit.Abstractions;
 

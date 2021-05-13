@@ -39,7 +39,7 @@ namespace BSU.Core.Model
             {
                 var implementation = _types.GetRepoImplementation(repositoryEntry.Type, repositoryEntry.Url);
                 var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, repositoryState, _dispatcher, this);
-                repository.ModAdded += mod => _matchMaker.AddRepoMod(mod);
+                repository.ModAdded += mod => _matchMaker.AddRepositoryMod(mod);
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
             }
@@ -77,7 +77,7 @@ namespace BSU.Core.Model
             var repoState = PersistentState.AddRepo(name, url, type);
             var implementation = _types.GetRepoImplementation(type, url);
             var repository = new Repository(implementation, name, url, _jobManager, repoState, _dispatcher, this);
-            repository.ModAdded += mod => _matchMaker.AddRepoMod(mod);
+            repository.ModAdded += mod => _matchMaker.AddRepositoryMod(mod);
             Repositories.Add(repository);
             RepositoryAdded?.Invoke(repository);
         }

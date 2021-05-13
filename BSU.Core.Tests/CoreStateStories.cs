@@ -4,6 +4,7 @@ using System.Linq;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
+using BSU.Core.Tests.Util;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,7 +15,7 @@ namespace BSU.Core.Tests
     {
         public CoreStateStories(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-        }/*
+        }
 
         internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, MockWorker worker, MockModelStructure structure)
         {
@@ -23,7 +24,7 @@ namespace BSU.Core.Tests
             {
                 mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);
             }
-            var repoMod = new RepositoryMod(worker, mockRepo, "myrepo", worker, new MockPersistedRepositoryModState(), new RelatedActionsBag(), structure);
+            var repoMod = new RepositoryMod(worker, mockRepo, "myrepo", worker, new MockPersistedRepositoryModState(), structure);
             structure.RepositoryMods.Add(repoMod);
             return (mockRepo, repoMod);
         }
@@ -46,12 +47,7 @@ namespace BSU.Core.Tests
         {
             var files1 = f1.GetFiles();
             var files2 = f2.GetFiles();
-            var keys = new HashSet<string>(files1.Keys);
-            foreach (var key in files2.Keys)
-            {
-                keys.Add(key);
-            }
-
+            var keys = files1.Keys.Union(files2.Keys);
             return keys.All(key => files1.ContainsKey(key) && files2.ContainsKey(key) && files1[key] == files2[key]);
         }
 
@@ -59,38 +55,45 @@ namespace BSU.Core.Tests
         private void Download()
         {
             var structure = new MockModelStructure();
-            var matchMaker = new MatchMaker(structure);
+            var matchMaker = new MatchMaker();
             var worker = new MockWorker();
             var (repoFiles, repoMod) = CreateRepoMod("1", "1", worker, structure);
             matchMaker.AddRepositoryMod(repoMod);
 
             var mockStorage = new MockStorage();
             var storageState = new MockStorageState();
-            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, worker, matchMaker, worker);
+            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, worker, worker);
             worker.DoWork();
-            var update = storage.PrepareDownload(repoMod.Implementation, repoMod.AsUpdateTarget, "mystoragemod");
 
-            update.OnStateChange += () =>
-            {
-                if (update.State == UpdateState.Created)
-                {
-                    update.Continue();
-                    return;
-                }
-                if (update.State != UpdateState.Prepared) return;
-                Assert.True(update.GetPrepStats() > 0);
-                update.Continue();
-            };
-            update.Continue();
-        
+            IModelStorageMod updated = null;
+            repoMod.LocalModUpdated += mod => updated = mod;
+
+            // TODO: events should be named OnXyz
+            repoMod.Selection = new RepositoryModActionSelection(storage);
+
+            var update = repoMod.DoUpdate();
+
+            // TODO: update should only have the Create() method, which should return an object that has Prepare() etc.
+            var createTask = update.Create();
             worker.DoWork();
-            var storageMod = storage.Mods[0];
-            Assert.True(repoMod.LocalMods.ContainsKey(storageMod));
-            Assert.Equal(ModActionEnum.Use, repoMod.LocalMods[storageMod].ActionType);
+            Assert.True(createTask.IsCompletedSuccessfully);
+            var prepTask = update.Prepare();
+            worker.DoWork();
+            Assert.True(prepTask.IsCompletedSuccessfully);
+            Assert.True(update.GetPrepStats() > 0);
+            var updateTask = update.Update();
+            worker.DoWork();
+            Assert.True(updateTask.IsCompletedSuccessfully);
+
+            worker.DoWork();
+            var storageMod = storage.GetMods().Result.Single();
+
+            Assert.Equal(storageMod, updated);
+            Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storageMod));
 
             Assert.True(FilesEqual(repoFiles, mockStorage.Mods.Values.First()));
         }
-
+/*
         [Fact]
         private void Update()
         {
@@ -255,7 +258,7 @@ namespace BSU.Core.Tests
             worker.DoWork();
             var x = new List<MockStorageMod>();
             var update = storage.PrepareDownload(repoMod.Implementation, repoMod.AsUpdateTarget, "mystoragemod");
-                
+
             update.OnStateChange += () =>
             {
                 if (update.State == UpdateState.Created)
@@ -268,7 +271,7 @@ namespace BSU.Core.Tests
                 Assert.True(update.GetPrepStats() > 0);
                 update.Abort();
             };
-            
+
             update.Continue();
             worker.DoWork();
 

@@ -9,11 +9,11 @@ namespace BSU.Core.Model
         private readonly List<IModelStorageMod> _storageMods = new();
         private bool _storageModsCreated;
 
-        public void AddRepoMod(IModelRepositoryMod repositoryMod)
+        public void AddRepositoryMod(IModelRepositoryMod repositoryMod)
         {
             if (!repositoryMod.IsLoaded)
             {
-                repositoryMod.OnLoaded += () => AddRepoMod(repositoryMod);
+                repositoryMod.OnLoaded += () => AddRepositoryMod(repositoryMod);
                 return;
             }
             _repositoryMods.Add(repositoryMod);
