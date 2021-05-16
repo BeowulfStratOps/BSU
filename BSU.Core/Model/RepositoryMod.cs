@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
@@ -22,7 +21,7 @@ namespace BSU.Core.Model
         public bool IsLoaded { get; private set; }
         public event Action OnLoaded;
 
-        private readonly AsyncJobSlot _loading;
+        private readonly JobSlot _loading;
 
         private MatchHash _matchHash;
         private VersionHash _versionHash;
@@ -62,46 +61,37 @@ namespace BSU.Core.Model
             if (_internalState.Selection == PersistedSelection.Create(new RepositoryModActionSelection()))
                 Selection = new RepositoryModActionSelection();
 
-            _loading = new AsyncJobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
+            _loading = new JobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
 
             _logger.Info($"Created with identifier {identifier}");
         }
 
-        private async Task Load()
+        public void Load()
         {
-            if (_error != null) return;
-            try
-            {
-                await _loading.Do();
-                IsLoaded = true;
-                OnLoaded?.Invoke();
-            }
-            catch (Exception e)
-            {
-                _error = e;
-            }
+            _loading.Request();
         }
 
-        public async Task<string> GetDisplayName()
+        public string GetDisplayName()
         {
-            await Load();
+            if (!IsLoaded) throw new InvalidOperationException();
             return Implementation.GetDisplayName();
         }
 
         public void SignalAllStorageModsLoaded()
         {
             _logger.Info("all mods loaded.");
+            DoAutoSelection();
+        }
+
+        private void DoAutoSelection()
+        {
+            // TODO: check if a better option became available and notify user
             // never change a selection once it was made. Would be clickjacking on the user
-            // TODO: check if a better option became available and notify user (must only ever happen for old selections)
             if (Selection != null) return;
 
             _logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
             var selection = CoreCalculation.AutoSelect(this, _modelStructure);
-            if (selection == Selection) return;
-
-            _logger.Trace("Auto-selection for mod {0} changed to {1}", Identifier, selection);
-
             Selection = selection;
         }
 
@@ -109,41 +99,67 @@ namespace BSU.Core.Model
 
         public VersionHash GetVersionHash() => _versionHash;
 
+        private readonly HashSet<IModelStorageMod> _storageModStateChangedSubscriptions = new();
+
         public void ProcessMod(IModelStorageMod mod)
         {
             _logger.Info("added local mod.");
             if (_error != null) return;
             var actionType = CoreCalculation.GetModAction(this, mod);
 
+            void Handler() => ProcessMod(mod);
+
             if (actionType == null)
             {
-                // TODO: unsubscribe from mod.StateChanged
+                if (!_storageModStateChangedSubscriptions.Contains(mod)) return;
+                mod.StateChanged -= Handler;
+                _storageModStateChangedSubscriptions.Remove(mod);
                 return;
             }
 
-            mod.StateChanged += () => ProcessMod(mod); // TODO: only do this once. delete it when not needed anymore.
+            if (!_storageModStateChangedSubscriptions.Contains(mod))
+            {
+                mod.StateChanged += Handler;
+                _storageModStateChangedSubscriptions.Add(mod);
+            }
 
             _logger.Info("Set action for {0} to {1}", mod, actionType.ToString());
 
             if (actionType == ModActionEnum.LoadingMatch) return;
 
-            LocalModUpdated?.Invoke(mod);  // TODO: add action?
+            LocalModUpdated?.Invoke(mod);
 
             if (mod.GetStorageModIdentifiers() == _internalState.Selection)
                 Selection = new RepositoryModActionSelection(mod);
+
+            DoAutoSelection();
         }
 
         private void LoadInternal(CancellationToken cancellationToken)
-    {
+        {
             // TODO: use cancellationToken
-            Implementation.Load();
-            _matchHash = new MatchHash(Implementation);
-            _versionHash = new VersionHash(Implementation);
-            AsUpdateTarget = new UpdateTarget(_versionHash.GetHashString(), Implementation.GetDisplayName());
+            try
+            {
+                Implementation.Load();
+                _matchHash = new MatchHash(Implementation);
+                _versionHash = new VersionHash(Implementation);
+                AsUpdateTarget = new UpdateTarget(_versionHash.GetHashString(), Implementation.GetDisplayName());
+                _actionQueue.EnQueueAction(() =>
+                {
+                    IsLoaded = true;
+                    OnLoaded?.Invoke();
+                });
+            }
+            catch (Exception e)
+            {
+                _error = e;
+                // TODO: should fire some event
+            }
         }
 
         public IUpdateState DoUpdate()
         {
+            if (!IsLoaded) throw new InvalidOperationException();
             if (Selection == null) throw new InvalidOperationException();
 
             // TODO: switch
@@ -165,7 +181,7 @@ namespace BSU.Core.Model
                 {
                     ProcessMod(mod);
                     Selection = new RepositoryModActionSelection(mod);
-                });
+                }, _matchHash, _versionHash);
                 return update;
             }
 

@@ -51,7 +51,7 @@ namespace BSU.Core.ViewModel
                 CalculatedState = state;
             };
             Name = repository.Name;
-            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model, _modelStructure));
+            repository.ModAdded += mod => mod.OnLoaded += () => Mods.Add(new RepositoryMod(mod, model, _modelStructure));
         }
 
         private async Task DoDelete()

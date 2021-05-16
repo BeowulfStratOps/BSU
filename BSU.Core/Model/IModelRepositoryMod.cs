@@ -18,9 +18,10 @@ namespace BSU.Core.Model
         event Action SelectionChanged;
         IUpdateState DoUpdate();
         void ProcessMod(IModelStorageMod storageMod);
-        Task<string> GetDisplayName();
+        string GetDisplayName();
         void SignalAllStorageModsLoaded();
         MatchHash GetMatchHash();
         VersionHash GetVersionHash();
+        void Load();
     }
 }

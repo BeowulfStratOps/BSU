@@ -7,9 +7,8 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorage : IStorage
     {
-        private string path;
         private Action<MockStorage> _load;
-        public Dictionary<string, MockStorageMod> Mods = new Dictionary<string, MockStorageMod>();
+        public Dictionary<string, MockStorageMod> Mods = new();
 
         public MockStorage(Action<MockStorage> load = null)
         {

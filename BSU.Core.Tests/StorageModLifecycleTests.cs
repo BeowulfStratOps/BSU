@@ -27,6 +27,12 @@ namespace BSU.Core.Tests
             var state = new MockPersistedStorageModState {UpdateTarget = stateTarget};
 
             var storageMod = new StorageMod(worker, mockStorage, "mystorage", state, worker, Guid.Empty, true);
+            if (stateTarget == null)
+            {
+                storageMod.Load();
+                worker.DoWork();
+            }
+
             return (mockStorage, storageMod, worker);
         }
 
@@ -46,7 +52,7 @@ namespace BSU.Core.Tests
         {
             var (implementation, storageMod, worker) = CreateStorageMod();
             worker.DoWork();
-            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
         }
 
         [Fact]
@@ -120,7 +126,7 @@ namespace BSU.Core.Tests
             update.Prepare().Wait();
             update.Update().Wait();
 
-            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
             Assert.NotNull(storageMod.GetMatchHash());
             Assert.True(storageMod.GetMatchHash().IsMatch(new MatchHash(new string[] { })));
             Assert.NotNull(storageMod.GetVersionHash());
@@ -141,7 +147,7 @@ namespace BSU.Core.Tests
             update.Prepare().Wait();
             update.Abort();
 
-            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
             Assert.NotNull(storageMod.GetMatchHash());
             Assert.True(storageMod.GetMatchHash().IsMatch(new MatchHash(new string[] { })));
             Assert.NotNull(storageMod.GetVersionHash());
@@ -174,7 +180,7 @@ namespace BSU.Core.Tests
             implementation.ThrowErrorOpen = true;
             update.Update().Wait();
             Assert.NotNull(update.Exception);
-            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
             implementation.ThrowErrorOpen = false;
             Assert.NotNull(storageMod.GetMatchHash());
             Assert.NotNull(storageMod.GetVersionHash());
@@ -199,7 +205,7 @@ namespace BSU.Core.Tests
             {
             }
 
-            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
             Assert.NotNull(storageMod.GetMatchHash());
             Assert.NotNull(storageMod.GetVersionHash());
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.Model.Utility;
 
 namespace BSU.Core.Model
@@ -20,6 +21,8 @@ namespace BSU.Core.Model
 
         event Action OnEnded;
         internal IModelStorageMod GetStorageMod();
+        MatchHash GetTargetMatch();
+        VersionHash GetTargetVersion();
     }
 
     public enum UpdateState

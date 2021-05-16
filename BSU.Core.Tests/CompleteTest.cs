@@ -88,8 +88,9 @@ namespace BSU.Core.Tests
             //settings.Storages.Add(new StorageEntry("storage2", "mock", "s2"));
             var state = new InternalState(settings);
             var model = new Model.Model(state, worker, types, worker);
-            model.Load();
+            var loading = model.Load();
             worker.DoWork();
+            Assert.True(loading.IsCompletedSuccessfully);
             var storageMod1 = model.Storages.Single(s => s.Name == "storage1").GetMods().Result
                 .Single(m => m.Identifier == "mod5");
             var repoMod1 = model.Repositories.Single(s => s.Name == "repo1").GetMods().Result

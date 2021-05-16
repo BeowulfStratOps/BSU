@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
@@ -17,7 +18,7 @@ namespace BSU.Core.Model
         public string Name { get; }
         public Guid Identifier { get; }
         public string Location { get; }
-        private readonly List<IModelStorageMod> _mods = new List<IModelStorageMod>();
+        private readonly List<IModelStorageMod> _mods = new();
 
         private readonly AsyncJobSlot _loading;
 
@@ -63,9 +64,9 @@ namespace BSU.Core.Model
         }
 
         public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
-            Action<IModelStorageMod> createdCallback)
+            Action<IModelStorageMod> createdCallback, MatchHash matchHash, VersionHash versionHash)
         {
-            if (_loading.IsRunning) throw new InvalidOperationException(); // TODO: check it is finished. i.e. started and not running
+            if (!_loading.IsDone) throw new InvalidOperationException();
 
             return new StorageModUpdateState(_jobManager, _actionQueue, repositoryMod, target, update =>
             {
@@ -80,7 +81,7 @@ namespace BSU.Core.Model
                     createdCallback(storageMod);
                 });
                 return storageMod;
-            });
+            }, matchHash, versionHash);
         }
 
         public bool CanWrite => Implementation.CanWrite();

@@ -35,7 +35,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             throw new NotImplementedException();
         }
 
-        public Task<string> GetDisplayName()
+        public string GetDisplayName()
         {
             throw new NotImplementedException();
         }
@@ -48,5 +48,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public MatchHash GetMatchHash() => _matchHash;
 
         public VersionHash GetVersionHash() => _versionHash;
+        public void Load()
+        {
+
+        }
     }
 }

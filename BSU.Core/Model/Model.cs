@@ -39,7 +39,11 @@ namespace BSU.Core.Model
             {
                 var implementation = _types.GetRepoImplementation(repositoryEntry.Type, repositoryEntry.Url);
                 var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, repositoryState, _dispatcher, this);
-                repository.ModAdded += mod => _matchMaker.AddRepositoryMod(mod);
+                repository.ModAdded += mod =>
+                {
+                    _matchMaker.AddRepositoryMod(mod);
+                    mod.Load();
+                };
                 Repositories.Add(repository);
                 RepositoryAdded?.Invoke(repository);
             }
@@ -56,7 +60,11 @@ namespace BSU.Core.Model
                     continue;
                 }
                 var storage = new Storage(implementation, storageEntry.Name, storageEntry.Path, storageState, _jobManager, _dispatcher);
-                storage.ModAdded += mod => _matchMaker.AddStorageMod(mod);
+                storage.ModAdded += mod =>
+                {
+                    _matchMaker.AddStorageMod(mod);
+                    mod.Load();
+                };
                 Storages.Add(storage);
                 StorageAdded?.Invoke(storage);
             }

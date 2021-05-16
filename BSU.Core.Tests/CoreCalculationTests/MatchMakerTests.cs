@@ -25,9 +25,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
 
         [Fact]
-        private void Created()
+        private void Loaded()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, null, null, StorageModStateEnum.Created);
+            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, null, null, StorageModStateEnum.Loaded);
 
             Assert.Equal(ModActionEnum.LoadingMatch, action);
             Assert.True(requiresMatchHash);
@@ -39,7 +39,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, null, StorageModStateEnum.Matched);
 
-            Assert.Null(action);
+            Assert.Equal(ModActionEnum.Loading, action);
             Assert.False(requiresMatchHash);
             Assert.True(requireVersionHash);
         }

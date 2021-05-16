@@ -7,6 +7,7 @@
         Matched,
         Versioned,
         Updating,
-        Error
+        Error,
+        Loaded
     }
 }

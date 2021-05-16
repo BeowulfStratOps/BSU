@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.JobManager;
 using BSU.Core.Model.Utility;
 using BSU.Core.Sync;
@@ -26,29 +27,35 @@ namespace BSU.Core.Model
 
 
         private readonly ProgressProvider _progressProvider = new ProgressProvider();
+        private readonly MatchHash _matchHash;
+        private readonly VersionHash _versionHash;
 
         public UpdateState State { get; private set; }
 
-        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repositoryMod, StorageMod storageMod, UpdateTarget target)
+        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repositoryMod, StorageMod storageMod, UpdateTarget target, MatchHash matchHash, VersionHash versionHash)
         {
             _jobManager = jobManager;
             _actionQueue = actionQueue;
             _repositoryMod = repositoryMod;
             _storageMod = storageMod;
             Target = target;
+            _matchHash = matchHash;
+            _versionHash = versionHash;
 
             State = UpdateState.Created;
 
             _logger.Info("Creating Update State for mod {0}", storageMod.Identifier);
         }
 
-        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repositoryMod, UpdateTarget target, Func<IUpdateState, StorageMod> createStorageMod)
+        public StorageModUpdateState(IJobManager jobManager, IActionQueue actionQueue, IRepositoryMod repositoryMod, UpdateTarget target, Func<IUpdateState, StorageMod> createStorageMod, MatchHash matchHash, VersionHash versionHash)
         {
             Target = target;
             _jobManager = jobManager;
             _actionQueue = actionQueue;
             _repositoryMod = repositoryMod;
             _createStorageMod = createStorageMod;
+            _matchHash = matchHash;
+            _versionHash = versionHash;
 
             State = UpdateState.NotCreated;
 
@@ -164,6 +171,9 @@ namespace BSU.Core.Model
 
         public event Action OnEnded;
         IModelStorageMod IUpdateState.GetStorageMod() => _storageMod ?? throw new InvalidOperationException();
+        public MatchHash GetTargetMatch() => _matchHash;
+
+        public VersionHash GetTargetVersion() => _versionHash;
 
         public override string ToString()
         {

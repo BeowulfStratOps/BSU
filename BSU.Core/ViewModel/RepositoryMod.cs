@@ -50,11 +50,8 @@ namespace BSU.Core.ViewModel
                 Selection = ModAction.Create(mod.Selection, mod);
                 DownloadIdentifier = mod.DownloadIdentifier;
             };
-            mod.GetDisplayName().ContinueWith(async name =>
-            {
-                DisplayName = await name;
-                OnPropertyChanged(nameof(DisplayName));
-            });
+            DisplayName = mod.GetDisplayName();
+            OnPropertyChanged(nameof(DisplayName));
             foreach (var storage in structure.GetStorages())
             {
                 AddStorage(storage);

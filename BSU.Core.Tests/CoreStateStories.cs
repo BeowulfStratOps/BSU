@@ -58,17 +58,20 @@ namespace BSU.Core.Tests
             var matchMaker = new MatchMaker();
             var worker = new MockWorker();
             var (repoFiles, repoMod) = CreateRepoMod("1", "1", worker, structure);
+            repoMod.Load();
+            worker.DoWork();
             matchMaker.AddRepositoryMod(repoMod);
 
             var mockStorage = new MockStorage();
             var storageState = new MockStorageState();
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, worker, worker);
+            storage.Load();
             worker.DoWork();
 
             IModelStorageMod updated = null;
+            // TODO: events should be named OnXyz
             repoMod.LocalModUpdated += mod => updated = mod;
 
-            // TODO: events should be named OnXyz
             repoMod.Selection = new RepositoryModActionSelection(storage);
 
             var update = repoMod.DoUpdate();
@@ -85,8 +88,9 @@ namespace BSU.Core.Tests
             worker.DoWork();
             Assert.True(updateTask.IsCompletedSuccessfully);
 
+            var getModsTask = storage.GetMods();
             worker.DoWork();
-            var storageMod = storage.GetMods().Result.Single();
+            var storageMod = getModsTask.Result.Single();
 
             Assert.Equal(storageMod, updated);
             Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storageMod));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Utility;
 
@@ -96,6 +97,16 @@ namespace BSU.Core.Tests.Mocks
         public event Action OnStateChange;
         public event Action OnEnded;
         IModelStorageMod IUpdateState.GetStorageMod()
+        {
+            throw new NotImplementedException();
+        }
+
+        public MatchHash GetTargetMatch()
+        {
+            throw new NotImplementedException();
+        }
+
+        public VersionHash GetTargetVersion()
         {
             throw new NotImplementedException();
         }

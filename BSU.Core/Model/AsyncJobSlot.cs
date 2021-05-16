@@ -34,7 +34,6 @@ namespace BSU.Core.Model
             _job = new SimpleAsyncJob(_action, _title, 1).Do(_jobManager);
             await _job;
         }
-
-        public bool IsRunning => _job != null && !_job.IsCompleted;
+        public bool IsDone => _job is {IsCompletedSuccessfully: true};
     }
 }

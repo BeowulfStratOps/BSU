@@ -19,5 +19,6 @@ namespace BSU.Core.Model
         StorageModStateEnum GetState();
         void RequireMatchHash();
         void RequireVersionHash();
+        public void Load();
     }
 }

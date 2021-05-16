@@ -52,5 +52,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public void RequireMatchHash() => RequiredMatchHash = true;
 
         public void RequireVersionHash() => RequiredVersionHash = true;
+        public void Load()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

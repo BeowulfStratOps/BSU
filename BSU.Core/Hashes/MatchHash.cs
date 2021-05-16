@@ -14,7 +14,7 @@ namespace BSU.Core.Hashes
     /// <summary>
     /// Hash to determine whether two mod file-sets belong to the same mod. e.g. ace 3.5 and ace 3.12 are both ACE3
     /// </summary>
-    internal class MatchHash
+    public class MatchHash
     {
         private readonly Logger _logger = EntityLogger.GetLogger();
 

@@ -23,7 +23,7 @@ namespace BSU.Core.Model
                     if (repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
                     if (repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate; // TODO: not implemented!
                     return null;
-                case StorageModStateEnum.Created:
+                case StorageModStateEnum.Loaded:
                     storageMod.RequireMatchHash();
                     return ModActionEnum.LoadingMatch;
                 case StorageModStateEnum.Updating:
