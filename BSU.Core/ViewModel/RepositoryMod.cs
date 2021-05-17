@@ -9,7 +9,7 @@ namespace BSU.Core.ViewModel
 {
     public class RepositoryMod : ObservableBase
     {
-        private readonly IModelRepositoryMod _mod;
+        internal readonly IModelRepositoryMod Mod;
 
         public string Name { get; }
         public string DisplayName { private set; get; }
@@ -28,7 +28,7 @@ namespace BSU.Core.ViewModel
                 if (_selection == value) return;
                 _selection = value;
                 if (value == null) return; // can't be done by user.
-                _mod.Selection = value.AsSelection;
+                Mod.Selection = value.AsSelection;
                 ShowDownloadIdentifier = _selection is SelectStorage;
                 OnPropertyChanged();
                 UpdateErrorText();
@@ -38,7 +38,7 @@ namespace BSU.Core.ViewModel
         internal RepositoryMod(IModelRepositoryMod mod, IModelStructure structure, IModelStructure modelStructure)
         {
             //IsLoading = mod.GetState().IsLoading;
-            _mod = mod;
+            Mod = mod;
             _modelStructure = modelStructure;
             Name = mod.Identifier;
             mod.LocalModUpdated += UpdateAction;
@@ -61,7 +61,7 @@ namespace BSU.Core.ViewModel
         private void UpdateAction(IModelStorageMod storageMod)
         {
             var reSelect = Selection?.AsSelection?.StorageMod == storageMod;
-            var selection = new SelectMod(storageMod, (ModActionEnum) CoreCalculation.GetModAction(_mod, storageMod));
+            var selection = new SelectMod(storageMod, (ModActionEnum) CoreCalculation.GetModAction(Mod, storageMod));
             Actions.Update(selection);
             if (reSelect)
                 Selection = selection;
@@ -84,27 +84,27 @@ namespace BSU.Core.ViewModel
         {
             // TODO: make sure it updates itself when e.g. conflict states change
 
-            if (_mod.Selection == null)
+            if (Mod.Selection == null)
             {
                 ErrorText = "Select an action";
                 return;
             }
 
-            if (_mod.Selection.DoNothing)
+            if (Mod.Selection.DoNothing)
             {
                 ErrorText = "";
             }
 
-            if (_mod.Selection.DownloadStorage != null)
+            if (Mod.Selection.DownloadStorage != null)
             {
-                _mod.Selection.DownloadStorage.HasMod(DownloadIdentifier)
+                Mod.Selection.DownloadStorage.HasMod(DownloadIdentifier)
                     .ContinueWith(async inUse => ErrorText = await inUse ? "Name in use" : "");
 
             }
 
-            if (_mod.Selection.StorageMod != null)
+            if (Mod.Selection.StorageMod != null)
             {
-                var conflicts = CoreCalculation.GetConflicts(_mod, _mod.Selection.StorageMod, _modelStructure);
+                var conflicts = CoreCalculation.GetConflicts(Mod, Mod.Selection.StorageMod, _modelStructure);
                 if (!conflicts.Any())
                 {
                     ErrorText = "";
@@ -123,7 +123,7 @@ namespace BSU.Core.ViewModel
             set
             {
                 if (value == _downloadIdentifier) return;
-                _mod.DownloadIdentifier = value;
+                Mod.DownloadIdentifier = value;
                 _downloadIdentifier = value;
                 OnPropertyChanged();
                 UpdateErrorText();
@@ -144,7 +144,7 @@ namespace BSU.Core.ViewModel
         public IProgressProvider UpdateProgress
         {
             get => _updateProgress;
-            private set
+            internal set
             {
                 if (value == _updateProgress) return;
                 _updateProgress = value;

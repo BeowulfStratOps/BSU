@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.JobManager;
 using BSU.Core.Model.Updating;
+using BSU.Core.Model.Utility;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -23,7 +24,7 @@ namespace BSU.Core.Model
         public Guid Identifier { get; }
         public string Location { get; }
 
-        private readonly List<IModelRepositoryMod> _mods  = new List<IModelRepositoryMod>();
+        private readonly List<IModelRepositoryMod> _mods  = new();
 
         private readonly AsyncJobSlot _loading;
 
@@ -98,10 +99,18 @@ namespace BSU.Core.Model
 
         public event Action<CalculatedRepositoryState> CalculatedStateChanged;
 
-        public RepositoryUpdate DoUpdate()
+        public RepositoryUpdate DoUpdate(out Dictionary<IModelRepositoryMod, IProgressProvider> individualProgress)
         {
-            var updates = _mods.Select(m => m.DoUpdate()).Where(u => u != null);
-            return new RepositoryUpdate(updates.ToList());
+            individualProgress = new Dictionary<IModelRepositoryMod, IProgressProvider>();
+            var updates = new List<IUpdateCreate>();
+            foreach (var mod in _mods)
+            {
+                var update = mod.DoUpdate();
+                if (update == null) continue;
+                updates.Add(update);
+                individualProgress.Add(mod, update.ProgressProvider);
+            }
+            return new RepositoryUpdate(updates);
         }
     }
 }

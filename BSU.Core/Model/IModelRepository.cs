@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BSU.Core.Model.Updating;
+using BSU.Core.Model.Utility;
 
 namespace BSU.Core.Model
 {
@@ -12,7 +13,7 @@ namespace BSU.Core.Model
         event Action<IModelRepositoryMod> ModAdded;
         Guid Identifier { get; }
         string Name { get; }
-        RepositoryUpdate DoUpdate();
+        RepositoryUpdate DoUpdate(out Dictionary<IModelRepositoryMod, IProgressProvider> individualProgress);
         Task Load();
     }
 }

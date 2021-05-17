@@ -151,6 +151,7 @@ public class RepositoryUpdatePrepared : RepositoryUpdateBase
             var tasks = _updates.Select(s => s.Update()).ToList();
             var (next, failed) = await DoStageAsync(tasks);
             var stats = new StageStats<IUpdateDone>(next, failed);
+            SignalEnded();
             return new RepositoryUpdateDone(stats);
         }
     }

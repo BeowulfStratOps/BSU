@@ -33,7 +33,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public ObservableCollection<RepositoryMod> Mods { get; } = new ObservableCollection<RepositoryMod>();
+        public ObservableCollection<RepositoryMod> Mods { get; } = new();
 
         internal Repository(IModelRepository repository, IModel model, IModelStructure modelStructure)
         {
@@ -74,7 +74,23 @@ Cancel - Do not remove this repository";
 
         private async Task DoUpdate()
         {
-            var update = _repository.DoUpdate(); // TODO: use it with using, to make sure it's cleaned up
+            var update = _repository.DoUpdate(out var individualProgress); // TODO: use it with using, to make sure it's cleaned up
+            UpdateProgress = update.ProgressProvider;
+            update.OnEnded += () =>
+            {
+                UpdateProgress = null;
+                foreach (var mod in Mods)
+                {
+                    mod.UpdateProgress = null;
+                }
+            };
+
+            foreach (var (mod, progress) in individualProgress)
+            {
+                var viewModelMod = Mods.Single(m => m.Mod == mod);
+                viewModelMod.UpdateProgress = progress;
+            }
+
             var created = await update.Create();
             if (created.Stats.FailedCount > 0)
             {
@@ -82,7 +98,7 @@ Cancel - Do not remove this repository";
                 var createdContext = new MsgPopupContext(createdText, "Proceed with Update?");
                 if (!await UpdateSetup.Raise(createdContext))
                 {
-                    update.Abort();
+                    created.Abort();
                     return;
                 }
             }
@@ -92,7 +108,7 @@ Cancel - Do not remove this repository";
             var preparedContext = new MsgPopupContext(preparedText, "Update Prepared");
             if (!await UpdatePrepared.Raise(preparedContext))
             {
-                update.Abort();
+                prepared.Abort();
                 return;
             }
 

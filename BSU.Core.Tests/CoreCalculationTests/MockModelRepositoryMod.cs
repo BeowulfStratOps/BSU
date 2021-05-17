@@ -22,7 +22,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public RepositoryModActionSelection Selection { get; set; }
         public string DownloadIdentifier { get; set; }
         public string Identifier { get; }
-        public bool IsLoaded { get; } = true;
+        public bool IsLoaded => true;
         public event Action OnLoaded;
         public event Action<IModelStorageMod> LocalModUpdated;
         public event Action SelectionChanged;
