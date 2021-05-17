@@ -76,7 +76,7 @@ namespace BSU.Core.ViewModel
 
         public override bool Equals(ModAction other)
         {
-            return other is SelectMod selectMod && selectMod.StorageMod == StorageMod;
+            return other is SelectMod selectMod && selectMod.StorageMod == StorageMod && selectMod.ActionType == ActionType;
         }
 
         public override int GetHashCode()

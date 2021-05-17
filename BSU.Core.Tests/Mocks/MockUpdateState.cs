@@ -115,4 +115,16 @@ namespace BSU.Core.Tests.Mocks
 
         public override string ToString() => State.ToString();
     }
+
+    public enum UpdateState
+    {
+        NotCreated,
+        Creating,
+        Created,
+        Preparing,
+        Prepared,
+        Updating,
+        Updated,
+        Aborted
+    }
 }

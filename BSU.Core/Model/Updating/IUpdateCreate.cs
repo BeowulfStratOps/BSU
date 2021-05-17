@@ -34,17 +34,4 @@ namespace BSU.Core.Model.Updating
     {
         Task<IUpdateCreated> Create();
     }
-
-    public enum UpdateState
-    {
-        NotCreated,
-        Creating,
-        Created,
-        Preparing,
-        Prepared,
-        Updating,
-        Updated,
-        Aborted,
-        Errored
-    }
 }

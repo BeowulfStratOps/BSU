@@ -105,6 +105,9 @@ namespace BSU.Core.Model
             RequiresUserIntervention // Else
             */
 
+            if (mods.Any(m => !m.IsLoaded))
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
+
             var partial = mods.Any(m => m.Selection?.DoNothing ?? false);
 
             mods = mods.Where(m => !(m.Selection?.DoNothing ?? false)).ToList();

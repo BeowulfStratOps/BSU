@@ -17,7 +17,7 @@ namespace BSU.Core.ViewModel
         private string _downloadIdentifier = "";
         private bool _showDownloadIdentifier;
 
-        public ModActionTree Actions { get; } = new ModActionTree();
+        public ModActionTree Actions { get; } = new();
 
         private ModAction _selection;
         public ModAction Selection
@@ -64,7 +64,7 @@ namespace BSU.Core.ViewModel
             var selection = new SelectMod(storageMod, (ModActionEnum) CoreCalculation.GetModAction(_mod, storageMod));
             Actions.Update(selection);
             if (reSelect)
-                Selection = selection; // TODO: not working.
+                Selection = selection;
         }
 
         internal void AddStorage(IModelStorage storage)

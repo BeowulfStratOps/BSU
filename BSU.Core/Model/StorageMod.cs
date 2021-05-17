@@ -203,7 +203,7 @@ namespace BSU.Core.Model
 
         public IUpdateCreate PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch, VersionHash targetVersion)
         {
-            CheckState(StorageModStateEnum.Loaded, StorageModStateEnum.CreatedWithUpdateTarget);
+            CheckState(StorageModStateEnum.Versioned, StorageModStateEnum.CreatedWithUpdateTarget);
 
             if (_loadJob.IsRunning || _matchHashJob.IsRunning || _versionHashJob.IsRunning) throw new InvalidOperationException();
 

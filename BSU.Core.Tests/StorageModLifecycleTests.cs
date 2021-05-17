@@ -14,7 +14,7 @@ namespace BSU.Core.Tests
         {
         }
 
-        internal static (MockStorageMod, StorageMod, MockWorker) CreateStorageMod(UpdateTarget stateTarget = null, bool dontLoad = false)
+        internal static (MockStorageMod, StorageMod, MockWorker) CreateStorageMod(UpdateTarget stateTarget = null, bool dontLoad = false, bool loadVersion = false)
         {
             var worker = new MockWorker(true);
 
@@ -30,6 +30,14 @@ namespace BSU.Core.Tests
             if (stateTarget == null && !dontLoad)
             {
                 storageMod.Load();
+                worker.DoWork();
+            }
+
+            if (loadVersion)
+            {
+                storageMod.RequireMatchHash();
+                worker.DoWork();
+                storageMod.RequireVersionHash();
                 worker.DoWork();
             }
 
@@ -98,7 +106,7 @@ namespace BSU.Core.Tests
         private void Prepared()
         {
             var target = new UpdateTarget("123", "LeMod");
-            var (implementation, storageMod, worker) = CreateStorageMod();
+            var (implementation, storageMod, worker) = CreateStorageMod(loadVersion: true);
 
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, target, new MatchHash(new string[] { }),
@@ -119,7 +127,7 @@ namespace BSU.Core.Tests
         private void Updated()
         {
             var target = new UpdateTarget("123", "LeMod");
-            var (implementation, storageMod, worker) = CreateStorageMod();
+            var (implementation, storageMod, worker) = CreateStorageMod(loadVersion: true);
 
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, target, new MatchHash(new string[] { }),
@@ -139,7 +147,7 @@ namespace BSU.Core.Tests
         [Fact]
         private void UpdateAborted()
         {
-            var (implementation, storageMod, worker) = CreateStorageMod();
+            var (implementation, storageMod, worker) = CreateStorageMod(loadVersion: true);
 
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
@@ -173,7 +181,7 @@ namespace BSU.Core.Tests
         private void ErrorUpdateDo()
         {
             // TODO: ???
-            var (implementation, storageMod, worker) = CreateStorageMod();
+            var (implementation, storageMod, worker) = CreateStorageMod(loadVersion: true);
 
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
@@ -191,7 +199,7 @@ namespace BSU.Core.Tests
         [Fact]
         private void ErrorPrepareUpdate()
         {
-            var (implementation, storageMod, worker) = CreateStorageMod();
+            var (implementation, storageMod, worker) = CreateStorageMod(loadVersion: true);
 
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),

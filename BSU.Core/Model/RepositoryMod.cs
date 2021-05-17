@@ -96,14 +96,24 @@ namespace BSU.Core.Model
             Selection = selection;
         }
 
-        public MatchHash GetMatchHash() => _matchHash;
+        public MatchHash GetMatchHash()
+        {
+            if (!IsLoaded) throw new InvalidOperationException();
+            return _matchHash;
+        }
 
-        public VersionHash GetVersionHash() => _versionHash;
+        public VersionHash GetVersionHash()
+        {
+            if (!IsLoaded) throw new InvalidOperationException();
+            return _versionHash;
+        }
 
         private readonly HashSet<IModelStorageMod> _storageModStateChangedSubscriptions = new();
 
         public void ProcessMod(IModelStorageMod mod)
         {
+            if (!IsLoaded) throw new InvalidOperationException();
+
             _logger.Info("added local mod.");
             if (_error != null) return;
             var actionType = CoreCalculation.GetModAction(this, mod);

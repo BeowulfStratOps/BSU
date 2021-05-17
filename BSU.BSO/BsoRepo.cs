@@ -36,8 +36,6 @@ namespace BSU.BSO
             var baseUrl = string.Join('/', parts);
             _mods = serverFile.ModFolders.ToDictionary(m => m.ModName,
                 m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName));
-            _mods = _mods.Where(kv => kv.Key.ToLowerInvariant().Contains("ace"))
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
         public Dictionary<string, IRepositoryMod> GetMods()

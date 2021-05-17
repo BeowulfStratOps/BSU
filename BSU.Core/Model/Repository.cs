@@ -68,6 +68,7 @@ namespace BSU.Core.Model
                     var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _modelStructure);
                     modelMod.LocalModUpdated += _ => ReCalculateState();
                     modelMod.SelectionChanged += ReCalculateState;
+                    modelMod.OnLoaded += ReCalculateState;
                     _mods.Add(modelMod);
                     _actionQueue.EnQueueAction(() =>
                     {
