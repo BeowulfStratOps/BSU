@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
+using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 
@@ -63,12 +64,12 @@ namespace BSU.Core.Model
             return new List<IModelStorageMod>(_mods);
         }
 
-        public IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
+        public IUpdateCreate PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
             Action<IModelStorageMod> createdCallback, MatchHash matchHash, VersionHash versionHash)
         {
             if (!_loading.IsDone) throw new InvalidOperationException();
 
-            return new StorageModUpdateState(_jobManager, _actionQueue, repositoryMod, target, update =>
+            return new StorageModUpdateState(_jobManager, repositoryMod, target, update =>
             {
                 var mod = Implementation.CreateMod(identifier);
                 var state = _internalState.GetMod(identifier);

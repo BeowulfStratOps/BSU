@@ -80,11 +80,11 @@ namespace BSU.Core.Tests
             var createTask = update.Create();
             worker.DoWork();
             Assert.True(createTask.IsCompletedSuccessfully);
-            var prepTask = update.Prepare();
+            var prepTask = createTask.Result.Prepare();
             worker.DoWork();
             Assert.True(prepTask.IsCompletedSuccessfully);
-            Assert.True(update.GetPrepStats() > 0);
-            var updateTask = update.Update();
+            Assert.True(prepTask.Result.GetStats() > 0);
+            var updateTask = prepTask.Result.Update();
             worker.DoWork();
             Assert.True(updateTask.IsCompletedSuccessfully);
 

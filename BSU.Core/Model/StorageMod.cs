@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
+using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -52,7 +53,7 @@ namespace BSU.Core.Model
 
         public StorageMod(IActionQueue actionQueue, IStorageMod implementation, string identifier,
             IPersistedStorageModState internalState, IJobManager jobManager, Guid parentIdentifier, bool canWrite,
-            IUpdateState updateState = null)
+            IUpdateCreate updateState = null)
         {
             _internalState = internalState;
             _jobManager = jobManager;
@@ -188,7 +189,7 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        private void SetCurrentUpdate(IUpdateState update)
+        private void SetCurrentUpdate(IUpdateCreate update)
         {
             // Don't actually need to save it. just handle when it's done
             update.OnEnded += () =>
@@ -200,7 +201,7 @@ namespace BSU.Core.Model
             };
         }
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch, VersionHash targetVersion)
+        public IUpdateCreate PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch, VersionHash targetVersion)
         {
             CheckState(StorageModStateEnum.Loaded, StorageModStateEnum.CreatedWithUpdateTarget);
 
@@ -210,7 +211,7 @@ namespace BSU.Core.Model
             _matchHash = targetMatch;
             _versionHash = targetVersion;
 
-            var update = new StorageModUpdateState(_jobManager, ActionQueue, repositoryMod, this, target, targetMatch, targetVersion);
+            var update = new StorageModUpdateState(_jobManager, repositoryMod, this, target, targetMatch, targetVersion);
 
             UpdateTarget = target;
             State = StorageModStateEnum.Updating;

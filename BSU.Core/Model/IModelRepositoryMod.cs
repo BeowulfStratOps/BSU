@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
+using BSU.Core.Model.Updating;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -16,7 +17,7 @@ namespace BSU.Core.Model
         event Action OnLoaded;
         event Action<IModelStorageMod> LocalModUpdated;
         event Action SelectionChanged;
-        IUpdateState DoUpdate();
+        IUpdateCreate DoUpdate();
         void ProcessMod(IModelStorageMod storageMod);
         string GetDisplayName();
         void SignalAllStorageModsLoaded();

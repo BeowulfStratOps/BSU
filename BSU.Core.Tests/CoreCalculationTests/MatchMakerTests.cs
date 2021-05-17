@@ -80,7 +80,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, null, null, StorageModStateEnum.Error);
 
-            Assert.Equal(ModActionEnum.Error, action);
+            Assert.Null(action);
             Assert.False(requiresMatchHash);
             Assert.False(requireVersionHash);
         }

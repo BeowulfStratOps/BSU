@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.JobManager;
+using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -98,15 +99,8 @@ namespace BSU.Core.Model
 
         public RepositoryUpdate DoUpdate()
         {
-            var repoUpdate = new RepositoryUpdate();
-
-            foreach (var mod in _mods)
-            {
-                var updateInfo = mod.DoUpdate();
-                if (updateInfo == null) continue; // Do nothing
-                repoUpdate.Add(updateInfo);
-            }
-            return repoUpdate;
+            var updates = _mods.Select(m => m.DoUpdate()).Where(u => u != null);
+            return new RepositoryUpdate(updates.ToList());
         }
     }
 }

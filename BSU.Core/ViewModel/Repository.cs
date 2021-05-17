@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,7 +20,6 @@ namespace BSU.Core.ViewModel
 
         private CalculatedRepositoryState _calculatedState;
         private IProgressProvider _updateProgress;
-        private readonly IModelStructure _modelStructure;
 
         public CalculatedRepositoryState CalculatedState
         {
@@ -41,7 +39,6 @@ namespace BSU.Core.ViewModel
         {
             _repository = repository;
             _model = model;
-            _modelStructure = modelStructure;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
@@ -51,7 +48,7 @@ namespace BSU.Core.ViewModel
                 CalculatedState = state;
             };
             Name = repository.Name;
-            repository.ModAdded += mod => mod.OnLoaded += () => Mods.Add(new RepositoryMod(mod, model, _modelStructure));
+            repository.ModAdded += mod => mod.OnLoaded += () => Mods.Add(new RepositoryMod(mod, model, modelStructure));
         }
 
         private async Task DoDelete()
@@ -79,10 +76,9 @@ Cancel - Do not remove this repository";
         {
             var update = _repository.DoUpdate(); // TODO: use it with using, to make sure it's cleaned up
             var created = await update.Create();
-            if (created.Failed.Any())
+            if (created.Stats.FailedCount > 0)
             {
-                var folders = string.Join(", ", created.Failed.Select(f => "smth"));
-                var createdText = $"There were errors while creating mod folders: {folders}. Proceed?";
+                var createdText = $"There were errors while creating {created.Stats.FailedCount} mod folders. Proceed?";
                 var createdContext = new MsgPopupContext(createdText, "Proceed with Update?");
                 if (!await UpdateSetup.Raise(createdContext))
                 {
@@ -90,9 +86,9 @@ Cancel - Do not remove this repository";
                     return;
                 }
             }
-            var prepared = await update.Prepare();
-            var bytes = prepared.Succeeded.Sum(s => s.GetPrepStats());
-            var preparedText = $"{bytes} Bytes from {prepared.Succeeded.Count} mods to download. {prepared.Failed.Count} mods failed. Proceed?";
+            var prepared = await created.Prepare();
+            var bytes = prepared.Stats.Succeeded.Sum(s => s.GetStats());
+            var preparedText = $"{bytes} Bytes from {prepared.Stats.Succeeded.Count} mods to download. {prepared.Stats.FailedCount} mods failed. Proceed?";
             var preparedContext = new MsgPopupContext(preparedText, "Update Prepared");
             if (!await UpdatePrepared.Raise(preparedContext))
             {
@@ -100,8 +96,8 @@ Cancel - Do not remove this repository";
                 return;
             }
 
-            var updated = await update.Update();
-            var updatedText = $"{updated.Succeeded.Count} Mods updated. {updated.Failed.Count} Mods failed.";
+            var updated = await prepared.Update();
+            var updatedText = $"{updated.Stats.Succeeded.Count} Mods updated. {updated.Stats.FailedCount} Mods failed.";
             var updatedContext = new MsgPopupContext(updatedText, "Update Finished");
             await UpdateFinished.Raise(updatedContext);
         }
@@ -109,7 +105,7 @@ Cancel - Do not remove this repository";
         public DelegateCommand Update { get; }
 
         public DelegateCommand Delete { get; }
-        public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
+        public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new();
         public Guid Identifier { get; }
 
         public IProgressProvider UpdateProgress

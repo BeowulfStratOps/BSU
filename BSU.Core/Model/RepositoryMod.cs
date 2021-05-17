@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.JobManager;
+using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -157,7 +158,7 @@ namespace BSU.Core.Model
             }
         }
 
-        public IUpdateState DoUpdate()
+        public IUpdateCreate DoUpdate()
         {
             if (!IsLoaded) throw new InvalidOperationException();
             if (Selection == null) throw new InvalidOperationException();

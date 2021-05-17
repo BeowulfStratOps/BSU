@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
+using BSU.Core.Model.Updating;
 using BSU.Core.Tests.Util;
 
 namespace BSU.Core.Tests.CoreCalculationTests
@@ -25,7 +26,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public event Action OnLoaded;
         public event Action<IModelStorageMod> LocalModUpdated;
         public event Action SelectionChanged;
-        public IUpdateState DoUpdate()
+        public IUpdateCreate DoUpdate()
         {
             throw new NotImplementedException();
         }

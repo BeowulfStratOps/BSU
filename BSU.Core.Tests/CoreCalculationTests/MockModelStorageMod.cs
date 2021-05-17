@@ -1,6 +1,7 @@
 ﻿using System;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
+using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
@@ -24,7 +25,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public event Action StateChanged;
 
-        public IUpdateState PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch,
+        public IUpdateCreate PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch,
             VersionHash targetVersion)
         {
             throw new NotImplementedException();

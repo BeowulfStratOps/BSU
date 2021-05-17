@@ -14,7 +14,7 @@ namespace BSU.Core.Tests
         {
         }
 
-        internal static (MockStorageMod, StorageMod, MockWorker) CreateStorageMod(UpdateTarget stateTarget = null)
+        internal static (MockStorageMod, StorageMod, MockWorker) CreateStorageMod(UpdateTarget stateTarget = null, bool dontLoad = false)
         {
             var worker = new MockWorker(true);
 
@@ -27,7 +27,7 @@ namespace BSU.Core.Tests
             var state = new MockPersistedStorageModState {UpdateTarget = stateTarget};
 
             var storageMod = new StorageMod(worker, mockStorage, "mystorage", state, worker, Guid.Empty, true);
-            if (stateTarget == null)
+            if (stateTarget == null && !dontLoad)
             {
                 storageMod.Load();
                 worker.DoWork();
@@ -103,7 +103,10 @@ namespace BSU.Core.Tests
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, target, new MatchHash(new string[] { }),
                 new VersionHash(new byte[] { }));
-            update.Prepare().Wait();
+
+            Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
+
+            update.Create().Result.Prepare().Wait();
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
             Assert.NotNull(storageMod.GetMatchHash());
@@ -122,9 +125,9 @@ namespace BSU.Core.Tests
             var update = storageMod.PrepareUpdate(repo, target, new MatchHash(new string[] { }),
                 new VersionHash(new byte[] { }));
 
-            update.Create().Wait();
-            update.Prepare().Wait();
-            update.Update().Wait();
+            var created = update.Create().Result;
+            var prepared = created.Prepare().Result;
+            prepared.Update().Wait();
 
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
             Assert.NotNull(storageMod.GetMatchHash());
@@ -143,9 +146,9 @@ namespace BSU.Core.Tests
                 new VersionHash(new byte[] { }));
 
 
-            update.Create().Wait();
-            update.Prepare().Wait();
-            update.Abort();
+            var created = update.Create().Result;
+            var prepared = created.Prepare().Result;
+            prepared.Abort();
 
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
             Assert.NotNull(storageMod.GetMatchHash());
@@ -157,11 +160,11 @@ namespace BSU.Core.Tests
         [Fact]
         private void ErrorLoad()
         {
-            var (implementation, storageMod, worker) = CreateStorageMod();
+            var (implementation, storageMod, worker) = CreateStorageMod(dontLoad: true);
 
             implementation.ThrowErrorLoad = true;
 
-            storageMod.RequireMatchHash();
+            storageMod.Load();
             worker.DoWork();
             Assert.Equal(StorageModStateEnum.Error, storageMod.GetState());
         }
@@ -175,11 +178,10 @@ namespace BSU.Core.Tests
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
                 new VersionHash(new byte[] { }));
-            update.Create().Wait();
-            update.Prepare().Wait();
+            var created = update.Create().Result;
+            var prepared = created.Prepare().Result;
             implementation.ThrowErrorOpen = true;
-            update.Update().Wait();
-            Assert.NotNull(update.Exception);
+            Assert.ThrowsAsync<TestException>(() => prepared.Update());
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
             implementation.ThrowErrorOpen = false;
             Assert.NotNull(storageMod.GetMatchHash());
@@ -194,17 +196,9 @@ namespace BSU.Core.Tests
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
                 new VersionHash(new byte[] { }));
-            update.Create().Wait();
+            var created = update.Create().Result;
             implementation.ThrowErrorOpen = true;
-            try
-            {
-                update.Prepare().Wait();
-                Assert.False(true);
-            }
-            catch (TestException)
-            {
-            }
-
+            Assert.ThrowsAsync<TestException>(() => created.Prepare());
             Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
             Assert.NotNull(storageMod.GetMatchHash());
             Assert.NotNull(storageMod.GetVersionHash());

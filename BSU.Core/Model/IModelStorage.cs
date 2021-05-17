@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
+using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 
@@ -11,7 +12,7 @@ namespace BSU.Core.Model
     {
         Task<List<IModelStorageMod>> GetMods();
 
-        IUpdateState PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
+        IUpdateCreate PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
             Action<IModelStorageMod> createdCallback, MatchHash matchHash, VersionHash versionHash);
         bool CanWrite { get; }
         Guid Identifier { get; }

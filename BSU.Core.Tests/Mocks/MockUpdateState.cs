@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
-using BSU.Core.Model;
+using BSU.Core.Model.Updating;
 using BSU.Core.Model.Utility;
 
 namespace BSU.Core.Tests.Mocks
 {
-    internal class MockUpdateState : IUpdateState
+    internal class MockUpdateState : IUpdateCreate, IUpdateCreated, IUpdatePrepared, IUpdateDone
     {
         private readonly bool _errorCreate;
         private readonly bool _errorPrepare;
@@ -29,46 +29,46 @@ namespace BSU.Core.Tests.Mocks
             _state = UpdateState.NotCreated;
         }
 
-        public Task Create()
+        public Task<IUpdateCreated> Create()
         {
+            if (State == UpdateState.Created) return Task.FromResult<IUpdateCreated>(this);
             if (State != UpdateState.NotCreated) throw new InvalidOperationException();
             if (_errorCreate)
-                Error();
+                return Error<IUpdateCreated>();
             else
                 State = UpdateState.Created;
-            return Task.CompletedTask;
+            return Task.FromResult<IUpdateCreated>(this);
         }
 
-        public Task Prepare()
+        public Task<IUpdatePrepared> Prepare()
         {
             if (State != UpdateState.Created) throw new InvalidOperationException();
             if (_errorPrepare)
-                Error();
+                return Error<IUpdatePrepared>();
             else
                 State = UpdateState.Prepared;
-            return Task.CompletedTask;
+            return Task.FromResult<IUpdatePrepared>(this);
         }
 
-        public Task Update()
+        public Task<IUpdateDone> Update()
         {
             if (State != UpdateState.Prepared) throw new InvalidOperationException();
             CommitCalled = true;
             if (_errorUpdate)
-                Error();
+                return Error<IUpdateDone>();
             else
             {
                 State = UpdateState.Updated;
                 OnEnded?.Invoke();
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult<IUpdateDone>(this);
         }
 
-        private void Error()
+        private Task<T> Error<T>()
         {
-            State = UpdateState.Errored;
-            Exception = new TestException();
             OnEnded?.Invoke();
+            return Task.FromException<T>(new TestException());
         }
 
         public void Abort()
@@ -82,10 +82,10 @@ namespace BSU.Core.Tests.Mocks
 
         private UpdateState _state;
 
-        public UpdateState State
+        private UpdateState State
         {
             get => _state;
-            private set
+            set
             {
                 if (_state == value) return;
                 _state = value;
@@ -93,13 +93,8 @@ namespace BSU.Core.Tests.Mocks
             }
         }
 
-        public Exception Exception { get; private set; }
         public event Action OnStateChange;
         public event Action OnEnded;
-        IModelStorageMod IUpdateState.GetStorageMod()
-        {
-            throw new NotImplementedException();
-        }
 
         public MatchHash GetTargetMatch()
         {
@@ -111,17 +106,12 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        public int GetPrepStats()
+        public int GetStats()
         {
             throw new NotImplementedException();
         }
 
         public IProgressProvider ProgressProvider { get; } = new ProgressProvider();
-
-        public bool IsIndeterminate { get; }
-        public double Progress { get; }
-
-        public event Action OnProgressChange;
 
         public override string ToString() => State.ToString();
     }
