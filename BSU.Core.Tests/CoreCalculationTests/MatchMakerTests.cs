@@ -88,7 +88,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void ContinueUpdate()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 1, StorageModStateEnum.CreatedWithUpdateTarget);
+            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 1, StorageModStateEnum.LoadedWithUpdateTarget);
 
             Assert.Equal(ModActionEnum.ContinueUpdate, action);
             Assert.False(requiresMatchHash);

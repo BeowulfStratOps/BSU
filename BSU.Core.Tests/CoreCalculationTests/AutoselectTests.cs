@@ -21,7 +21,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var storageMod = actionType switch
             {
                 ModActionEnum.Update => new MockModelStorageMod(1, 2, StorageModStateEnum.Versioned),
-                ModActionEnum.ContinueUpdate => new MockModelStorageMod(1, 1, StorageModStateEnum.CreatedWithUpdateTarget),
+                ModActionEnum.ContinueUpdate => new MockModelStorageMod(1, 1, StorageModStateEnum.LoadedWithUpdateTarget),
                 ModActionEnum.Await => new MockModelStorageMod(1, 1, StorageModStateEnum.Updating),
                 ModActionEnum.Use => new MockModelStorageMod(1, 1, StorageModStateEnum.Versioned),
                 ModActionEnum.AbortAndUpdate => new MockModelStorageMod(1, 2, StorageModStateEnum.Updating),

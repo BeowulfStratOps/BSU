@@ -19,9 +19,13 @@ namespace BSU.Core.Model
                     if (!repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash())) return null;
                     storageMod.RequireVersionHash();
                     return ModActionEnum.Loading;
-                case StorageModStateEnum.CreatedWithUpdateTarget:
+                case StorageModStateEnum.LoadedWithUpdateTarget:
                     if (repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
-                    if (repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate; // TODO: not implemented!
+                    storageMod.RequireMatchHash();
+                    return null;
+                case StorageModStateEnum.MatchedWithUpdateTarget:
+                    if (repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
+                    if (repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate;
                     return null;
                 case StorageModStateEnum.Loaded:
                     storageMod.RequireMatchHash();
@@ -87,6 +91,8 @@ namespace BSU.Core.Model
             {
                 if (repositoryMod == origin) continue;
                 if (repositoryMod.GetVersionHash().IsMatch(origin.GetVersionHash())) continue; // can't possibly be a conflict
+
+                if (selected.GetState() != StorageModStateEnum.Versioned && selected.GetState() != StorageModStateEnum.MatchedWithUpdateTarget) continue;
 
                 // matches, but different target version -> conflict
                 if (selected.GetMatchHash().IsMatch(repositoryMod.GetMatchHash())) result.Add(repositoryMod);

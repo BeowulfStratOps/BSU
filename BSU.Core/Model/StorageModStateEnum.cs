@@ -8,6 +8,8 @@
         Versioned,
         Updating,
         Error,
-        Loaded
+        Loaded,
+        LoadedWithUpdateTarget,
+        MatchedWithUpdateTarget
     }
 }

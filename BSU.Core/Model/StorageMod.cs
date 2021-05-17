@@ -86,6 +86,8 @@ namespace BSU.Core.Model
 
         public void Load()
         {
+            if (State == StorageModStateEnum.Updating) return; // skip loading
+            CheckState(StorageModStateEnum.Created, StorageModStateEnum.CreatedWithUpdateTarget);
             _loadJob.Request();
         }
 
@@ -98,7 +100,9 @@ namespace BSU.Core.Model
                 Implementation.Load();
                 ActionQueue.EnQueueAction(() =>
                 {
-                    State = StorageModStateEnum.Loaded;
+                    State = State == StorageModStateEnum.CreatedWithUpdateTarget
+                        ? StorageModStateEnum.LoadedWithUpdateTarget
+                        : StorageModStateEnum.Loaded;
                 });
             }
 
@@ -143,7 +147,9 @@ namespace BSU.Core.Model
 
                 ActionQueue.EnQueueAction(() =>
                 {
-                    State = StorageModStateEnum.Matched;
+                    State = State == StorageModStateEnum.LoadedWithUpdateTarget
+                        ? StorageModStateEnum.MatchedWithUpdateTarget
+                        : StorageModStateEnum.Matched;
                 });
             }
             catch (Exception e)
@@ -196,6 +202,8 @@ namespace BSU.Core.Model
             {
                 _versionHashJob.Reset();
                 _matchHashJob.Reset();
+                _versionHash = null;
+                _matchHash = null;
                 UpdateTarget = null;
                 State = StorageModStateEnum.Loaded;
             };
@@ -203,7 +211,7 @@ namespace BSU.Core.Model
 
         public IUpdateCreate PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch, VersionHash targetVersion)
         {
-            CheckState(StorageModStateEnum.Versioned, StorageModStateEnum.CreatedWithUpdateTarget);
+            CheckState(StorageModStateEnum.Versioned, StorageModStateEnum.LoadedWithUpdateTarget, StorageModStateEnum.MatchedWithUpdateTarget);
 
             if (_loadJob.IsRunning || _matchHashJob.IsRunning || _versionHashJob.IsRunning) throw new InvalidOperationException();
 
@@ -240,7 +248,7 @@ namespace BSU.Core.Model
 
         public void RequireMatchHash()
         {
-            CheckState(StorageModStateEnum.Loaded);
+            CheckState(StorageModStateEnum.Loaded, StorageModStateEnum.LoadedWithUpdateTarget);
             _matchHashJob.Request();
         }
 

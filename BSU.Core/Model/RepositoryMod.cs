@@ -118,6 +118,8 @@ namespace BSU.Core.Model
             if (_error != null) return;
             var actionType = CoreCalculation.GetModAction(this, mod);
 
+            LocalModUpdated?.Invoke(mod);
+
             void Handler() => ProcessMod(mod);
 
             if (actionType == null)
@@ -137,8 +139,6 @@ namespace BSU.Core.Model
             _logger.Info("Set action for {0} to {1}", mod, actionType.ToString());
 
             if (actionType == ModActionEnum.LoadingMatch) return;
-
-            LocalModUpdated?.Invoke(mod);
 
             if (mod.GetStorageModIdentifiers() == _internalState.Selection)
                 Selection = new RepositoryModActionSelection(mod);

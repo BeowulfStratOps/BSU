@@ -201,6 +201,7 @@ namespace BSU.Core.Model.Updating
 
             if (_syncJob.NothingToDo)
             {
+                SignalEnded();
                 return new StorageModUpdateDone();
             }
             Progress.IsIndeterminate = false;

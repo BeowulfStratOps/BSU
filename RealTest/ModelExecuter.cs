@@ -16,7 +16,7 @@ namespace RealTest
             _model = core.Model;
         }
 
-        public IUpdateState PrepareUpdate(string repoModPath, string storagModPath)
+        public IUpdateCreate PrepareUpdate(string repoModPath, string storagModPath)
         {
             var repoName = repoModPath.Split("/")[0];
             var repoModName = repoModPath.Split("/")[1];
@@ -38,7 +38,7 @@ namespace RealTest
             return storageMod.PrepareUpdate(repoMod);
         }
 
-        public IUpdateState PrepareDownload(string repoModPath, string storageName, string identifier)
+        public IUpdateCreate PrepareDownload(string repoModPath, string storageName, string identifier)
         {
             var repoName = repoModPath.Split("/")[0];
             var repoModName = repoModPath.Split("/")[1];

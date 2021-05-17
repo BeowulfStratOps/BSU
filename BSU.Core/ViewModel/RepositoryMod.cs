@@ -50,7 +50,7 @@ namespace BSU.Core.ViewModel
                 Selection = ModAction.Create(mod.Selection, mod);
                 DownloadIdentifier = mod.DownloadIdentifier;
             };
-            DisplayName = mod.GetDisplayName();
+            mod.OnLoaded += () => DisplayName = mod.GetDisplayName();
             OnPropertyChanged(nameof(DisplayName));
             foreach (var storage in structure.GetStorages())
             {
@@ -60,10 +60,21 @@ namespace BSU.Core.ViewModel
 
         private void UpdateAction(IModelStorageMod storageMod)
         {
-            var reSelect = Selection?.AsSelection?.StorageMod == storageMod;
-            var selection = new SelectMod(storageMod, (ModActionEnum) CoreCalculation.GetModAction(Mod, storageMod));
+            var isCurrentlySelected = Selection?.AsSelection?.StorageMod == storageMod;
+            var action = CoreCalculation.GetModAction(Mod, storageMod);
+            if (action == null)
+            {
+                var removeAction = Actions.SingleOrDefault(a => a.AsSelection.StorageMod == storageMod);
+                if (removeAction != null)
+                    Actions.Remove(removeAction);
+                if (isCurrentlySelected)
+                    Selection = new SelectDoNothing();
+                return;
+            }
+            if (action == ModActionEnum.LoadingMatch && !isCurrentlySelected) return; // random mod that is loading basic information, no need to show this
+            var selection = new SelectMod(storageMod, (ModActionEnum) action);
             Actions.Update(selection);
-            if (reSelect)
+            if (isCurrentlySelected)
                 Selection = selection;
         }
 
@@ -151,8 +162,6 @@ namespace BSU.Core.ViewModel
                 OnPropertyChanged();
             }
         }
-
-        public double Progress { get; private set; }
 
         private string _errorText;
         private IProgressProvider _updateProgress;
