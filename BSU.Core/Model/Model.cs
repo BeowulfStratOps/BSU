@@ -79,15 +79,20 @@ namespace BSU.Core.Model
         public event Action<Storage> StorageAdded;
         public event Action<IModelStorage> StorageDeleted;
 
-        public void AddRepository(string type, string url, string name)
+        public async Task AddRepository(string type, string url, string name)
         {
             if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
             var repoState = PersistentState.AddRepo(name, url, type);
             var implementation = _types.GetRepoImplementation(type, url);
             var repository = new Repository(implementation, name, url, _jobManager, repoState, _dispatcher, this);
-            repository.ModAdded += mod => _matchMaker.AddRepositoryMod(mod);
+            repository.ModAdded += mod =>
+            {
+                _matchMaker.AddRepositoryMod(mod);
+                mod.Load();
+            };
             Repositories.Add(repository);
             RepositoryAdded?.Invoke(repository);
+            await repository.Load();
         }
 
         public void AddStorage(string type, DirectoryInfo dir, string name)

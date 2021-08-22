@@ -63,7 +63,7 @@ namespace BSU.Core.ViewModel
             var doAdd = await AddRepositoryInteraction.Raise(vm);
 
             if (doAdd != true) return;
-            Model.AddRepository("BSO", vm.Url, vm.Name);
+            await Model.AddRepository("BSO", vm.Url, vm.Name);
         }
 
         private async Task DoAddStorage()

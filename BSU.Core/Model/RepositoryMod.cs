@@ -114,7 +114,7 @@ namespace BSU.Core.Model
         {
             if (!IsLoaded) throw new InvalidOperationException();
 
-            _logger.Info("added local mod.");
+            _logger.Trace("added local mod {@Identifier}", mod.Identifier);
             if (_error != null) return;
             var actionType = CoreCalculation.GetModAction(this, mod);
 
