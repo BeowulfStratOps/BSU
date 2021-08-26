@@ -44,22 +44,22 @@ namespace BSU.Core.Persistence
             _settings.Store();
         }
 
-        public IRepositoryState AddRepo(string name, string url, string type)
+        public (IRepositoryEntry entry, IRepositoryState state) AddRepo(string name, string url, string type)
         {
             if (_settings.Repositories.Any(r => r.Name == name)) throw new ArgumentException("Name in use");
             var repo = new RepositoryEntry(name, type, url, Guid.NewGuid());
             _settings.Repositories.Add(repo);
             _settings.Store();
-            return new RepositoryState(repo, _settings.Store);
+            return (repo, new RepositoryState(repo, _settings.Store));
         }
 
-        public IStorageState AddStorage(string name, DirectoryInfo directory, string type)
+        public (IStorageEntry entry, IStorageState state) AddStorage(string name, DirectoryInfo directory, string type)
         {
             if (_settings.Storages.Any(s => s.Name == name)) throw new ArgumentException("Name in use");
             var storage = new StorageEntry(name, type, directory.FullName, Guid.NewGuid());
             _settings.Storages.Add(storage);
             _settings.Store();
-            return new StorageState(storage, _settings.Store);
+            return (storage, new StorageState(storage, _settings.Store));
         }
 
         public void RemoveStorage(Guid storageIdentifier)

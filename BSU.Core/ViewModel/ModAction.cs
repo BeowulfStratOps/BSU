@@ -7,7 +7,7 @@ namespace BSU.Core.ViewModel
 {
     public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
-        internal static ModAction Create(RepositoryModActionSelection selection, IModelRepositoryMod parent)
+        internal static ModAction Create(RepositoryModActionSelection selection, IModelRepositoryMod parent, ModActionEnum action)
         {
             if (selection == null) return null;
 
@@ -16,8 +16,7 @@ namespace BSU.Core.ViewModel
             if (selection.DownloadStorage != null) return new SelectStorage(selection.DownloadStorage);
 
             if (selection.StorageMod != null)
-                return new SelectMod(selection.StorageMod,
-                    (ModActionEnum) CoreCalculation.GetModAction(parent, selection.StorageMod));
+                return new SelectMod(selection.StorageMod, action);
 
             throw new ArgumentException();
         }

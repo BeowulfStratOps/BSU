@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.BSO.FileStructures;
 using BSU.CoreCommon;
 using Newtonsoft.Json;
@@ -24,11 +26,11 @@ namespace BSU.BSO
             _url = url;
         }
 
-        public void Load()
+        private async Task Load(CancellationToken cancellationToken)
         {
-            using var client = new WebClient();
+            using var client = new HttpClient();
             _logger.Debug("Downloading server file from {0}", _url);
-            var serverFileJson = client.DownloadString(_url);
+            var serverFileJson = await client.GetStringAsync(_url, cancellationToken);
             var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
 
             var parts = _url.Split('/');
@@ -38,8 +40,9 @@ namespace BSU.BSO
                 m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName));
         }
 
-        public Dictionary<string, IRepositoryMod> GetMods()
+        public async Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken)
         {
+            await Load(cancellationToken);
             return _mods;
         }
 

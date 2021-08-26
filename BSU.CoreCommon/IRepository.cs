@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BSU.CoreCommon
 {
@@ -7,12 +9,6 @@ namespace BSU.CoreCommon
     /// </summary>
     public interface IRepository
     {
-        void Load();
-
-        /// <summary>
-        /// List of mods the repository contains..
-        /// </summary>
-        /// <returns></returns>
-        Dictionary<string, IRepositoryMod> GetMods();
+        Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken);
     }
 }

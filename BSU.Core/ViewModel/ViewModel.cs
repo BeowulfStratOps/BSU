@@ -1,8 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BSU.Core.JobManager;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
 
@@ -13,48 +13,26 @@ namespace BSU.Core.ViewModel
         public DelegateCommand AddRepository { get; }
         public DelegateCommand AddStorage { get; }
 
-        private Model.Model Model { get; }
+        private IModel Model { get; }
         public ObservableCollection<Repository> Repositories { get; } = new();
         public ObservableCollection<Storage> Storages { get; } = new();
 
         public InteractionRequest<AddRepository, bool?> AddRepositoryInteraction { get; } = new();
         public InteractionRequest<AddStorage, bool?> AddStorageInteraction { get; } = new();
 
-        internal ViewModel(Model.Model model)
+        internal ViewModel(IModel model)
         {
             AddRepository = new DelegateCommand(DoAddRepository);
             AddStorage = new DelegateCommand(DoAddStorage);
             Model = model;
-            model.RepositoryAdded += repository => Repositories.Add(new Repository(repository, model, model));
-            model.RepositoryDeleted += repository =>
+            foreach (var modelRepository in model.GetRepositories())
             {
-                var vmRepository = Repositories.Single(r => r.Identifier == repository.Identifier);
-                Repositories.Remove(vmRepository);
-            };
-            model.StorageAdded += storage =>
+                Repositories.Add(new Repository(modelRepository, model));
+            }
+            foreach (var modelStorage in model.GetStorages())
             {
-                Storages.Add(new Storage(storage, model));
-                foreach (var repository in Repositories)
-                {
-                    foreach (var mod in repository.Mods)
-                    {
-                        mod.AddStorage(storage);
-                    }
-                }
-            };
-            model.StorageDeleted += storage =>
-            {
-                var vmStorage = Storages.Single(s => s.Identifier == storage.Identifier);
-                Storages.Remove(vmStorage);
-                foreach (var repository in Repositories)
-                {
-                    foreach (var mod in repository.Mods)
-                    {
-                        mod.RemoveStorage(storage);
-                    }
-                }
-            };
-
+                Storages.Add(new Storage(modelStorage, model));
+            }
         }
 
         private async Task DoAddRepository()
@@ -63,7 +41,8 @@ namespace BSU.Core.ViewModel
             var doAdd = await AddRepositoryInteraction.Raise(vm);
 
             if (doAdd != true) return;
-            await Model.AddRepository("BSO", vm.Url, vm.Name);
+            var repo = Model.AddRepository("BSO", vm.Url, vm.Name);
+            Repositories.Add(new Repository(repo, Model));
         }
 
         private async Task DoAddStorage()
@@ -71,7 +50,16 @@ namespace BSU.Core.ViewModel
             var vm = new AddStorage();
             var doAdd = await AddStorageInteraction.Raise(vm);
             if (doAdd != true) return;
-            Model.AddStorage("DIRECTORY", new DirectoryInfo(vm.Path), vm.Name);
+            var storage = Model.AddStorage("DIRECTORY", new DirectoryInfo(vm.Path), vm.Name);
+            Storages.Add(new Storage(storage, Model));
+        }
+
+        public async Task Load()
+        {
+            var tasks = new List<Task>();
+            tasks.AddRange(Repositories.Select(r => r.Load()));
+            tasks.AddRange(Storages.Select(s => s.Load()));
+            await Task.WhenAll(tasks);
         }
     }
 }

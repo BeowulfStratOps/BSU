@@ -3,130 +3,85 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BSU.Core.JobManager;
 using BSU.Core.Persistence;
-using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
-    public interface IActionQueue
-    {
-        void EnQueueAction(Action action);
-    }
     internal class Model : IModel
     {
-        private readonly IJobManager _jobManager;
         private readonly Types _types;
-        private readonly IActionQueue _dispatcher;
-        public List<IModelRepository> Repositories { get; } = new List<IModelRepository>();
-        public List<IModelStorage> Storages { get; } = new List<IModelStorage>();
+
+        private readonly ModelStructure _structure = new();
 
         private InternalState PersistentState { get; }
 
-        private readonly MatchMaker _matchMaker = new();
-
-        public Model(InternalState persistentState, IJobManager jobManager, Types types, IActionQueue dispatcher)
+        public Model(InternalState persistentState, Types types)
         {
-            _jobManager = jobManager;
             _types = types;
-            _dispatcher = dispatcher;
             PersistentState = persistentState;
         }
 
-        public async Task Load()
+        public void Load()
         {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
-                var implementation = _types.GetRepoImplementation(repositoryEntry.Type, repositoryEntry.Url);
-                var repository = new Repository(implementation, repositoryEntry.Name, repositoryEntry.Url, _jobManager, repositoryState, _dispatcher, this);
-                repository.ModAdded += mod =>
-                {
-                    _matchMaker.AddRepositoryMod(mod);
-                    mod.Load();
-                };
-                Repositories.Add(repository);
-                RepositoryAdded?.Invoke(repository);
+                var repository = CreateRepository(repositoryEntry, repositoryState);
+                _structure.AddRepository(repository);
             }
             foreach (var (storageEntry, storageState) in PersistentState.GetStorages())
             {
-                IStorage implementation;
-                try
-                {
-                    implementation = _types.GetStorageImplementation(storageEntry.Type, storageEntry.Path);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    continue;
-                }
-                var storage = new Storage(implementation, storageEntry.Name, storageEntry.Path, storageState, _jobManager, _dispatcher);
-                storage.ModAdded += mod =>
-                {
-                    _matchMaker.AddStorageMod(mod);
-                    mod.Load();
-                };
-                Storages.Add(storage);
-                StorageAdded?.Invoke(storage);
+                var storage = CreateStorage(storageEntry, storageState);
+                _structure.AddStorage(storage);
             }
-
-            await Task.WhenAll(Storages.Select(s => s.Load()));
-            _matchMaker.SignalAllStorageModsLoaded(); // TODO: make sure this actually happens AFTER the previous line??
-            await Task.WhenAll(Repositories.Select(r => r.Load()));
         }
 
-        public event Action<Repository> RepositoryAdded;
-        public event Action<IModelRepository> RepositoryDeleted;
-        public event Action<Storage> StorageAdded;
-        public event Action<IModelStorage> StorageDeleted;
+        private Repository CreateRepository(IRepositoryEntry data, IRepositoryState state)
+        {
+            var implementation = _types.GetRepoImplementation(data.Type, data.Url);
+            var repository = new Repository(implementation, data.Name, data.Url, state, _structure);
+            // TODO: kick off mods
+            return repository;
+        }
 
-        public async Task AddRepository(string type, string url, string name)
+        private Storage CreateStorage(IStorageEntry data, IStorageState state)
+        {
+            var implementation = _types.GetStorageImplementation(data.Type, data.Path);
+            var storage = new Storage(implementation, data.Name, data.Path, state);
+            // TODO: kick off mods
+            return storage;
+        }
+
+        public IModelRepository AddRepository(string type, string url, string name)
         {
             if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
-            var repoState = PersistentState.AddRepo(name, url, type);
-            var implementation = _types.GetRepoImplementation(type, url);
-            var repository = new Repository(implementation, name, url, _jobManager, repoState, _dispatcher, this);
-            repository.ModAdded += mod =>
-            {
-                _matchMaker.AddRepositoryMod(mod);
-                mod.Load();
-            };
-            Repositories.Add(repository);
-            RepositoryAdded?.Invoke(repository);
-            await repository.Load();
+            var (entry, repoState) = PersistentState.AddRepo(name, url, type);
+            return CreateRepository(entry, repoState);
         }
 
-        public void AddStorage(string type, DirectoryInfo dir, string name)
+        public IModelStorage AddStorage(string type, DirectoryInfo dir, string name)
         {
             if (!_types.GetStorageTypes().Contains(type)) throw new ArgumentException();
-            var storageState = PersistentState.AddStorage(name, dir, type);
-            var implementation = _types.GetStorageImplementation(type, dir.FullName);
-            var storage = new Storage(implementation, name, dir.FullName, storageState, _jobManager, _dispatcher);
-            storage.ModAdded += mod => _matchMaker.AddStorageMod(mod);
-            Storages.Add(storage);
-            StorageAdded?.Invoke(storage);
+            var (entry, storageState) = PersistentState.AddStorage(name, dir, type);
+            return CreateStorage(entry, storageState);
         }
 
-        public IEnumerable<IModelStorage> GetStorages() => Storages;
+        public IEnumerable<IModelStorage> GetStorages() => _structure.GetStorages();
 
-        public IEnumerable<IModelRepository> GetRepositories() => Repositories;
-        public IEnumerable<IModelStorageMod> GetAllStorageMods() => _matchMaker.GetStorageMods();
-
-        public IEnumerable<IModelRepositoryMod> GetAllRepositoryMods() => _matchMaker.GetRepositoryMods();
-
+        public IEnumerable<IModelRepository> GetRepositories() => _structure.GetRepositories();
         public void DeleteRepository(IModelRepository repository, bool removeMods)
         {
             if (removeMods) throw new NotImplementedException();
-            Repositories.Remove(repository);
+            _structure.RemoveRepository(repository);
             PersistentState.RemoveRepository(repository.Identifier);
-            RepositoryDeleted?.Invoke(repository);
+            // TODO: dispose / stop actions
         }
 
         public void DeleteStorage(IModelStorage storage, bool removeMods)
         {
             if (removeMods) throw new NotImplementedException();
-            Storages.Remove(storage);
+            _structure.RemoveStorage(storage);
             PersistentState.RemoveStorage(storage.Identifier);
-            StorageDeleted?.Invoke(storage);
+            // TODO: dispose / stop actions
         }
     }
 }

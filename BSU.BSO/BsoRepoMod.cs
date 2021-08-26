@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.BSO.FileStructures;
 using BSU.CoreCommon;
 using BSU.Hashes;
@@ -17,24 +19,30 @@ namespace BSU.BSO
     /// </summary>
     internal class BsoRepoMod : IRepositoryMod
     {
+        // TODO: re-use http clients?
+
         private readonly Logger _logger = EntityLogger.GetLogger();
 
         private readonly string _url;
         private HashFile _hashFile;
         private string _displayName;
 
-        public List<string> GetFileList() => _hashFile.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
+        public Task<List<string>> GetFileList(CancellationToken cancellationToken)
+        {
+            var files = _hashFile.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
+            return Task.FromResult(files);
+        }
 
         /// <summary>
         /// Downloads a single file. Exception if file is not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        public byte[] GetFile(string path)
+        public async Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
         {
-            using var client = new WebClient();
+            using var client = new HttpClient();
             _logger.Debug("Downloading file from {0} / {1}", _url, path);
-            var data = client.DownloadData(_url + GetRealPath(path));
+            var data = await client.GetByteArrayAsync(_url + GetRealPath(path), cancellationToken);
             _logger.Debug("Finsihed downloading {0} / {1}", _url, path);
             return data;
         }
@@ -49,14 +57,14 @@ namespace BSU.BSO
             _url = url;
         }
 
-        public void Load()
+        public async Task Load(CancellationToken cancellationToken)
         {
-            using var client = new WebClient();
+            using var client = new HttpClient();
             _logger.Debug("Downloading hash file from {0}", _url);
-            var hashFileJson = client.DownloadString(_url + "/hash.json");
+            var hashFileJson = await client.GetStringAsync(_url + "/hash.json", cancellationToken);
             _logger.Debug("Finished downloading hash file");
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
-            GetDisplayName();
+            await GetDisplayName(cancellationToken);
         }
 
 
@@ -64,7 +72,7 @@ namespace BSU.BSO
         /// Attempts to build a extract a display name for this mod. Cached.
         /// </summary>
         /// <returns></returns>
-        public string GetDisplayName()
+        public async Task<string> GetDisplayName(CancellationToken cancellationToken)
         {
             if (_displayName != null) return _displayName;
 
@@ -72,9 +80,9 @@ namespace BSU.BSO
             var modCppEntry = GetFileEntry("/mod.cpp");
             if (modCppEntry != null)
             {
-                using var client = new WebClient();
+                using var client = new HttpClient();
                 _logger.Debug("Downloading mod.cpp from {0}", _url);
-                modCpp = client.DownloadString(_url + modCppEntry.FileName);
+                modCpp = await client.GetStringAsync(_url + modCppEntry.FileName, cancellationToken);
             }
 
             // TODO: make case insensitive
@@ -92,10 +100,11 @@ namespace BSU.BSO
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        public FileHash GetFileHash(string path)
+        public Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
             var entry = GetFileEntry(path);
-            return entry == null ? null : new SHA1AndPboHash(entry.Hash, entry.FileSize);
+            var hash = entry == null ? null : new SHA1AndPboHash(entry.Hash);
+            return Task.FromResult<FileHash>(hash);
         }
 
         /// <summary>
@@ -104,7 +113,7 @@ namespace BSU.BSO
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        public long GetFileSize(string path) => GetFileEntry(path).FileSize;
+        public Task<long> GetFileSize(string path, CancellationToken cancellationToken) => Task.FromResult(GetFileEntry(path).FileSize);
 
         /// <summary>
         /// Downloads a file. Exception if not found.
@@ -112,7 +121,7 @@ namespace BSU.BSO
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        public void DownloadTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
+        public async Task DownloadTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
         {
             // TODO: use .part file
             // TODO: use FileStream
@@ -121,16 +130,16 @@ namespace BSU.BSO
             _logger.Debug("Downloading content {0} / {1}", _url, path);
 
             var req = WebRequest.CreateHttp(url);
-            using var resp = req.GetResponse();
-            using var stream = resp.GetResponseStream();
+            using var resp = await req.GetResponseAsync();
+            await using var stream = resp.GetResponseStream();
 
             var buffer = new byte[10 * 1024 * 1024];
             while (!token.IsCancellationRequested)
             {
-                var len = stream.Read(buffer, 0, buffer.Length);
+                var len = await stream.ReadAsync(buffer, 0, buffer.Length, token);
                 if (len == 0) break;
-                fileStream.Write(buffer, 0, len);
-                updateCallback(len);
+                await fileStream.WriteAsync(buffer, 0, len, token);
+                updateCallback.Report(len);
             }
 
             if (token.IsCancellationRequested)
@@ -149,9 +158,9 @@ namespace BSU.BSO
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        public void UpdateTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
+        public async Task UpdateTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
         {
-            DownloadTo(path, fileStream, updateCallback, token);
+            await DownloadTo(path, fileStream, updateCallback, token);
         }
 
         public int GetUid() => _logger.GetId();

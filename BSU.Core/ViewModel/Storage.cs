@@ -14,26 +14,31 @@ namespace BSU.Core.ViewModel
         private readonly IModelStorage _storage;
         private readonly IModel _model;
         public string Name { get; }
-        internal Model.Storage ModelStorage { get; }
-        
-        public bool IsLoading { get; }
+        internal IModelStorage ModelStorage { get; }
 
         public ObservableCollection<StorageMod> Mods { get; } = new ObservableCollection<StorageMod>();
-        
+
         public DelegateCommand Delete { get; }
         public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
         public Guid Identifier { get; }
 
-        internal Storage(Model.Storage storage,IModel model)
+        internal Storage(IModelStorage storage, IModel model)
         {
             Delete = new DelegateCommand(DoDelete);
-            //IsLoading = storage.Loading.IsActive();
             ModelStorage = storage;
             _model = model;
             Identifier = storage.Identifier;
             _storage = storage;
             Name = storage.Name;
-            storage.ModAdded += mod => Mods.Add(new StorageMod(mod));
+        }
+
+        internal async Task Load()
+        {
+            var mods = await ModelStorage.GetMods();
+            foreach (var mod in mods)
+            {
+                Mods.Add(new StorageMod(mod));
+            }
         }
 
         private async Task DoDelete()
@@ -44,7 +49,7 @@ namespace BSU.Core.ViewModel
 Yes - Delete mods in on this storage
 No - Keep mods
 Cancel - Do not remove this storage";
-            
+
             var context = new MsgPopupContext(text, "Remove Storage");
             var removeMods = await DeleteInteraction.Raise(context);
             if (removeMods == null) return;

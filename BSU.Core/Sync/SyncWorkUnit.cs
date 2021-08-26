@@ -1,38 +1,22 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model;
-using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Sync
 {
-    /// <summary>
-    /// Base class for atomic sync operations. Tracks progress/state.
-    /// </summary>
     internal abstract class SyncWorkUnit
     {
         protected readonly StorageMod Storage;
         protected readonly string Path;
-        private bool _done;
-        public event Action OnProgress;
+        protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        protected SyncWorkUnit(StorageMod storage, string path, RepoSync sync)
+        protected SyncWorkUnit(StorageMod storage, string path)
         {
             Storage = storage;
             Path = path;
         }
-        
-        public void Work(CancellationToken cancellationToken)
-        {
-            DoWork(cancellationToken);
-            _done = true;
-        }
 
-        protected abstract void DoWork(CancellationToken token);
-        public bool IsDone() => _done;
-
-        protected void SignalProgress()
-        {
-            OnProgress?.Invoke();
-        }
+        public abstract Task DoAsync(CancellationToken cancellationToken);
     }
 }

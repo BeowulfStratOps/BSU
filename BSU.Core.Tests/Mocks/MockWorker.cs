@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BSU.Core.JobManager;
 using BSU.Core.Model;
 using BSU.CoreCommon;
 using NLog;

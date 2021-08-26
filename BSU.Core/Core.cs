@@ -2,7 +2,6 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using BSU.Core.JobManager;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
@@ -18,8 +17,6 @@ namespace BSU.Core
     {
         private readonly Logger _logger = EntityLogger.GetLogger();
 
-        internal readonly IJobManager JobManager;
-
         internal readonly Model.Model Model;
         public readonly Types Types;
         public readonly ViewModel.ViewModel ViewModel;
@@ -29,37 +26,28 @@ namespace BSU.Core
         /// Create a new core instance. Should be used in a using block.
         /// </summary>
         /// <param name="settingsPath">Location to store local settings, including repo/storage data.</param>
-        public Core(FileInfo settingsPath, IActionQueue dispatcher) : this(Settings.Load(settingsPath), dispatcher)
+        public Core(FileInfo settingsPath) : this(Settings.Load(settingsPath))
         {
         }
 
-        internal Core(ISettings settings, IActionQueue dispatcher) : this(settings, null, dispatcher)
-        {
-        }
-
-
-        internal Core(ISettings settings, IJobManager jobManager, IActionQueue dispatcher)
+        internal Core(ISettings settings)
         {
             _logger.Info("Creating new core instance");
-            jobManager ??= new JobManager.JobManager(dispatcher);
-            JobManager = jobManager;
             Types = new Types();
             var state = new InternalState(settings);
 
-            Model = new Model.Model(state, jobManager, Types, dispatcher);
+            Model = new Model.Model(state, Types);
             ViewModel = new ViewModel.ViewModel(Model);
         }
 
-        public void Dispose() => Dispose(false);
-
-        public void Dispose(bool blocking)
+        public void Dispose()
         {
-            JobManager.Shutdown(blocking);
+            // TODO: cancel operations
         }
 
-        public async Task Start()
+        public void Load()
         {
-            await Model.Load();
+            Model.Load();
         }
     }
 }

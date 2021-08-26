@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.CoreCommon;
 using BSU.Hashes;
 using NLog;
@@ -19,7 +20,7 @@ namespace BSU.Core
             _path = path;
         }
 
-        public void Load()
+        public async Task Load(CancellationToken cancellationToken)
         {
             var dir = new DirectoryInfo(_path);
             foreach (var modDir in dir.EnumerateDirectories())
@@ -28,7 +29,7 @@ namespace BSU.Core
             }
         }
 
-        public Dictionary<string, IRepositoryMod> GetMods() => _mods;
+        public Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken) => Task.FromResult(_mods);
     }
 
     internal class FileRepositoryMod : IRepositoryMod
@@ -44,49 +45,49 @@ namespace BSU.Core
             _directory = directory;
         }
 
-        public void Load()
+        public async Task Load(CancellationToken cancellationToken)
         {
             foreach (var file in _directory.EnumerateFiles("*", SearchOption.AllDirectories))
             {
-                var data = File.ReadAllBytes(file.FullName);
+                var data = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
                 var path = Path.GetRelativePath(_directory.FullName, file.FullName);
                 path = "/" + path.ToLowerInvariant().Replace("\\", "/");
                 _files.Add(path, data);
             }
         }
 
-        public List<string> GetFileList() => _files.Keys.ToList();
+        public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult<List<string>>(_files.Keys.ToList());
 
-        public FileHash GetFileHash(string path)
+        public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
-            using var stream = new MemoryStream(_files[path], false);
+            await using var stream = new MemoryStream(_files[path], false);
             var extension = path.Split(".")[^1];
-            var hash = new SHA1AndPboHash(stream, extension);
+            var hash = await SHA1AndPboHash.BuildAsync(stream, extension, cancellationToken);
             return hash;
         }
 
-        public byte[] GetFile(string path) => _files[path];
+        public Task<byte[]> GetFile(string path, CancellationToken cancellationToken) => Task.FromResult<byte[]>(_files[path]);
 
-        public string GetDisplayName() => $"Test - {_directory.Name}"; // TODO
+        public Task<string> GetDisplayName(CancellationToken cancellationToken) => Task.FromResult($"Test - {_directory.Name}"); // TODO
 
-        public long GetFileSize(string path) => _files[path].LongLength;
+        public Task<long> GetFileSize(string path, CancellationToken cancellationToken) => Task.FromResult(_files[path].LongLength);
 
-        public void DownloadTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
+        public async Task DownloadTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
         {
             const int bufferSize = 4 * 1024;
             var data = _files[path];
             for (var i = 0; i < data.LongLength; i += bufferSize)
             {
                 var size = Math.Min(bufferSize, data.Length - i);
-                fileStream.Write(data, i, size);
+                await fileStream.WriteAsync(data, i, size, token);
                 Thread.Sleep(1);
             }
             fileStream.SetLength(data.LongLength);
         }
 
-        public void UpdateTo(string path, Stream fileStream, Action<long> updateCallback, CancellationToken token)
+        public async Task UpdateTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
         {
-            DownloadTo(path, fileStream, updateCallback, token);
+            await DownloadTo(path, fileStream, updateCallback, token);
         }
 
         public int GetUid() => _logger.GetId();

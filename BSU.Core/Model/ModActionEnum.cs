@@ -8,8 +8,5 @@
         Use,
         AbortAndUpdate,
         Unusable, // should never reach the user
-        Loading,
-        Error, // should never reach the user
-        LoadingMatch
     }
 }

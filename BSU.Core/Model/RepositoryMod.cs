@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Hashes;
-using BSU.Core.JobManager;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
@@ -12,28 +13,18 @@ namespace BSU.Core.Model
 {
     internal class RepositoryMod : IModelRepositoryMod
     {
-        private readonly IActionQueue _actionQueue;
-        private readonly IJobManager _jobManager;
         private readonly IPersistedRepositoryModState _internalState;
         private readonly IModelStructure _modelStructure;
         private readonly Logger _logger = EntityLogger.GetLogger();
-        public IRepositoryMod Implementation { get; } // TODO: make private
+        private IRepositoryMod Implementation { get; } // TODO: make private
         public string Identifier { get; }
-        public bool IsLoaded { get; private set; }
-        public event Action OnLoaded;
 
-        private readonly JobSlot _loading;
-
-        private MatchHash _matchHash;
-        private VersionHash _versionHash;
-
-        public UpdateTarget AsUpdateTarget { get; private set; }
-
-        private Exception _error;
+        private readonly ResettableLazyAsync<MatchHash> _matchHash;
+        private readonly ResettableLazyAsync<VersionHash> _versionHash;
 
         private RepositoryModActionSelection _selection;
 
-        public RepositoryModActionSelection Selection
+        private RepositoryModActionSelection Selection
         {
             get => _selection;
             set
@@ -42,16 +33,13 @@ namespace BSU.Core.Model
                 _logger.Debug("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
                 _selection = value;
                 _internalState.Selection = PersistedSelection.Create(value);
-                SelectionChanged?.Invoke();
             }
         }
 
-        public RepositoryMod(IActionQueue actionQueue, IRepositoryMod implementation, string identifier,
-            IJobManager jobManager, IPersistedRepositoryModState internalState,
+        public RepositoryMod(IRepositoryMod implementation, string identifier,
+            IPersistedRepositoryModState internalState,
             IModelStructure modelStructure)
         {
-            _actionQueue = actionQueue;
-            _jobManager = jobManager;
             _internalState = internalState;
             _modelStructure = modelStructure;
             Implementation = implementation;
@@ -62,137 +50,88 @@ namespace BSU.Core.Model
             if (_internalState.Selection == PersistedSelection.Create(new RepositoryModActionSelection()))
                 Selection = new RepositoryModActionSelection();
 
-            _loading = new JobSlot(LoadInternal, $"Load RepoMod {Identifier}", _jobManager);
+            // TODO: is there a cleaner way of doing caching?
+            _matchHash = new ResettableLazyAsync<MatchHash>(CalculateMatchHash, null, CancellationToken.None);
+            _versionHash = new ResettableLazyAsync<VersionHash>(CalculateVersionHash, null, CancellationToken.None);
 
             _logger.Info($"Created with identifier {identifier}");
         }
 
-        public void Load()
+        private async Task<MatchHash> CalculateMatchHash(CancellationToken cancellationToken)
         {
-            _loading.Request();
+            return await MatchHash.CreateAsync(Implementation, cancellationToken);
         }
 
-        public string GetDisplayName()
+        private async Task<VersionHash> CalculateVersionHash(CancellationToken cancellationToken)
         {
-            if (!IsLoaded) throw new InvalidOperationException();
-            return Implementation.GetDisplayName();
+            return await VersionHash.CreateAsync(Implementation, cancellationToken);
         }
 
-        public void SignalAllStorageModsLoaded()
+        public async Task<string> GetDisplayName(CancellationToken cancellationToken)
         {
-            _logger.Info("all mods loaded.");
-            DoAutoSelection();
+            // TODO: cache
+            return await Implementation.GetDisplayName(cancellationToken);
         }
 
-        private void DoAutoSelection()
+        public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.Get();
+
+        public async Task<VersionHash> GetVersionHash(CancellationToken cancellationToken) => await _versionHash.Get();
+
+        public void SetSelection(RepositoryModActionSelection selection)
         {
-            // TODO: check if a better option became available and notify user
-            // never change a selection once it was made. Would be clickjacking on the user
-            if (Selection != null) return;
-
-            _logger.Trace("Checking auto-selection for mod {0}", Identifier);
-
-            var selection = CoreCalculation.AutoSelect(this, _modelStructure);
             Selection = selection;
         }
 
-        public MatchHash GetMatchHash()
+        public async Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken)
         {
-            if (!IsLoaded) throw new InvalidOperationException();
-            return _matchHash;
+            // TODO: check if a better option became available and notify user ??
+
+            // never change a selection once it was made. Would be clickjacking on the user
+            if (Selection != null) return Selection;
+
+            _logger.Trace("Checking auto-selection for mod {0}", Identifier);
+
+            // TODO: check our selected one (well.. initially selected one. should be a separate field/flag)
+
+            var selectionResult = await CoreCalculation.AutoSelect(this, _modelStructure, cancellationToken);
+            var selection = selectionResult.result switch
+            {
+                AutoSelectResult.Success => new RepositoryModActionSelection(selectionResult.mod),
+                AutoSelectResult.Download => new RepositoryModActionSelection(_modelStructure.GetStorages().First()),
+                AutoSelectResult.None => null,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            Selection = selection;
+            return selection;
         }
 
-        public VersionHash GetVersionHash()
+        public async Task<IUpdateCreated> StartUpdate(CancellationToken cancellationToken)
         {
-            if (!IsLoaded) throw new InvalidOperationException();
-            return _versionHash;
-        }
-
-        private readonly HashSet<IModelStorageMod> _storageModStateChangedSubscriptions = new();
-
-        public void ProcessMod(IModelStorageMod mod)
-        {
-            if (!IsLoaded) throw new InvalidOperationException();
-
-            _logger.Trace("added local mod {@Identifier}", mod.Identifier);
-            if (_error != null) return;
-            var actionType = CoreCalculation.GetModAction(this, mod);
-
-            LocalModUpdated?.Invoke(mod);
-
-            void Handler() => ProcessMod(mod);
-
-            if (actionType == null)
-            {
-                if (!_storageModStateChangedSubscriptions.Contains(mod)) return;
-                mod.StateChanged -= Handler;
-                _storageModStateChangedSubscriptions.Remove(mod);
-                return;
-            }
-
-            if (!_storageModStateChangedSubscriptions.Contains(mod))
-            {
-                mod.StateChanged += Handler;
-                _storageModStateChangedSubscriptions.Add(mod);
-            }
-
-            _logger.Info("Set action for {0} to {1}", mod, actionType.ToString());
-
-            if (actionType == ModActionEnum.LoadingMatch) return;
-
-            if (mod.GetStorageModIdentifiers() == _internalState.Selection)
-                Selection = new RepositoryModActionSelection(mod);
-
-            DoAutoSelection();
-        }
-
-        private void LoadInternal(CancellationToken cancellationToken)
-        {
-            // TODO: use cancellationToken
-            try
-            {
-                Implementation.Load();
-                _matchHash = new MatchHash(Implementation);
-                _versionHash = new VersionHash(Implementation);
-                AsUpdateTarget = new UpdateTarget(_versionHash.GetHashString(), Implementation.GetDisplayName());
-                _actionQueue.EnQueueAction(() =>
-                {
-                    IsLoaded = true;
-                    OnLoaded?.Invoke();
-                });
-            }
-            catch (Exception e)
-            {
-                _error = e;
-                // TODO: should fire some event
-            }
-        }
-
-        public IUpdateCreate DoUpdate()
-        {
-            if (!IsLoaded) throw new InvalidOperationException();
             if (Selection == null) throw new InvalidOperationException();
 
             // TODO: switch
 
             if (Selection.DoNothing) return null;
 
+            var matchHash = await _matchHash.Get();
+            var versionHash = await _versionHash.Get();
+            var displayName = await GetDisplayName(cancellationToken);
+
             if (Selection.StorageMod != null)
             {
-                var action = CoreCalculation.GetModAction(this, Selection.StorageMod);
+                var action = await CoreCalculation.GetModAction(this, Selection.StorageMod, cancellationToken);
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate) return null;
 
-                var update = Selection.StorageMod.PrepareUpdate(Implementation, AsUpdateTarget, _matchHash, _versionHash);
+                var update = await Selection.StorageMod.PrepareUpdate(Implementation, displayName, matchHash, versionHash);
                 return update;
             }
 
             if (Selection.DownloadStorage != null)
             {
-                var update = Selection.DownloadStorage.PrepareDownload(Implementation, AsUpdateTarget, DownloadIdentifier, mod =>
-                {
-                    ProcessMod(mod);
-                    Selection = new RepositoryModActionSelection(mod);
-                }, _matchHash, _versionHash);
+                var updateTarget = new UpdateTarget(versionHash.GetHashString(), displayName);
+                var mod = await Selection.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
+                Selection = new RepositoryModActionSelection(mod);
+                var update = await mod.PrepareUpdate(Implementation, displayName, matchHash, versionHash);
                 return update;
             }
 
@@ -202,8 +141,5 @@ namespace BSU.Core.Model
         public string DownloadIdentifier { get; set; }
 
         public override string ToString() => Identifier;
-
-        public event Action<IModelStorageMod> LocalModUpdated;
-        public event Action SelectionChanged;
     }
 }

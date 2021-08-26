@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
@@ -10,16 +11,13 @@ namespace BSU.Core.Model
     internal interface IModelStorageMod
     {
         event Action StateChanged;
-        IUpdateCreate PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch, VersionHash targetVersion);
-        void Abort();
+        Task<IUpdateCreated> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch, VersionHash targetVersion);
+        Task Abort();
         PersistedSelection GetStorageModIdentifiers();
         bool CanWrite { get; }
         string Identifier { get; }
-        VersionHash GetVersionHash();
-        MatchHash GetMatchHash();
+        Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
+        Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         StorageModStateEnum GetState();
-        void RequireMatchHash();
-        void RequireVersionHash();
-        public void Load();
     }
 }

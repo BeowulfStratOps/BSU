@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
@@ -9,20 +10,13 @@ namespace BSU.Core.Model
 {
     internal interface IModelRepositoryMod
     {
-        UpdateTarget AsUpdateTarget { get; }
-        public RepositoryModActionSelection Selection { get; set; }
+        public void SetSelection(RepositoryModActionSelection selection);
+        public Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken);
         string DownloadIdentifier { get; set; }
         string Identifier { get; }
-        bool IsLoaded { get; }
-        event Action OnLoaded;
-        event Action<IModelStorageMod> LocalModUpdated;
-        event Action SelectionChanged;
-        IUpdateCreate DoUpdate();
-        void ProcessMod(IModelStorageMod storageMod);
-        string GetDisplayName();
-        void SignalAllStorageModsLoaded();
-        MatchHash GetMatchHash();
-        VersionHash GetVersionHash();
-        void Load();
+        Task<IUpdateCreated> StartUpdate(CancellationToken cancellationToken);
+        Task<string> GetDisplayName(CancellationToken cancellationToken);
+        Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
+        Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
     }
 }

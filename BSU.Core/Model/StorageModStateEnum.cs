@@ -4,12 +4,7 @@
     {
         CreatedWithUpdateTarget,
         Created,
-        Matched,
-        Versioned,
         Updating,
-        Error,
-        Loaded,
-        LoadedWithUpdateTarget,
-        MatchedWithUpdateTarget
+        Error
     }
 }

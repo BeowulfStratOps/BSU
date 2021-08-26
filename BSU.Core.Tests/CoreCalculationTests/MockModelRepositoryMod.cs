@@ -26,7 +26,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public event Action OnLoaded;
         public event Action<IModelStorageMod> LocalModUpdated;
         public event Action SelectionChanged;
-        public IUpdateCreate DoUpdate()
+        public IUpdateCreate StartUpdate()
         {
             throw new NotImplementedException();
         }

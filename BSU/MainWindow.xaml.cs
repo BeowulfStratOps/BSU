@@ -22,23 +22,12 @@ namespace BSU.GUI
         {
             Thread.CurrentThread.Name = "main";
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
-            _core = new Core.Core(settingsFile, new CoreDispatcher(Dispatcher));
-            DataContext = _core.ViewModel;
+            _core = new Core.Core(settingsFile);
+            _core.Load();
+            var viewModel = _core.ViewModel;
+            DataContext = viewModel;
             InitializeComponent();
-            Dispatcher.InvokeAsync(Run);
-        }
-
-        private async Task Run()
-        {
-            try
-            {
-                await _core.Start();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Close();
-            }
+            viewModel.Load(); // TODO: this is terrible. it should be awaited _somewhere_
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)

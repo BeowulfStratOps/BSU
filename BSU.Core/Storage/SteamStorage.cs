@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Storage
@@ -20,8 +22,9 @@ namespace BSU.Core.Storage
             _basePath = new DirectoryInfo(Path.Combine(path, "steamapps", "workshop", "content", "107410"));
         }
 
-        public void Load()
+        public async Task Load(CancellationToken cancellationToken)
         {
+            // TODO: async?
             var folders = new List<DirectoryInfo>();
             if (!_basePath.Exists) throw new FileNotFoundException(); // TODO: useful error
 
@@ -35,16 +38,16 @@ namespace BSU.Core.Storage
             _mods = folders.ToDictionary(di => di.Name, di => (IStorageMod) new SteamMod(di, this));
         }
 
-        public Dictionary<string, IStorageMod> GetMods() => _mods;
+        public Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken) => Task.FromResult(_mods);
 
         public string GetLocation() => _basePath.FullName;
 
-        public IStorageMod CreateMod(string identifier)
+        public Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("Storage not writable");
         }
 
-        public void RemoveMod(string identifier)
+        public Task RemoveMod(string identifier, CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("Storage not writable");
         }

@@ -5,9 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using BSU.Core.Model;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.CoreCommon;
-using NLog;
 
 namespace BSU.Core.Hashes
 {
@@ -16,24 +16,21 @@ namespace BSU.Core.Hashes
     /// </summary>
     public class MatchHash
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
-
         private const float Threshold = 0.8f; // at least 80% pbo names match required
 
-        private readonly Regex AddonsPboRegex =
+        private static readonly Regex AddonsPboRegex =
             new Regex("^/addons/.*\\.pbo$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private readonly string _name;
         private readonly HashSet<string> _pboNames;
 
         // TODO: use more specialized interface to get files
-        public MatchHash(IStorageMod mod)
+        public static async Task<MatchHash> CreateAsync(IStorageMod mod, CancellationToken cancellationToken)
         {
-            _logger.Debug("Building match hash for storage mod {0}", mod.GetUid());
             Stream modCpp = null;
             try
             {
-                modCpp = mod.OpenFile("/mod.cpp", FileAccess.Read);
+                modCpp = await mod.OpenFile("/mod.cpp", FileAccess.Read, cancellationToken);
             }
             catch (IOException)
             {
@@ -41,20 +38,23 @@ namespace BSU.Core.Hashes
                 // TODO: cache to the rescue!
             }
 
+            string name = null;
+
             if (modCpp != null)
             {
                 using var reader = new StreamReader(modCpp);
                 var entries = Util.ParseModCpp(reader.ReadToEnd());
-                var name = entries.GetValueOrDefault("name");
+                name = entries.GetValueOrDefault("name");
                 if (name != null)
                 {
-                    _name = CleanName(name);
-                    _logger.Trace("Found name {0}", _name);
+                    name = CleanName(name);
                 }
             }
 
-            _pboNames = mod.GetFileList().Where(p => AddonsPboRegex.IsMatch(p)).ToHashSet();
-            _logger.Trace("Found {0} pbo files", _pboNames.Count);
+            var pboNames = await mod.GetFileList(cancellationToken);
+            var pboNameSet = pboNames.Where(p => AddonsPboRegex.IsMatch(p)).ToHashSet();
+
+            return new MatchHash(pboNameSet, name);
         }
 
         private static string CleanName(string name)
@@ -66,19 +66,20 @@ namespace BSU.Core.Hashes
         }
 
         // TODO: use more specialized interface to get files
-        public MatchHash(IRepositoryMod mod)
+        public static async Task<MatchHash> CreateAsync(IRepositoryMod mod, CancellationToken cancellationToken)
         {
-            _logger.Debug("Building match hash for repo mod {0}", mod.GetUid());
-            var modCppData = mod.GetFile("/mod.cpp");
+            var modCppData = await mod.GetFile("/mod.cpp", cancellationToken);
+            string name = null;
             if (modCppData != null)
             {
-                var name = Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
-                if (name != null) _name = CleanName(name);
-                _logger.Trace("Found name {0}", name);
+                name = Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
+                if (name != null) name = CleanName(name);
             }
 
-            _pboNames = mod.GetFileList().Where(f => AddonsPboRegex.IsMatch(f)).ToHashSet();
-            _logger.Trace("Found {0} pbo files", _pboNames.Count);
+            var pboNames = await mod.GetFileList(cancellationToken);
+            var pboNameSet = pboNames.Where(f => AddonsPboRegex.IsMatch(f)).ToHashSet();
+
+            return new MatchHash(pboNameSet, name);
         }
 
         /// <summary>
@@ -108,10 +109,11 @@ namespace BSU.Core.Hashes
             return true;
         }
 
-        // TODO: this is for testing only. MatchHash should be abstracted.
-        internal MatchHash(IEnumerable<string> pboNames)
+        // TODO: internal is for testing only. MatchHash should be abstracted.
+        internal MatchHash(IEnumerable<string> pboNames, string name)
         {
             _pboNames = new HashSet<string>(pboNames);
+            _name = name;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.CoreCommon;
 using NLog;
 
@@ -26,21 +27,23 @@ namespace BSU.Core.Storage
             if (!new DirectoryInfo(path).Exists) throw new DirectoryNotFoundException();
         }
 
-        public void Load()
+        public async Task Load(CancellationToken cancellationToken)
         {
+            // TODO: async?
             _mods = new DirectoryInfo(_path).EnumerateDirectories("@*")
                 .ToDictionary(di => di.Name, di => (IStorageMod) new DirectoryMod(di, this));
         }
 
-        public Dictionary<string, IStorageMod> GetMods()
+        public Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
         {
-            return _mods;
+            return Task.FromResult(_mods);
         }
 
         public string GetLocation() => _path;
 
-        public IStorageMod CreateMod(string identifier)
+        public async Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
         {
+            // TODO: async?
             _logger.Debug("Creating mod {0}", identifier);
             var dir = new DirectoryInfo(Path.Combine(_path, identifier));
             if (dir.Exists) throw new InvalidOperationException("Path exists");
@@ -48,8 +51,9 @@ namespace BSU.Core.Storage
             return new DirectoryMod(dir, this);
         }
 
-        public void RemoveMod(string identifier)
+        public async Task RemoveMod(string identifier, CancellationToken cancellationToken)
         {
+            // TODO: async?
             var dir = new DirectoryInfo(Path.Combine(_path, "@" + identifier));
             if (!dir.Exists) throw new InvalidOperationException("Path doesn't exist");
             dir.Delete(true);

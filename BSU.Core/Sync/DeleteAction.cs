@@ -1,7 +1,6 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model;
-using BSU.CoreCommon;
-using NLog;
 
 namespace BSU.Core.Sync
 {
@@ -10,16 +9,15 @@ namespace BSU.Core.Sync
     /// </summary>
     internal class DeleteAction : SyncWorkUnit
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
-
-        public DeleteAction(StorageMod storage, string path, RepoSync sync) : base(storage, path, sync)
+        public DeleteAction(StorageMod storage, string path) : base(storage, path)
         {
+
         }
 
-        protected override void DoWork(CancellationToken token)
+        public override async Task DoAsync(CancellationToken cancellationToken)
         {
-            _logger.Trace("{0} Deleting {1}", Storage.GetUid(), Path);
-            Storage.Implementation.DeleteFile(Path);
+            Logger.Trace("{0} Deleting {1}", Storage, Path);
+            await Storage.Implementation.DeleteFile(Path, cancellationToken);
         }
     }
 }

@@ -1,19 +1,20 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BSU.CoreCommon
 {
     public interface IStorage
     {
         /// <summary>
-        /// e.g. false steam
+        /// e.g. false for steam
         /// </summary>
         /// <returns></returns>
         bool CanWrite();
 
-        Dictionary<string, IStorageMod> GetMods();
+        Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken);
 
-        IStorageMod CreateMod(string identifier);
-        void RemoveMod(string identifier);
-        public void Load();
+        Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken);
+        Task RemoveMod(string identifier, CancellationToken cancellationToken);
     }
 }

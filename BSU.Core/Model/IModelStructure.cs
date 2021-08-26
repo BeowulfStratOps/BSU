@@ -6,9 +6,10 @@ namespace BSU.Core.Model
 {
     internal interface IModelStructure
     {
+        // TODO: abort all things when one of those changes
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();
-        IEnumerable<IModelStorageMod> GetAllStorageMods();
-        IEnumerable<IModelRepositoryMod> GetAllRepositoryMods();
+        Task<IEnumerable<IModelStorageMod>> GetStorageMods();
+        Task<IEnumerable<IModelRepositoryMod>> GetRepositoryMods();
     }
 }

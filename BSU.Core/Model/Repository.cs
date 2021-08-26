@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.JobManager;
 using BSU.Core.Model.Updating;
-using BSU.Core.Model.Utility;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -14,102 +12,74 @@ namespace BSU.Core.Model
 {
     internal class Repository : IModelRepository
     {
-        private readonly IJobManager _jobManager;
         private readonly IRepositoryState _internalState;
-        private readonly IActionQueue _actionQueue;
         private readonly IModelStructure _modelStructure;
         public IRepository Implementation { get; }
         public string Name { get; }
-        public event Action<IModelRepositoryMod> ModAdded;
         public Guid Identifier { get; }
         public string Location { get; }
 
         private readonly List<IModelRepositoryMod> _mods  = new();
 
-        private readonly AsyncJobSlot _loading;
+        private readonly Task _loading;
 
         private readonly Logger _logger = EntityLogger.GetLogger();
 
-        public Repository(IRepository implementation, string name, string location, IJobManager jobManager,
-            IRepositoryState internalState, IActionQueue actionQueue, IModelStructure modelStructure)
+        public Repository(IRepository implementation, string name, string location,
+            IRepositoryState internalState, IModelStructure modelStructure)
         {
-            _jobManager = jobManager;
             _internalState = internalState;
-            _actionQueue = actionQueue;
             _modelStructure = modelStructure;
             Location = location;
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
-            var title = $"Load Repo {Identifier}";
-            _loading = new AsyncJobSlot(LoadInternal, title, jobManager);
+            _loading = LoadInternal(CancellationToken.None); // TODO: cts
         }
 
-        public async Task Load()
+        private async Task LoadInternal(CancellationToken cancellationToken)
         {
-            try
+            foreach (var (key, mod) in await Implementation.GetMods(cancellationToken))
             {
-                await _loading.Do();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        }
-
-        private void LoadInternal(CancellationToken cancellationToken)
-        {
-            try
-            {
-                // TODO: use cancellationToken
-                Implementation.Load();
-                foreach (KeyValuePair<string, IRepositoryMod> mod in Implementation.GetMods())
-                {
-                    var modelMod = new RepositoryMod(_actionQueue, mod.Value, mod.Key, _jobManager, _internalState.GetMod(mod.Key), _modelStructure);
-                    modelMod.LocalModUpdated += _ => ReCalculateState();
-                    modelMod.SelectionChanged += ReCalculateState;
-                    modelMod.OnLoaded += ReCalculateState;
-                    _mods.Add(modelMod);
-                    _actionQueue.EnQueueAction(() =>
-                    {
-                        ModAdded?.Invoke(modelMod);
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
+                var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), _modelStructure);
+                _mods.Add(modelMod);
             }
         }
 
         public async Task<List<IModelRepositoryMod>> GetMods()
         {
-            await Load();
+            await _loading;
             return new List<IModelRepositoryMod>(_mods);
         }
 
-        private void ReCalculateState()
+        public async Task<CalculatedRepositoryState> GetState(CancellationToken cancellationToken)
         {
-            var calculatedState = CoreCalculation.CalculateRepositoryState(_mods, _modelStructure);
+            var mods = await GetMods();
+
+            async Task<(IModelRepositoryMod mod, RepositoryModActionSelection selection, ModActionEnum? action)> GetModSelection(IModelRepositoryMod mod)
+            {
+                var selection = await mod.GetSelection(cancellationToken);
+                var action = selection.StorageMod == null
+                    ? null
+                    : (ModActionEnum?)await CoreCalculation.GetModAction(mod, selection.StorageMod, cancellationToken);
+                return (mod, selection, action);
+            }
+
+            var infoTasks = mods.Select(GetModSelection).ToList();
+            await Task.WhenAll(infoTasks);
+            var infos = infoTasks.Select(t => t.Result).ToList();
+
+            var calculatedState = CoreCalculation.CalculateRepositoryState(infos);
             _logger.Trace("Repo {0} calculated state: {1}", Identifier, calculatedState);
-            CalculatedStateChanged?.Invoke(calculatedState);
+            return calculatedState;
         }
 
-        public event Action<CalculatedRepositoryState> CalculatedStateChanged;
-
-        public RepositoryUpdate DoUpdate(out Dictionary<IModelRepositoryMod, IProgressProvider> individualProgress)
+        public async Task<RepositoryUpdate> DoUpdate(CancellationToken cancellationToken)
         {
-            individualProgress = new Dictionary<IModelRepositoryMod, IProgressProvider>();
-            var updates = new List<IUpdateCreate>();
-            foreach (var mod in _mods)
-            {
-                var update = mod.DoUpdate();
-                if (update == null) continue;
-                updates.Add(update);
-                individualProgress.Add(mod, update.ProgressProvider);
-            }
+            var updateTasks = _mods.Select(m => m.StartUpdate(cancellationToken)).ToList();
+            await Task.WhenAll(updateTasks);
+            var updates = updateTasks.Select(ut => ut.Result).Where(u => u != null).ToList();
+
             return new RepositoryUpdate(updates);
         }
     }

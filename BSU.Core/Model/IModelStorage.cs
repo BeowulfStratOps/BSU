@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
@@ -12,14 +13,12 @@ namespace BSU.Core.Model
     {
         Task<List<IModelStorageMod>> GetMods();
 
-        IUpdateCreate PrepareDownload(IRepositoryMod repositoryMod, UpdateTarget target, string identifier,
-            Action<IModelStorageMod> createdCallback, MatchHash matchHash, VersionHash versionHash);
+        Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget);
         bool CanWrite { get; }
         Guid Identifier { get; }
         string Name { get; }
         PersistedSelection AsStorageIdentifier();
         Task<bool> HasMod(string downloadIdentifier);
-        event Action<IModelStorageMod> ModAdded;
-        Task Load();
+        Task Load(CancellationToken cancellationToken);
     }
 }

@@ -1,62 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Persistence;
-
 namespace BSU.Core.Model
 {
     public static class CoreCalculation
     {
-        internal static ModActionEnum? GetModAction(IModelRepositoryMod repoMod,
-            IModelStorageMod storageMod)
+        // TODO: ideally, all that async stuff and calling other members in here should happen on the repo/repoMod. only reason it happens here is conflicts being annoying.
+
+        internal static async Task<ModActionEnum> GetModAction(IModelRepositoryMod repoMod,
+            IModelStorageMod storageMod, CancellationToken cancellationToken)
         {
-            // TODO: RequireXHash should be called by caller. side effects are bad etc.
+            // TODO: lock to make sure we get valid state?
+
+            async Task<bool> CheckMatch()
+            {
+                var repoTask = repoMod.GetMatchHash(cancellationToken);
+                var storageTask = storageMod.GetMatchHash(cancellationToken);
+                return (await repoTask).IsMatch(await storageTask);
+            }
+
+            async Task<bool> CheckVersion()
+            {
+                var repoTask = repoMod.GetVersionHash(cancellationToken);
+                var storageTask = storageMod.GetVersionHash(cancellationToken);
+                return (await repoTask).IsMatch(await storageTask);
+            }
 
             switch (storageMod.GetState())
             {
-                case StorageModStateEnum.Matched:
-                    if (!repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash())) return null;
-                    storageMod.RequireVersionHash();
-                    return ModActionEnum.Loading;
-                case StorageModStateEnum.LoadedWithUpdateTarget:
-                    if (repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
-                    storageMod.RequireMatchHash();
-                    return null;
-                case StorageModStateEnum.MatchedWithUpdateTarget:
-                    if (repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash())) return ModActionEnum.ContinueUpdate;
-                    if (repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate;
-                    return null;
-                case StorageModStateEnum.Loaded:
-                    storageMod.RequireMatchHash();
-                    return ModActionEnum.LoadingMatch;
+                case StorageModStateEnum.CreatedWithUpdateTarget:
+                {
+                    if (await CheckVersion()) return ModActionEnum.ContinueUpdate;
+                    if (await CheckMatch()) return ModActionEnum.AbortAndUpdate;
+                    return ModActionEnum.Unusable;
+                }
+                case StorageModStateEnum.Created:
+                {
+                    if (!await CheckMatch())  return ModActionEnum.Unusable;
+                    if (await CheckVersion()) return ModActionEnum.Use;
+                    return ModActionEnum.Update;
+                }
                 case StorageModStateEnum.Updating:
-                    if (repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash())) return ModActionEnum.Await;
-                    if (repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash())) return ModActionEnum.AbortAndUpdate;
-                    return null;
+                {
+                    if (await CheckVersion()) return ModActionEnum.Await;
+                    if (await CheckMatch()) return ModActionEnum.AbortAndUpdate;
+                    return ModActionEnum.Unusable;
+                }
                 case StorageModStateEnum.Error:
-                    return null;
-                case StorageModStateEnum.Versioned:
-                    if (!repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash())) return null;
-                    return repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash()) ? ModActionEnum.Use : ModActionEnum.Update;
+                    return ModActionEnum.Unusable;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        internal static RepositoryModActionSelection AutoSelect(IModelRepositoryMod repoMod,
-            IModelStructure modelStructure)
+        internal static async Task<(AutoSelectResult result, IModelStorageMod mod)> AutoSelect(IModelRepositoryMod repoMod, IModelStructure structure, CancellationToken cancellationToken)
         {
-            var storageMods = modelStructure.GetAllStorageMods().ToList();
+            var storageMods = (await structure.GetStorageMods()).ToList();
 
-            var actions = storageMods.ToDictionary(s => s, s => GetModAction(repoMod, s));
+            async Task<(IModelStorageMod mod, ModActionEnum action, bool hasConflcts)> GetModInfo(IModelStorageMod mod)
+            {
+                var actionTask = GetModAction(repoMod, mod, cancellationToken);
+                var conflictTask = GetConflicts(repoMod, mod, structure, cancellationToken);
+                await Task.WhenAll(actionTask, conflictTask);
+                return (mod, actionTask.Result, conflictTask.Result.Any());
+            }
 
-            storageMods = storageMods.Where(s => actions[s] != null).ToList();
-
-            if (storageMods.Any(s => actions[s] == ModActionEnum.Loading || actions[s] == ModActionEnum.LoadingMatch))
-                return null;
-
-            var conflicts = storageMods.ToDictionary(s => s, s => GetConflicts(repoMod, s, modelStructure).Any());
+            var infoTasks = storageMods.Select(GetModInfo).ToList();
+            await Task.WhenAll(infoTasks);
+            var infos = infoTasks.Select(t => t.Result).ToList();
 
             // Order of precedence
             var precedence = new[]
@@ -64,82 +77,75 @@ namespace BSU.Core.Model
 
             foreach (var actionType in precedence)
             {
-                var storageMod = actions.Keys.FirstOrDefault(mod =>
-                    actions[mod] == actionType && !conflicts[mod]);
-                if (storageMod == null) continue;
+                var info = infos.FirstOrDefault(info => info.action == actionType && !info.hasConflcts);
+                if (info == default) continue;
 
-                return new RepositoryModActionSelection(storageMod);
+                return (AutoSelectResult.Success, info.mod);
             }
 
-            if (actions.All(am => am.Value == ModActionEnum.Unusable))
-            {
-                var downloadStorage = modelStructure.GetStorages().FirstOrDefault(s => s.CanWrite);
-                if (downloadStorage != null)
-                {
-                    return new RepositoryModActionSelection(downloadStorage);
-                }
-            }
-
-            return null;
+            if (infos.All(info => info.action == ModActionEnum.Unusable)) return (AutoSelectResult.Download, null);
+            return (AutoSelectResult.None, null);
         }
 
-        internal static List<IModelRepositoryMod> GetConflicts(IModelRepositoryMod origin, IModelStorageMod selected,
-            IModelStructure structure)
+        internal static async Task<List<IModelRepositoryMod>> GetConflicts(IModelRepositoryMod origin, IModelStorageMod selected,
+            IModelStructure structure, CancellationToken cancellationToken)
         {
             var result = new List<IModelRepositoryMod>();
-            foreach (var repositoryMod in structure.GetAllRepositoryMods())
+
+            var modTasks = structure.GetRepositories().Select(r => r.GetMods()).ToList();
+            await Task.WhenAll(modTasks);
+            var mods = modTasks.SelectMany(t => t.Result);
+
+            // TODO: could parallelize
+            foreach (var repositoryMod in mods)
             {
                 if (repositoryMod == origin) continue;
-                if (repositoryMod.GetVersionHash().IsMatch(origin.GetVersionHash())) continue; // can't possibly be a conflict
-
-                if (selected.GetState() != StorageModStateEnum.Versioned && selected.GetState() != StorageModStateEnum.MatchedWithUpdateTarget) continue;
+                var repoVersion = await repositoryMod.GetVersionHash(cancellationToken);
+                if (repoVersion.IsMatch(await origin.GetVersionHash(cancellationToken))) continue; // can't possibly be a conflict
 
                 // matches, but different target version -> conflict
-                if (selected.GetMatchHash().IsMatch(repositoryMod.GetMatchHash())) result.Add(repositoryMod);
+                var repoMatch = await repositoryMod.GetMatchHash(cancellationToken);
+                if (repoMatch.IsMatch(await selected.GetMatchHash(cancellationToken))) result.Add(repositoryMod);
             }
 
             return result;
         }
 
-        internal static CalculatedRepositoryState CalculateRepositoryState(List<IModelRepositoryMod> mods, IModelStructure structure)
+        internal static CalculatedRepositoryState CalculateRepositoryState(List<(IModelRepositoryMod mod, RepositoryModActionSelection selection, ModActionEnum? action)> mods)
         {
             /*
-            Loading, // 3. At least one loading
             NeedsUpdate, // 2. all selected, no internal conflicts.
             NeedsDownload, // 2. more than 50% of the mods need a download, otherwise same as update
             Ready, // 1. All use
             RequiresUserIntervention // Else
             */
 
-            if (mods.Any(m => !m.IsLoaded))
-                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
+            var partial = mods.Any(m => m.selection?.DoNothing ?? false);
 
-            var partial = mods.Any(m => m.Selection?.DoNothing ?? false);
-
-            mods = mods.Where(m => !(m.Selection?.DoNothing ?? false)).ToList();
+            mods = mods.Where(m => !(m.selection?.DoNothing ?? false)).ToList();
 
             if (mods.All(mod =>
-                mod.Selection?.StorageMod != null && GetModAction(mod, mod.Selection?.StorageMod) == ModActionEnum.Use))
+                mod.selection?.StorageMod != null && mod.action == ModActionEnum.Use))
             {
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Ready, partial);
             }
 
-            if (mods.All(mod => mod.Selection?.StorageMod != null || mod.Selection?.DownloadStorage != null))
+            if (mods.All(mod => mod.selection?.StorageMod != null || mod.selection?.DownloadStorage != null))
             {
 
-                if (mods.Count(mod => mod.Selection?.DownloadStorage != null) > 0.5 * mods.Count)
+                if (mods.Count(mod => mod.selection?.DownloadStorage != null) > 0.5 * mods.Count)
                     return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsDownload, partial);
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsUpdate, partial);
             }
 
-            if (mods.All(mod =>
-                mod.Selection?.StorageMod == null && mod.Selection?.DownloadStorage == null &&
-                structure.GetAllStorageMods().Any(s => GetModAction(mod, s) == ModActionEnum.Loading || GetModAction(mod, s) == ModActionEnum.LoadingMatch)))
-            {
-                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, partial);
-            }
-
             return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.RequiresUserIntervention, partial);
         }
+    }
+
+    internal enum AutoSelectResult
+    {
+        Success,
+        Download,
+        None
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.JobManager;
 using BSU.Core.Model;
 using BSU.CoreCommon;
 using NLog;
@@ -13,169 +12,61 @@ namespace BSU.Core.Sync
     /// <summary>
     /// Job for updating/downloading a storage mod from a repository.
     /// </summary>
-    internal class RepoSync : IJob, IJobProgress
+    internal class RepoSync
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private static readonly Logger Logger = EntityLogger.GetLogger();
 
-        private readonly List<SyncWorkUnit> _allActions, _actionsTodo;
-        private readonly List<Exception> Errors = new List<Exception>();
+        private readonly List<SyncWorkUnit> _allActions; // TODO: can be read only
 
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-        internal readonly StorageMod StorageMod;
-        internal readonly IRepositoryMod RepositoryMod;
-        internal readonly UpdateTarget Target;
-        private readonly string _title;
-        private readonly int _priority;
-        private readonly ReferenceCounter _workCounter;
-        private readonly int _totalCount;
-        public readonly bool NothingToDo;
-
-        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
-
-        public RepoSync(IRepositoryMod repository, StorageMod storage, UpdateTarget target, string title, int priority, CancellationToken cancellationToken)
+        private RepoSync(List<SyncWorkUnit> actions)
         {
-            // TODO: use cancellationToken
-            // TODO: write some tests!
-            StorageMod = storage;
-            Target = target;
-            _title = title;
-            _priority = priority;
-            RepositoryMod = repository;
+            _allActions = actions;
+        }
 
-            _logger.Debug("Building sync actions {0} to {1}", storage.GetUid(), repository.GetUid());
+        public static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage, CancellationToken cancellationToken)
+        {
+            Logger.Debug("Building sync actions {0} to {1}", storage, repository);
 
-            _allActions = new List<SyncWorkUnit>();
-            var repositoryList = repository.GetFileList();
-            var storageList = storage.Implementation.GetFileList();
+            var allActions = new List<SyncWorkUnit>();
+            var repositoryList = await repository.GetFileList(cancellationToken);
+            var storageList = await storage.Implementation.GetFileList(cancellationToken);
             var storageListCopy = new List<string>(storageList);
             foreach (var repoFile in repositoryList)
             {
                 if (storageList.Contains(repoFile))
                 {
-                    if (!repository.GetFileHash(repoFile).Equals(storage.Implementation.GetFileHash(repoFile)))
+                    var repoFileHash = await repository.GetFileHash(repoFile, cancellationToken);
+                    var storageFileHash = await storage.Implementation.GetFileHash(repoFile, cancellationToken);
+                    if (!repoFileHash.Equals(storageFileHash))
                     {
-                        _allActions.Add(new UpdateAction(repository, storage, repoFile,
-                            repository.GetFileSize(repoFile), this));
+                        var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
+                        allActions.Add(new UpdateAction(repository, storage, repoFile));
                     }
 
                     storageListCopy.Remove(repoFile);
                 }
                 else
                 {
-                    _allActions.Add(new DownloadAction(repository, storage, repoFile, repository.GetFileSize(repoFile),
-                        this));
+                    var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
+                    allActions.Add(new DownloadAction(repository, storage, repoFile));
                 }
             }
 
             foreach (var storageModFile in storageListCopy)
             {
-                _allActions.Add(new DeleteAction(storage, storageModFile, this));
+                allActions.Add(new DeleteAction(storage, storageModFile));
             }
 
-            _actionsTodo = new List<SyncWorkUnit>(_allActions);
-            _logger.Debug("Download actions: {0}", _actionsTodo.OfType<DownloadAction>().Count());
-            _logger.Debug("Update actions: {0}", _actionsTodo.OfType<UpdateAction>().Count());
-            _logger.Debug("Delete actions: {0}", _actionsTodo.OfType<DeleteAction>().Count());
+            Logger.Debug("Download actions: {0}", allActions.OfType<DownloadAction>().Count());
+            Logger.Debug("Update actions: {0}", allActions.OfType<UpdateAction>().Count());
+            Logger.Debug("Delete actions: {0}", allActions.OfType<DeleteAction>().Count());
 
-            _totalCount = _actionsTodo.Count;
-            _workCounter = new ReferenceCounter(_actionsTodo.Count);
-
-            NothingToDo = _totalCount == 0;
+            return new RepoSync(allActions);
         }
 
-
-        public long GetRemainingBytesToDownload() =>
-            _allActions.OfType<DownloadAction>().Sum(a => a.GetBytesRemaining());
-
-        public long GetRemainingBytesToUpdate() => _allActions.OfType<UpdateAction>().Sum(a => a.GetBytesRemaining());
-
-        public int GetRemainingChangedFilesCount() => _allActions.OfType<UpdateAction>().Count(a => !a.IsDone());
-
-        public int GetRemainingDeletedFilesCount() => _allActions.OfType<DeleteAction>().Count(a => !a.IsDone());
-
-        public string GetStorageModDisplayName() => StorageMod.Implementation.GetDisplayName();
-
-        public string GetRepositoryModDisplayName() => RepositoryMod.GetDisplayName();
-
-        public int GetRemainingNewFilesCount() => _allActions.OfType<DownloadAction>().Count(a => !a.IsDone());
-        public long GetTotalBytesToDownload() => _allActions.OfType<DownloadAction>().Sum(a => a.GetBytesTotal());
-
-        public long GetTotalBytesToUpdate() => _allActions.OfType<UpdateAction>().Sum(a => a.GetBytesTotal());
-
-        public int GetTotalChangedFilesCount() => _allActions.OfType<UpdateAction>().Count();
-
-        public int GetTotalDeletedFilesCount() => _allActions.OfType<DeleteAction>().Count();
-
-        public int GetTotalNewFilesCount() => _allActions.OfType<DownloadAction>().Count();
-
-        public bool DoWork(IActionQueue actionQueue)
+        public async Task UpdateAsync(CancellationToken cancellationToken)
         {
-            if (_cancellationTokenSource.IsCancellationRequested) return false;
-            SyncWorkUnit work;
-            lock (_actionsTodo)
-            {
-                if (_actionsTodo.Count == 0) return false;
-                work = _actionsTodo[0];
-                _actionsTodo.Remove(work);
-            }
-
-            try
-            {
-                work.OnProgress += () => actionQueue.EnQueueAction(() => OnProgress?.Invoke());
-                work.Work(_cancellationTokenSource.Token);
-            }
-            catch (Exception e)
-            {
-                Errors.Add(e);
-                _logger.Error(e);
-            }
-
-            actionQueue.EnQueueAction(() => OnProgress?.Invoke());
-            if (_workCounter.Dec())
-            {
-                _logger.Debug("Sync done");
-                _tcs.SetResult(null);
-            }
-
-            lock (_actionsTodo)
-            {
-                return _actionsTodo.Count > 0;
-            }
-        }
-
-        public string GetTargetHash() => Target.Hash;
-
-        /// <summary>
-        /// Signals to abort this job. Does not wait.
-        /// </summary>
-        public void Abort()
-        {
-            _cancellationTokenSource.Cancel();
-        }
-
-        public Exception GetError()
-        {
-            return Errors.Any() ? new AggregateException(Errors) : null;
-        }
-
-        public string GetTitle() => _title;
-
-        public event Action OnProgress;
-
-        public float GetProgress()
-        {
-            return 1f - (GetRemainingBytesToDownload() + GetRemainingBytesToUpdate()) /
-                   (float)(GetTotalBytesToDownload() + GetTotalBytesToUpdate());
-        }
-
-        public int GetPriority() => _priority;
-        public int GetUid() => _logger.GetId();
-
-        public Task Do(IJobManager jobManager)
-        {
-            jobManager.QueueJob(this);
-            return _tcs.Task;
+            throw new NotImplementedException();
         }
     }
 }

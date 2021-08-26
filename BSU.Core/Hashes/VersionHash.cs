@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using BSU.Core.Model;
+using System.Threading.Tasks;
 using BSU.CoreCommon;
 using BSU.Hashes;
-using NLog;
 
 namespace BSU.Core.Hashes
 {
@@ -16,21 +16,20 @@ namespace BSU.Core.Hashes
     /// </summary>
     public class VersionHash
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
-
         private readonly byte[] _hash;
 
         // TODO: use more specialized interface to get files
-        internal VersionHash(IStorageMod mod)
+        public static async Task<VersionHash> CreateAsync(IStorageMod mod, CancellationToken cancellationToken)
         {
-            _logger.Debug("Building version hash from storage mod {0}", mod.GetUid());
             var hashes = new Dictionary<string, FileHash>();
-            foreach (var file in mod.GetFileList())
+            foreach (var file in await mod.GetFileList(cancellationToken))
             {
-                hashes.Add(file, new SHA1AndPboHash(mod.OpenFile(file, FileAccess.Read), Utils.GetExtension(file)));
+                var stream = await mod.OpenFile(file, FileAccess.Read, cancellationToken);
+                var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(file), cancellationToken);
+                hashes.Add(file, hash);
             }
 
-            _hash = BuildHash(hashes);
+            return new VersionHash(BuildHash(hashes));
         }
 
         // TODO: this is for testing only. VersionHash should be abstracted.
@@ -40,10 +39,16 @@ namespace BSU.Core.Hashes
         }
 
         // TODO: use more specialized interface to get files
-        internal VersionHash(IRepositoryMod mod)
+        public static async Task<VersionHash> CreateAsync(IRepositoryMod mod, CancellationToken cancellationToken)
         {
-            _logger.Debug("Building version hash from repository mod {0}", mod.GetUid());
-            _hash = BuildHash(mod.GetFileList().ToDictionary(h => h, mod.GetFileHash));
+            var files = await mod.GetFileList(cancellationToken);
+            var hashes = new Dictionary<string, FileHash>();
+            foreach (var file in files)
+            {
+                var hash = await mod.GetFileHash(file, cancellationToken);
+                hashes.Add(file, hash);
+            }
+            return new VersionHash(BuildHash(hashes));
         }
 
         /// <summary>
@@ -80,7 +85,7 @@ namespace BSU.Core.Hashes
         public static VersionHash CreateEmpty()
         {
             using var sha1 = SHA1.Create();
-            return new VersionHash(sha1.ComputeHash(new byte[0]));
+            return new VersionHash(sha1.ComputeHash(Array.Empty<byte>()));
         }
 
         public override string ToString() => GetHashString();

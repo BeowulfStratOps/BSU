@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
-using BSU.Core.Model.Utility;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -19,7 +19,6 @@ namespace BSU.Core.ViewModel
         public InteractionRequest<MsgPopupContext, object> UpdateFinished { get; } = new InteractionRequest<MsgPopupContext, object>();
 
         private CalculatedRepositoryState _calculatedState;
-        private IProgressProvider _updateProgress;
 
         public CalculatedRepositoryState CalculatedState
         {
@@ -35,20 +34,14 @@ namespace BSU.Core.ViewModel
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new();
 
-        internal Repository(IModelRepository repository, IModel model, IModelStructure modelStructure)
+        internal Repository(IModelRepository repository, IModel model)
         {
             _repository = repository;
             _model = model;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
-            CalculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
-            repository.CalculatedStateChanged += state =>
-            {
-                CalculatedState = state;
-            };
             Name = repository.Name;
-            repository.ModAdded += mod => Mods.Add(new RepositoryMod(mod, model, modelStructure));
         }
 
         private async Task DoDelete()
@@ -74,45 +67,19 @@ Cancel - Do not remove this repository";
 
         private async Task DoUpdate()
         {
-            var update = _repository.DoUpdate(out var individualProgress); // TODO: use it with using, to make sure it's cleaned up
-            UpdateProgress = update.ProgressProvider;
-            update.OnEnded += () =>
-            {
-                UpdateProgress = null;
-                foreach (var mod in Mods)
-                {
-                    mod.UpdateProgress = null;
-                }
-            };
+            var update = await _repository.DoUpdate(CancellationToken.None); // TODO: use it with using, to make sure it's cleaned up
 
-            foreach (var (mod, progress) in individualProgress)
-            {
-                var viewModelMod = Mods.Single(m => m.Mod == mod);
-                viewModelMod.UpdateProgress = progress;
-            }
-
-            var created = await update.Create();
-            if (created.Stats.FailedCount > 0)
-            {
-                var createdText = $"There were errors while creating {created.Stats.FailedCount} mod folders. Proceed?";
-                var createdContext = new MsgPopupContext(createdText, "Proceed with Update?");
-                if (!await UpdateSetup.Raise(createdContext))
-                {
-                    created.Abort();
-                    return;
-                }
-            }
-            var prepared = await created.Prepare();
-            var bytes = prepared.Stats.Succeeded.Sum(s => s.GetStats());
+            var prepared = await update.Prepare(CancellationToken.None);
+            var bytes = prepared.Stats.Succeeded.Sum(s => 0);
             var preparedText = $"{bytes} Bytes from {prepared.Stats.Succeeded.Count} mods to download. {prepared.Stats.FailedCount} mods failed. Proceed?";
             var preparedContext = new MsgPopupContext(preparedText, "Update Prepared");
             if (!await UpdatePrepared.Raise(preparedContext))
             {
-                prepared.Abort();
+                // prepared.Abort();
                 return;
             }
 
-            var updated = await prepared.Update();
+            var updated = await prepared.Update(CancellationToken.None);
             var updatedText = $"{updated.Stats.Succeeded.Count} Mods updated. {updated.Stats.FailedCount} Mods failed.";
             var updatedContext = new MsgPopupContext(updatedText, "Update Finished");
             await UpdateFinished.Raise(updatedContext);
@@ -124,15 +91,15 @@ Cancel - Do not remove this repository";
         public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new();
         public Guid Identifier { get; }
 
-        public IProgressProvider UpdateProgress
+        public async Task Load()
         {
-            get => _updateProgress;
-            private set
+            var mods = await _repository.GetMods();
+            foreach (var mod in mods)
             {
-                if (_updateProgress == value) return;
-                _updateProgress = value;
-                OnPropertyChanged();
+                Mods.Add(new RepositoryMod(mod, _model));
             }
+
+            await Task.WhenAll(Mods.Select(m => m.Load()));
         }
     }
 }
