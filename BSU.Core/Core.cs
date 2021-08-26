@@ -37,17 +37,13 @@ namespace BSU.Core
             var state = new InternalState(settings);
 
             Model = new Model.Model(state, Types);
+            Model.Load();
             ViewModel = new ViewModel.ViewModel(Model);
         }
 
         public void Dispose()
         {
             // TODO: cancel operations
-        }
-
-        public void Load()
-        {
-            Model.Load();
         }
     }
 }

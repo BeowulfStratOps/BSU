@@ -25,13 +25,27 @@ namespace BSU.Core.Model
         {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
-                var repository = CreateRepository(repositoryEntry, repositoryState);
-                _structure.AddRepository(repository);
+                try
+                {
+                    var repository = CreateRepository(repositoryEntry, repositoryState);
+                    _structure.AddRepository(repository);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
             foreach (var (storageEntry, storageState) in PersistentState.GetStorages())
             {
-                var storage = CreateStorage(storageEntry, storageState);
-                _structure.AddStorage(storage);
+                try
+                {
+                    var storage = CreateStorage(storageEntry, storageState);
+                    _structure.AddStorage(storage);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
         }
 

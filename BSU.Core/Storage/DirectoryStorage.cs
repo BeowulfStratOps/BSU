@@ -21,28 +21,33 @@ namespace BSU.Core.Storage
 
         private Dictionary<string, IStorageMod> _mods;
 
+        private readonly Task _loading;
+
         public DirectoryStorage(string path)
         {
             _path = path;
             if (!new DirectoryInfo(path).Exists) throw new DirectoryNotFoundException();
+            _loading = Load(CancellationToken.None);
         }
 
-        public async Task Load(CancellationToken cancellationToken)
+        private async Task Load(CancellationToken cancellationToken)
         {
             // TODO: async?
             _mods = new DirectoryInfo(_path).EnumerateDirectories("@*")
                 .ToDictionary(di => di.Name, di => (IStorageMod) new DirectoryMod(di, this));
         }
 
-        public Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
+        public async Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
         {
-            return Task.FromResult(_mods);
+            await _loading;
+            return _mods;
         }
 
         public string GetLocation() => _path;
 
         public async Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
         {
+            await _loading;
             // TODO: async?
             _logger.Debug("Creating mod {0}", identifier);
             var dir = new DirectoryInfo(Path.Combine(_path, identifier));
@@ -53,6 +58,7 @@ namespace BSU.Core.Storage
 
         public async Task RemoveMod(string identifier, CancellationToken cancellationToken)
         {
+            await _loading;
             // TODO: async?
             var dir = new DirectoryInfo(Path.Combine(_path, "@" + identifier));
             if (!dir.Exists) throw new InvalidOperationException("Path doesn't exist");

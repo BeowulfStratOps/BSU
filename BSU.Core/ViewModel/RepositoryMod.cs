@@ -50,25 +50,25 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        /*private void UpdateAction(IModelStorageMod storageMod)
+        private async Task<ModAction> UpdateAction(IModelStorageMod storageMod)
         {
             var isCurrentlySelected = Selection?.AsSelection?.StorageMod == storageMod;
             var action = await CoreCalculation.GetModAction(Mod, storageMod, CancellationToken.None);
-            if (action == null)
+            if (action == ModActionEnum.Unusable)
             {
                 var removeAction = Actions.SingleOrDefault(a => a.AsSelection.StorageMod == storageMod);
                 if (removeAction != null)
                     Actions.Remove(removeAction);
                 if (isCurrentlySelected)
                     Selection = new SelectDoNothing();
-                return;
+                return Selection;
             }
-            if (action == ModActionEnum.LoadingMatch && !isCurrentlySelected) return; // random mod that is loading basic information, no need to show this
-            var selection = new SelectMod(storageMod, (ModActionEnum) action);
+            var selection = new SelectMod(storageMod, action);
             Actions.Update(selection);
             if (isCurrentlySelected)
                 Selection = selection;
-        }*/
+            return selection;
+        }
 
         internal void AddStorage(IModelStorage storage)
         {
@@ -159,13 +159,17 @@ namespace BSU.Core.ViewModel
 
         public async Task Load()
         {
-            await Task.WhenAll(
-                    Mod.GetSelection(CancellationToken.None).ContinueWith(s =>
-                    {
-                        Selection = ModAction.Create(s.Result, Mod, ModActionEnum.Update);
-                    }),
-                Mod.GetDisplayName(CancellationToken.None).ContinueWith(t => DisplayName = t.Result)
-            );
+            DisplayName = await Mod.GetDisplayName(CancellationToken.None);
+            var selection = await Mod.GetSelection(CancellationToken.None);
+            if (selection.StorageMod != null)
+            {
+                var updatedAction = await UpdateAction(selection.StorageMod);
+                Selection = updatedAction;
+            }
+            else
+            {
+                Selection = ModAction.Create(selection, Mod, null);
+            }
         }
     }
 }

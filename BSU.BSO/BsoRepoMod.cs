@@ -26,11 +26,14 @@ namespace BSU.BSO
         private readonly string _url;
         private HashFile _hashFile;
         private string _displayName;
+        private readonly Task _loading;
 
-        public Task<List<string>> GetFileList(CancellationToken cancellationToken)
+
+        public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
         {
+            await _loading;
             var files = _hashFile.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
-            return Task.FromResult(files);
+            return files;
         }
 
         /// <summary>
@@ -40,6 +43,7 @@ namespace BSU.BSO
         /// <returns></returns>
         public async Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
         {
+            await _loading;
             using var client = new HttpClient();
             _logger.Debug("Downloading file from {0} / {1}", _url, path);
             var data = await client.GetByteArrayAsync(_url + GetRealPath(path), cancellationToken);
@@ -55,16 +59,16 @@ namespace BSU.BSO
         public BsoRepoMod(string url)
         {
             _url = url;
+            _loading = Load(CancellationToken.None);
         }
 
-        public async Task Load(CancellationToken cancellationToken)
+        private async Task Load(CancellationToken cancellationToken)
         {
             using var client = new HttpClient();
             _logger.Debug("Downloading hash file from {0}", _url);
             var hashFileJson = await client.GetStringAsync(_url + "/hash.json", cancellationToken);
             _logger.Debug("Finished downloading hash file");
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
-            await GetDisplayName(cancellationToken);
         }
 
 
@@ -75,6 +79,7 @@ namespace BSU.BSO
         public async Task<string> GetDisplayName(CancellationToken cancellationToken)
         {
             if (_displayName != null) return _displayName;
+            await _loading;
 
             string modCpp = null;
             var modCppEntry = GetFileEntry("/mod.cpp");
@@ -100,11 +105,12 @@ namespace BSU.BSO
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        public Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
+        public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
+            await _loading;
             var entry = GetFileEntry(path);
             var hash = entry == null ? null : new SHA1AndPboHash(entry.Hash);
-            return Task.FromResult<FileHash>(hash);
+            return hash;
         }
 
         /// <summary>
@@ -113,7 +119,11 @@ namespace BSU.BSO
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        public Task<long> GetFileSize(string path, CancellationToken cancellationToken) => Task.FromResult(GetFileEntry(path).FileSize);
+        public async Task<long> GetFileSize(string path, CancellationToken cancellationToken)
+        {
+            await _loading;
+            return GetFileEntry(path).FileSize;
+        }
 
         /// <summary>
         /// Downloads a file. Exception if not found.
@@ -123,6 +133,7 @@ namespace BSU.BSO
         /// <param name="token">Can be used to cancel this operation.</param>
         public async Task DownloadTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
         {
+            await _loading;
             // TODO: use .part file
             // TODO: use FileStream
             var url = _url + GetRealPath(path);
@@ -160,9 +171,8 @@ namespace BSU.BSO
         /// <param name="token">Can be used to cancel this operation.</param>
         public async Task UpdateTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
         {
+            await _loading;
             await DownloadTo(path, fileStream, updateCallback, token);
         }
-
-        public int GetUid() => _logger.GetId();
     }
 }

@@ -55,14 +55,12 @@ namespace BSU.Core.Model
             }
         }
 
-        internal static async Task<(AutoSelectResult result, IModelStorageMod mod)> AutoSelect(IModelRepositoryMod repoMod, IModelStructure structure, CancellationToken cancellationToken)
+        internal static async Task<(AutoSelectResult result, IModelStorageMod mod)> AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelStorageMod> storageMods, CancellationToken cancellationToken)
         {
-            var storageMods = (await structure.GetStorageMods()).ToList();
-
             async Task<(IModelStorageMod mod, ModActionEnum action, bool hasConflcts)> GetModInfo(IModelStorageMod mod)
             {
                 var actionTask = GetModAction(repoMod, mod, cancellationToken);
-                var conflictTask = GetConflicts(repoMod, mod, structure, cancellationToken);
+                var conflictTask = repoMod.GetConflicts(cancellationToken);
                 await Task.WhenAll(actionTask, conflictTask);
                 return (mod, actionTask.Result, conflictTask.Result.Any());
             }
@@ -87,28 +85,17 @@ namespace BSU.Core.Model
             return (AutoSelectResult.None, null);
         }
 
-        internal static async Task<List<IModelRepositoryMod>> GetConflicts(IModelRepositoryMod origin, IModelStorageMod selected,
-            IModelStructure structure, CancellationToken cancellationToken)
+        internal static async Task<bool> IsConflicting(IModelRepositoryMod origin, IModelRepositoryMod otherMod,
+            IModelStorageMod selected, CancellationToken cancellationToken)
         {
-            var result = new List<IModelRepositoryMod>();
+            if (otherMod == origin) return false;
+            var repoVersion = await otherMod.GetVersionHash(cancellationToken);
+            if (repoVersion.IsMatch(await origin.GetVersionHash(cancellationToken)))
+                return false; // can't possibly be a conflict
 
-            var modTasks = structure.GetRepositories().Select(r => r.GetMods()).ToList();
-            await Task.WhenAll(modTasks);
-            var mods = modTasks.SelectMany(t => t.Result);
-
-            // TODO: could parallelize
-            foreach (var repositoryMod in mods)
-            {
-                if (repositoryMod == origin) continue;
-                var repoVersion = await repositoryMod.GetVersionHash(cancellationToken);
-                if (repoVersion.IsMatch(await origin.GetVersionHash(cancellationToken))) continue; // can't possibly be a conflict
-
-                // matches, but different target version -> conflict
-                var repoMatch = await repositoryMod.GetMatchHash(cancellationToken);
-                if (repoMatch.IsMatch(await selected.GetMatchHash(cancellationToken))) result.Add(repositoryMod);
-            }
-
-            return result;
+            // matches, but different target version -> conflict
+            var repoMatch = await otherMod.GetMatchHash(cancellationToken);
+            return repoMatch.IsMatch(await selected.GetMatchHash(cancellationToken));
         }
 
         internal static CalculatedRepositoryState CalculateRepositoryState(List<(IModelRepositoryMod mod, RepositoryModActionSelection selection, ModActionEnum? action)> mods)

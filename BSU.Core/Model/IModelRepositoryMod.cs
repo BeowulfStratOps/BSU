@@ -18,5 +18,6 @@ namespace BSU.Core.Model
         Task<string> GetDisplayName(CancellationToken cancellationToken);
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
+        Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -93,16 +94,35 @@ namespace BSU.Core.Model
 
             // TODO: check our selected one (well.. initially selected one. should be a separate field/flag)
 
-            var selectionResult = await CoreCalculation.AutoSelect(this, _modelStructure, cancellationToken);
-            var selection = selectionResult.result switch
+            var storageMods = await _modelStructure.GetStorageMods();
+            var (result, selectedMod) = await CoreCalculation.AutoSelect(this, storageMods, cancellationToken);
+            var selection = result switch
             {
-                AutoSelectResult.Success => new RepositoryModActionSelection(selectionResult.mod),
+                AutoSelectResult.Success => new RepositoryModActionSelection(selectedMod),
                 AutoSelectResult.Download => new RepositoryModActionSelection(_modelStructure.GetStorages().First()),
                 AutoSelectResult.None => null,
                 _ => throw new ArgumentOutOfRangeException()
             };
             Selection = selection;
             return selection;
+        }
+
+        public async Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken)
+        {
+            var result = new List<IModelRepositoryMod>();
+            var selection = await GetSelection(cancellationToken);
+            if (selection.StorageMod == null) return result;
+            var otherMods = await _modelStructure.GetRepositoryMods();
+
+            // TODO: do in parallel?
+            foreach (var mod in otherMods)
+            {
+                if (mod == this) continue;
+                if (await CoreCalculation.IsConflicting(this, mod, selection.StorageMod, cancellationToken))
+                    result.Add(mod);
+            }
+
+            return result;
         }
 
         public async Task<IUpdateCreated> StartUpdate(CancellationToken cancellationToken)
