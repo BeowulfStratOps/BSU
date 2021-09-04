@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
 
@@ -7,16 +8,16 @@ namespace BSU.Core.ViewModel
 {
     public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
-        internal static ModAction Create(RepositoryModActionSelection selection, IModelRepositoryMod parent, ModActionEnum? action)
+        internal static async Task<ModAction> Create(RepositoryModActionSelection selection, IModelRepositoryMod parent, CancellationToken cancellationToken)
         {
             if (selection == null) return null;
 
-            if (selection.DoNothing) return new SelectDoNothing();
+            if (selection is RepositoryModActionDoNothing) return new SelectDoNothing();
 
-            if (selection.DownloadStorage != null) return new SelectStorage(selection.DownloadStorage);
+            if (selection is RepositoryModActionDownload download) return new SelectStorage(download.DownloadStorage);
 
-            if (selection.StorageMod != null)
-                return new SelectMod(selection.StorageMod, (ModActionEnum)action);
+            if (selection is RepositoryModActionStorageMod actionStorageMod)
+                return new SelectMod(actionStorageMod.StorageMod, await parent.GetActionForMod(actionStorageMod.StorageMod, cancellationToken));
 
             throw new ArgumentException();
         }
@@ -30,16 +31,6 @@ namespace BSU.Core.ViewModel
         }
 
         public abstract override int GetHashCode();
-
-        public static bool operator ==(ModAction left, ModAction right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ModAction left, ModAction right)
-        {
-            return !Equals(left, right);
-        }
 
         internal abstract RepositoryModActionSelection AsSelection { get; }
     }
@@ -58,7 +49,7 @@ namespace BSU.Core.ViewModel
             return 0;
         }
 
-        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionSelection();
+        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionDoNothing();
     }
 
     public class SelectMod : ModAction
@@ -83,7 +74,7 @@ namespace BSU.Core.ViewModel
             return HashCode.Combine(StorageMod);
         }
 
-        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionSelection(StorageMod);
+        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionStorageMod(StorageMod);
     }
 
     public class SelectStorage : ModAction
@@ -106,6 +97,6 @@ namespace BSU.Core.ViewModel
             return HashCode.Combine(DownloadStorage);
         }
 
-        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionSelection(DownloadStorage);
+        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionDownload(DownloadStorage);
     }
 }

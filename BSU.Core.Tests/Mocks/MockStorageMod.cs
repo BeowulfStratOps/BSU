@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.CoreCommon;
 using BSU.Hashes;
 using NLog;
@@ -51,7 +53,7 @@ namespace BSU.Core.Tests.Mocks
 
         public string GetDisplayName() => throw new NotImplementedException();
 
-        public Stream OpenFile(string path, FileAccess access)
+        public Task<Stream> OpenFile(string path, FileAccess access, CancellationToken cancellationToken)
         {
             if (Locked) throw new IOException("File in use");
 
@@ -59,22 +61,23 @@ namespace BSU.Core.Tests.Mocks
 
             if (access.HasFlag(FileAccess.Write))
             {
-                var data = Files.TryGetValue(path, out var content) ? content : new byte[0];
-                return new MockStream(data, d => Files[path] = d);
+                var data = Files.TryGetValue(path, out var content) ? content : Array.Empty<byte>();
+                return Task.FromResult<Stream>(new MockStream(data, d => Files[path] = d));
             }
             else
             {
-                return Files.TryGetValue(path, out var content) ? new MemoryStream(content) : null;
+                var result = Files.TryGetValue(path, out var content) ? new MemoryStream(content) : null;
+                return Task.FromResult<Stream>(result);
             }
         }
 
-        public FileHash GetFileHash(string path)
+        /*public FileHash GetFileHash(string path)
         {
             if (Locked) throw new IOException("File in use");
             return new SHA1AndPboHash(OpenFile(path, FileAccess.Read), Utils.GetExtension(path));
-        }
+        }*/
 
-        public List<string> GetFileList() => Files.Keys.ToList();
+        public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult(Files.Keys.ToList());
 
         public string GetIdentifier() => Identifier;
 
@@ -110,6 +113,23 @@ namespace BSU.Core.Tests.Mocks
                 _save(ToArray());
                 base.Dispose(disposing);
             }
+        }
+
+        public Task<string> GetDisplayName(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
+        {
+            using var stream = OpenFile(path, FileAccess.Read, cancellationToken).Result;
+            var hash = SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None).Result;
+            return Task.FromResult<FileHash>(hash);
+        }
+
+        public Task DeleteFile(string path, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 

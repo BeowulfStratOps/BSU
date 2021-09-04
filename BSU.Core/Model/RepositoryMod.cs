@@ -30,10 +30,10 @@ namespace BSU.Core.Model
             get => _selection;
             set
             {
-                if (value == _selection) return;
+                if (value != null && value.Equals(_selection)) return;
                 _logger.Debug("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
                 _selection = value;
-                _internalState.Selection = PersistedSelection.Create(value);
+                _internalState.Selection = PersistedSelection.FromSelection(value);
             }
         }
 
@@ -47,13 +47,12 @@ namespace BSU.Core.Model
             Identifier = identifier;
             DownloadIdentifier = identifier;
 
-            // TODO: WTF.
-            if (_internalState.Selection == PersistedSelection.Create(new RepositoryModActionSelection()))
-                Selection = new RepositoryModActionSelection();
+            if (_internalState.Selection?.Type == PersistedSelectionType.DoNothing)
+                Selection = new RepositoryModActionDoNothing();
 
             // TODO: is there a cleaner way of doing caching?
-            _matchHash = new ResettableLazyAsync<MatchHash>(CalculateMatchHash, null, CancellationToken.None);
-            _versionHash = new ResettableLazyAsync<VersionHash>(CalculateVersionHash, null, CancellationToken.None);
+            _matchHash = new ResettableLazyAsync<MatchHash>(CalculateMatchHash, null);
+            _versionHash = new ResettableLazyAsync<VersionHash>(CalculateVersionHash, null);
 
             _logger.Info($"Created with identifier {identifier}");
         }
@@ -74,13 +73,19 @@ namespace BSU.Core.Model
             return await Implementation.GetDisplayName(cancellationToken);
         }
 
-        public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.Get();
+        public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.GetAsync(cancellationToken);
 
-        public async Task<VersionHash> GetVersionHash(CancellationToken cancellationToken) => await _versionHash.Get();
+        public async Task<VersionHash> GetVersionHash(CancellationToken cancellationToken) => await _versionHash.GetAsync(cancellationToken);
 
         public void SetSelection(RepositoryModActionSelection selection)
         {
             Selection = selection;
+        }
+
+        public async Task<ModActionEnum> GetActionForMod(IModelStorageMod storageMod,
+            CancellationToken cancellationToken)
+        {
+            return await CoreCalculation.GetModAction(this, storageMod, cancellationToken);
         }
 
         public async Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken)
@@ -96,10 +101,10 @@ namespace BSU.Core.Model
 
             var storageMods = await _modelStructure.GetStorageMods();
             var (result, selectedMod) = await CoreCalculation.AutoSelect(this, storageMods, cancellationToken);
-            var selection = result switch
+            RepositoryModActionSelection selection = result switch
             {
-                AutoSelectResult.Success => new RepositoryModActionSelection(selectedMod),
-                AutoSelectResult.Download => new RepositoryModActionSelection(_modelStructure.GetStorages().First()),
+                AutoSelectResult.Success => new RepositoryModActionStorageMod(selectedMod),
+                AutoSelectResult.Download => new RepositoryModActionDownload(_modelStructure.GetStorages().First()),
                 AutoSelectResult.None => null,
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -109,16 +114,21 @@ namespace BSU.Core.Model
 
         public async Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken)
         {
-            var result = new List<IModelRepositoryMod>();
             var selection = await GetSelection(cancellationToken);
-            if (selection.StorageMod == null) return result;
+            if (selection is not RepositoryModActionStorageMod actionStorageMod) return new List<IModelRepositoryMod>();
+            return await GetConflictsUsingMod(actionStorageMod.StorageMod, cancellationToken);
+        }
+
+        public async Task<List<IModelRepositoryMod>> GetConflictsUsingMod(IModelStorageMod storageMod, CancellationToken cancellationToken)
+        {
+            var result = new List<IModelRepositoryMod>();
             var otherMods = await _modelStructure.GetRepositoryMods();
 
             // TODO: do in parallel?
             foreach (var mod in otherMods)
             {
                 if (mod == this) continue;
-                if (await CoreCalculation.IsConflicting(this, mod, selection.StorageMod, cancellationToken))
+                if (await CoreCalculation.IsConflicting(this, mod, storageMod, cancellationToken))
                     result.Add(mod);
             }
 
@@ -131,26 +141,27 @@ namespace BSU.Core.Model
 
             // TODO: switch
 
-            if (Selection.DoNothing) return null;
+            if (Selection is RepositoryModActionDoNothing) return null;
 
-            var matchHash = await _matchHash.Get();
-            var versionHash = await _versionHash.Get();
+            // TODO: all at the same time
+            var matchHash = await _matchHash.GetAsync(cancellationToken);
+            var versionHash = await _versionHash.GetAsync(cancellationToken);
             var displayName = await GetDisplayName(cancellationToken);
 
-            if (Selection.StorageMod != null)
+            if (Selection is RepositoryModActionStorageMod actionStorageMod)
             {
-                var action = await CoreCalculation.GetModAction(this, Selection.StorageMod, cancellationToken);
+                var action = await CoreCalculation.GetModAction(this, actionStorageMod.StorageMod, cancellationToken);
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate) return null;
 
-                var update = await Selection.StorageMod.PrepareUpdate(Implementation, displayName, matchHash, versionHash);
+                var update = await actionStorageMod.StorageMod.PrepareUpdate(Implementation, displayName, matchHash, versionHash);
                 return update;
             }
 
-            if (Selection.DownloadStorage != null)
+            if (Selection is RepositoryModActionDownload actionDownload)
             {
                 var updateTarget = new UpdateTarget(versionHash.GetHashString(), displayName);
-                var mod = await Selection.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
-                Selection = new RepositoryModActionSelection(mod);
+                var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
+                Selection = new RepositoryModActionStorageMod(mod);
                 var update = await mod.PrepareUpdate(Implementation, displayName, matchHash, versionHash);
                 return update;
             }

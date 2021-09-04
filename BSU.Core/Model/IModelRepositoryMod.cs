@@ -19,5 +19,7 @@ namespace BSU.Core.Model
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
         Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken);
+        Task<List<IModelRepositoryMod>> GetConflictsUsingMod(IModelStorageMod mod, CancellationToken cancellationToken);
+        Task<ModActionEnum> GetActionForMod(IModelStorageMod storageMod, CancellationToken cancellationToken);
     }
 }

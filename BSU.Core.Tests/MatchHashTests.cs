@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
@@ -90,14 +91,14 @@ namespace BSU.Core.Tests
         {
             var storageMod = new MockStorageMod();
             AddFiles(storageMod, names, name);
-            return new MatchHash(storageMod);
+            return MatchHash.CreateAsync(storageMod, CancellationToken.None).Result;
         }
 
         private static MatchHash CreateRepoMod(string[] names, string name)
         {
             var repoMod = new MockRepositoryMod();
             AddFiles(repoMod, names, name);
-            return new MatchHash(repoMod);
+            return MatchHash.CreateAsync(repoMod, CancellationToken.None).Result;
         }
 
         private static bool Check(string[] fileNames1, string modName1, string[] fileNames2, string modName2)

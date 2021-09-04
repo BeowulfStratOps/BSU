@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
-using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 
@@ -31,7 +29,7 @@ namespace BSU.Core.Model
             _loading = Load(CancellationToken.None); // TODO: cts, task.run?
         }
 
-        public async Task Load(CancellationToken cancellationToken)
+        private async Task Load(CancellationToken cancellationToken)
         {
             foreach (KeyValuePair<string, IStorageMod> mod in await Implementation.GetMods(cancellationToken))
             {
@@ -50,17 +48,19 @@ namespace BSU.Core.Model
 
         public async Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget)
         {
+            await _loading;
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
             state.UpdateTarget = updateTarget;
             var storageMod = new StorageMod(mod, identifier, state, Identifier, true);
+            _mods.Add(storageMod);
             return storageMod;
         }
 
         public bool CanWrite => Implementation.CanWrite();
         public PersistedSelection AsStorageIdentifier()
         {
-            return new PersistedSelection(Identifier, null);
+            return new PersistedSelection(PersistedSelectionType.Download, Identifier, null);
         }
 
         public async Task<bool> HasMod(string downloadIdentifier)

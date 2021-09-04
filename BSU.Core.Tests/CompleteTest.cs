@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
@@ -77,7 +78,6 @@ namespace BSU.Core.Tests
         [Fact]
         private void Load()
         {
-            var worker = new MockWorker();
             var types = new Types();
             types.AddRepoType("mock", CreateRepo);
             types.AddStorageType("mock", CreateStorage);
@@ -87,30 +87,32 @@ namespace BSU.Core.Tests
             settings.Storages.Add(new StorageEntry("storage1", "mock", "s1", Guid.NewGuid()));
             //settings.Storages.Add(new StorageEntry("storage2", "mock", "s2"));
             var state = new InternalState(settings);
-            var model = new Model.Model(state, worker, types, worker);
-            var loading = model.Load();
-            worker.DoWork();
-            Assert.True(loading.IsCompletedSuccessfully);
-            var storageMod1 = model.Storages.Single(s => s.Name == "storage1").GetMods().Result
+            var model = new Model.Model(state, types);
+            model.Load();
+            var storageMod1 = model.GetStorages().Single(s => s.Name == "storage1").GetMods().Result
                 .Single(m => m.Identifier == "mod5");
-            var repoMod1 = model.Repositories.Single(s => s.Name == "repo1").GetMods().Result
+            var repoMod1 = model.GetRepositories().Single(s => s.Name == "repo1").GetMods().Result
                 .Single(m => m.Identifier == "mod1");
-            Assert.Equal(storageMod1, repoMod1.Selection.StorageMod);
+            Assert.Equal(storageMod1,
+                ((RepositoryModActionStorageMod)repoMod1.GetSelection(CancellationToken.None).Result).StorageMod);
         }
     }
 
     internal class MockRepository : IRepository
     {
-        public Dictionary<string, IRepositoryMod> Mods { get; set; } = new Dictionary<string, IRepositoryMod>();
-        private readonly Action<MockRepository> _load;
+        public Dictionary<string, IRepositoryMod> Mods { get; } = new();
+        private Action<MockRepository> _load;
 
         public MockRepository(Action<MockRepository> load)
         {
             _load = load;
         }
 
-        public void Load() => _load(this);
-
-        public Dictionary<string, IRepositoryMod> GetMods() => Mods;
+        public Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken)
+        {
+            _load?.Invoke(this);
+            _load = null;
+            return Task.FromResult(Mods);
+        }
     }
 }

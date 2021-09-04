@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
@@ -17,19 +18,18 @@ namespace BSU.Core.Tests
         {
         }
 
-        internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, MockWorker worker, MockModelStructure structure)
+        internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, MockModelStructure structure)
         {
             var mockRepo = new MockRepositoryMod();
             for (int i = 0; i < 3; i++)
             {
                 mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);
             }
-            var repoMod = new RepositoryMod(worker, mockRepo, "myrepo", worker, new MockPersistedRepositoryModState(), structure);
-            structure.RepositoryMods.Add(repoMod);
+            var repoMod = new RepositoryMod(mockRepo, "myrepo", new MockPersistedRepositoryModState(), structure);
             return (mockRepo, repoMod);
         }
 
-        internal static (MockStorageMod, StorageMod) CreateStorageMod(string match, string version, MockWorker worker, MockModelStructure structure, UpdateTarget stateTarget = null)
+        internal static (MockStorageMod, StorageMod) CreateStorageMod(string match, string version, MockModelStructure structure, UpdateTarget stateTarget = null)
         {
             var mockStorage = new MockStorageMod();
             for (int i = 0; i < 3; i++)
@@ -38,7 +38,7 @@ namespace BSU.Core.Tests
             }
 
             var state = new MockPersistedStorageModState {UpdateTarget = stateTarget};
-            var storageMod = new StorageMod(worker, mockStorage, "mystorage", state, worker, Guid.Empty, true);
+            var storageMod = new StorageMod(mockStorage, "mystorage", state, Guid.Empty, true);
             structure.StorageMods.Add(storageMod);
             return (mockStorage, storageMod);
         }
@@ -55,45 +55,21 @@ namespace BSU.Core.Tests
         private void Download()
         {
             var structure = new MockModelStructure();
-            var matchMaker = new MatchMaker();
-            var worker = new MockWorker();
-            var (repoFiles, repoMod) = CreateRepoMod("1", "1", worker, structure);
-            repoMod.Load();
-            worker.DoWork();
-            matchMaker.AddRepositoryMod(repoMod);
+            var (repoFiles, repoMod) = CreateRepoMod("1", "1", structure);
 
             var mockStorage = new MockStorage();
             var storageState = new MockStorageState();
-            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, worker, worker);
-            storage.Load();
-            worker.DoWork();
+            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState);
 
-            IModelStorageMod updated = null;
-            // TODO: events should be named OnXyz
-            repoMod.LocalModUpdated += mod => updated = mod;
+            repoMod.SetSelection(new RepositoryModActionDownload(storage));
 
-            repoMod.Selection = new RepositoryModActionSelection(storage);
+            var update = repoMod.StartUpdate(CancellationToken.None).Result;
+            var prepared = update.Prepare(CancellationToken.None).Result;
+            var updated = prepared.Update(CancellationToken.None).Result;
 
-            var update = repoMod.DoUpdate();
+            var storageMod = storage.GetMods().Result.Single();
 
-            // TODO: update should only have the Create() method, which should return an object that has Prepare() etc.
-            var createTask = update.Create();
-            worker.DoWork();
-            Assert.True(createTask.IsCompletedSuccessfully);
-            var prepTask = createTask.Result.Prepare();
-            worker.DoWork();
-            Assert.True(prepTask.IsCompletedSuccessfully);
-            Assert.True(prepTask.Result.GetStats() > 0);
-            var updateTask = prepTask.Result.Update();
-            worker.DoWork();
-            Assert.True(updateTask.IsCompletedSuccessfully);
-
-            var getModsTask = storage.GetMods();
-            worker.DoWork();
-            var storageMod = getModsTask.Result.Single();
-
-            Assert.Equal(storageMod, updated);
-            Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storageMod));
+            Assert.Equal(ModActionEnum.Use, repoMod.GetActionForMod(storageMod, CancellationToken.None).Result);
 
             Assert.True(FilesEqual(repoFiles, mockStorage.Mods.Values.First()));
         }

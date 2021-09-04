@@ -32,8 +32,7 @@ namespace BSU.Core.Hashes
             return new VersionHash(BuildHash(hashes));
         }
 
-        // TODO: this is for testing only. VersionHash should be abstracted.
-        internal VersionHash(byte[] hash)
+        private VersionHash(byte[] hash)
         {
             _hash = hash;
         }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.Tests.Mocks;
 using Xunit;
@@ -122,14 +123,14 @@ namespace BSU.Core.Tests
         {
             var storageMod = new MockStorageMod();
             AddFiles(storageMod, files);
-            return new VersionHash(storageMod);
+            return VersionHash.CreateAsync(storageMod, CancellationToken.None).Result;
         }
 
         private static VersionHash CreateRepositoryMod(Dictionary<string, string> files)
         {
             var repoMod = new MockRepositoryMod();
             AddFiles(repoMod, files);
-            return new VersionHash(repoMod);
+            return VersionHash.CreateAsync(repoMod, CancellationToken.None).Result;
         }
 
         private static bool Check(Dictionary<string, string> files1, Dictionary<string, string> files2)

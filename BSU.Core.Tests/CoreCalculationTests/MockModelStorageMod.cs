@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
@@ -25,13 +27,13 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public event Action StateChanged;
 
-        public IUpdateCreate PrepareUpdate(IRepositoryMod repositoryMod, UpdateTarget target, MatchHash targetMatch,
+        public Task<IUpdateCreated> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch,
             VersionHash targetVersion)
         {
             throw new NotImplementedException();
         }
 
-        public void Abort()
+        public Task Abort()
         {
             throw new NotImplementedException();
         }
@@ -43,19 +45,18 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public bool CanWrite { get; }
         public string Identifier { get; }
+        public Task<VersionHash> GetVersionHash(CancellationToken cancellationToken)
+        {
+            RequiredVersionHash = true;
+            return Task.FromResult(_versionHash);
+        }
 
-        public VersionHash GetVersionHash() => _versionHash;
-
-        public MatchHash GetMatchHash() => _matchHash;
+        public Task<MatchHash> GetMatchHash(CancellationToken cancellationToken)
+        {
+            RequiredMatchHash = true;
+            return Task.FromResult(_matchHash);
+        }
 
         public StorageModStateEnum GetState() => _state;
-
-        public void RequireMatchHash() => RequiredMatchHash = true;
-
-        public void RequireVersionHash() => RequiredVersionHash = true;
-        public void Load()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using BSU.Core.Hashes;
 using BSU.Core.Tests.Mocks;
 
@@ -15,7 +16,7 @@ namespace BSU.Core.Tests.Util
             {
                 mockRepo.SetFile($"/addons/{match}_{i}.pbo", i.ToString());
             }
-            return new MatchHash(mockRepo);
+            return MatchHash.CreateAsync(mockRepo, CancellationToken.None).Result;
         }
 
         internal static VersionHash GetVersionHash(int? version)
@@ -26,7 +27,7 @@ namespace BSU.Core.Tests.Util
             {
                 mockRepo.SetFile($"/addons/file_{i}.pbo", version.ToString() + i);
             }
-            return new VersionHash(mockRepo);
+            return VersionHash.CreateAsync(mockRepo, CancellationToken.None).Result;
         }
     }
 }

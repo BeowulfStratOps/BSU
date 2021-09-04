@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using BSU.Core.Storage;
 using Xunit;
 
@@ -35,8 +36,7 @@ namespace BSU.Core.Tests
             using var file = Create("@ace", "mod.cpp");
             file.WriteLine("Ey yo");
             var storage = new DirectoryStorage(_tmpDir.FullName);
-            storage.Load();
-            var mods = storage.GetMods();
+            var mods = storage.GetMods(CancellationToken.None).Result;
             // TODO: do some checking
         }
 
@@ -46,8 +46,7 @@ namespace BSU.Core.Tests
             using var file = Create("@ace", "mod.cpp");
             file.WriteLine("Ey yo");
             var storage = new DirectoryStorage(_tmpDir.FullName);
-            storage.Load();
-            using var newFile = storage.GetMods().Values.Single().OpenFile("/addons/addon2.pbo", FileAccess.Write);
+            using var newFile = storage.GetMods(CancellationToken.None).Result.Values.Single().OpenFile("/addons/addon2.pbo", FileAccess.Write, CancellationToken.None).Result;
             newFile.Write(new byte[] {1, 2, 3}, 0, 3);
             newFile.Close();
             // TODO: check file contents, file still in use

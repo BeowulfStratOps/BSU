@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
@@ -18,40 +20,54 @@ namespace BSU.Core.Tests.CoreCalculationTests
             _versionHash = TestUtils.GetVersionHash(version);
         }
 
-        public UpdateTarget AsUpdateTarget { get; }
-        public RepositoryModActionSelection Selection { get; set; }
+        public void SetSelection(RepositoryModActionSelection selection)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public string DownloadIdentifier { get; set; }
         public string Identifier { get; }
-        public bool IsLoaded => true;
-        public event Action OnLoaded;
-        public event Action<IModelStorageMod> LocalModUpdated;
-        public event Action SelectionChanged;
-        public IUpdateCreate StartUpdate()
+        public Dictionary<IModelStorageMod, List<IModelRepositoryMod>> Conflicts { get; set; } = new();
+
+        public Task<IUpdateCreated> StartUpdate(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public void ProcessMod(IModelStorageMod storageMod)
+        public Task<string> GetDisplayName(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public string GetDisplayName()
+        public Task<MatchHash> GetMatchHash(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_matchHash);
+        }
+
+        public Task<VersionHash> GetVersionHash(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_versionHash);
+        }
+
+        public Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public void SignalAllStorageModsLoaded()
+        public Task<List<IModelRepositoryMod>> GetConflictsUsingMod(IModelStorageMod mod, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var conflicts = Conflicts.TryGetValue(mod, out var mods) ? mods : new List<IModelRepositoryMod>();
+            return Task.FromResult(conflicts);
         }
 
-        public MatchHash GetMatchHash() => _matchHash;
-
-        public VersionHash GetVersionHash() => _versionHash;
-        public void Load()
+        public Task<ModActionEnum> GetActionForMod(IModelStorageMod storageMod, CancellationToken cancellationToken)
         {
-
+            return CoreCalculation.GetModAction(this, storageMod, cancellationToken);
         }
     }
 }

@@ -1,15 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using BSU.Core.Hashes;
+﻿using System.Threading;
 using BSU.Core.Model;
-using BSU.Core.Tests.CoreCalculationTests;
-using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
-using Moq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.CoreCalculationTests
 {
     public class ConflictTests : LoggedTest
     {
@@ -24,13 +19,9 @@ namespace BSU.Core.Tests
 
             var repoMod2 = new MockModelRepositoryMod(1, 2);
 
-            var storageMod = new MockModelStorageMod(1, 1, StorageModStateEnum.Versioned);
+            var storageMod = new MockModelStorageMod(1, 1, StorageModStateEnum.Created);
 
-            var structure = new MockModelStructure {RepositoryMods = {repoMod1, repoMod2}};
-
-            var conflicts = CoreCalculation.GetConflicts(repoMod1, storageMod, structure);
-
-            Assert.Single(conflicts);
+            Assert.True(CoreCalculation.IsConflicting(repoMod1, repoMod2, storageMod, CancellationToken.None).Result);
         }
 
         [Fact]
@@ -40,13 +31,9 @@ namespace BSU.Core.Tests
 
             var repoMod2 = new MockModelRepositoryMod(1, 1);
 
-            var storageMod = new MockModelStorageMod(1, 1, StorageModStateEnum.Versioned);
+            var storageMod = new MockModelStorageMod(1, 1, StorageModStateEnum.Created);
 
-            var structure = new MockModelStructure {RepositoryMods = {repoMod1, repoMod2}};
-
-            var conflicts = CoreCalculation.GetConflicts(repoMod1, storageMod, structure);
-
-            Assert.Empty(conflicts);
+            Assert.False(CoreCalculation.IsConflicting(repoMod1, repoMod2, storageMod, CancellationToken.None).Result);
         }
     }
 }

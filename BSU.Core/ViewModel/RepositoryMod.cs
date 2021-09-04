@@ -52,11 +52,11 @@ namespace BSU.Core.ViewModel
 
         private async Task<ModAction> UpdateAction(IModelStorageMod storageMod)
         {
-            var isCurrentlySelected = Selection?.AsSelection?.StorageMod == storageMod;
+            var isCurrentlySelected = Selection?.AsSelection is RepositoryModActionStorageMod actionStorageMod && actionStorageMod.StorageMod == storageMod;
             var action = await CoreCalculation.GetModAction(Mod, storageMod, CancellationToken.None);
             if (action == ModActionEnum.Unusable)
             {
-                var removeAction = Actions.SingleOrDefault(a => a.AsSelection.StorageMod == storageMod);
+                var removeAction = Actions.SingleOrDefault(a => a.AsSelection is RepositoryModActionStorageMod actionStorageMod && actionStorageMod.StorageMod == storageMod);
                 if (removeAction != null)
                     Actions.Remove(removeAction);
                 if (isCurrentlySelected)
@@ -161,14 +161,14 @@ namespace BSU.Core.ViewModel
         {
             DisplayName = await Mod.GetDisplayName(CancellationToken.None);
             var selection = await Mod.GetSelection(CancellationToken.None);
-            if (selection.StorageMod != null)
+            if (selection is RepositoryModActionStorageMod actionStorageMod)
             {
-                var updatedAction = await UpdateAction(selection.StorageMod);
+                var updatedAction = await UpdateAction(actionStorageMod.StorageMod);
                 Selection = updatedAction;
             }
             else
             {
-                Selection = ModAction.Create(selection, Mod, null);
+                Selection = await ModAction.Create(selection, Mod, CancellationToken.None);
             }
         }
     }

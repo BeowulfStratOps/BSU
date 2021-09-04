@@ -66,7 +66,10 @@ namespace BSU.Core.Sync
 
         public async Task UpdateAsync(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            // TODO: should probably have some sort of progress?
+            // TODO: do some throttling
+            var tasks = _allActions.Select(a => a.DoAsync(cancellationToken));
+            await Task.WhenAll(tasks);
         }
     }
 }

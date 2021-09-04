@@ -1,14 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
-using BSU.Core.Model.Utility;
 
 namespace BSU.Core.Tests.Mocks
 {
-    internal class MockUpdateState : IUpdateCreate, IUpdateCreated, IUpdatePrepared, IUpdateDone
+    internal class MockUpdateState : IUpdateCreated, IUpdatePrepared, IUpdateDone
     {
-        private readonly bool _errorCreate;
         private readonly bool _errorPrepare;
         private readonly bool _errorUpdate;
 
@@ -18,29 +16,10 @@ namespace BSU.Core.Tests.Mocks
         {
             _errorPrepare = errorPrepare;
             _errorUpdate = errorUpdate;
-            _state = UpdateState.Created;
+            State = UpdateState.Created;
         }
 
-        public MockUpdateState(bool errorCreate, bool errorPrepare, bool errorUpdate)
-        {
-            _errorCreate = errorCreate;
-            _errorPrepare = errorPrepare;
-            _errorUpdate = errorUpdate;
-            _state = UpdateState.NotCreated;
-        }
-
-        public Task<IUpdateCreated> Create()
-        {
-            if (State == UpdateState.Created) return Task.FromResult<IUpdateCreated>(this);
-            if (State != UpdateState.NotCreated) throw new InvalidOperationException();
-            if (_errorCreate)
-                return Error<IUpdateCreated>();
-            else
-                State = UpdateState.Created;
-            return Task.FromResult<IUpdateCreated>(this);
-        }
-
-        public Task<IUpdatePrepared> Prepare()
+        public Task<IUpdatePrepared> Prepare(CancellationToken cancellationToken)
         {
             if (State != UpdateState.Created) throw new InvalidOperationException();
             if (_errorPrepare)
@@ -50,7 +29,7 @@ namespace BSU.Core.Tests.Mocks
             return Task.FromResult<IUpdatePrepared>(this);
         }
 
-        public Task<IUpdateDone> Update()
+        public Task<IUpdateDone> Update(CancellationToken cancellationToken)
         {
             if (State != UpdateState.Prepared) throw new InvalidOperationException();
             CommitCalled = true;
@@ -80,38 +59,14 @@ namespace BSU.Core.Tests.Mocks
             OnEnded?.Invoke();
         }
 
-        private UpdateState _state;
+        private UpdateState State { get; set; }
 
-        private UpdateState State
-        {
-            get => _state;
-            set
-            {
-                if (_state == value) return;
-                _state = value;
-                OnStateChange?.Invoke();
-            }
-        }
-
-        public event Action OnStateChange;
         public event Action OnEnded;
-
-        public MatchHash GetTargetMatch()
-        {
-            throw new NotImplementedException();
-        }
-
-        public VersionHash GetTargetVersion()
-        {
-            throw new NotImplementedException();
-        }
 
         public int GetStats()
         {
             throw new NotImplementedException();
         }
-
-        public IProgressProvider ProgressProvider { get; } = new ProgressProvider();
 
         public override string ToString() => State.ToString();
     }

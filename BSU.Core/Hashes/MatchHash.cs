@@ -115,5 +115,10 @@ namespace BSU.Core.Hashes
             _pboNames = new HashSet<string>(pboNames);
             _name = name;
         }
+
+        public static MatchHash CreateEmpty()
+        {
+            return new MatchHash(Array.Empty<string>(), null);
+        }
     }
 }

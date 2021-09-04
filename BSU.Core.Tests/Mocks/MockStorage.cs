@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Tests.Mocks
@@ -16,26 +18,33 @@ namespace BSU.Core.Tests.Mocks
         }
 
         public bool CanWrite() => true;
-
-        public Dictionary<string, IStorageMod> GetMods() =>
-            Mods.ToDictionary(kv => kv.Key, kv => (IStorageMod) kv.Value);
-
-        public IStorageMod CreateMod(string identifier)
+        public Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
         {
+            Load();
+            var mods = Mods.ToDictionary(kv => kv.Key, kv => (IStorageMod) kv.Value);
+            return Task.FromResult(mods);
+        }
+
+        public Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
+        {
+            Load();
             if (identifier == null) throw new ArgumentNullException();
             var newMod = new MockStorageMod {Identifier = identifier, Storage = this};
             Mods.Add(identifier, newMod);
-            return newMod;
+            return Task.FromResult<IStorageMod>(newMod);
         }
 
-        public void RemoveMod(string identifier)
+        public Task RemoveMod(string identifier, CancellationToken cancellationToken)
         {
+            Load();
             Mods.Remove(identifier);
+            return Task.CompletedTask;
         }
 
-        public void Load()
+        private void Load()
         {
             _load?.Invoke(this);
+            _load = null;
         }
     }
 }

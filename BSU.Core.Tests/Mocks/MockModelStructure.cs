@@ -16,12 +16,18 @@ namespace BSU.Core.Tests.Mocks
             return new List<Repository>();
         }
 
+        public Task<IEnumerable<IModelStorageMod>> GetStorageMods()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<IModelRepositoryMod>> GetRepositoryMods()
+        {
+            throw new NotImplementedException();
+        }
+
         public List<IModelStorageMod> StorageMods { get; } = new();
 
-        public IEnumerable<IModelStorageMod> GetAllStorageMods() => StorageMods;
-
         public List<IModelRepositoryMod> RepositoryMods { get; } = new();
-
-        public IEnumerable<IModelRepositoryMod> GetAllRepositoryMods() => RepositoryMods;
     }
 }

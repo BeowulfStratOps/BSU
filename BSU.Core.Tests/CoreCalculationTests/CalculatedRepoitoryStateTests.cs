@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Linq;
 using BSU.Core.Model;
-using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using Moq;
 using Xunit;
@@ -15,43 +13,39 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        private IModelRepositoryMod CreateMod(MockModelStructure structure, ModActionEnum? selectedModAction,
-            bool hasDownloadSelected, bool doNothing = false)
+        private (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?) Null()
         {
-            if (selectedModAction != null && hasDownloadSelected) throw new ArgumentException();
+            return (new MockModelRepositoryMod(null, null), null, null);
+        }
 
-            RepositoryModActionSelection selection = null;
+        private (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?) DoNothing()
+        {
+            return (new MockModelRepositoryMod(null, null), new RepositoryModActionDoNothing(), null);
+        }
 
-            if (selectedModAction != null)
-            {
-                var storageMod = AutoselectTests.AddAction(structure, (ModActionEnum) selectedModAction);
-                selection = new RepositoryModActionSelection(storageMod);
-            }
+        private (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?) Download()
+        {
+            var storage = new Mock<IModelStorage>(MockBehavior.Strict).Object;
+            return (new MockModelRepositoryMod(null, null), new RepositoryModActionDownload(storage), null);
+        }
 
-            if (hasDownloadSelected)
-            {
-                var download = new Mock<IModelStorage>(MockBehavior.Strict);
-                selection = new RepositoryModActionSelection(download.Object);
-            }
+        private (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?) StorageMod(ModActionEnum? action)
+        {
+            var storageMod = AutoselectTests.FromAction((ModActionEnum) action);
+            return (new MockModelRepositoryMod(null, null), new RepositoryModActionStorageMod(storageMod), null);
+        }
 
-            if (doNothing)
-            {
-                selection = new RepositoryModActionSelection();
-            }
-
-            var res = new MockModelRepositoryMod(1, 1) {Selection = selection};
-
-            return res;
+        private CalculatedRepositoryState CalculateState(params (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?)[] modData)
+        {
+            return CoreCalculation.CalculateRepositoryState(modData.ToList());
         }
 
         [Fact]
         private void Single_Download()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, true)
-            }, structure);
+            var result = CalculateState(
+                Download()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
             Assert.False(result.IsPartial);
         }
@@ -59,11 +53,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void Single_Ready()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Use)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
             Assert.False(result.IsPartial);
         }
@@ -71,35 +63,19 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void Single_Update()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Update, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Update)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
-        }
-
-        [Fact]
-        private void Single_Loading()
-        {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Loading, false)
-            }, structure);
-            Assert.Equal(CalculatedRepositoryStateEnum.Loading, result.State);
             Assert.False(result.IsPartial);
         }
 
         [Fact]
         private void Single_UserIntervention()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, false)
-            }, structure);
+            var result = CalculateState(
+                Null()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
             Assert.False(result.IsPartial);
         }
@@ -107,11 +83,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void Single_Await()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Await, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Await)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
             Assert.False(result.IsPartial);
         }
@@ -119,11 +93,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void Single_ContinueUpdate()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.ContinueUpdate, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.ContinueUpdate)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
@@ -131,11 +103,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void Single_AbortAndUpdate()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.AbortAndUpdate, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.AbortAndUpdate)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
@@ -143,12 +113,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void UseAnd_Download()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, true),
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
+            var result = CalculateState(
+                Download(),
+                StorageMod(ModActionEnum.Use)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
             Assert.False(result.IsPartial);
         }
@@ -156,12 +124,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void UseAnd_Ready()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Use, false),
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Use),
+                StorageMod(ModActionEnum.Use)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
             Assert.False(result.IsPartial);
         }
@@ -169,38 +135,21 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void UseAnd_Update()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Update, false),
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Update),
+                StorageMod(ModActionEnum.Use)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
-        }
-
-        [Fact]
-        private void UseAnd_Loading()
-        {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Loading, false),
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
-            Assert.Equal(CalculatedRepositoryStateEnum.Loading, result.State);
             Assert.False(result.IsPartial);
         }
 
         [Fact]
         private void UseAnd_UserIntervention()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, false),
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Use),
+                Null()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
             Assert.False(result.IsPartial);
         }
@@ -208,12 +157,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void UseAnd_Await()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Await, false),
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Use),
+                StorageMod(ModActionEnum.Await)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
             Assert.False(result.IsPartial);
         }
@@ -221,12 +168,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void UseAnd_ContinueUpdate()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.ContinueUpdate, false),
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.ContinueUpdate),
+                StorageMod(ModActionEnum.Use)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
@@ -234,12 +179,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void UseAnd_AbortAndUpdate()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.AbortAndUpdate, false),
-                CreateMod(structure, ModActionEnum.Use, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.AbortAndUpdate),
+                StorageMod(ModActionEnum.Use)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
@@ -247,12 +190,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void UserIntervention_AndUpdate()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, false),
-                CreateMod(structure, ModActionEnum.Update, false)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Update),
+                Null()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
             Assert.False(result.IsPartial);
         }
@@ -260,13 +201,11 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void MoreDownload()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, true),
-                CreateMod(structure, null, true),
-                CreateMod(structure, ModActionEnum.Update, false)
-            }, structure);
+            var result = CalculateState(
+                Download(),
+                Download(),
+                StorageMod(ModActionEnum.Update)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
             Assert.False(result.IsPartial);
         }
@@ -274,13 +213,11 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void MoreUpdate()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, true),
-                CreateMod(structure, ModActionEnum.Update, false),
-                CreateMod(structure, ModActionEnum.Update, false)
-            }, structure);
+            var result = CalculateState(
+                Download(),
+                StorageMod(ModActionEnum.Update),
+                StorageMod(ModActionEnum.Update)
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.False(result.IsPartial);
         }
@@ -288,12 +225,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void DoNothingAnd_Download()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, true),
-                CreateMod(structure, null, false, true)
-            }, structure);
+            var result = CalculateState(
+                Download(),
+                DoNothing()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
             Assert.True(result.IsPartial);
         }
@@ -301,12 +236,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void DoNothingAnd_Ready()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Use, false),
-                CreateMod(structure, null, false, true)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Use),
+                DoNothing()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
             Assert.True(result.IsPartial);
         }
@@ -314,38 +247,21 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void DoNothingAnd_Update()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Update, false),
-                CreateMod(structure, null, false, true)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Update),
+                DoNothing()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.True(result.IsPartial);
-        }
-
-        [Fact]
-        private void DoNothingAnd_Loading()
-        {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Loading, false),
-                CreateMod(structure, null, false, true)
-            }, structure);
-            Assert.Equal(CalculatedRepositoryStateEnum.Loading, result.State);
             Assert.True(result.IsPartial);
         }
 
         [Fact]
         private void DoNothingAnd_UserIntervention()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, false),
-                CreateMod(structure, null, false, true)
-            }, structure);
+            var result = CalculateState(
+                Null(),
+                DoNothing()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
             Assert.True(result.IsPartial);
         }
@@ -353,12 +269,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void DoNothingAnd_Await()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.Await, false),
-                CreateMod(structure, null, false, true)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.Await),
+                DoNothing()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
             Assert.True(result.IsPartial);
         }
@@ -366,12 +280,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void DoNothingAnd_ContinueUpdate()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.ContinueUpdate, false),
-                CreateMod(structure, null, false, true)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.ContinueUpdate),
+                DoNothing()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.True(result.IsPartial);
         }
@@ -379,12 +291,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void DoNothingAnd_AbortAndUpdate()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, ModActionEnum.AbortAndUpdate, false),
-                CreateMod(structure, null, false, true)
-            }, structure);
+            var result = CalculateState(
+                StorageMod(ModActionEnum.AbortAndUpdate),
+                DoNothing()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
             Assert.True(result.IsPartial);
         }
@@ -392,11 +302,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         [Fact]
         private void Single_DoNothing()
         {
-            var structure = new MockModelStructure();
-            var result = CoreCalculation.CalculateRepositoryState(new List<IModelRepositoryMod>
-            {
-                CreateMod(structure, null, false, true)
-            }, structure);
+            var result = CalculateState(
+                DoNothing()
+            );
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
             Assert.True(result.IsPartial);
         }

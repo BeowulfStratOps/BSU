@@ -59,8 +59,8 @@ namespace BSU.Core.Model
                 initialVersionHash = VersionHash.FromDigest(_updateTarget.Hash);
             }
 
-            _matchHash = new ResettableLazyAsync<MatchHash>(CreateMatchHash, null, CancellationToken.None); // TODO: ct
-            _versionHash = new ResettableLazyAsync<VersionHash>(CreateVersionHash, initialVersionHash, CancellationToken.None); // TODO: ct
+            _matchHash = new ResettableLazyAsync<MatchHash>(CreateMatchHash, null);
+            _versionHash = new ResettableLazyAsync<VersionHash>(CreateVersionHash, initialVersionHash);
         }
 
         private async Task<VersionHash> CreateVersionHash(CancellationToken cancellationToken)
@@ -73,11 +73,9 @@ namespace BSU.Core.Model
             return await MatchHash.CreateAsync(Implementation, cancellationToken);
         }
 
-        // TODO: cts?
-        public async Task<VersionHash> GetVersionHash(CancellationToken cancellationToken) => await _versionHash.Get();
+        public async Task<VersionHash> GetVersionHash(CancellationToken cancellationToken) => await _versionHash.GetAsync(cancellationToken);
 
-        // TODO: cts?
-        public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.Get();
+        public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.GetAsync(cancellationToken);
 
         public StorageModStateEnum GetState() => State;
 
@@ -120,7 +118,7 @@ namespace BSU.Core.Model
             try
             {
                 if (!acceptableCurrent.Contains(State)) throw new InvalidOperationException();
-                await Task.WhenAll(_matchHash.AwaitReset(), _versionHash.AwaitReset());
+                await Task.WhenAll(_matchHash.ResetAndWaitAsync(), _versionHash.ResetAndWaitAsync());
                 UpdateTarget = null;
                 if (setValues != null) await setValues();
                 State = newState;
@@ -138,7 +136,7 @@ namespace BSU.Core.Model
 
         public PersistedSelection GetStorageModIdentifiers()
         {
-            return new PersistedSelection(_parentIdentifier, Identifier);
+            return new PersistedSelection(PersistedSelectionType.StorageMod, _parentIdentifier, Identifier);
         }
 
         public override string ToString() => Identifier;

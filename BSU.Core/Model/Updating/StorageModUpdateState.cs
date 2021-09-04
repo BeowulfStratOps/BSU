@@ -60,9 +60,10 @@ namespace BSU.Core.Model.Updating
                 var repoSync = await RepoSync.BuildAsync(_repositoryMod, _storageMod, cts.Token);
                 return new StorageModUpdatePrepared(repoSync, Common);
             }
-            finally
+            catch (Exception)
             {
                 Common.SignalEnded();
+                throw;
             }
         }
     }

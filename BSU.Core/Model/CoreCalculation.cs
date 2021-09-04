@@ -59,8 +59,8 @@ namespace BSU.Core.Model
         {
             async Task<(IModelStorageMod mod, ModActionEnum action, bool hasConflcts)> GetModInfo(IModelStorageMod mod)
             {
-                var actionTask = GetModAction(repoMod, mod, cancellationToken);
-                var conflictTask = repoMod.GetConflicts(cancellationToken);
+                var actionTask = repoMod.GetActionForMod(mod, cancellationToken);
+                var conflictTask = repoMod.GetConflictsUsingMod(mod, cancellationToken);
                 await Task.WhenAll(actionTask, conflictTask);
                 return (mod, actionTask.Result, conflictTask.Result.Any());
             }
@@ -107,20 +107,20 @@ namespace BSU.Core.Model
             RequiresUserIntervention // Else
             */
 
-            var partial = mods.Any(m => m.selection?.DoNothing ?? false);
+            var partial = mods.Any(m => m.selection is RepositoryModActionDoNothing);
 
-            mods = mods.Where(m => !(m.selection?.DoNothing ?? false)).ToList();
+            mods = mods.Where(m => m.selection is not RepositoryModActionDoNothing).ToList();
 
             if (mods.All(mod =>
-                mod.selection?.StorageMod != null && mod.action == ModActionEnum.Use))
+                mod.selection is RepositoryModActionStorageMod && mod.action == ModActionEnum.Use))
             {
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Ready, partial);
             }
 
-            if (mods.All(mod => mod.selection?.StorageMod != null || mod.selection?.DownloadStorage != null))
+            if (mods.All(mod => mod.selection is RepositoryModActionStorageMod or RepositoryModActionDownload))
             {
 
-                if (mods.Count(mod => mod.selection?.DownloadStorage != null) > 0.5 * mods.Count)
+                if (mods.Count(mod => mod.selection is RepositoryModActionDownload) > 0.5 * mods.Count)
                     return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsDownload, partial);
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsUpdate, partial);
             }

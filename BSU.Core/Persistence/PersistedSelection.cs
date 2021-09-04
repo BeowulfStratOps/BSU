@@ -6,55 +6,54 @@ namespace BSU.Core.Persistence
     internal class PersistedSelection : IEquatable<PersistedSelection>
     {
         // TODO: might need a way to store download identifier?
-        // TODO: make more explicit regarding DoNothing/Mod/Download
 
+        public PersistedSelectionType Type { get; }
         public Guid? Storage { get; }
         public string Mod { get; }
 
-        public PersistedSelection(Guid? storage, string mod)
+        public PersistedSelection(PersistedSelectionType type, Guid? storage, string mod)
         {
+            Type = type;
             Storage = storage;
             Mod = mod;
         }
 
-        public static PersistedSelection Create(RepositoryModActionSelection storage)
+        public static PersistedSelection FromSelection(RepositoryModActionSelection selection)
         {
-            if (storage.DoNothing) return new PersistedSelection(null, null);
-            if (storage.StorageMod != null) return storage.StorageMod.GetStorageModIdentifiers();
-            if (storage.DownloadStorage != null) return storage.DownloadStorage.AsStorageIdentifier();
-            throw new ArgumentException();
+            return selection switch
+            {
+                null => throw new NotImplementedException(), // TODO: implement
+                RepositoryModActionDoNothing => new PersistedSelection(PersistedSelectionType.DoNothing, null, null),
+                RepositoryModActionStorageMod storageModAction => storageModAction.StorageMod.GetStorageModIdentifiers(),
+                RepositoryModActionDownload downloadAction => downloadAction.DownloadStorage.AsStorageIdentifier(),
+                _ => throw new ArgumentException()
+            };
         }
+
+        public override string ToString() => $"{Storage?.ToString() ?? "-"}/{Mod??"-"}";
 
         public bool Equals(PersistedSelection other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Nullable.Equals(Storage, other.Storage) && Mod == other.Mod;
+            return Type == other.Type && Nullable.Equals(Storage, other.Storage) && Mod == other.Mod;
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(PersistedSelection)) return false;
-            return Equals((PersistedSelection) obj);
+            return Equals(obj as PersistedSelection);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Storage, Mod);
+            return HashCode.Combine((int)Type, Storage, Mod);
         }
+    }
 
-        public static bool operator ==(PersistedSelection left, PersistedSelection right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(PersistedSelection left, PersistedSelection right)
-        {
-            return !Equals(left, right);
-        }
-
-        public override string ToString() => $"{Storage?.ToString() ?? "-"}/{Mod??"-"}";
+    internal enum PersistedSelectionType
+    {
+        DoNothing,
+        StorageMod,
+        Download
     }
 }
