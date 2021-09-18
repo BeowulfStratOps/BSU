@@ -9,76 +9,79 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class ViewModel : ObservableBase
+    public class ViewModel : ObservableBase, IViewModelService
     {
-        public DelegateCommand AddRepository { get; }
-        public DelegateCommand AddStorage { get; }
+        private object _content;
+        public object Content
+        {
+            get => _content;
+            private set
+            {
+                if (_content == value) return;
+                _content = value;
+                OnPropertyChanged();
+            }
+        }
 
-        private IModel Model { get; }
-        public ObservableCollection<Repository> Repositories { get; } = new();
-        public ObservableCollection<Storage> Storages { get; } = new();
-
-        public InteractionRequest<AddRepository, bool?> AddRepositoryInteraction { get; } = new();
-        public InteractionRequest<AddStorage, bool?> AddStorageInteraction { get; } = new();
+        private readonly RepositoriesPage _repoPage;
+        private readonly StoragePage _storagePage;
 
         internal ViewModel(IModel model)
         {
-            AddRepository = new DelegateCommand(DoAddRepository);
-            AddStorage = new DelegateCommand(DoAddStorage);
-            Model = model;
-            foreach (var modelRepository in model.GetRepositories())
-            {
-                Repositories.Add(new Repository(modelRepository, model, Update));
-            }
-            foreach (var modelStorage in model.GetStorages())
-            {
-                Storages.Add(new Storage(modelStorage, model));
-            }
-        }
-
-        private async Task DoAddRepository()
-        {
-            var vm = new AddRepository();
-            var doAdd = await AddRepositoryInteraction.Raise(vm);
-
-            if (doAdd != true) return;
-            var repo = Model.AddRepository("BSO", vm.Url, vm.Name);
-            Repositories.Add(new Repository(repo, Model, Update));
-        }
-
-        private async Task DoAddStorage()
-        {
-            var vm = new AddStorage();
-            var doAdd = await AddStorageInteraction.Raise(vm);
-            if (doAdd != true) return;
-            var storage = Model.AddStorage("DIRECTORY", new DirectoryInfo(vm.Path), vm.Name);
-            Storages.Add(new Storage(storage, Model));
+            _repoPage = new RepositoriesPage(model, this);
+            _storagePage = new StoragePage(model, this);
+            Content = _repoPage;
         }
 
         public async Task Load()
         {
-            async Task LoadAndUpdate(Repository repository)
-            {
-                await repository.Load();
-                await repository.UpdateMods();
-            }
-
-            var tasks = new List<Task>();
-            tasks.AddRange(Repositories.Select(LoadAndUpdate));
-            tasks.AddRange(Storages.Select(s => s.Load()));
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(_repoPage.Load(), _storagePage.Load());
         }
 
         public async Task Update()
         {
             try
             {
-                await Task.WhenAll(Repositories.Select(r => r.UpdateMods()));
+                await _repoPage.Update();
             }
             catch (OperationCanceledException)
             {
                 // happens if something changes in the model. view model will call updated again after whatever cause the change is done
             }
         }
+
+        private readonly Stack<object> _navigationStack = new();
+
+        public void NavigateToRepositories()
+        {
+            _navigationStack.Push(Content);
+            Content = _repoPage;
+        }
+
+        public void NavigateToStorages()
+        {
+            _navigationStack.Push(Content);
+            Content = _storagePage;
+        }
+
+        public void NavigateToRepository(Repository repository)
+        {
+            _navigationStack.Push(Content);
+            Content = repository;
+        }
+
+        public void NavigateBack()
+        {
+            Content = _navigationStack.Pop();
+        }
+    }
+
+    public interface IViewModelService
+    {
+        Task Update();
+        void NavigateToRepositories();
+        void NavigateToStorages();
+        void NavigateToRepository(Repository repository);
+        void NavigateBack();
     }
 }

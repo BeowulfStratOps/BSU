@@ -36,26 +36,13 @@
                     <TextBlock Text="{Binding Path=CalculatedState}"></TextBlock>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Command="{Binding Details}">Details</Button>
                     <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE74D;" Margin="2" Command="{Binding Delete}"></Button>
                     <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE896;" Margin="2" Command="{Binding Update}"></Button>
                     <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xEDB5;" Margin="2" IsEnabled="False"></Button>
                 </StackPanel>
             </DockPanel>
             <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleIfTrueConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
-            <Expander>
-                <Expander.Header>
-                    <TextBlock>Mods</TextBlock>
-                </Expander.Header>
-                <Border BorderBrush="Black" BorderThickness="1">
-                    <ItemsControl ItemsSource="{Binding Path=Mods}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <local:RepositoryMod></local:RepositoryMod>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Border>
-            </Expander>
         </DockPanel>
     </Border>
 </UserControl>

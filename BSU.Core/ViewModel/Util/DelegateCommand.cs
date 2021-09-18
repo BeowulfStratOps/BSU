@@ -6,10 +6,20 @@ namespace BSU.Core.ViewModel.Util
 {
     public class DelegateCommand : ICommand
     {
-        private readonly Func<Task> _action;
+        private readonly Action _action;
         private bool _canExecute;
 
         public DelegateCommand(Func<Task> action, bool canExecute = true)
+        {
+            // TODO: async void = bad
+            _action = async () =>
+            {
+                await action();
+            };
+            _canExecute = canExecute;
+        }
+
+        public DelegateCommand(Action action, bool canExecute = true)
         {
             _action = action;
             _canExecute = canExecute;
@@ -19,13 +29,11 @@ namespace BSU.Core.ViewModel.Util
         {
             if (value == _canExecute) return;
             _canExecute = value;
-            CanExecuteChanged?.Invoke(null, new EventArgs());
+            CanExecuteChanged?.Invoke(null, EventArgs.Empty);
         }
 
         public bool CanExecute(object parameter) => _canExecute;
-
-        // TODO: async void = bad
-        public async void Execute(object parameter) => await _action();
+        public void Execute(object parameter) => _action();
 
         public event EventHandler CanExecuteChanged;
     }

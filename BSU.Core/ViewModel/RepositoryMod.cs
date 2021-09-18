@@ -12,7 +12,7 @@ namespace BSU.Core.ViewModel
     public class RepositoryMod : ObservableBase
     {
         internal readonly IModelRepositoryMod Mod;
-        private readonly Func<Task> _updateViewModel;
+        private readonly IViewModelService _viewModelService;
 
         public string Name => _name;
 
@@ -42,14 +42,14 @@ namespace BSU.Core.ViewModel
                 ShowDownloadIdentifier = _selection is SelectStorage;
                 OnPropertyChanged();
                 UpdateErrorText(); // TODO: await? :(
-                _updateViewModel(); // TODO: await? pls? somewhere? :(
+                _viewModelService.Update(); // TODO: await? pls? somewhere? :(
             }
         }
 
-        internal RepositoryMod(IModelRepositoryMod mod, IModel model, Func<Task> updateViewModel)
+        internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)
         {
             Mod = mod;
-            _updateViewModel = updateViewModel;
+            _viewModelService = viewModelService;
             _name = mod.Identifier;
 
             DownloadIdentifier = mod.DownloadIdentifier;
@@ -205,7 +205,6 @@ namespace BSU.Core.ViewModel
                 Selection = await ModAction.Create(selection, Mod, CancellationToken.None);
             }
 
-            // TODO: meh...
             var actions = await Mod.GetModActions(CancellationToken.None);
             foreach (var (mod, _) in actions)
             {
@@ -219,7 +218,7 @@ namespace BSU.Core.ViewModel
             var update = await Mod.StartUpdate(progress, cancellationToken);
             if (update == null) return default;
             CanChangeSelection = false;
-            await _updateViewModel();
+            await _viewModelService.Update();
 
             return (update, progress);
         }

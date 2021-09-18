@@ -12,7 +12,7 @@ namespace BSU.Core.ViewModel
     {
         private readonly IModelRepository _repository;
         private readonly IModel _model;
-        private readonly Func<Task> _updateViewModel;
+        private readonly IViewModelService _viewModelService;
         public string Name { get; }
 
         public FileSyncProgress UpdateProgress { get; } = new();
@@ -37,14 +37,30 @@ namespace BSU.Core.ViewModel
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new();
 
-        internal Repository(IModelRepository repository, IModel model, Func<Task> updateViewModel)
+        public DelegateCommand Update { get; }
+
+        public DelegateCommand Delete { get; }
+        public DelegateCommand Details { get; }
+
+
+        public DelegateCommand Back { get; }
+
+        public DelegateCommand ShowStorage { get; }
+
+        public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new();
+        public Guid Identifier { get; }
+
+        internal Repository(IModelRepository repository, IModel model, IViewModelService viewModelService)
         {
             _repository = repository;
             _model = model;
-            _updateViewModel = updateViewModel;
+            _viewModelService = viewModelService;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
+            Back = new DelegateCommand(viewModelService.NavigateBack);
+            ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
+            Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
             Name = repository.Name;
         }
 
@@ -92,25 +108,19 @@ Cancel - Do not remove this repository";
 
             var updateStats = await update.Update(CancellationToken.None);
 
-            await _updateViewModel();
+            await _viewModelService.Update();
 
             var updatedText = $"{updateStats.SucceededCount} Mods updated. {updateStats.FailedCount} Mods failed.";
             var updatedContext = new MsgPopupContext(updatedText, "Update Finished");
             await UpdateFinished.Raise(updatedContext);
         }
 
-        public DelegateCommand Update { get; }
-
-        public DelegateCommand Delete { get; }
-        public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new();
-        public Guid Identifier { get; }
-
         public async Task Load()
         {
             var mods = await _repository.GetMods();
             foreach (var mod in mods)
             {
-                Mods.Add(new RepositoryMod(mod, _model, _updateViewModel));
+                Mods.Add(new RepositoryMod(mod, _model, _viewModelService));
             }
             await Task.WhenAll(Mods.Select(m => m.Load()));
         }
