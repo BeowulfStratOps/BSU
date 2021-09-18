@@ -12,7 +12,7 @@
     <Border Margin="5">
         <Border.Resources>
             <BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter" />
-            <converters:NullToVisibilityConverter x:Key="VisibleIfNotNullConverter" />
+            <converters:BoolToVisibilityConverter x:Key="VisibleOrHiddenConverter" />
         </Border.Resources>
         <DockPanel>
             <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
@@ -20,7 +20,8 @@
                 <TextBlock Text="{Binding Path=DisplayName}"></TextBlock>
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Width="200">
-                <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Path=Actions}" SelectedItem="{Binding Selection}">
+                <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Path=Actions}" SelectedItem="{Binding Selection}"
+                          IsEnabled="{Binding CanChangeSelection}">
                     <ComboBox.Resources>
                         <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
                             <local:SelectDoNothing></local:SelectDoNothing>
@@ -35,11 +36,11 @@
                 </ComboBox>
                 <DockPanel Visibility="{Binding ShowDownloadIdentifier, Converter={StaticResource VisibleIfTrueConverter}}">
                     <TextBlock DockPanel.Dock="Left">Folder:</TextBlock>
-                    <TextBox Text="{Binding DownloadIdentifier}"></TextBox>
+                    <TextBox Text="{Binding DownloadIdentifier, UpdateSourceTrigger=PropertyChanged}"></TextBox>
                 </DockPanel>
                 <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
             </StackPanel>
-            <ProgressBar Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress, Converter={StaticResource VisibleIfNotNullConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
+            <ProgressBar Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleOrHiddenConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
         </DockPanel>
     </Border>
 </UserControl>

@@ -19,5 +19,10 @@ namespace BSU.Core.Sync
             Logger.Trace("{0} Deleting {1}", Storage, Path);
             await Storage.Implementation.DeleteFile(Path, cancellationToken);
         }
+
+        public override FileSyncStats GetStats()
+        {
+            return new FileSyncStats(FileSyncState.Updating, 0, 0, 0, 0);
+        }
     }
 }

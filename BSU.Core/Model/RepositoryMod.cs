@@ -7,6 +7,7 @@ using BSU.Core.Concurrency;
 using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
+using BSU.Core.Sync;
 using BSU.CoreCommon;
 using NLog;
 
@@ -88,6 +89,14 @@ namespace BSU.Core.Model
             return await CoreCalculation.GetModAction(this, storageMod, cancellationToken);
         }
 
+        public async Task<List<(IModelStorageMod mod, ModActionEnum action)>> GetModActions(CancellationToken cancellationToken)
+        {
+            var mods = await _modelStructure.GetStorageMods();
+            var tasks = mods.Select(async m => (m, await GetActionForMod(m, cancellationToken))).ToList();
+            await Task.WhenAll(tasks);
+            return tasks.Select(t => t.Result).ToList();
+        }
+
         public async Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken)
         {
             // TODO: check if a better option became available and notify user ??
@@ -135,7 +144,7 @@ namespace BSU.Core.Model
             return result;
         }
 
-        public async Task<IUpdateCreated> StartUpdate(CancellationToken cancellationToken)
+        public async Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
         {
             if (Selection == null) throw new InvalidOperationException();
 
@@ -153,7 +162,7 @@ namespace BSU.Core.Model
                 var action = await CoreCalculation.GetModAction(this, actionStorageMod.StorageMod, cancellationToken);
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate) return null;
 
-                var update = await actionStorageMod.StorageMod.PrepareUpdate(Implementation, displayName, matchHash, versionHash);
+                var update = await actionStorageMod.StorageMod.PrepareUpdate(Implementation, displayName, matchHash, versionHash, progress);
                 return update;
             }
 
@@ -162,7 +171,7 @@ namespace BSU.Core.Model
                 var updateTarget = new UpdateTarget(versionHash.GetHashString(), displayName);
                 var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
                 Selection = new RepositoryModActionStorageMod(mod);
-                var update = await mod.PrepareUpdate(Implementation, displayName, matchHash, versionHash);
+                var update = await mod.PrepareUpdate(Implementation, displayName, matchHash, versionHash, progress);
                 return update;
             }
 

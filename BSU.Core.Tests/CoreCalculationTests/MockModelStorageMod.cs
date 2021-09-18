@@ -5,6 +5,7 @@ using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
+using BSU.Core.Sync;
 using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
 
@@ -27,8 +28,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public event Action StateChanged;
 
-        public Task<IUpdateCreated> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch,
-            VersionHash targetVersion)
+        public Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch,
+            VersionHash targetVersion, IProgress<FileSyncStats> progress)
         {
             throw new NotImplementedException();
         }

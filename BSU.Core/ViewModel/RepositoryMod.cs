@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Model.Updating;
+using BSU.Core.Sync;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -10,14 +12,22 @@ namespace BSU.Core.ViewModel
     public class RepositoryMod : ObservableBase
     {
         internal readonly IModelRepositoryMod Mod;
+        private readonly Func<Task> _updateViewModel;
 
-        public string Name { get; }
-        public string DisplayName { private set; get; }
+        public string Name => _name;
+
+        public string DisplayName
+        {
+            private set => _displayName = value;
+            get => _displayName;
+        }
 
         private string _downloadIdentifier = "";
         private bool _showDownloadIdentifier;
 
-        public ModActionTree Actions { get; } = new();
+        public FileSyncProgress UpdateProgress => _updateProgress;
+
+        public ModActionTree Actions => _actions;
 
         private ModAction _selection;
         public ModAction Selection
@@ -25,29 +35,34 @@ namespace BSU.Core.ViewModel
             get => _selection;
             set
             {
-                if (_selection == value) return;
+                if (value == null) return; // can happen when the collection is modified
+                if (Equals(_selection, value)) return;
                 _selection = value;
-                if (value == null) return; // can't be done by user.
-                //Mod.Selection = value.AsSelection;
+                Mod.SetSelection(value.AsSelection);
                 ShowDownloadIdentifier = _selection is SelectStorage;
                 OnPropertyChanged();
-                //UpdateErrorText();
+                UpdateErrorText(); // TODO: await? :(
+                _updateViewModel(); // TODO: await? pls? somewhere? :(
             }
         }
 
-        internal RepositoryMod(IModelRepositoryMod mod, IModel model)
+        internal RepositoryMod(IModelRepositoryMod mod, IModel model, Func<Task> updateViewModel)
         {
-            //IsLoading = mod.GetState().IsLoading;
             Mod = mod;
-            Name = mod.Identifier;
+            _updateViewModel = updateViewModel;
+            _name = mod.Identifier;
 
             DownloadIdentifier = mod.DownloadIdentifier;
 
-            OnPropertyChanged(nameof(DisplayName));
             foreach (var storage in model.GetStorages())
             {
                 AddStorage(storage);
             }
+
+            UpdateProgress.Progress.ProgressChanged += (_, stats) =>
+            {
+                if (stats.State == FileSyncState.None) CanChangeSelection = true;
+            };
         }
 
         private async Task<ModAction> UpdateAction(IModelStorageMod storageMod)
@@ -56,11 +71,11 @@ namespace BSU.Core.ViewModel
             var action = await CoreCalculation.GetModAction(Mod, storageMod, CancellationToken.None);
             if (action == ModActionEnum.Unusable)
             {
-                var removeAction = Actions.SingleOrDefault(a => a.AsSelection is RepositoryModActionStorageMod actionStorageMod && actionStorageMod.StorageMod == storageMod);
-                if (removeAction != null)
-                    Actions.Remove(removeAction);
+                var removeAction = Actions.SingleOrDefault(a => a.AsSelection is RepositoryModActionStorageMod storageModSelection && storageModSelection.StorageMod == storageMod);
                 if (isCurrentlySelected)
                     Selection = new SelectDoNothing();
+                if (removeAction != null)
+                    Actions.Remove(removeAction);
                 return Selection;
             }
             var selection = new SelectMod(storageMod, action);
@@ -83,31 +98,30 @@ namespace BSU.Core.ViewModel
             Actions.Remove(selection);
         }
 
-        /*private void UpdateErrorText()
+        private async Task UpdateErrorText()
         {
             // TODO: make sure it updates itself when e.g. conflict states change
 
-            if (Mod.Selection == null)
+            if (Selection == null)
             {
                 ErrorText = "Select an action";
                 return;
             }
 
-            if (Mod.Selection.DoNothing)
+            if (Selection is SelectDoNothing)
             {
                 ErrorText = "";
             }
 
-            if (Mod.Selection.DownloadStorage != null)
+            if (Selection is SelectStorage selectStorage)
             {
-                Mod.Selection.DownloadStorage.HasMod(DownloadIdentifier)
-                    .ContinueWith(async inUse => ErrorText = await inUse ? "Name in use" : "");
-
+                var folderExists = await selectStorage.DownloadStorage.HasMod(DownloadIdentifier);
+                ErrorText = folderExists ? "Name in use" : "";
             }
 
-            if (Mod.Selection.StorageMod != null)
+            if (Selection is SelectMod selectMod)
             {
-                var conflicts = CoreCalculation.GetConflicts(Mod, Mod.Selection.StorageMod, _modelStructure);
+                var conflicts = await Mod.GetConflictsUsingMod(selectMod.StorageMod, CancellationToken.None);
                 if (!conflicts.Any())
                 {
                     ErrorText = "";
@@ -115,9 +129,9 @@ namespace BSU.Core.ViewModel
                 }
 
                 var conflictNames = conflicts.Select(c => $"{c}");
-                ErrorText = "Conflicts: " + string.Join(", ", conflicts);
+                ErrorText = "Conflicts: " + string.Join(", ", conflictNames);
             }
-        }*/
+        }
 
         // TODO: validate folder name: invalid chars, leading '@'
         public string DownloadIdentifier
@@ -129,7 +143,7 @@ namespace BSU.Core.ViewModel
                 Mod.DownloadIdentifier = value;
                 _downloadIdentifier = value;
                 OnPropertyChanged();
-                //UpdateErrorText();
+                UpdateErrorText(); // TODO: await :(
             }
         }
 
@@ -145,6 +159,11 @@ namespace BSU.Core.ViewModel
         }
 
         private string _errorText;
+        private readonly string _name;
+        private string _displayName;
+        private readonly FileSyncProgress _updateProgress = new();
+        private readonly ModActionTree _actions = new();
+        private bool _canChangeSelection = true;
 
         public string ErrorText
         {
@@ -157,9 +176,24 @@ namespace BSU.Core.ViewModel
             }
         }
 
+        public bool CanChangeSelection
+        {
+            get => _canChangeSelection;
+            set
+            {
+                if (_canChangeSelection == value) return;
+                _canChangeSelection = value;
+                OnPropertyChanged();
+            }
+        }
+
         public async Task Load()
         {
             DisplayName = await Mod.GetDisplayName(CancellationToken.None);
+        }
+
+        public async Task Update()
+        {
             var selection = await Mod.GetSelection(CancellationToken.None);
             if (selection is RepositoryModActionStorageMod actionStorageMod)
             {
@@ -170,6 +204,24 @@ namespace BSU.Core.ViewModel
             {
                 Selection = await ModAction.Create(selection, Mod, CancellationToken.None);
             }
+
+            // TODO: meh...
+            var actions = await Mod.GetModActions(CancellationToken.None);
+            foreach (var (mod, _) in actions)
+            {
+                await UpdateAction(mod);
+            }
+        }
+
+        internal async Task<(IModUpdate update, Progress<FileSyncStats> progress)> StartUpdate(CancellationToken cancellationToken)
+        {
+            var progress = UpdateProgress.Progress;
+            var update = await Mod.StartUpdate(progress, cancellationToken);
+            if (update == null) return default;
+            CanChangeSelection = false;
+            await _updateViewModel();
+
+            return (update, progress);
         }
     }
 }

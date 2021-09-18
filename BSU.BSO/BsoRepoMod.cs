@@ -129,9 +129,9 @@ namespace BSU.BSO
         /// Downloads a file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
+        /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        public async Task DownloadTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
+        public async Task DownloadTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
         {
             await _loading;
             // TODO: use .part file
@@ -150,7 +150,7 @@ namespace BSU.BSO
                 var len = await stream.ReadAsync(buffer, 0, buffer.Length, token);
                 if (len == 0) break;
                 await fileStream.WriteAsync(buffer, 0, len, token);
-                updateCallback.Report(len);
+                progress.Report(len);
             }
 
             if (token.IsCancellationRequested)
@@ -167,12 +167,12 @@ namespace BSU.BSO
         /// Updates an existing file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
+        /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        public async Task UpdateTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
+        public async Task UpdateTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
         {
             await _loading;
-            await DownloadTo(path, fileStream, updateCallback, token);
+            await DownloadTo(path, fileStream, progress, token);
         }
     }
 }

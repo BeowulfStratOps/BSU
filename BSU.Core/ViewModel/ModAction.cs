@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
+using NLog.Targets.Wrappers;
 
 namespace BSU.Core.ViewModel
 {
@@ -66,7 +67,8 @@ namespace BSU.Core.ViewModel
 
         public override bool Equals(ModAction other)
         {
-            return other is SelectMod selectMod && selectMod.StorageMod == StorageMod && selectMod.ActionType == ActionType;
+            var ret = other is SelectMod selectMod && selectMod.StorageMod == StorageMod && selectMod.ActionType == ActionType;
+            return ret;
         }
 
         public override int GetHashCode()
@@ -89,7 +91,8 @@ namespace BSU.Core.ViewModel
 
         public override bool Equals(ModAction other)
         {
-            return other is SelectStorage selectMod && selectMod.DownloadStorage == DownloadStorage;
+            var ret = other is SelectStorage selectMod && selectMod.DownloadStorage == DownloadStorage;
+            return ret;
         }
 
         public override int GetHashCode()

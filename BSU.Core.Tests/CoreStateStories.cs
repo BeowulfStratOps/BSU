@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
@@ -63,9 +61,9 @@ namespace BSU.Core.Tests
 
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
 
-            var update = repoMod.StartUpdate(CancellationToken.None).Result;
-            var prepared = update.Prepare(CancellationToken.None).Result;
-            var updated = prepared.Update(CancellationToken.None).Result;
+            var update = repoMod.StartUpdate(null, CancellationToken.None).Result;
+            update.Prepare(CancellationToken.None).Wait();
+            update.Update(CancellationToken.None).Wait();
 
             var storageMod = storage.GetMods().Result.Single();
 

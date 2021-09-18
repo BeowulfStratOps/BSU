@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using BSU.Core.Model.Updating;
+using BSU.Core.Sync;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
+using BSU.Core.ViewModel;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,25 +17,30 @@ namespace BSU.Core.Tests
         {
         }
 
-        private void CheckCounts<T>(StageStats<T> args, int expectedSuccesses, int expectedFails)
+        private void CheckCounts(StageStats args, int expectedSuccesses, int expectedFails)
         {
-            var successes = args.Succeeded.Count;
+            var successes = args.SucceededCount;
             var fails = args.FailedCount;
             Assert.Equal(expectedSuccesses, successes);
             Assert.Equal(expectedFails, fails);
+        }
+
+        private RepositoryUpdate GetRepoUpdate(params IModUpdate[] updates)
+        {
+            return new RepositoryUpdate(updates.Select(u => (u, new Progress<FileSyncStats>())).ToList(), null);
         }
 
         [Fact]
         private void Success()
         {
             var updateState = new MockUpdateState(false, false);
-            var repoUpdate = new RepositoryUpdate(new List<IUpdateCreated>{updateState});
+            var repoUpdate = GetRepoUpdate(updateState);
 
             var prepared = repoUpdate.Prepare(CancellationToken.None).Result;
-            var done = prepared.Update(CancellationToken.None).Result;
+            var done = repoUpdate.Update(CancellationToken.None).Result;
 
-            CheckCounts(prepared.Stats, 1, 0);
-            CheckCounts(done.Stats, 1, 0);
+            CheckCounts(prepared, 1, 0);
+            CheckCounts(done, 1, 0);
 
             Assert.True(updateState.CommitCalled);
         }
@@ -69,13 +77,13 @@ namespace BSU.Core.Tests
         private void UpdateError()
         {
             var updateState = new MockUpdateState(false, true);
-            var repoUpdate = new RepositoryUpdate(new List<IUpdateCreated> {updateState});
+            var repoUpdate = GetRepoUpdate(updateState);
 
             var prepared = repoUpdate.Prepare(CancellationToken.None).Result;
-            var done = prepared.Update(CancellationToken.None).Result;
+            var done = repoUpdate.Update(CancellationToken.None).Result;
 
-            CheckCounts(prepared.Stats, 1, 0);
-            CheckCounts(done.Stats, 0, 1);
+            CheckCounts(prepared, 1, 0);
+            CheckCounts(done, 0, 1);
 
             Assert.True(updateState.CommitCalled);
         }
@@ -85,13 +93,13 @@ namespace BSU.Core.Tests
         {
             var updateState = new MockUpdateState(false, false);
             var updateStateFail = new MockUpdateState(true, false);
-            var repoUpdate = new RepositoryUpdate(new List<IUpdateCreated> {updateState, updateStateFail});
+            var repoUpdate = GetRepoUpdate(updateState, updateStateFail);
 
             var prepared = repoUpdate.Prepare(CancellationToken.None).Result;
-            var done = prepared.Update(CancellationToken.None).Result;
+            var done = repoUpdate.Update(CancellationToken.None).Result;
 
-            CheckCounts(prepared.Stats, 1, 1);
-            CheckCounts(done.Stats, 1, 0);
+            CheckCounts(prepared, 1, 1);
+            CheckCounts(done, 1, 0);
 
             Assert.True(updateState.CommitCalled);
         }

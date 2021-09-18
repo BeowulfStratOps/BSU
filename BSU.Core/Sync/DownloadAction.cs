@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
@@ -12,17 +13,27 @@ namespace BSU.Core.Sync
     internal class DownloadAction : SyncWorkUnit
     {
         private readonly IRepositoryMod _repository;
+        private readonly long _fileSize;
+        private long _done;
 
-        public DownloadAction(IRepositoryMod repository, StorageMod storage, string path) : base(storage, path)
+        public DownloadAction(IRepositoryMod repository, StorageMod storage, string path, long fileSize) : base(storage, path)
         {
             _repository = repository;
+            _fileSize = fileSize;
         }
 
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
             Logger.Trace("{0}, {1} Downloading {2}", _repository, _repository, Path);
             await using var target = await Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.Write, cancellationToken);
-            await _repository.DownloadTo(Path, target, null, cancellationToken);
+            var progress = new Progress<long>();
+            progress.ProgressChanged += (_, count) => _done += count;
+            await _repository.DownloadTo(Path, target, progress, cancellationToken);
+        }
+
+        public override FileSyncStats GetStats()
+        {
+            return new FileSyncStats(FileSyncState.Updating, _fileSize, 0, _done, 0);
         }
     }
 }

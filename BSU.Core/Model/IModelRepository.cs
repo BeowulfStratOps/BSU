@@ -11,6 +11,6 @@ namespace BSU.Core.Model
         Task<List<IModelRepositoryMod>> GetMods();
         Guid Identifier { get; }
         string Name { get; }
-        Task<RepositoryUpdate> DoUpdate(CancellationToken cancellationToken);
+        Task<CalculatedRepositoryState> GetState(CancellationToken cancellationToken);
     }
 }

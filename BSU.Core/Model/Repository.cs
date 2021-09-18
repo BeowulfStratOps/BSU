@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
+using BSU.Core.Sync;
 using BSU.CoreCommon;
 using NLog;
 
@@ -72,15 +73,6 @@ namespace BSU.Core.Model
             var calculatedState = CoreCalculation.CalculateRepositoryState(infos);
             _logger.Trace("Repo {0} calculated state: {1}", Identifier, calculatedState);
             return calculatedState;
-        }
-
-        public async Task<RepositoryUpdate> DoUpdate(CancellationToken cancellationToken)
-        {
-            var updateTasks = _mods.Select(m => m.StartUpdate(cancellationToken)).ToList();
-            await Task.WhenAll(updateTasks);
-            var updates = updateTasks.Select(ut => ut.Result).Where(u => u != null).ToList();
-
-            return new RepositoryUpdate(updates);
         }
     }
 }

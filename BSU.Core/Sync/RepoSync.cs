@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Model.Updating;
 using BSU.CoreCommon;
 using NLog;
 
@@ -40,7 +41,7 @@ namespace BSU.Core.Sync
                     if (!repoFileHash.Equals(storageFileHash))
                     {
                         var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
-                        allActions.Add(new UpdateAction(repository, storage, repoFile));
+                        allActions.Add(new UpdateAction(repository, storage, repoFile, fileSize));
                     }
 
                     storageListCopy.Remove(repoFile);
@@ -48,7 +49,7 @@ namespace BSU.Core.Sync
                 else
                 {
                     var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
-                    allActions.Add(new DownloadAction(repository, storage, repoFile));
+                    allActions.Add(new DownloadAction(repository, storage, repoFile, fileSize));
                 }
             }
 
@@ -64,12 +65,36 @@ namespace BSU.Core.Sync
             return new RepoSync(allActions);
         }
 
-        public async Task UpdateAsync(CancellationToken cancellationToken)
+        public async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
         {
-            // TODO: should probably have some sort of progress?
-            // TODO: do some throttling
+            // TODO: limit parallel disk/network usage
             var tasks = _allActions.Select(a => a.DoAsync(cancellationToken));
-            await Task.WhenAll(tasks);
+            var whenAll = Task.WhenAll(tasks);
+            while (true)
+            {
+                await Task.WhenAny(whenAll, Task.Delay(50));
+
+                long sumDownloadDone = 0;
+                long sumDownloadTotal = 0;
+                long sumUpdateDone = 0;
+                long sumUpdateTotal = 0;
+
+                foreach (var syncWorkUnit in _allActions)
+                {
+                    var stats = syncWorkUnit.GetStats(); // not synchronized, but that's ok. we're just looking for a snapshot
+                    sumDownloadDone += stats.DownloadDone;
+                    sumDownloadTotal += stats.DownloadTotal;
+                    sumUpdateDone += stats.UpdateDone;
+                    sumUpdateTotal += stats.UpdateTotal;
+
+                    progress?.Report(new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal,
+                        sumDownloadDone, sumUpdateDone));
+                }
+
+                if (whenAll.IsCompleted) break;
+            }
+
+            progress?.Report(new FileSyncStats(FileSyncState.None, 0, 0, 0, 0));
         }
     }
 }

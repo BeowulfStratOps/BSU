@@ -12,7 +12,10 @@ namespace BSU.Core.ViewModel
     {
         private readonly IModelRepository _repository;
         private readonly IModel _model;
+        private readonly Func<Task> _updateViewModel;
         public string Name { get; }
+
+        public FileSyncProgress UpdateProgress { get; } = new();
 
         public InteractionRequest<MsgPopupContext, bool> UpdatePrepared { get; } = new InteractionRequest<MsgPopupContext, bool>();
         public InteractionRequest<MsgPopupContext, bool> UpdateSetup { get; } = new InteractionRequest<MsgPopupContext, bool>();
@@ -34,10 +37,11 @@ namespace BSU.Core.ViewModel
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new();
 
-        internal Repository(IModelRepository repository, IModel model)
+        internal Repository(IModelRepository repository, IModel model, Func<Task> updateViewModel)
         {
             _repository = repository;
             _model = model;
+            _updateViewModel = updateViewModel;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete);
             Update = new DelegateCommand(DoUpdate);
@@ -67,20 +71,30 @@ Cancel - Do not remove this repository";
 
         private async Task DoUpdate()
         {
-            var update = await _repository.DoUpdate(CancellationToken.None); // TODO: use it with using, to make sure it's cleaned up
+            var updateTasks = Mods.Select(m => m.StartUpdate(CancellationToken.None)).ToList();
+            await Task.WhenAll(updateTasks);
+            var updates = updateTasks.Select(t => t.Result).Where(r => r.update != null).ToList();
 
-            var prepared = await update.Prepare(CancellationToken.None);
-            var bytes = prepared.Stats.Succeeded.Sum(s => 0);
-            var preparedText = $"{bytes} Bytes from {prepared.Stats.Succeeded.Count} mods to download. {prepared.Stats.FailedCount} mods failed. Proceed?";
+            var progress = UpdateProgress.Progress;
+
+            var update = new RepositoryUpdate(updates, progress);
+
+            var prepareStats = await update.Prepare(CancellationToken.None);
+            var bytes = 0;
+            var preparedText = $"{bytes} Bytes from {prepareStats.SucceededCount} mods to download. {prepareStats.FailedCount} mods failed. Proceed?";
             var preparedContext = new MsgPopupContext(preparedText, "Update Prepared");
             if (!await UpdatePrepared.Raise(preparedContext))
             {
+                throw new NotImplementedException();
                 // prepared.Abort();
                 return;
             }
 
-            var updated = await prepared.Update(CancellationToken.None);
-            var updatedText = $"{updated.Stats.Succeeded.Count} Mods updated. {updated.Stats.FailedCount} Mods failed.";
+            var updateStats = await update.Update(CancellationToken.None);
+
+            await _updateViewModel();
+
+            var updatedText = $"{updateStats.SucceededCount} Mods updated. {updateStats.FailedCount} Mods failed.";
             var updatedContext = new MsgPopupContext(updatedText, "Update Finished");
             await UpdateFinished.Raise(updatedContext);
         }
@@ -96,10 +110,15 @@ Cancel - Do not remove this repository";
             var mods = await _repository.GetMods();
             foreach (var mod in mods)
             {
-                Mods.Add(new RepositoryMod(mod, _model));
+                Mods.Add(new RepositoryMod(mod, _model, _updateViewModel));
             }
-
             await Task.WhenAll(Mods.Select(m => m.Load()));
+        }
+
+        public async Task UpdateMods()
+        {
+            await Task.WhenAll(Mods.Select(m => m.Update()));
+            CalculatedState = await _repository.GetState(CancellationToken.None);
         }
     }
 }

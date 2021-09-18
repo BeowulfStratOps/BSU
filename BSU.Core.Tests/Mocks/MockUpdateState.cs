@@ -2,10 +2,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model.Updating;
+using BSU.Core.ViewModel;
 
 namespace BSU.Core.Tests.Mocks
 {
-    internal class MockUpdateState : IUpdateCreated, IUpdatePrepared, IUpdateDone
+    internal class MockUpdateState : IModUpdate
     {
         private readonly bool _errorPrepare;
         private readonly bool _errorUpdate;
@@ -19,35 +20,37 @@ namespace BSU.Core.Tests.Mocks
             State = UpdateState.Created;
         }
 
-        public Task<IUpdatePrepared> Prepare(CancellationToken cancellationToken)
+        public Task Prepare(CancellationToken cancellationToken)
         {
             if (State != UpdateState.Created) throw new InvalidOperationException();
             if (_errorPrepare)
-                return Error<IUpdatePrepared>();
+                return Error();
             else
                 State = UpdateState.Prepared;
-            return Task.FromResult<IUpdatePrepared>(this);
+            return Task.CompletedTask;
         }
 
-        public Task<IUpdateDone> Update(CancellationToken cancellationToken)
+        public Task Update(CancellationToken cancellationToken)
         {
             if (State != UpdateState.Prepared) throw new InvalidOperationException();
             CommitCalled = true;
             if (_errorUpdate)
-                return Error<IUpdateDone>();
+                return Error();
             else
             {
                 State = UpdateState.Updated;
                 OnEnded?.Invoke();
             }
 
-            return Task.FromResult<IUpdateDone>(this);
+            return Task.CompletedTask;
         }
 
-        private Task<T> Error<T>()
+        public bool IsPrepared => State == UpdateState.Prepared;
+
+        private Task Error()
         {
             OnEnded?.Invoke();
-            return Task.FromException<T>(new TestException());
+            return Task.FromException(new TestException());
         }
 
         public void Abort()

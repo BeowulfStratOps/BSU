@@ -72,7 +72,7 @@ namespace BSU.Core
 
         public Task<long> GetFileSize(string path, CancellationToken cancellationToken) => Task.FromResult(_files[path].LongLength);
 
-        public async Task DownloadTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
+        public async Task DownloadTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
         {
             const int bufferSize = 4 * 1024;
             var data = _files[path];
@@ -85,9 +85,9 @@ namespace BSU.Core
             fileStream.SetLength(data.LongLength);
         }
 
-        public async Task UpdateTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
+        public async Task UpdateTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
         {
-            await DownloadTo(path, fileStream, updateCallback, token);
+            await DownloadTo(path, fileStream, progress, token);
         }
 
         public int GetUid() => _logger.GetId();

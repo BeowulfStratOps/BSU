@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
+using BSU.Core.Sync;
 using BSU.Core.Tests.Util;
 
 namespace BSU.Core.Tests.CoreCalculationTests
@@ -34,7 +35,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public string Identifier { get; }
         public Dictionary<IModelStorageMod, List<IModelRepositoryMod>> Conflicts { get; set; } = new();
 
-        public Task<IUpdateCreated> StartUpdate(CancellationToken cancellationToken)
+        public Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -68,6 +69,11 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public Task<ModActionEnum> GetActionForMod(IModelStorageMod storageMod, CancellationToken cancellationToken)
         {
             return CoreCalculation.GetModAction(this, storageMod, cancellationToken);
+        }
+
+        public Task<List<(IModelStorageMod mod, ModActionEnum action)>> GetModActions(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -13,7 +13,7 @@
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
         <Border.Resources>
-            <converters:NullToVisibilityConverter x:Key="VisibleIfNotNullConverter" />
+            <converters:BoolToVisibilityConverter x:Key="VisibleIfTrueConverter" />
         </Border.Resources>
         <i:Interaction.Triggers>
             <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdatePrepared}">
@@ -41,7 +41,7 @@
                     <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xEDB5;" Margin="2" IsEnabled="False"></Button>
                 </StackPanel>
             </DockPanel>
-            <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress, Converter={StaticResource VisibleIfNotNullConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
+            <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleIfTrueConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
             <Expander>
                 <Expander.Header>
                     <TextBlock>Mods</TextBlock>

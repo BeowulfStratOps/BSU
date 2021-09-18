@@ -18,5 +18,15 @@ namespace BSU.Core.Sync
         }
 
         public abstract Task DoAsync(CancellationToken cancellationToken);
+        public abstract FileSyncStats GetStats();
+    }
+
+    internal record FileSyncStats(FileSyncState State, long DownloadTotal, long UpdateTotal, long DownloadDone, long UpdateDone);
+
+    internal enum FileSyncState
+    {
+        Waiting,
+        Updating,
+        None
     }
 }

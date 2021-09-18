@@ -6,6 +6,7 @@ using BSU.Core.Concurrency;
 using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
+using BSU.Core.Sync;
 using BSU.CoreCommon;
 using NLog;
 
@@ -91,8 +92,9 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        public async Task<IUpdateCreated> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch, VersionHash targetVersion)
+        public async Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress)
         {
+            progress.Report(new FileSyncStats(FileSyncState.Waiting, 0, 0, 0, 0));
             await SetState(StorageModStateEnum.Updating, new [] { StorageModStateEnum.Created , StorageModStateEnum.CreatedWithUpdateTarget},
                 async () =>
                 {
@@ -101,7 +103,7 @@ namespace BSU.Core.Model
                     UpdateTarget = new UpdateTarget(targetVersion.GetHashString(), targetDisplayName);
                 });
 
-            var update = new StorageModUpdateState(this, repositoryMod);
+            var update = new StorageModUpdateState(this, repositoryMod, progress);
 
             update.OnEnded += async () => await SetState(StorageModStateEnum.Created, new[]
             {

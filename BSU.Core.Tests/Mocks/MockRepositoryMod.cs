@@ -62,7 +62,7 @@ namespace BSU.Core.Tests.Mocks
             _load = load;
         }
 
-        public Task DownloadTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
+        public Task DownloadTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
         {
             for (int i = 0; i < SleepMs; i++)
             {
@@ -94,9 +94,9 @@ namespace BSU.Core.Tests.Mocks
             return Task.FromResult(GetFile(path, cancellationToken).Result.LongLength);
         }
 
-        public Task UpdateTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token)
+        public Task UpdateTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
         {
-            return DownloadTo(path, fileStream, updateCallback, token);
+            return DownloadTo(path, fileStream, progress, token);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace BSU.Core.ViewModel
             Model = model;
             foreach (var modelRepository in model.GetRepositories())
             {
-                Repositories.Add(new Repository(modelRepository, model));
+                Repositories.Add(new Repository(modelRepository, model, Update));
             }
             foreach (var modelStorage in model.GetStorages())
             {
@@ -42,7 +43,7 @@ namespace BSU.Core.ViewModel
 
             if (doAdd != true) return;
             var repo = Model.AddRepository("BSO", vm.Url, vm.Name);
-            Repositories.Add(new Repository(repo, Model));
+            Repositories.Add(new Repository(repo, Model, Update));
         }
 
         private async Task DoAddStorage()
@@ -56,10 +57,28 @@ namespace BSU.Core.ViewModel
 
         public async Task Load()
         {
+            async Task LoadAndUpdate(Repository repository)
+            {
+                await repository.Load();
+                await repository.UpdateMods();
+            }
+
             var tasks = new List<Task>();
-            tasks.AddRange(Repositories.Select(r => r.Load()));
+            tasks.AddRange(Repositories.Select(LoadAndUpdate));
             tasks.AddRange(Storages.Select(s => s.Load()));
             await Task.WhenAll(tasks);
+        }
+
+        public async Task Update()
+        {
+            try
+            {
+                await Task.WhenAll(Repositories.Select(r => r.UpdateMods()));
+            }
+            catch (OperationCanceledException)
+            {
+                // happens if something changes in the model. view model will call updated again after whatever cause the change is done
+            }
         }
     }
 }

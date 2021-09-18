@@ -1,26 +1,20 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.ViewModel;
 
 namespace BSU.Core.Model.Updating
 {
-    public interface IUpdateState
+    internal interface IRepositoryUpdate
     {
-        public event Action OnEnded;
+        Task<StageStats> Prepare(CancellationToken cancellationToken);
+        Task<StageStats> Update(CancellationToken cancellationToken);
     }
 
-    public interface IUpdateCreated : IUpdateState
+    internal interface IModUpdate
     {
-        Task<IUpdatePrepared> Prepare(CancellationToken cancellationToken);
-    }
-
-    public interface IUpdatePrepared : IUpdateState
-    {
-        Task<IUpdateDone> Update(CancellationToken cancellationToken);
-    }
-
-    public interface IUpdateDone
-    {
-
+        Task Prepare(CancellationToken cancellationToken);
+        Task Update(CancellationToken cancellationToken);
+        bool IsPrepared { get; }
     }
 }

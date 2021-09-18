@@ -6,95 +6,60 @@ using BSU.CoreCommon;
 
 namespace BSU.Core.Model.Updating
 {
-    internal class StorageModUpdateStateCommon
-    {
-        public event Action OnEnded;
 
-        public void SignalEnded()
-        {
-            OnEnded?.Invoke();
-        }
-    }
-
-    internal abstract class StorageModUpdateStateBase : IUpdateState
-    {
-        protected readonly StorageModUpdateStateCommon Common;
-        private bool _stateInvalidated;
-
-        protected StorageModUpdateStateBase(StorageModUpdateStateCommon common)
-        {
-            Common = common;
-        }
-
-        protected void InvalidateState()
-        {
-            if (_stateInvalidated) throw new InvalidOperationException();
-            _stateInvalidated = true;
-        }
-
-        public event Action OnEnded
-        {
-            add => Common.OnEnded += value;
-            remove => Common.OnEnded -= value;
-        }
-    }
-
-    internal class StorageModUpdateState : StorageModUpdateStateBase, IUpdateCreated
+    internal class StorageModUpdateState : IModUpdate
     {
         private readonly StorageMod _storageMod;
         private readonly IRepositoryMod _repositoryMod;
+        private readonly IProgress<FileSyncStats> _progress;
 
-        public StorageModUpdateState(StorageMod storageMod, IRepositoryMod repositoryMod) : base(new StorageModUpdateStateCommon())
+        private RepoSync _repoSync;
+
+        private bool _prepared, _updated;
+
+        public StorageModUpdateState(StorageMod storageMod, IRepositoryMod repositoryMod, IProgress<FileSyncStats> progress)
         {
             _storageMod = storageMod;
             _repositoryMod = repositoryMod;
+            _progress = progress;
         }
 
-        public async Task<IUpdatePrepared> Prepare(CancellationToken cancellationToken)
+        public event Action OnEnded;
+
+        public async Task Prepare(CancellationToken cancellationToken)
         {
-            InvalidateState();
+            if (_prepared) throw new InvalidOperationException();
+            _prepared = true;
 
             try
             {
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken);
-                var repoSync = await RepoSync.BuildAsync(_repositoryMod, _storageMod, cts.Token);
-                return new StorageModUpdatePrepared(repoSync, Common);
+                _repoSync = await RepoSync.BuildAsync(_repositoryMod, _storageMod, cancellationToken);
+                IsPrepared = true;
             }
-            catch (Exception)
+            catch
             {
-                Common.SignalEnded();
+                OnEnded?.Invoke();
+                _progress.Report(new FileSyncStats(FileSyncState.None, 0, 0, 0, 0));
                 throw;
             }
         }
-    }
 
-    internal class StorageModUpdatePrepared : StorageModUpdateStateBase, IUpdatePrepared
-    {
-        private readonly RepoSync _syncJob;
-
-        public StorageModUpdatePrepared(RepoSync syncJob, StorageModUpdateStateCommon common) : base(common)
+        public async Task Update(CancellationToken cancellationToken)
         {
-            _syncJob = syncJob;
-        }
+            if (_updated) throw new InvalidOperationException();
+            _updated = true;
 
-        public async Task<IUpdateDone> Update(CancellationToken cancellationToken)
-        {
-            InvalidateState();
+            if (_repoSync == null) throw new InvalidOperationException();
 
             try
             {
-                await _syncJob.UpdateAsync(cancellationToken);
-                return new StorageModUpdateDone();
+                await _repoSync.UpdateAsync(cancellationToken, _progress);
             }
             finally
             {
-                Common.SignalEnded();
+                OnEnded?.Invoke();
             }
         }
-    }
-
-    internal class StorageModUpdateDone : IUpdateDone
-    {
-
+        public bool IsPrepared { get; private set; }
     }
 }

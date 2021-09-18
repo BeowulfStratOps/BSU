@@ -67,7 +67,7 @@ namespace BSU.Core.Tests
 
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, target.Display, MatchHash.CreateEmpty(),
-                VersionHash.CreateEmpty()).Result;
+                VersionHash.CreateEmpty(), null).Result;
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
             Assert.True(storageMod.GetMatchHash().IsMatch(MatchHash.CreateEmpty()));
@@ -83,7 +83,7 @@ namespace BSU.Core.Tests
 
             var repo = CreateRepoMod();
             var update = storageMod.PrepareUpdate(repo, target.Display, MatchHash.CreateEmpty(),
-                VersionHash.CreateEmpty()).Result;
+                VersionHash.CreateEmpty(), null).Result;
             update.Prepare(CancellationToken.None).Wait();
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
@@ -98,9 +98,10 @@ namespace BSU.Core.Tests
             var (implementation, storageMod) = CreateStorageMod();
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target.Display, MatchHash.CreateEmpty(), VersionHash.CreateEmpty()).Result;
+            var update = storageMod.PrepareUpdate(repo, target.Display, MatchHash.CreateEmpty(), VersionHash.CreateEmpty(), null).Result;
 
-            update.Prepare(CancellationToken.None).Result.Update(CancellationToken.None).Wait();
+            update.Prepare(CancellationToken.None).Wait();
+            update.Update(CancellationToken.None).Wait();
 
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
             Assert.True(storageMod.GetMatchHash().IsMatch(MatchHash.CreateAsync(repo, CancellationToken.None).Result));

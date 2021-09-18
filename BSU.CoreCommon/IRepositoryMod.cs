@@ -46,16 +46,16 @@ namespace BSU.CoreCommon
         /// Downloads a file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
+        /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        Task DownloadTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token);
+        Task DownloadTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token);
 
         /// <summary>
         /// Updates an existing file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="updateCallback">Called occasionally with number of bytes downloaded since last call</param>
+        /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        Task UpdateTo(string path, Stream fileStream, IProgress<long> updateCallback, CancellationToken token);
+        Task UpdateTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token);
     }
 }
