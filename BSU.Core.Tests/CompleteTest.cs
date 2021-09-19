@@ -114,5 +114,10 @@ namespace BSU.Core.Tests
             _load = null;
             return Task.FromResult(Mods);
         }
+
+        public Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

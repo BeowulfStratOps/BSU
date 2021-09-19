@@ -10,5 +10,8 @@ namespace BSU.CoreCommon
     public interface IRepository
     {
         Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken);
+        Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken);
     }
+
+    public record ServerInfo(string Name, string Url);
 }

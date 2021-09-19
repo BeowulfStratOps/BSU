@@ -17,11 +17,11 @@ namespace BSU.Core.ViewModel
 
         public FileSyncProgress UpdateProgress { get; } = new();
 
-        public InteractionRequest<MsgPopupContext, bool> UpdatePrepared { get; } = new InteractionRequest<MsgPopupContext, bool>();
-        public InteractionRequest<MsgPopupContext, bool> UpdateSetup { get; } = new InteractionRequest<MsgPopupContext, bool>();
-        public InteractionRequest<MsgPopupContext, object> UpdateFinished { get; } = new InteractionRequest<MsgPopupContext, object>();
+        public InteractionRequest<MsgPopupContext, bool> UpdatePrepared { get; } = new();
+        public InteractionRequest<MsgPopupContext, bool> UpdateSetup { get; } = new();
+        public InteractionRequest<MsgPopupContext, object> UpdateFinished { get; } = new();
 
-        private CalculatedRepositoryState _calculatedState;
+        private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
 
         public CalculatedRepositoryState CalculatedState
         {
@@ -49,6 +49,30 @@ namespace BSU.Core.ViewModel
 
         public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new();
         public Guid Identifier { get; }
+
+        private string _title = "Loading...";
+        public string Title
+        {
+            get => _title;
+            set
+            {
+                if (_title == value) return;
+                _title = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _serverUrl = "Loading...";
+        public string ServerUrl
+        {
+            get => _serverUrl;
+            set
+            {
+                if (_serverUrl == value) return;
+                _serverUrl = value;
+                OnPropertyChanged();
+            }
+        }
 
         internal Repository(IModelRepository repository, IModel model, IViewModelService viewModelService)
         {
@@ -117,6 +141,7 @@ Cancel - Do not remove this repository";
 
         public async Task Load()
         {
+            (Title, ServerUrl) = await _repository.GetServerInfo(CancellationToken.None);
             var mods = await _repository.GetMods();
             foreach (var mod in mods)
             {

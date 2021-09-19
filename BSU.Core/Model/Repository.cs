@@ -74,5 +74,10 @@ namespace BSU.Core.Model
             _logger.Trace("Repo {0} calculated state: {1}", Identifier, calculatedState);
             return calculatedState;
         }
+
+        public async Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
+        {
+            return await Implementation.GetServerInfo(cancellationToken);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model.Updating;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
@@ -12,5 +13,6 @@ namespace BSU.Core.Model
         Guid Identifier { get; }
         string Name { get; }
         Task<CalculatedRepositoryState> GetState(CancellationToken cancellationToken);
+        Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken);
     }
 }

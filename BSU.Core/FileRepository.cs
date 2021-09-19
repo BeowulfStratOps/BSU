@@ -30,6 +30,10 @@ namespace BSU.Core
         }
 
         public Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken) => Task.FromResult(_mods);
+        public Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     internal class FileRepositoryMod : IRepositoryMod

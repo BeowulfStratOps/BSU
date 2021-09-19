@@ -20,6 +20,7 @@ namespace BSU.BSO
 
         private readonly string _url;
         private Dictionary<string, IRepositoryMod> _mods;
+        private ServerFile _serverFile;
 
         public BsoRepo(string url)
         {
@@ -31,12 +32,12 @@ namespace BSU.BSO
             using var client = new HttpClient();
             _logger.Debug("Downloading server file from {0}", _url);
             var serverFileJson = await client.GetStringAsync(_url, cancellationToken);
-            var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
+            _serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
 
             var parts = _url.Split('/');
             parts[^1] = "";
             var baseUrl = string.Join('/', parts);
-            _mods = serverFile.ModFolders.ToDictionary(m => m.ModName,
+            _mods = _serverFile.ModFolders.ToDictionary(m => m.ModName,
                 m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName));
         }
 
@@ -46,6 +47,10 @@ namespace BSU.BSO
             return _mods;
         }
 
-        public string GetLocation() => _url;
+        public async Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
+        {
+            await Load(CancellationToken.None);
+            return new ServerInfo(_serverFile.ServerName, _serverFile.ServerAddress);
+        }
     }
 }

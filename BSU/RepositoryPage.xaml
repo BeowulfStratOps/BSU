@@ -8,24 +8,60 @@
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:actions="clr-namespace:BSU.GUI.Actions"
+             xmlns:converters="clr-namespace:BSU.GUI.Converters"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <DockPanel>
+        <DockPanel.Resources>
+            <converters:BoolToVisibilityConverter x:Key="VisibleIfTrueConverter" />
+        </DockPanel.Resources>
+        <i:Interaction.Triggers>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdatePrepared}">
+                <actions:YesNoPopupAction></actions:YesNoPopupAction>
+            </i:EventTrigger>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateSetup}">
+                <actions:YesNoPopupAction></actions:YesNoPopupAction>
+            </i:EventTrigger>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateFinished}">
+                <actions:MsgPopupAction></actions:MsgPopupAction>
+            </i:EventTrigger>
+            <i:EventTrigger EventName="Raised" SourceObject="{Binding DeleteInteraction}">
+                <actions:YesNoCancelPopupAction></actions:YesNoCancelPopupAction>
+            </i:EventTrigger>
+        </i:Interaction.Triggers>
+
         <!-- TODO: figure out how to reuse this for all pages -->
         <DockPanel DockPanel.Dock="Top">
             <Button DockPanel.Dock="Right" Width="50" Command="{Binding Back}">Back</Button>
             <Button DockPanel.Dock="Right" Width="50" Command="{Binding ShowStorage}">Storage</Button>
         </DockPanel>
 
+        <DockPanel Dock="Top">
+            <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
+                <TextBlock Text="{Binding Title}"></TextBlock>
+                <TextBlock Text="{Binding ServerUrl}"></TextBlock>
+                <TextBlock Text="{Binding Path=CalculatedState}"></TextBlock>
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Command="{Binding Details}">Details</Button>
+                <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE74D;" Margin="2" Command="{Binding Delete}"></Button>
+                <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE896;" Margin="2" Command="{Binding Update}"></Button>
+                <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xEDB5;" Margin="2" IsEnabled="False"></Button>
+            </StackPanel>
+        </DockPanel>
+        <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleIfTrueConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
 
-        <Border BorderBrush="Black" BorderThickness="1">
-            <ItemsControl ItemsSource="{Binding Path=Mods}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <userControls:RepositoryMod></userControls:RepositoryMod>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </Border>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Border BorderBrush="Black" BorderThickness="1">
+                <ItemsControl ItemsSource="{Binding Path=Mods}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <userControls:RepositoryMod></userControls:RepositoryMod>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </ScrollViewer>
     </DockPanel>
 </UserControl>

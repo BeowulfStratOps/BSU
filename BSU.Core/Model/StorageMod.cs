@@ -94,7 +94,7 @@ namespace BSU.Core.Model
 
         public async Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress)
         {
-            progress.Report(new FileSyncStats(FileSyncState.Waiting, 0, 0, 0, 0));
+            progress?.Report(new FileSyncStats(FileSyncState.Waiting, 0, 0, 0, 0));
             await SetState(StorageModStateEnum.Updating, new [] { StorageModStateEnum.Created , StorageModStateEnum.CreatedWithUpdateTarget},
                 async () =>
                 {
