@@ -22,7 +22,7 @@ namespace BSU.Core.Persistence
         {
             return selection switch
             {
-                null => throw new NotImplementedException(), // TODO: implement
+                null => null, //throw new NotImplementedException(), // TODO: implement
                 RepositoryModActionDoNothing => new PersistedSelection(PersistedSelectionType.DoNothing, null, null),
                 RepositoryModActionStorageMod storageModAction => storageModAction.StorageMod.GetStorageModIdentifiers(),
                 RepositoryModActionDownload downloadAction => downloadAction.DownloadStorage.AsStorageIdentifier(),

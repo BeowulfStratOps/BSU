@@ -4,11 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:BSU.GUI"
-             xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:actions="clr-namespace:BSU.GUI.Actions"
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
+             xmlns:components="clr-namespace:BSU.GUI.Components"
+             xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <DockPanel>
@@ -32,8 +33,8 @@
 
         <!-- TODO: figure out how to reuse this for all pages -->
         <DockPanel DockPanel.Dock="Top">
-            <Button DockPanel.Dock="Right" Width="50" Command="{Binding Back}">Back</Button>
-            <Button DockPanel.Dock="Right" Width="50" Command="{Binding ShowStorage}">Storage</Button>
+            <userControls:SvgButton DockPanel.Dock="Left" Width="50" Height="50" Command="{Binding Back}" Svg="{StaticResource SvgBack}" />
+            <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding ShowStorage}" Svg="{StaticResource SvgStorage}" />
         </DockPanel>
 
         <DockPanel Dock="Top">
@@ -44,10 +45,9 @@
                 <TextBlock Text="{Binding Path=CalculatedState}"></TextBlock>
             </StackPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Command="{Binding Details}">Details</Button>
-                <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE74D;" Margin="2" Command="{Binding Delete}"></Button>
-                <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE896;" Margin="2" Command="{Binding Update}"></Button>
-                <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xEDB5;" Margin="2" IsEnabled="False"></Button>
+                <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" />
+                <userControls:SvgCommandButton Width="50" Height="50" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" />
+                <userControls:SvgCommandButton Width="50" Height="50" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" />
             </StackPanel>
         </DockPanel>
         <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleIfTrueConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
@@ -57,7 +57,7 @@
                 <ItemsControl ItemsSource="{Binding Path=Mods}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <userControls:RepositoryMod></userControls:RepositoryMod>
+                            <components:RepositoryMod></components:RepositoryMod>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

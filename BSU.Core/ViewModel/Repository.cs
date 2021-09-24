@@ -30,17 +30,24 @@ namespace BSU.Core.ViewModel
             {
                 if (_calculatedState == value) return;
                 _calculatedState = value;
-                Update.SetCanExecute(CanUpdate()); // TODO: should this be a behaviour?
                 OnPropertyChanged();
+                UpdateButtonStates();
             }
+        }
+
+        private void UpdateButtonStates()
+        {
+            Update.State = GetUpdateActionState();
+            Play.State = GetPlayActionState();
         }
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new();
 
-        public DelegateCommand Update { get; }
+        public StateCommand Update { get; }
 
         public DelegateCommand Delete { get; }
         public DelegateCommand Details { get; }
+        public StateCommand Play { get; }
 
 
         public DelegateCommand Back { get; }
@@ -81,10 +88,12 @@ namespace BSU.Core.ViewModel
             _viewModelService = viewModelService;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete);
-            Update = new DelegateCommand(DoUpdate);
+            Update = new StateCommand(DoUpdate);
             Back = new DelegateCommand(viewModelService.NavigateBack);
             ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
+            Play = new StateCommand(() => throw new NotImplementedException());
+            UpdateButtonStates();
             Name = repository.Name;
         }
 
@@ -103,10 +112,41 @@ Cancel - Do not remove this repository";
                 _model.DeleteRepository(_repository, (bool)removeData);
         }
 
-        private bool CanUpdate()
+        private CommandState GetUpdateActionState()
         {
-            return CalculatedState.State == CalculatedRepositoryStateEnum.NeedsDownload ||
-                   CalculatedState.State == CalculatedRepositoryStateEnum.NeedsUpdate;
+            switch (CalculatedState.State)
+            {
+                case CalculatedRepositoryStateEnum.NeedsUpdate:
+                case CalculatedRepositoryStateEnum.NeedsDownload:
+                    return CommandState.Enabled;
+                case CalculatedRepositoryStateEnum.Ready:
+                case CalculatedRepositoryStateEnum.RequiresUserIntervention:
+                case CalculatedRepositoryStateEnum.InProgress:
+                    return CommandState.Disabled;
+                case CalculatedRepositoryStateEnum.Loading:
+                    return CommandState.Loading;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private CommandState GetPlayActionState()
+        {
+            switch (CalculatedState.State)
+            {
+                case CalculatedRepositoryStateEnum.NeedsUpdate:
+                case CalculatedRepositoryStateEnum.NeedsDownload:
+                    return CommandState.Warning;
+                case CalculatedRepositoryStateEnum.Ready:
+                    return CommandState.Primary;
+                case CalculatedRepositoryStateEnum.RequiresUserIntervention:
+                case CalculatedRepositoryStateEnum.InProgress:
+                    return CommandState.Disabled;
+                case CalculatedRepositoryStateEnum.Loading:
+                    return CommandState.Enabled;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private async Task DoUpdate()

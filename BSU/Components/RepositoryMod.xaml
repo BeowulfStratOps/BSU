@@ -1,12 +1,12 @@
-﻿<UserControl x:Class="BSU.GUI.UserControls.RepositoryMod"
+﻿<UserControl x:Class="BSU.GUI.Components.RepositoryMod"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:BSU.GUI.UserControls"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
+             xmlns:components="clr-namespace:BSU.GUI.Components"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
     <Border Margin="5">
@@ -24,13 +24,13 @@
                           IsEnabled="{Binding CanChangeSelection}">
                     <ComboBox.Resources>
                         <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
-                            <local:SelectDoNothing></local:SelectDoNothing>
+                            <components:SelectDoNothing></components:SelectDoNothing>
                         </DataTemplate>
                         <DataTemplate DataType="{x:Type viewModel:SelectMod}">
-                            <local:SelectMod></local:SelectMod>
+                            <components:SelectMod></components:SelectMod>
                         </DataTemplate>
                         <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
-                            <local:SelectStorage></local:SelectStorage>
+                            <components:SelectStorage></components:SelectStorage>
                         </DataTemplate>
                     </ComboBox.Resources>
                 </ComboBox>

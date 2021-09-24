@@ -1,0 +1,23 @@
+﻿<UserControl x:Class="BSU.GUI.UserControls.SvgButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:BSU.GUI.UserControls"
+             mc:Ignorable="d"
+             Name="Uc"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid DataContext="{Binding ElementName=Uc}">
+        <Button Command="{Binding Command}">
+            <Button.Template>
+                <ControlTemplate>
+                    <Border x:Name="circle" Background="Transparent" CornerRadius="{Binding Path=ActualWidth, ElementName=circle}" BorderThickness="1">
+                        <Viewbox Stretch="Fill">
+                            <ContentPresenter Content="{Binding Svg}"></ContentPresenter>
+                        </Viewbox>
+                    </Border>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+    </Grid>
+</UserControl>

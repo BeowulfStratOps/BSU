@@ -1,7 +1,6 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
-namespace BSU.GUI.UserControls
+namespace BSU.GUI.Components
 {
     public partial class SelectMod : UserControl
     {

@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace BSU.GUI.UserControls
+namespace BSU.GUI.Components
 {
     public partial class StorageMod : UserControl
     {

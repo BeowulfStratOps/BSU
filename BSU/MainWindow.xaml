@@ -7,7 +7,7 @@
         xmlns:gui="clr-namespace:BSU.GUI"
         mc:Ignorable="d"
         Title="BSO Sync Utility" Height="450" Width="800" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
-        Closing="MainWindow_OnClosing" WindowState="Maximized">
+        Closing="MainWindow_OnClosing" WindowState="Normal">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo></TaskbarItemInfo>
     </Window.TaskbarItemInfo>
