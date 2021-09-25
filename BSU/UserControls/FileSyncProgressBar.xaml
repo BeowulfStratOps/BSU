@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="BSU.GUI.UserControls.FileSyncProgressBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:BSU.GUI.UserControls"
+             xmlns:converters="clr-namespace:BSU.GUI.Converters"
+             xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:FileSyncProgress}">
+    <UserControl.Resources>
+        <converters:ByteSizeConverter x:Key="ByteSizeConverter" />
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converters:CollapseConverter x:Key="CollapseConverter" />
+    </UserControl.Resources>
+    <Grid Visibility="{Binding Active, Converter={StaticResource CollapseConverter}}">
+        <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsIndeterminate}" Value="{Binding ProgressValue, Mode=OneWay}"></ProgressBar>
+        <TextBlock Visibility="{Binding Stage, Converter={StaticResource NullToVisibilityConverter}}">
+            <Run Text="{Binding Stage, Mode=OneWay}" />...
+        </TextBlock>
+        <TextBlock Visibility="{Binding Stats, Converter={StaticResource NullToVisibilityConverter}}">
+            Download:
+            <Run Text="{Binding Stats.DownloadDone, Converter={StaticResource ByteSizeConverter}}" />
+            /
+            <Run Text="{Binding Stats.DownloadTotal, Converter={StaticResource ByteSizeConverter}}" />
+            <LineBreak />
+            Update:
+            <Run Text="{Binding Stats.UpdateDone, Converter={StaticResource ByteSizeConverter}}" />
+            /
+            <Run Text="{Binding Stats.UpdateTotal, Converter={StaticResource ByteSizeConverter}}" />
+        </TextBlock>
+    </Grid>
+</UserControl>

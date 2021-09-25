@@ -7,6 +7,7 @@
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
              xmlns:components="clr-namespace:BSU.GUI.Components"
+             xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
     <Border Margin="5">
@@ -40,7 +41,7 @@
                 </DockPanel>
                 <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
             </StackPanel>
-            <ProgressBar Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleOrHiddenConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
+            <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
         </DockPanel>
     </Border>
 </UserControl>

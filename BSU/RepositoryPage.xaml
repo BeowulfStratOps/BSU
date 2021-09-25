@@ -12,7 +12,6 @@
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <DockPanel>
         <DockPanel.Resources>
-            <converters:BoolToVisibilityConverter x:Key="VisibleIfTrueConverter" />
             <converters:ColorIndicationConverter x:Key="ColorConverter" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
         </DockPanel.Resources>
@@ -40,7 +39,7 @@
                 <userControls:SvgButton Width="50" Height="50" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}"/>
             </StackPanel>
         </DockPanel>
-        <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleIfTrueConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
+        <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Border BorderBrush="Black" BorderThickness="1">

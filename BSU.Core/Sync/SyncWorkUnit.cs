@@ -21,9 +21,9 @@ namespace BSU.Core.Sync
         public abstract FileSyncStats GetStats();
     }
 
-    internal record FileSyncStats(FileSyncState State, long DownloadTotal, long UpdateTotal, long DownloadDone, long UpdateDone);
+    public record FileSyncStats(FileSyncState State, long DownloadTotal, long UpdateTotal, long DownloadDone, long UpdateDone);
 
-    internal enum FileSyncState
+    public enum FileSyncState
     {
         Waiting,
         Updating,

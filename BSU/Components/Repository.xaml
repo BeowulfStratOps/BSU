@@ -34,7 +34,7 @@
                     <userControls:SvgButton Width="50" Height="50" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}"/>
                 </StackPanel>
             </DockPanel>
-            <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleIfTrueConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>
+            <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleIfTrueConverter}}" Value="{Binding UpdateProgress.ProgressValue, Mode=OneWay}"></ProgressBar>
         </DockPanel>
     </Border>
 </UserControl>

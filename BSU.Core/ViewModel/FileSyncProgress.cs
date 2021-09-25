@@ -6,7 +6,7 @@ namespace BSU.Core.ViewModel
 {
     public class FileSyncProgress : ObservableBase
     {
-        private bool _isIndeterminate = false;
+        private bool _isIndeterminate;
         public bool IsIndeterminate
         {
             get => _isIndeterminate;
@@ -18,7 +18,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        private bool _active = false;
+        private bool _active;
         public bool Active
         {
             get => _active;
@@ -30,14 +30,38 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        private double _value = 0;
-        public double Value
+        private double _progressValue;
+        public double ProgressValue
         {
-            get => _value;
+            get => _progressValue;
             private set
             {
-                if (Math.Abs(value - _value) < 0.0001) return;
-                _value = value;
+                if (Math.Abs(value - _progressValue) < 0.0001) return;
+                _progressValue = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _stage;
+        public string Stage
+        {
+            get => _stage;
+            private set
+            {
+                if (_stage == value) return;
+                _stage = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private FileSyncStats _stats;
+        public FileSyncStats Stats
+        {
+            get => _stats;
+            private set
+            {
+                if (_stats == value) return;
+                _stats = value;
                 OnPropertyChanged();
             }
         }
@@ -56,22 +80,28 @@ namespace BSU.Core.ViewModel
                 case FileSyncState.Waiting:
                 {
                     Active = true;
-                    Value = 0;
+                    ProgressValue = 0;
                     IsIndeterminate = true;
+                    Stage = "Preparing";
+                    Stats = null;
                     break;
                 }
                 case FileSyncState.Updating:
                 {
                     Active = true;
                     IsIndeterminate = false;
-                    Value = (stats.DownloadDone + stats.UpdateDone) / (double)(stats.DownloadTotal + stats.UpdateTotal);
+                    ProgressValue = (stats.DownloadDone + stats.UpdateDone) / (double)(stats.DownloadTotal + stats.UpdateTotal);
+                    Stage = null;
+                    Stats = stats;
                     break;
                 }
                 case FileSyncState.None:
                 {
                     Active = false;
-                    Value = 0;
+                    ProgressValue = 0;
                     IsIndeterminate = false;
+                    Stage = null;
+                    stats = null;
                     break;
                 }
                 default:
