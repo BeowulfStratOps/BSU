@@ -19,7 +19,6 @@ namespace BSU.Core.Tests.Mocks
         public bool ThrowErrorLoad = false;
         public bool ThrowErrorOpen = false;
         private readonly Action<MockStorageMod> _load;
-        private readonly Logger _logger = EntityLogger.GetLogger();
 
         public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
 
@@ -94,8 +93,6 @@ namespace BSU.Core.Tests.Mocks
             if (ThrowErrorLoad) throw new TestException();
             _load?.Invoke(this);
         }
-
-        public int GetUid() => _logger.GetId();
 
         private sealed class MockStream : MemoryStream
         {

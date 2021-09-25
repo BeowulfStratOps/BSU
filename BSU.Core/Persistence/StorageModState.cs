@@ -15,10 +15,11 @@ namespace BSU.Core.Persistence
         private readonly Dictionary<string, UpdateTarget> _updating;
         private readonly Action _store;
         private readonly string _identifier;
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger;
 
         public PersistedStorageModState(Dictionary<string, UpdateTarget> updating, Action store, string identifier)
         {
+            _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _updating = updating;
             _store = store;
             _identifier = identifier;

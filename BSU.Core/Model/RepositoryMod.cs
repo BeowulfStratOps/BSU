@@ -17,7 +17,7 @@ namespace BSU.Core.Model
     {
         private readonly IPersistedRepositoryModState _internalState;
         private readonly IModelStructure _modelStructure;
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger;
         private IRepositoryMod Implementation { get; } // TODO: make private
         public string Identifier { get; }
 
@@ -32,7 +32,7 @@ namespace BSU.Core.Model
             set
             {
                 if (value != null && value.Equals(_selection)) return;
-                _logger.Debug("Mod {0} changing selection from {1} to {2}", Identifier, _selection, value);
+                _logger.Debug($"Changing selection from {_selection} to {value}");
                 _selection = value;
                 _internalState.Selection = PersistedSelection.FromSelection(value);
             }
@@ -42,6 +42,7 @@ namespace BSU.Core.Model
             IPersistedRepositoryModState internalState,
             IModelStructure modelStructure)
         {
+            _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             _modelStructure = modelStructure;
             Implementation = implementation;
@@ -49,13 +50,11 @@ namespace BSU.Core.Model
             DownloadIdentifier = identifier;
 
             if (_internalState.Selection?.Type == PersistedSelectionType.DoNothing)
-                Selection = new RepositoryModActionDoNothing();
+                _selection = new RepositoryModActionDoNothing();
 
             // TODO: is there a cleaner way of doing caching?
             _matchHash = new ResettableLazyAsync<MatchHash>(CalculateMatchHash, null);
             _versionHash = new ResettableLazyAsync<VersionHash>(CalculateVersionHash, null);
-
-            _logger.Info($"Created with identifier {identifier}");
         }
 
         private async Task<MatchHash> CalculateMatchHash(CancellationToken cancellationToken)

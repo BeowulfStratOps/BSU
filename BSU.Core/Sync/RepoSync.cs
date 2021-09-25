@@ -15,18 +15,20 @@ namespace BSU.Core.Sync
     /// </summary>
     internal class RepoSync
     {
-        private static readonly Logger Logger = EntityLogger.GetLogger();
+        private readonly Logger _logger;
 
         private readonly List<SyncWorkUnit> _allActions; // TODO: can be read only
 
-        private RepoSync(List<SyncWorkUnit> actions)
+        private RepoSync(List<SyncWorkUnit> actions, Logger logger)
         {
             _allActions = actions;
+            _logger = logger;
         }
 
         public static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage, CancellationToken cancellationToken)
         {
-            Logger.Debug("Building sync actions {0} to {1}", storage, repository);
+            var logger = LogHelper.GetLoggerWithIdentifier(typeof(RepoSync), Guid.NewGuid().ToString());
+            logger.Debug("Building sync actions {0} to {1}", storage, repository);
 
             var allActions = new List<SyncWorkUnit>();
             var repositoryList = await repository.GetFileList(cancellationToken);
@@ -58,11 +60,11 @@ namespace BSU.Core.Sync
                 allActions.Add(new DeleteAction(storage, storageModFile));
             }
 
-            Logger.Debug("Download actions: {0}", allActions.OfType<DownloadAction>().Count());
-            Logger.Debug("Update actions: {0}", allActions.OfType<UpdateAction>().Count());
-            Logger.Debug("Delete actions: {0}", allActions.OfType<DeleteAction>().Count());
+            logger.Debug("Download actions: {0}", allActions.OfType<DownloadAction>().Count());
+            logger.Debug("Update actions: {0}", allActions.OfType<UpdateAction>().Count());
+            logger.Debug("Delete actions: {0}", allActions.OfType<DeleteAction>().Count());
 
-            return new RepoSync(allActions);
+            return new RepoSync(allActions, logger);
         }
 
         public async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats> progress)

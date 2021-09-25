@@ -15,7 +15,7 @@ namespace BSU.Core
 {
     public class Core : IDisposable
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         internal readonly Model.Model Model;
         public readonly Types Types;

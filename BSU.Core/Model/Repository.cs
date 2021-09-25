@@ -24,11 +24,12 @@ namespace BSU.Core.Model
 
         private readonly Task _loading;
 
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger;
 
         public Repository(IRepository implementation, string name, string location,
             IRepositoryState internalState, IModelStructure modelStructure)
         {
+            _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
             _modelStructure = modelStructure;
             Location = location;

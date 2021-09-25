@@ -11,7 +11,7 @@ namespace BSU.Core.Persistence
     /// </summary>
     internal class Settings : ISettings
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly FileInfo _path;
         private readonly SettingsData _data;

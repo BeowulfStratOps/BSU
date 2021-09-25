@@ -16,7 +16,7 @@ namespace BSU.Core.Storage
     /// </summary>
     public class DirectoryMod : IStorageMod
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger;
 
         private readonly DirectoryInfo _dir;
         private readonly IStorage _parentStorage;
@@ -24,6 +24,7 @@ namespace BSU.Core.Storage
 
         public DirectoryMod(DirectoryInfo dir, IStorage parentStorage)
         {
+            _logger = LogHelper.GetLoggerWithIdentifier(this, dir.Name);
             _dir = dir;
             _parentStorage = parentStorage;
         }
@@ -32,8 +33,6 @@ namespace BSU.Core.Storage
         {
             await GetDisplayName(cancellationToken);
         }
-
-        public int GetUid() => _logger.GetId();
 
         /// <summary>
         /// Attempts to retrieve a display name for this mod folder.

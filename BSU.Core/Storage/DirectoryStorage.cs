@@ -15,7 +15,7 @@ namespace BSU.Core.Storage
     // TODO: document that this is (aggressively) using normalized (=lower case) paths!
     public class DirectoryStorage : IStorage
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger;
 
         private readonly string _path;
 
@@ -27,6 +27,7 @@ namespace BSU.Core.Storage
         {
             _path = path;
             if (!new DirectoryInfo(path).Exists) throw new DirectoryNotFoundException();
+            _logger = LogHelper.GetLoggerWithIdentifier(this, path.Split(new[]{'/','\\'})[^1]);
             _loading = Task.Run(() => Load(CancellationToken.None));
         }
 
@@ -42,8 +43,6 @@ namespace BSU.Core.Storage
             await _loading;
             return _mods;
         }
-
-        public string GetLocation() => _path;
 
         public async Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
         {

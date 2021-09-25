@@ -23,7 +23,6 @@ namespace BSU.Core.Tests.Mocks
         public string Identifier, DisplayName;
         public bool ThrowErrorLoad;
         private readonly Action<MockRepositoryMod> _load;
-        private readonly Logger _logger = EntityLogger.GetLogger();
 
         public void SetFile(string key, string data)
         {
@@ -73,8 +72,6 @@ namespace BSU.Core.Tests.Mocks
             if (!NoOp) fileStream.Write(Files[path]);
             return Task.CompletedTask;
         }
-
-        public int GetUid() => _logger.GetId();
 
         public Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {

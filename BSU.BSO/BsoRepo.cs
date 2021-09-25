@@ -16,7 +16,7 @@ namespace BSU.BSO
     /// </summary>
     public class BsoRepo : IRepository
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _url;
         private Dictionary<string, IRepositoryMod> _mods;

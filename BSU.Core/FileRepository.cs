@@ -39,7 +39,7 @@ namespace BSU.Core
     internal class FileRepositoryMod : IRepositoryMod
     {
         private readonly DirectoryInfo _directory;
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         // TODO: terrible performance
         private readonly Dictionary<string, byte[]> _files = new();
@@ -93,7 +93,5 @@ namespace BSU.Core
         {
             await DownloadTo(path, fileStream, progress, token);
         }
-
-        public int GetUid() => _logger.GetId();
     }
 }

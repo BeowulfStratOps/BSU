@@ -27,9 +27,14 @@ namespace BSU.Core.Persistence
             set
             {
                 if (value == null)
+                {
                     _usedMods.Remove(_identifier);
-                else
-                    _usedMods[_identifier] = value;
+                    _store();
+                    return;
+                }
+
+                if (_usedMods[_identifier].Equals(value)) return;
+                _usedMods[_identifier] = value;
                 _store();
             }
         }

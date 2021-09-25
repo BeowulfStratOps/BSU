@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 
 namespace BSU.Core.Concurrency
 {
     // TODO: create derived types without reset and/or without T ?
-    // TODO: tests! (pretty sure it blocks the semaphore while waiting for the task atm)
     internal class ResettableLazyAsync<T> where T : class
     {
         private readonly Func<CancellationToken, Task<T>> _function;
+        private readonly Action<JobLogEvent> _log;
         private CancellationTokenSource _cts;
 
         // used for very short-lived lock. won't use cancellation token for that reason
@@ -16,9 +17,10 @@ namespace BSU.Core.Concurrency
 
         private Task<T> _task;
 
-        public ResettableLazyAsync(Func<CancellationToken, Task<T>> function, T initialValue = null)
+        public ResettableLazyAsync(Func<CancellationToken, Task<T>> function, T initialValue = null, Action<JobLogEvent> log = null)
         {
             _function = function;
+            _log = log;
             _cts = new CancellationTokenSource();
             if (initialValue != null)
                 _task = Task.FromResult(initialValue);
@@ -36,6 +38,7 @@ namespace BSU.Core.Concurrency
                 {
                     await _task;
                     _task = null;
+                    _log?.Invoke(JobLogEvent.Abort);
                 }
                 catch
                 {
@@ -67,7 +70,13 @@ namespace BSU.Core.Concurrency
                 else
                 {
                     var operationCancellationToken = _cts.Token;
-                    _task = Task.Run(async () => await _function(operationCancellationToken),
+                    _task = Task.Run(async () =>
+                        {
+                            _log?.Invoke(JobLogEvent.Start);
+                            var result = await _function(operationCancellationToken);
+                            _log?.Invoke(JobLogEvent.Stop);
+                            return result;
+                        },
                         operationCancellationToken);
                     task = _task;
                 }
@@ -95,5 +104,12 @@ namespace BSU.Core.Concurrency
                 _semaphore.Release();
             }
         }
+    }
+
+    internal enum JobLogEvent
+    {
+        Start,
+        Stop,
+        Abort
     }
 }

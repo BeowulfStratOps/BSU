@@ -21,7 +21,7 @@ namespace BSU.BSO
     {
         // TODO: re-use http clients?
 
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _url;
         private HashFile _hashFile;

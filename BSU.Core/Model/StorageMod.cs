@@ -25,7 +25,7 @@ namespace BSU.Core.Model
 
         private UpdateTarget _updateTarget;
 
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger;
 
         private readonly SemaphoreSlim _stateLock = new(1);
         private StorageModStateEnum _state = StorageModStateEnum.Created; // TODO: should not be directly accessible
@@ -37,7 +37,7 @@ namespace BSU.Core.Model
             {
                 var old = _state;
                 _state = value;
-                _logger.Debug("State of '{0}' changed from {1} to {2}.", Identifier, old, value);
+                _logger.Debug("State changed from {1} to {2}.", Identifier, old, value);
                 StateChanged?.Invoke();
             }
         }
@@ -45,6 +45,7 @@ namespace BSU.Core.Model
         public StorageMod(IStorageMod implementation, string identifier,
             IPersistedStorageModState internalState, Guid parentIdentifier, bool canWrite)
         {
+            _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             _parentIdentifier = parentIdentifier;
             CanWrite = canWrite;
@@ -60,8 +61,8 @@ namespace BSU.Core.Model
                 initialVersionHash = VersionHash.FromDigest(_updateTarget.Hash);
             }
 
-            _matchHash = new ResettableLazyAsync<MatchHash>(CreateMatchHash, null);
-            _versionHash = new ResettableLazyAsync<VersionHash>(CreateVersionHash, initialVersionHash);
+            _matchHash = new ResettableLazyAsync<MatchHash>(CreateMatchHash, null, evt => _logger.Debug($"MatchHash job: {evt}"));
+            _versionHash = new ResettableLazyAsync<VersionHash>(CreateVersionHash, initialVersionHash, evt => _logger.Debug($"VersionHash job: {evt}"));
         }
 
         private async Task<VersionHash> CreateVersionHash(CancellationToken cancellationToken)

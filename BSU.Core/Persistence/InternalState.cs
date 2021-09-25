@@ -14,7 +14,7 @@ namespace BSU.Core.Persistence
     /// </summary>
     internal class InternalState : IInternalState
     {
-        private readonly Logger _logger = EntityLogger.GetLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly ISettings _settings;
 
