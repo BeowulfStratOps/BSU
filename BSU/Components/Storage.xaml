@@ -4,17 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
-             xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
-             xmlns:actions="clr-namespace:BSU.GUI.Actions"
              xmlns:components="clr-namespace:BSU.GUI.Components"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Storage}">
     <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
-        <b:Interaction.Triggers>
-            <b:EventTrigger EventName="Raised" SourceObject="{Binding DeleteInteraction}">
-                <actions:YesNoCancelPopupAction></actions:YesNoCancelPopupAction>
-            </b:EventTrigger>
-        </b:Interaction.Triggers>
         <DockPanel>
             <DockPanel Dock="Top">
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">

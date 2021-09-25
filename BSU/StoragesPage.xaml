@@ -4,20 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:BSU.GUI"
-             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
-             xmlns:actions="clr-namespace:BSU.GUI.Actions"
              xmlns:components="clr-namespace:BSU.GUI.Components"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:StoragePage}">
     <DockPanel>
-        <i:Interaction.Triggers>
-            <i:EventTrigger EventName="Raised" SourceObject="{Binding AddStorageInteraction}">
-                <actions:AddStorageAction></actions:AddStorageAction>
-            </i:EventTrigger>
-        </i:Interaction.Triggers>
-
         <!-- TODO: figure out how to reuse this for all pages -->
         <DockPanel DockPanel.Dock="Top">
             <userControls:SvgButton DockPanel.Dock="Left" Width="50" Height="50" Command="{Binding Back}" Svg="{StaticResource SvgBack}" />

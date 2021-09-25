@@ -12,8 +12,6 @@ namespace BSU.Core.ViewModel
         private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
         public ObservableCollection<Storage> Storages { get; } = new();
-
-        public InteractionRequest<AddStorage, bool?> AddStorageInteraction { get; } = new();
         public DelegateCommand AddStorage { get; }
 
         public DelegateCommand Back { get; }
@@ -26,17 +24,17 @@ namespace BSU.Core.ViewModel
             AddStorage = new DelegateCommand(DoAddStorage);
             foreach (var modelStorage in model.GetStorages())
             {
-                Storages.Add(new Storage(modelStorage, model));
+                Storages.Add(new Storage(modelStorage, model, _viewModelService));
             }
         }
 
-        private async Task DoAddStorage()
+        private void DoAddStorage()
         {
             var vm = new AddStorage();
-            var doAdd = await AddStorageInteraction.Raise(vm);
+            var doAdd = _viewModelService.InteractionService.AddStorage(vm);
             if (doAdd != true) return;
             var storage = _model.AddStorage("DIRECTORY", new DirectoryInfo(vm.Path), vm.Name);
-            Storages.Add(new Storage(storage, _model));
+            Storages.Add(new Storage(storage, _model, _viewModelService));
         }
 
         public async Task Load()

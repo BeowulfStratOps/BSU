@@ -105,9 +105,19 @@ namespace BSU.Core.Model
 
             _logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
-            // TODO: check our selected one (well.. initially selected one. should be a separate field/flag)
+            var storageMods = (await _modelStructure.GetStorageMods()).ToList();
 
-            var storageMods = await _modelStructure.GetStorageMods();
+            var previouslySelectedMod =
+                storageMods.SingleOrDefault(m => m.GetStorageModIdentifiers().Equals(_internalState.Selection));
+
+            if (previouslySelectedMod != null)
+            {
+                Selection = new RepositoryModActionStorageMod(previouslySelectedMod);
+                return Selection;
+            }
+
+            // TODO: check previously selected storage for download?
+
             var (result, selectedMod) = await CoreCalculation.AutoSelect(this, storageMods, cancellationToken);
             RepositoryModActionSelection selection = result switch
             {
@@ -159,7 +169,7 @@ namespace BSU.Core.Model
             if (Selection is RepositoryModActionStorageMod actionStorageMod)
             {
                 var action = await CoreCalculation.GetModAction(this, actionStorageMod.StorageMod, cancellationToken);
-                if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate) return null;
+                if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
                 var update = await actionStorageMod.StorageMod.PrepareUpdate(Implementation, displayName, matchHash, versionHash, progress);
                 return update;

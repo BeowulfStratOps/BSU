@@ -17,10 +17,6 @@ namespace BSU.Core.ViewModel
 
         public FileSyncProgress UpdateProgress { get; } = new();
 
-        public InteractionRequest<MsgPopupContext, bool> UpdatePrepared { get; } = new();
-        public InteractionRequest<MsgPopupContext, bool> UpdateSetup { get; } = new();
-        public InteractionRequest<MsgPopupContext, object> UpdateFinished { get; } = new();
-
         private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
 
         public CalculatedRepositoryState CalculatedState
@@ -53,8 +49,6 @@ namespace BSU.Core.ViewModel
         public DelegateCommand Back { get; }
 
         public DelegateCommand ShowStorage { get; }
-
-        public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new();
         public Guid Identifier { get; }
 
         private string _title = "Loading...";
@@ -97,7 +91,7 @@ namespace BSU.Core.ViewModel
             Name = repository.Name;
         }
 
-        private async Task DoDelete()
+        private void DoDelete()
         {
             // TODO: this doesn't look like it belongs here
             var text = $@"Removing repository {Name}. Do you want to remove mods used by this repository?
@@ -106,8 +100,7 @@ Yes - Delete mods if they are not in use by any other repository
 No - Keep local mods
 Cancel - Do not remove this repository";
 
-            var context = new MsgPopupContext(text, "Remove Repository");
-            var removeData = await DeleteInteraction.Raise(context);
+            var removeData = _viewModelService.InteractionService.YesNoCancelPopup(text, "Remove Repository");
             if (removeData != null) // not canceled
                 _model.DeleteRepository(_repository, (bool)removeData);
         }
@@ -162,8 +155,7 @@ Cancel - Do not remove this repository";
             var prepareStats = await update.Prepare(CancellationToken.None);
             var bytes = 0;
             var preparedText = $"{bytes} Bytes from {prepareStats.SucceededCount} mods to download. {prepareStats.FailedCount} mods failed. Proceed?";
-            var preparedContext = new MsgPopupContext(preparedText, "Update Prepared");
-            if (!await UpdatePrepared.Raise(preparedContext))
+            if (!_viewModelService.InteractionService.YesNoPopup(preparedText, "Update Prepared"))
             {
                 throw new NotImplementedException();
                 // prepared.Abort();
@@ -175,8 +167,7 @@ Cancel - Do not remove this repository";
             await _viewModelService.Update();
 
             var updatedText = $"{updateStats.SucceededCount} Mods updated. {updateStats.FailedCount} Mods failed.";
-            var updatedContext = new MsgPopupContext(updatedText, "Update Finished");
-            await UpdateFinished.Raise(updatedContext);
+            _viewModelService.InteractionService.MessagePopup(updatedText, "Update finished");
         }
 
         public async Task Load()

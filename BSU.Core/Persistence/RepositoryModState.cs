@@ -33,7 +33,7 @@ namespace BSU.Core.Persistence
                     return;
                 }
 
-                if (_usedMods[_identifier].Equals(value)) return;
+                if (_usedMods.TryGetValue(_identifier, out var oldValue) && oldValue.Equals(value)) return;
                 _usedMods[_identifier] = value;
                 _store();
             }

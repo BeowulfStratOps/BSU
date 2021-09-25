@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using BSU.Core.ViewModel;
+using BSU.GUI.Actions;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -26,6 +27,7 @@ namespace BSU.GUI
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             _core = new Core.Core(settingsFile);
             _viewModel = _core.ViewModel;
+            _viewModel.InteractionService = new InteractionService();
             DataContext = _viewModel;
             InitializeComponent();
             Run(); // TODO: this is terrible. it should be awaited _somewhere_

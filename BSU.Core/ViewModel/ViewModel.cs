@@ -74,14 +74,7 @@ namespace BSU.Core.ViewModel
         {
             Content = _navigationStack.Pop();
         }
-    }
 
-    public interface IViewModelService
-    {
-        Task Update();
-        void NavigateToRepositories();
-        void NavigateToStorages();
-        void NavigateToRepository(Repository repository);
-        void NavigateBack();
+        public IInteractionService InteractionService { get; set; }
     }
 }

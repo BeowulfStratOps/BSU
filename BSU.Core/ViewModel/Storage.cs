@@ -16,17 +16,18 @@ namespace BSU.Core.ViewModel
         public string Name { get; }
         internal IModelStorage ModelStorage { get; }
 
-        public ObservableCollection<StorageMod> Mods { get; } = new ObservableCollection<StorageMod>();
+        public ObservableCollection<StorageMod> Mods { get; } = new();
 
         public DelegateCommand Delete { get; }
-        public InteractionRequest<MsgPopupContext, bool?> DeleteInteraction { get; } = new InteractionRequest<MsgPopupContext, bool?>();
         public Guid Identifier { get; }
+        private readonly IViewModelService _viewModelService;
 
-        internal Storage(IModelStorage storage, IModel model)
+        internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService)
         {
             Delete = new DelegateCommand(DoDelete);
             ModelStorage = storage;
             _model = model;
+            _viewModelService = viewModelService;
             Identifier = storage.Identifier;
             _storage = storage;
             Name = storage.Name;
@@ -50,8 +51,7 @@ Yes - Delete mods in on this storage
 No - Keep mods
 Cancel - Do not remove this storage";
 
-            var context = new MsgPopupContext(text, "Remove Storage");
-            var removeMods = await DeleteInteraction.Raise(context);
+            var removeMods =  _viewModelService.InteractionService.YesNoCancelPopup(text, "Remove Storage");
             if (removeMods == null) return;
             _model.DeleteStorage(_storage, (bool) removeMods);
         }

@@ -13,7 +13,6 @@ namespace BSU.Core.ViewModel
         private readonly IViewModelService _viewModelService;
         public ObservableCollection<Repository> Repositories { get; } = new();
         public DelegateCommand AddRepository { get; }
-        public InteractionRequest<AddRepository, bool?> AddRepositoryInteraction { get; } = new();
 
 
 
@@ -31,10 +30,10 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        private async Task DoAddRepository()
+        private void DoAddRepository()
         {
             var vm = new AddRepository();
-            var doAdd = await AddRepositoryInteraction.Raise(vm);
+            var doAdd = _viewModelService.InteractionService.AddRepository(vm);;
 
             if (doAdd != true) return;
             var repo = _model.AddRepository("BSO", vm.Url, vm.Name);

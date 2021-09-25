@@ -4,9 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
-             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-             xmlns:gui="clr-namespace:BSU.GUI"
-             xmlns:actions="clr-namespace:BSU.GUI.Actions"
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              mc:Ignorable="d"
@@ -15,20 +12,6 @@
         <Border.Resources>
             <converters:BoolToVisibilityConverter x:Key="VisibleIfTrueConverter" />
         </Border.Resources>
-        <i:Interaction.Triggers>
-            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdatePrepared}">
-                <actions:YesNoPopupAction></actions:YesNoPopupAction>
-            </i:EventTrigger>
-            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateSetup}">
-                <actions:YesNoPopupAction></actions:YesNoPopupAction>
-            </i:EventTrigger>
-            <i:EventTrigger EventName="Raised" SourceObject="{Binding UpdateFinished}">
-                <actions:MsgPopupAction></actions:MsgPopupAction>
-            </i:EventTrigger>
-            <i:EventTrigger EventName="Raised" SourceObject="{Binding DeleteInteraction}">
-                <actions:YesNoCancelPopupAction></actions:YesNoCancelPopupAction>
-            </i:EventTrigger>
-        </i:Interaction.Triggers>
         <DockPanel>
             <DockPanel Dock="Top">
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
