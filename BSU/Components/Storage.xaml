@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:components="clr-namespace:BSU.GUI.Components"
+             xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Storage}">
     <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
@@ -15,7 +16,7 @@
                     <TextBlock Text="[Status]"></TextBlock>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button FontFamily="Segoe MDL2 Assets" FontSize="30" Content="&#xE74D;" Margin="2" Command="{Binding Delete}"></Button>
+                    <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}"/>
                 </StackPanel>
             </DockPanel>
             <Expander>

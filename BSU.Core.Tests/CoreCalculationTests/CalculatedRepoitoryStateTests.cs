@@ -13,29 +13,30 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        private (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?) Null()
+        private (RepositoryModActionSelection, ModActionEnum?) Null()
         {
-            return (new MockModelRepositoryMod(null, null), null, null);
+            return (null, null);
         }
 
-        private (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?) DoNothing()
+        private (RepositoryModActionSelection, ModActionEnum?) DoNothing()
         {
-            return (new MockModelRepositoryMod(null, null), new RepositoryModActionDoNothing(), null);
+            return (new RepositoryModActionDoNothing(), null);
         }
 
-        private (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?) Download()
+        private (RepositoryModActionSelection, ModActionEnum?) Download()
         {
             var storage = new Mock<IModelStorage>(MockBehavior.Strict).Object;
-            return (new MockModelRepositoryMod(null, null), new RepositoryModActionDownload(storage), null);
+            return (new RepositoryModActionDownload(storage), null);
         }
 
-        private (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?) StorageMod(ModActionEnum? action)
+        private (RepositoryModActionSelection, ModActionEnum?) StorageMod(ModActionEnum? action)
         {
-            var storageMod = AutoselectTests.FromAction((ModActionEnum) action);
-            return (new MockModelRepositoryMod(null, null), new RepositoryModActionStorageMod(storageMod), null);
+            var storageMod = AutoselectTests.FromAction((ModActionEnum)action);
+            return (new RepositoryModActionStorageMod(storageMod), action);
         }
 
-        private CalculatedRepositoryState CalculateState(params (IModelRepositoryMod, RepositoryModActionSelection, ModActionEnum?)[] modData)
+        private CalculatedRepositoryState CalculateState(
+            params (RepositoryModActionSelection, ModActionEnum?)[] modData)
         {
             return CoreCalculation.CalculateRepositoryState(modData.ToList());
         }
@@ -46,8 +47,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var result = CalculateState(
                 Download()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -57,7 +57,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.Use)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
-            Assert.False(result.IsPartial);
         }
 
         [Fact]
@@ -66,8 +65,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var result = CalculateState(
                 StorageMod(ModActionEnum.Update)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -77,7 +75,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 Null()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
-            Assert.False(result.IsPartial);
         }
 
         [Fact]
@@ -86,8 +83,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var result = CalculateState(
                 StorageMod(ModActionEnum.Await)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.Syncing, result.State);
         }
 
         [Fact]
@@ -96,8 +92,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var result = CalculateState(
                 StorageMod(ModActionEnum.ContinueUpdate)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -106,8 +101,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var result = CalculateState(
                 StorageMod(ModActionEnum.AbortAndUpdate)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -117,8 +111,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 Download(),
                 StorageMod(ModActionEnum.Use)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -129,7 +122,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.Use)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
-            Assert.False(result.IsPartial);
         }
 
         [Fact]
@@ -139,8 +131,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.Update),
                 StorageMod(ModActionEnum.Use)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -151,7 +142,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 Null()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
-            Assert.False(result.IsPartial);
         }
 
         [Fact]
@@ -161,8 +151,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.Use),
                 StorageMod(ModActionEnum.Await)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.Syncing, result.State);
         }
 
         [Fact]
@@ -172,8 +161,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.ContinueUpdate),
                 StorageMod(ModActionEnum.Use)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -183,8 +171,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.AbortAndUpdate),
                 StorageMod(ModActionEnum.Use)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -195,7 +182,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 Null()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
-            Assert.False(result.IsPartial);
         }
 
         [Fact]
@@ -206,8 +192,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 Download(),
                 StorageMod(ModActionEnum.Update)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -218,8 +203,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.Update),
                 StorageMod(ModActionEnum.Update)
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.False(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -229,8 +213,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 Download(),
                 DoNothing()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsDownload, result.State);
-            Assert.True(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -240,8 +223,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.Use),
                 DoNothing()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
-            Assert.True(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.ReadyPartial, result.State);
         }
 
         [Fact]
@@ -251,8 +233,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.Update),
                 DoNothing()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.True(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -263,7 +244,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 DoNothing()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
-            Assert.True(result.IsPartial);
         }
 
         [Fact]
@@ -273,8 +253,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.Await),
                 DoNothing()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.InProgress, result.State);
-            Assert.True(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.Syncing, result.State);
         }
 
         [Fact]
@@ -284,8 +263,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.ContinueUpdate),
                 DoNothing()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.True(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -295,8 +273,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 StorageMod(ModActionEnum.AbortAndUpdate),
                 DoNothing()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.NeedsUpdate, result.State);
-            Assert.True(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
@@ -305,8 +282,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var result = CalculateState(
                 DoNothing()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
-            Assert.True(result.IsPartial);
+            Assert.Equal(CalculatedRepositoryStateEnum.ReadyPartial, result.State);
         }
     }
 }

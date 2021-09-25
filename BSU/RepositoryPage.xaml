@@ -13,6 +13,8 @@
     <DockPanel>
         <DockPanel.Resources>
             <converters:BoolToVisibilityConverter x:Key="VisibleIfTrueConverter" />
+            <converters:ColorIndicationConverter x:Key="ColorConverter" />
+            <converters:CollapseConverter x:Key="CollapseConverter" />
         </DockPanel.Resources>
 
         <!-- TODO: figure out how to reuse this for all pages -->
@@ -29,9 +31,13 @@
                 <TextBlock Text="{Binding Path=CalculatedState}"></TextBlock>
             </StackPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" />
-                <userControls:SvgCommandButton Width="50" Height="50" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" />
-                <userControls:SvgCommandButton Width="50" Height="50" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" />
+                <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}"/>
+
+                <userControls:SvgButton Width="50" Height="50" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" HideIfDisabled="True" SvgBrush="{Binding UpdateButtonColor, Converter={StaticResource ColorConverter}}" />
+                <userControls:SvgButton Width="50" Height="50" Command="{Binding Pause}" Svg="{StaticResource SvgPause}" HideIfDisabled="True" />
+                <userControls:Spinner Width="50" Height="50" Visibility="{Binding UpdateLoading, Converter={StaticResource CollapseConverter}}" />
+
+                <userControls:SvgButton Width="50" Height="50" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}"/>
             </StackPanel>
         </DockPanel>
         <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding UpdateProgress.IsIndeterminate, Mode=OneWay}" Visibility="{Binding UpdateProgress.Active, Converter={StaticResource VisibleIfTrueConverter}}" Value="{Binding UpdateProgress.Value, Mode=OneWay}"></ProgressBar>

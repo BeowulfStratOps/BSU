@@ -17,7 +17,7 @@ namespace BSU.Core.ViewModel
 
         public FileSyncProgress UpdateProgress { get; } = new();
 
-        private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading, false);
+        private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading);
 
         public CalculatedRepositoryState CalculatedState
         {
@@ -33,17 +33,87 @@ namespace BSU.Core.ViewModel
 
         private void UpdateButtonStates()
         {
-            Update.State = GetUpdateActionState();
-            Play.State = GetPlayActionState();
+            switch (CalculatedState.State)
+            {
+                case CalculatedRepositoryStateEnum.NeedsSync:
+                    Update.SetCanExecute(true);
+                    UpdateLoading = false;
+                    UpdateButtonColor = ColorIndication.Primary;
+
+                    Pause.SetCanExecute(false);
+                    Delete.SetCanExecute(true);
+
+                    Play.SetCanExecute(true);
+                    PlayButtonColor = ColorIndication.Warning;
+                    break;
+                case CalculatedRepositoryStateEnum.Ready:
+                    Update.SetCanExecute(false);
+                    UpdateLoading = false;
+                    UpdateButtonColor = ColorIndication.Normal;
+
+                    Pause.SetCanExecute(false);
+                    Delete.SetCanExecute(true);
+
+                    Play.SetCanExecute(true);
+                    PlayButtonColor = ColorIndication.Primary;
+                    break;
+                case CalculatedRepositoryStateEnum.RequiresUserIntervention:
+                    Update.SetCanExecute(false);
+                    UpdateLoading = false;
+                    UpdateButtonColor = ColorIndication.Normal;
+
+                    Pause.SetCanExecute(false);
+                    Delete.SetCanExecute(true);
+
+                    Play.SetCanExecute(false);
+                    PlayButtonColor = ColorIndication.Normal;
+                    break;
+                case CalculatedRepositoryStateEnum.Syncing:
+                    Update.SetCanExecute(false);
+                    UpdateLoading = false;
+                    UpdateButtonColor = ColorIndication.Normal;
+
+                    Pause.SetCanExecute(true);
+                    Delete.SetCanExecute(false);
+
+                    Play.SetCanExecute(false);
+                    PlayButtonColor = ColorIndication.Normal;
+                    break;
+                case CalculatedRepositoryStateEnum.Loading:
+                    Update.SetCanExecute(false);
+                    UpdateLoading = true;
+                    UpdateButtonColor = ColorIndication.Normal;
+
+                    Pause.SetCanExecute(false);
+                    Delete.SetCanExecute(false);
+
+                    Play.SetCanExecute(true);
+                    PlayButtonColor = ColorIndication.Warning;
+                    break;
+                case CalculatedRepositoryStateEnum.ReadyPartial:
+                    Update.SetCanExecute(false);
+                    UpdateLoading = false;
+                    UpdateButtonColor = ColorIndication.Normal;
+
+                    Pause.SetCanExecute(false);
+                    Delete.SetCanExecute(true);
+
+                    Play.SetCanExecute(true);
+                    PlayButtonColor = ColorIndication.Warning;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new();
 
-        public StateCommand Update { get; }
+        public DelegateCommand Update { get; }
+        public DelegateCommand Pause { get; }
 
         public DelegateCommand Delete { get; }
         public DelegateCommand Details { get; }
-        public StateCommand Play { get; }
+        public DelegateCommand Play { get; }
 
 
         public DelegateCommand Back { get; }
@@ -64,6 +134,7 @@ namespace BSU.Core.ViewModel
         }
 
         private string _serverUrl = "Loading...";
+
         public string ServerUrl
         {
             get => _serverUrl;
@@ -81,12 +152,13 @@ namespace BSU.Core.ViewModel
             _model = model;
             _viewModelService = viewModelService;
             Identifier = repository.Identifier;
-            Delete = new DelegateCommand(DoDelete);
-            Update = new StateCommand(DoUpdate);
+            Delete = new DelegateCommand(DoDelete, false);
+            Update = new DelegateCommand(DoUpdate);
             Back = new DelegateCommand(viewModelService.NavigateBack);
             ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
-            Play = new StateCommand(() => throw new NotImplementedException());
+            Play = new DelegateCommand(() => PlayButtonColor = ColorIndication.Primary);
+            Pause = new DelegateCommand(() => throw new NotImplementedException(), false);
             UpdateButtonStates();
             Name = repository.Name;
         }
@@ -105,69 +177,44 @@ Cancel - Do not remove this repository";
                 _model.DeleteRepository(_repository, (bool)removeData);
         }
 
-        private CommandState GetUpdateActionState()
-        {
-            switch (CalculatedState.State)
-            {
-                case CalculatedRepositoryStateEnum.NeedsUpdate:
-                case CalculatedRepositoryStateEnum.NeedsDownload:
-                    return CommandState.Enabled;
-                case CalculatedRepositoryStateEnum.Ready:
-                case CalculatedRepositoryStateEnum.RequiresUserIntervention:
-                case CalculatedRepositoryStateEnum.InProgress:
-                    return CommandState.Disabled;
-                case CalculatedRepositoryStateEnum.Loading:
-                    return CommandState.Loading;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private CommandState GetPlayActionState()
-        {
-            switch (CalculatedState.State)
-            {
-                case CalculatedRepositoryStateEnum.NeedsUpdate:
-                case CalculatedRepositoryStateEnum.NeedsDownload:
-                    return CommandState.Warning;
-                case CalculatedRepositoryStateEnum.Ready:
-                    return CommandState.Primary;
-                case CalculatedRepositoryStateEnum.RequiresUserIntervention:
-                case CalculatedRepositoryStateEnum.InProgress:
-                    return CommandState.Disabled;
-                case CalculatedRepositoryStateEnum.Loading:
-                    return CommandState.Enabled;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
         private async Task DoUpdate()
         {
-            var updateTasks = Mods.Select(m => m.StartUpdate(CancellationToken.None)).ToList();
-            await Task.WhenAll(updateTasks);
-            var updates = updateTasks.Select(t => t.Result).Where(r => r.update != null).ToList();
-
-            var progress = UpdateProgress.Progress;
-
-            var update = new RepositoryUpdate(updates, progress);
-
-            var prepareStats = await update.Prepare(CancellationToken.None);
-            var bytes = 0;
-            var preparedText = $"{bytes} Bytes from {prepareStats.SucceededCount} mods to download. {prepareStats.FailedCount} mods failed. Proceed?";
-            if (!_viewModelService.InteractionService.YesNoPopup(preparedText, "Update Prepared"))
+            foreach (var mod in Mods)
             {
-                throw new NotImplementedException();
-                // prepared.Abort();
-                return;
+                mod.CanChangeSelection = false;
             }
 
-            var updateStats = await update.Update(CancellationToken.None);
+            try
+            {
+                var updateTasks = Mods.Select(m => m.StartUpdate(CancellationToken.None)).ToList();
+                await Task.WhenAll(updateTasks);
+                var updates = updateTasks.Select(t => t.Result).Where(r => r.update != null).ToList();
 
-            await _viewModelService.Update();
+                var progress = UpdateProgress.Progress;
 
-            var updatedText = $"{updateStats.SucceededCount} Mods updated. {updateStats.FailedCount} Mods failed.";
-            _viewModelService.InteractionService.MessagePopup(updatedText, "Update finished");
+                var update = new RepositoryUpdate(updates, progress);
+
+                await update.Prepare(CancellationToken.None);
+                var updateStats = await update.Update(CancellationToken.None);
+
+                await _viewModelService.Update();
+
+                if (updateStats.FailedCount == 0)
+                {
+                    _viewModelService.InteractionService.MessagePopup("Update Complete", "Update Complete");
+                    return;
+                }
+
+                var updatedText = $"{updateStats.SucceededCount} Mods updated. {updateStats.FailedCount} Mods failed.";
+                _viewModelService.InteractionService.MessagePopup(updatedText, "Update finished");
+            }
+            finally
+            {
+                foreach (var mod in Mods)
+                {
+                    mod.CanChangeSelection = true;
+                }
+            }
         }
 
         public async Task Load()
@@ -186,5 +233,45 @@ Cancel - Do not remove this repository";
             await Task.WhenAll(Mods.Select(m => m.Update()));
             CalculatedState = await _repository.GetState(CancellationToken.None);
         }
+
+        #region UI Properties
+
+        private ColorIndication _updateButtonColor = ColorIndication.Warning;
+        public ColorIndication UpdateButtonColor
+        {
+            get => _updateButtonColor;
+            set
+            {
+                if (_updateButtonColor == value) return;
+                _updateButtonColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private ColorIndication _playButtonColor = ColorIndication.Primary;
+        public ColorIndication PlayButtonColor
+        {
+            get => _playButtonColor;
+            set
+            {
+                if (_playButtonColor == value) return;
+                _playButtonColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool _updateLoading;
+        public bool UpdateLoading
+        {
+            get => _updateLoading;
+            set
+            {
+                if (_updateLoading == value) return;
+                _updateLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion
     }
 }

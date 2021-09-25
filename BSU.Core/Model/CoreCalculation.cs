@@ -98,34 +98,35 @@ namespace BSU.Core.Model
             return repoMatch.IsMatch(await selected.GetMatchHash(cancellationToken));
         }
 
-        internal static CalculatedRepositoryState CalculateRepositoryState(List<(IModelRepositoryMod mod, RepositoryModActionSelection selection, ModActionEnum? action)> mods)
+        internal static CalculatedRepositoryState CalculateRepositoryState(List<(RepositoryModActionSelection selection, ModActionEnum? action)> mods)
         {
             /*
-            NeedsUpdate, // 2. all selected, no internal conflicts.
-            NeedsDownload, // 2. more than 50% of the mods need a download, otherwise same as update
-            Ready, // 1. All use
-            RequiresUserIntervention // Else
+            NeedsSync, // auto selected previously used, other auto selection worked without any conflicts, no internal conflicts.
+            Ready, // All use
+            RequiresUserIntervention, // Else
+            Syncing, // All are ready or being worked on
+            Loading
             */
-
-            var partial = mods.Any(m => m.selection is RepositoryModActionDoNothing);
-
-            mods = mods.Where(m => m.selection is not RepositoryModActionDoNothing).ToList();
 
             if (mods.All(mod =>
                 mod.selection is RepositoryModActionStorageMod && mod.action == ModActionEnum.Use))
             {
-                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Ready, partial);
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Ready);
             }
 
-            if (mods.All(mod => mod.selection is RepositoryModActionStorageMod or RepositoryModActionDownload))
+            if (mods.All(mod => mod.selection is RepositoryModActionDoNothing ||
+                mod.selection is RepositoryModActionStorageMod && mod.action == ModActionEnum.Use))
             {
-
-                if (mods.Count(mod => mod.selection is RepositoryModActionDownload) > 0.5 * mods.Count)
-                    return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsDownload, partial);
-                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsUpdate, partial);
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.ReadyPartial);
             }
 
-            return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.RequiresUserIntervention, partial);
+            if (mods.Any(mod => mod.selection == null))
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.RequiresUserIntervention);
+
+            if (mods.Any(mod => mod.action == ModActionEnum.Await))
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Syncing);
+
+            return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsSync);
         }
     }
 

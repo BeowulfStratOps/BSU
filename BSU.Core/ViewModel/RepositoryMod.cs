@@ -63,11 +63,6 @@ namespace BSU.Core.ViewModel
             {
                 AddStorage(storage);
             }
-
-            UpdateProgress.Progress.ProgressChanged += (_, stats) =>
-            {
-                if (stats.State == FileSyncState.None) CanChangeSelection = true;
-            };
         }
 
         private async Task<ModAction> UpdateAction(IModelStorageMod storageMod)
@@ -222,7 +217,6 @@ namespace BSU.Core.ViewModel
             var progress = UpdateProgress.Progress;
             var update = await Mod.StartUpdate(progress, cancellationToken);
             if (update == null) return default;
-            CanChangeSelection = false;
             await _viewModelService.Update();
 
             return (update, progress);
