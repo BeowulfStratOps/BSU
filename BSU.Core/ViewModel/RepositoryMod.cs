@@ -36,14 +36,19 @@ namespace BSU.Core.ViewModel
             set
             {
                 if (value == null) return; // can happen when the collection is modified
-                if (Equals(_selection, value)) return;
-                _selection = value;
-                Mod.SetSelection(value.AsSelection);
-                ShowDownloadIdentifier = _selection is SelectStorage;
-                OnPropertyChanged();
-                UpdateErrorText(); // TODO: await? :(
-                _viewModelService.Update(); // TODO: await? pls? somewhere? :(
+                SetSelection(value, true);
             }
+        }
+
+        private void SetSelection(ModAction value, bool fromUi = false)
+        {
+            if (Equals(_selection, value)) return;
+            _selection = value;
+            Mod.SetSelection(value.AsSelection);
+            ShowDownloadIdentifier = _selection is SelectStorage;
+            OnPropertyChanged();
+            UpdateErrorText(); // TODO: await? :(
+            if (fromUi) _viewModelService.Update(); // TODO: await? pls? somewhere? :(
         }
 
         internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)
@@ -73,7 +78,7 @@ namespace BSU.Core.ViewModel
             {
                 var removeAction = Actions.SingleOrDefault(a => a.AsSelection is RepositoryModActionStorageMod storageModSelection && storageModSelection.StorageMod == storageMod);
                 if (isCurrentlySelected)
-                    Selection = new SelectDoNothing();
+                    SetSelection(new SelectDoNothing());
                 if (removeAction != null)
                     Actions.Remove(removeAction);
                 return Selection;
@@ -81,7 +86,7 @@ namespace BSU.Core.ViewModel
             var selection = new SelectMod(storageMod, action);
             Actions.Update(selection);
             if (isCurrentlySelected)
-                Selection = selection;
+                SetSelection(selection);
             return selection;
         }
 
@@ -198,11 +203,11 @@ namespace BSU.Core.ViewModel
             if (selection is RepositoryModActionStorageMod actionStorageMod)
             {
                 var updatedAction = await UpdateAction(actionStorageMod.StorageMod);
-                Selection = updatedAction;
+                SetSelection(updatedAction);
             }
             else
             {
-                Selection = await ModAction.Create(selection, Mod, CancellationToken.None);
+                SetSelection(await ModAction.Create(selection, Mod, CancellationToken.None));
             }
 
             var actions = await Mod.GetModActions(CancellationToken.None);

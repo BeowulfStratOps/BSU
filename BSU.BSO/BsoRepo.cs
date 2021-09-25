@@ -21,10 +21,12 @@ namespace BSU.BSO
         private readonly string _url;
         private Dictionary<string, IRepositoryMod> _mods;
         private ServerFile _serverFile;
+        private readonly Task _loading;
 
         public BsoRepo(string url)
         {
             _url = url;
+            _loading = Task.Run(() => Load(CancellationToken.None));
         }
 
         private async Task Load(CancellationToken cancellationToken)
@@ -43,13 +45,15 @@ namespace BSU.BSO
 
         public async Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken)
         {
-            await Load(cancellationToken);
+            // TODO: use cancellationToken
+            await _loading;
             return _mods;
         }
 
         public async Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
         {
-            await Load(CancellationToken.None);
+            // TODO: use cancellationToken
+            await _loading;
             return new ServerInfo(_serverFile.ServerName, _serverFile.ServerAddress);
         }
     }

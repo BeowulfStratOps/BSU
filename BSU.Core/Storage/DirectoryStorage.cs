@@ -27,7 +27,7 @@ namespace BSU.Core.Storage
         {
             _path = path;
             if (!new DirectoryInfo(path).Exists) throw new DirectoryNotFoundException();
-            _loading = Load(CancellationToken.None);
+            _loading = Task.Run(() => Load(CancellationToken.None));
         }
 
         private async Task Load(CancellationToken cancellationToken)

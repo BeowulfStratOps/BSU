@@ -59,7 +59,7 @@ namespace BSU.BSO
         public BsoRepoMod(string url)
         {
             _url = url;
-            _loading = Load(CancellationToken.None);
+            _loading = Task.Run(() => Load(CancellationToken.None));
         }
 
         private async Task Load(CancellationToken cancellationToken)

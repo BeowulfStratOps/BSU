@@ -71,7 +71,7 @@ namespace BSU.Core.Model
         public async Task<string> GetDisplayName(CancellationToken cancellationToken)
         {
             // TODO: cache
-            return await Implementation.GetDisplayName(cancellationToken);
+            return await Task.Run(() => Implementation.GetDisplayName(cancellationToken), cancellationToken);
         }
 
         public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.GetAsync(cancellationToken);
