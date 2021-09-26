@@ -15,7 +15,7 @@ namespace BSU.Core.Storage
     // TODO: document that this is (aggressively) using normalized (=lower case) paths!
     public class DirectoryStorage : IStorage
     {
-        private readonly Logger _logger;
+        private readonly ILogger _logger;
 
         private readonly string _path;
 

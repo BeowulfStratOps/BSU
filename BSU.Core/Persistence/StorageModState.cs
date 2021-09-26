@@ -15,7 +15,7 @@ namespace BSU.Core.Persistence
         private readonly Dictionary<string, UpdateTarget> _updating;
         private readonly Action _store;
         private readonly string _identifier;
-        private readonly Logger _logger;
+        private readonly ILogger _logger;
 
         public PersistedStorageModState(Dictionary<string, UpdateTarget> updating, Action store, string identifier)
         {

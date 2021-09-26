@@ -101,9 +101,16 @@ namespace BSU.Core.ViewModel
                     ProgressValue = 0;
                     IsIndeterminate = false;
                     Stage = null;
-                    stats = null;
+                    Stats = null;
                     break;
                 }
+                case FileSyncState.Stopping:
+                    Active = true;
+                    ProgressValue = 0;
+                    IsIndeterminate = true;
+                    Stage = "Stopping";
+                    Stats = null;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

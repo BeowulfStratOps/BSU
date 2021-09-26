@@ -19,6 +19,8 @@ namespace BSU.Core.ViewModel
 
         private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading);
 
+        private CancellationTokenSource _cts;
+
         public CalculatedRepositoryState CalculatedState
         {
             get => _calculatedState;
@@ -158,9 +160,14 @@ namespace BSU.Core.ViewModel
             ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(() => PlayButtonColor = ColorIndication.Primary);
-            Pause = new DelegateCommand(() => throw new NotImplementedException(), false);
+            Pause = new DelegateCommand(DoPause, false);
             UpdateButtonStates();
             Name = repository.Name;
+        }
+
+        private void DoPause()
+        {
+            _cts.Cancel();
         }
 
         private void DoDelete()
@@ -179,6 +186,7 @@ Cancel - Do not remove this repository";
 
         private async Task DoUpdate()
         {
+            _cts = new CancellationTokenSource();
             foreach (var mod in Mods)
             {
                 mod.CanChangeSelection = false;
@@ -194,8 +202,8 @@ Cancel - Do not remove this repository";
 
                 var update = new RepositoryUpdate(updates, progress);
 
-                await update.Prepare(CancellationToken.None);
-                var updateStats = await update.Update(CancellationToken.None);
+                await update.Prepare(_cts.Token);
+                var updateStats = await update.Update(_cts.Token);
 
                 await _viewModelService.Update();
 
@@ -208,12 +216,16 @@ Cancel - Do not remove this repository";
                 var updatedText = $"{updateStats.SucceededCount} Mods updated. {updateStats.FailedCount} Mods failed.";
                 _viewModelService.InteractionService.MessagePopup(updatedText, "Update finished");
             }
+            catch (OperationCanceledException)
+            {
+            }
             finally
             {
                 foreach (var mod in Mods)
                 {
                     mod.CanChangeSelection = true;
                 }
+                await _viewModelService.Update();
             }
         }
 

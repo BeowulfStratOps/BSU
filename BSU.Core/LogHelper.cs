@@ -6,7 +6,7 @@ namespace BSU.Core
 {
     public static class LogHelper
     {
-        public static Logger GetLoggerWithIdentifier(object entity, string rawIdentifier)
+        public static ILogger GetLoggerWithIdentifier(object entity, string rawIdentifier)
         {
             return GetLoggerWithIdentifier(entity.GetType(), rawIdentifier);
         }

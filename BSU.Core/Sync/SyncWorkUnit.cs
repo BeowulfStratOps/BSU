@@ -21,12 +21,14 @@ namespace BSU.Core.Sync
         public abstract FileSyncStats GetStats();
     }
 
-    public record FileSyncStats(FileSyncState State, long DownloadTotal, long UpdateTotal, long DownloadDone, long UpdateDone);
+    public record FileSyncStats(FileSyncState State, long DownloadTotal = 0, long UpdateTotal = 0,
+        long DownloadDone = 0, long UpdateDone = 0);
 
     public enum FileSyncState
     {
         Waiting,
         Updating,
-        None
+        None,
+        Stopping
     }
 }

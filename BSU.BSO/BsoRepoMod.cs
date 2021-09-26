@@ -145,18 +145,20 @@ namespace BSU.BSO
             await using var stream = resp.GetResponseStream();
 
             var buffer = new byte[10 * 1024 * 1024];
-            while (!token.IsCancellationRequested)
+            try
             {
-                var len = await stream.ReadAsync(buffer, 0, buffer.Length, token);
-                if (len == 0) break;
-                await fileStream.WriteAsync(buffer, 0, len, token);
-                progress.Report(len);
+                while (!token.IsCancellationRequested)
+                {
+                    var len = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                    if (len == 0) break;
+                    await fileStream.WriteAsync(buffer, 0, len, token);
+                    progress.Report(len);
+                }
             }
-
-            if (token.IsCancellationRequested)
+            catch (OperationCanceledException)
             {
                 _logger.Debug("Aborted downloading content {0} / {1}", _url, path);
-                throw new OperationCanceledException();
+                throw;
             }
 
             fileStream.SetLength(fileStream.Position);

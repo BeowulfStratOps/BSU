@@ -17,7 +17,7 @@ namespace BSU.Core.Model
     {
         private readonly IPersistedRepositoryModState _internalState;
         private readonly IModelStructure _modelStructure;
-        private readonly Logger _logger;
+        private readonly ILogger _logger;
         private IRepositoryMod Implementation { get; } // TODO: make private
         public string Identifier { get; }
 

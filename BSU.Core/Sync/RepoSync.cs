@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.CoreCommon;
@@ -25,9 +26,9 @@ namespace BSU.Core.Sync
             _logger = logger;
         }
 
-        public static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage, CancellationToken cancellationToken)
+        public static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage, CancellationToken cancellationToken, Guid guid)
         {
-            var logger = LogHelper.GetLoggerWithIdentifier(typeof(RepoSync), Guid.NewGuid().ToString());
+            var logger = LogHelper.GetLoggerWithIdentifier(typeof(RepoSync), guid.ToString());
             logger.Debug("Building sync actions {0} to {1}", storage, repository);
 
             var allActions = new List<SyncWorkUnit>();
@@ -72,10 +73,9 @@ namespace BSU.Core.Sync
             // TODO: limit parallel disk/network usage
             var tasks = _allActions.Select(a => a.DoAsync(cancellationToken));
             var whenAll = Task.WhenAll(tasks);
-            while (true)
-            {
-                await Task.WhenAny(whenAll, Task.Delay(50));
 
+            await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () =>
+            {
                 long sumDownloadDone = 0;
                 long sumDownloadTotal = 0;
                 long sumUpdateDone = 0;
@@ -83,20 +83,21 @@ namespace BSU.Core.Sync
 
                 foreach (var syncWorkUnit in _allActions)
                 {
-                    var stats = syncWorkUnit.GetStats(); // not synchronized, but that's ok. we're just looking for a snapshot
+                    // not synchronized, but that's ok. we're just looking for a snapshot
+                    var stats = syncWorkUnit.GetStats();
                     sumDownloadDone += stats.DownloadDone;
                     sumDownloadTotal += stats.DownloadTotal;
                     sumUpdateDone += stats.UpdateDone;
                     sumUpdateTotal += stats.UpdateTotal;
-
-                    progress?.Report(new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal,
-                        sumDownloadDone, sumUpdateDone));
                 }
 
-                if (whenAll.IsCompleted) break;
-            }
+                _logger.Trace("Progress: Updating");
+                progress?.Report(new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal,
+                    sumDownloadDone, sumUpdateDone));
+            });
 
-            progress?.Report(new FileSyncStats(FileSyncState.None, 0, 0, 0, 0));
+            _logger.Trace("Progress: None");
+            progress?.Report(new FileSyncStats(FileSyncState.None));
         }
     }
 }

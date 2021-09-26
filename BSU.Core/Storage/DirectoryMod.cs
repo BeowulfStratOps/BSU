@@ -16,7 +16,7 @@ namespace BSU.Core.Storage
     /// </summary>
     public class DirectoryMod : IStorageMod
     {
-        private readonly Logger _logger;
+        private readonly ILogger _logger;
 
         private readonly DirectoryInfo _dir;
         private readonly IStorage _parentStorage;

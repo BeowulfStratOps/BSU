@@ -32,18 +32,23 @@ namespace BSU.Core.Concurrency
             try
             {
                 if (_task == null) return;
+                if (_task.IsCompleted)
+                {
+                    _task = null;
+                    return;
+                }
                 _cts.Cancel();
                 _cts = new CancellationTokenSource();
                 try
                 {
                     await _task;
                     _task = null;
-                    _log?.Invoke(JobLogEvent.Abort);
                 }
                 catch
                 {
                     // ignored
                 }
+                _log?.Invoke(JobLogEvent.Abort);
             }
             finally
             {

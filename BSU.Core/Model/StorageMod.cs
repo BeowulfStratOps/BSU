@@ -25,7 +25,7 @@ namespace BSU.Core.Model
 
         private UpdateTarget _updateTarget;
 
-        private readonly Logger _logger;
+        private readonly ILogger _logger;
 
         private readonly SemaphoreSlim _stateLock = new(1);
         private StorageModStateEnum _state = StorageModStateEnum.Created; // TODO: should not be directly accessible
@@ -95,7 +95,8 @@ namespace BSU.Core.Model
 
         public async Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress)
         {
-            progress?.Report(new FileSyncStats(FileSyncState.Waiting, 0, 0, 0, 0));
+            _logger.Trace("Progress: Waiting");
+            progress?.Report(new FileSyncStats(FileSyncState.Waiting));
             await SetState(StorageModStateEnum.Updating, new [] { StorageModStateEnum.Created , StorageModStateEnum.CreatedWithUpdateTarget},
                 async () =>
                 {
@@ -120,7 +121,7 @@ namespace BSU.Core.Model
             // TODO: handle errors?
             try
             {
-                if (!acceptableCurrent.Contains(State)) throw new InvalidOperationException();
+                if (!acceptableCurrent.Contains(State)) throw new InvalidOperationException($"Tried to transition from {State} to {newState}");
                 await Task.WhenAll(_matchHash.ResetAndWaitAsync(), _versionHash.ResetAndWaitAsync());
                 UpdateTarget = null;
                 if (setValues != null) await setValues();

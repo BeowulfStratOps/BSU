@@ -22,7 +22,7 @@ namespace BSU.Core.Sync
 
         public override FileSyncStats GetStats()
         {
-            return new FileSyncStats(FileSyncState.Updating, 0, 0, 0, 0);
+            return new FileSyncStats(FileSyncState.Updating);
         }
     }
 }

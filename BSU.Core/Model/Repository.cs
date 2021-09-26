@@ -24,7 +24,7 @@ namespace BSU.Core.Model
 
         private readonly Task _loading;
 
-        private readonly Logger _logger;
+        private readonly ILogger _logger;
 
         public Repository(IRepository implementation, string name, string location,
             IRepositoryState internalState, IModelStructure modelStructure)

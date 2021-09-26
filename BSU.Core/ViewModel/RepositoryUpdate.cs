@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Model.Updating;
 using BSU.Core.Sync;
+using NLog;
 
 namespace BSU.Core.ViewModel
 {
@@ -16,6 +18,7 @@ namespace BSU.Core.ViewModel
 
         private readonly Dictionary<IModUpdate, FileSyncStats> _lastProgress = new();
         private readonly object _progressLock = new();
+        private readonly ILogger _logger;
 
         private bool _prepared, _updated;
 
@@ -24,11 +27,17 @@ namespace BSU.Core.ViewModel
             if (_prepared) throw new InvalidOperationException();
             _prepared = true;
 
+            cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
+
             var tasks = _updates.Select(s => s.update.Prepare(cancellationToken)).ToList();
 
             try
             {
                 await Task.WhenAll(tasks);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch
             {
@@ -44,21 +53,27 @@ namespace BSU.Core.ViewModel
             if (_updated) throw new InvalidOperationException();
             _updated = true;
 
+            cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
+
             var tasks = _updates.Where(u => u.update.IsPrepared).Select(s => s.update.Update(cancellationToken)).ToList();
             var whenAll = Task.WhenAll(tasks);
 
-            while (!whenAll.IsCompleted)
+            try
             {
-                var wait = Task.Delay(50, cancellationToken);
-                try
-                {
-                    await Task.WhenAny(wait, whenAll);
-                    ReportProgress();
-                }
-                catch
-                {
-                    // ignored
-                }
+                await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () => ReportProgress(GetProgress()));
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                // ignored
+                // we handle those separately
+            }
+            finally
+            {
+                ReportProgress(new FileSyncStats(FileSyncState.None));
             }
 
             return new StageStats(tasks.Count(t => t.IsCompletedSuccessfully), tasks.Count(t => t.IsFaulted));
@@ -69,10 +84,11 @@ namespace BSU.Core.ViewModel
             lock (_progressLock)
             {
                 if (_lastProgress.Values.Any(p => p.State == FileSyncState.Waiting))
-                    return new FileSyncStats(FileSyncState.Waiting, 0, 0, 0, 0);
-                var state = _lastProgress.Values.All(p => p.State == FileSyncState.None)
-                    ? FileSyncState.None
-                    : FileSyncState.Updating;
+                    return new FileSyncStats(FileSyncState.Waiting);
+                if (_lastProgress.Values.Any(p => p.State == FileSyncState.Stopping))
+                    return new FileSyncStats(FileSyncState.Stopping);
+                if (_lastProgress.Values.Any(p => p.State == FileSyncState.Stopping))
+                    return new FileSyncStats(FileSyncState.None);
                 long sumDownloadTotal = 0;
                 long sumDownloadDone = 0;
                 long sumUpdateTotal = 0;
@@ -85,27 +101,29 @@ namespace BSU.Core.ViewModel
                     sumUpdateDone += progressValue.UpdateDone;
                 }
 
-                return new FileSyncStats(state, sumDownloadTotal, sumUpdateTotal, sumDownloadDone, sumUpdateDone);
+                return new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal, sumDownloadDone, sumUpdateDone);
             }
         }
 
-        private void ReportProgress()
+        private void ReportProgress(FileSyncStats stats)
         {
-            var state = GetProgress();
-            _progress.Report(state);
+            _logger.Trace($"Progress: {stats.State}");
+            _progress?.Report(stats);
         }
 
         internal RepositoryUpdate(List<(IModUpdate update, Progress<FileSyncStats> progress)> updates, IProgress<FileSyncStats> progress)
         {
+            _logger = LogHelper.GetLoggerWithIdentifier(this, Guid.NewGuid().ToString());
             _updates = updates;
             _progress = progress;
             foreach (var (update, modProgress) in updates)
             {
-                _lastProgress.Add(update, new FileSyncStats(FileSyncState.Waiting, 0,0,0,0));
+                _lastProgress.Add(update, new FileSyncStats(FileSyncState.Waiting));
                 modProgress.ProgressChanged += (s, e) => ModProgressOnProgressChanged(s, e, update);
             }
 
-            _progress?.Report(new FileSyncStats(FileSyncState.Waiting, 0, 0, 0, 0));
+            _logger.Trace("Progress Waiting");
+            _progress?.Report(new FileSyncStats(FileSyncState.Waiting));
         }
 
         private void ModProgressOnProgressChanged(object sender, FileSyncStats progress, IModUpdate update)

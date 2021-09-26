@@ -9,12 +9,8 @@ using Xunit.Abstractions;
 namespace BSU.Core.Tests.Concurrency
 {
     // TODO: test all the cancellation stuff
-    public class ResettableLazyAsyncTests : LoggedTest
+    public class ResettableLazyAsyncTests
     {
-        public ResettableLazyAsyncTests(ITestOutputHelper outputHelper) : base(outputHelper)
-        {
-        }
-
         [Fact]
         public async Task Simple()
         {
