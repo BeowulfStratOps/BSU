@@ -159,10 +159,15 @@ namespace BSU.Core.ViewModel
             Back = new DelegateCommand(viewModelService.NavigateBack);
             ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
-            Play = new DelegateCommand(() => PlayButtonColor = ColorIndication.Primary);
+            Play = new DelegateCommand(DoPlay);
             Pause = new DelegateCommand(DoPause, false);
             UpdateButtonStates();
             Name = repository.Name;
+        }
+
+        private void DoPlay()
+        {
+            throw new NotImplementedException();
         }
 
         private void DoPause()

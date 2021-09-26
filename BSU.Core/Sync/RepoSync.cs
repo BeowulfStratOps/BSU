@@ -70,8 +70,8 @@ namespace BSU.Core.Sync
 
         public async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
         {
-            // TODO: limit parallel disk/network usage
-            var tasks = _allActions.Select(a => a.DoAsync(cancellationToken));
+            var tasks = _allActions.Select(a =>
+                ConcurrencyThrottle.Do(() => a.DoAsync(cancellationToken), cancellationToken));
             var whenAll = Task.WhenAll(tasks);
 
             await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () =>

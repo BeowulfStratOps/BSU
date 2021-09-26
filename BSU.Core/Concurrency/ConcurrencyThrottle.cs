@@ -8,12 +8,13 @@ namespace BSU.Core.Concurrency
     {
         private static readonly SemaphoreSlim Semaphore = new(5); // TODO: get from config
 
-        public static async Task<T> Do<T>(Func<Task<T>> action)
+        public static async Task Do(Func<Task> action, CancellationToken cancellationToken)
         {
-            await Semaphore.WaitAsync();
+            await Semaphore.WaitAsync(cancellationToken);
             try
             {
-                return await action();
+                cancellationToken.ThrowIfCancellationRequested();
+                await action();
             }
             finally
             {
