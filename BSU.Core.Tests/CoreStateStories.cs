@@ -23,7 +23,7 @@ namespace BSU.Core.Tests
             {
                 mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);
             }
-            var repoMod = new RepositoryMod(mockRepo, "myrepo", new MockPersistedRepositoryModState(), structure);
+            var repoMod = new RepositoryMod(mockRepo, "myrepo", new MockPersistedRepositoryModState(), structure, null);
             return (mockRepo, repoMod);
         }
 
@@ -36,7 +36,7 @@ namespace BSU.Core.Tests
             }
 
             var state = new MockPersistedStorageModState {UpdateTarget = stateTarget};
-            var storageMod = new StorageMod(mockStorage, "mystorage", state, null, true);
+            var storageMod = new StorageMod(mockStorage, "mystorage", state, null, true, null);
             structure.StorageMods.Add(storageMod);
             return (mockStorage, storageMod);
         }
@@ -57,7 +57,7 @@ namespace BSU.Core.Tests
 
             var mockStorage = new MockStorage();
             var storageState = new MockStorageState();
-            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState);
+            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, null);
 
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
 

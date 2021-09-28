@@ -15,6 +15,7 @@ namespace BSU.Core.Model
         public Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken);
         string DownloadIdentifier { get; set; }
         string Identifier { get; }
+        IModelRepository ParentRepository { get; }
         Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken);
         Task<string> GetDisplayName(CancellationToken cancellationToken);
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);

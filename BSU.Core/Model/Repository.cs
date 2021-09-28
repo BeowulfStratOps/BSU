@@ -43,7 +43,7 @@ namespace BSU.Core.Model
         {
             foreach (var (key, mod) in await Implementation.GetMods(cancellationToken))
             {
-                var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), _modelStructure);
+                var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), _modelStructure, this);
                 _mods.Add(modelMod);
             }
         }

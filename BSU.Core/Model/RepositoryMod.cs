@@ -20,6 +20,7 @@ namespace BSU.Core.Model
         private readonly ILogger _logger;
         private IRepositoryMod Implementation { get; } // TODO: make private
         public string Identifier { get; }
+        public IModelRepository ParentRepository { get; }
 
         private readonly ResettableLazyAsync<MatchHash> _matchHash;
         private readonly ResettableLazyAsync<VersionHash> _versionHash;
@@ -40,11 +41,12 @@ namespace BSU.Core.Model
 
         public RepositoryMod(IRepositoryMod implementation, string identifier,
             IPersistedRepositoryModState internalState,
-            IModelStructure modelStructure)
+            IModelStructure modelStructure, IModelRepository parentRepository)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             _modelStructure = modelStructure;
+            ParentRepository = parentRepository;
             Implementation = implementation;
             Identifier = identifier;
             DownloadIdentifier = identifier;

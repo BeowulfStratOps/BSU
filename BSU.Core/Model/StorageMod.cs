@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace BSU.Core.Model
     internal class StorageMod : IModelStorageMod
     {
         private readonly IPersistedStorageModState _internalState;
+        private readonly IModelStructure _modelStructure;
         public bool CanWrite { get; }
         public string Identifier { get; }
         public IModelStorage ParentStorage { get; }
@@ -43,10 +45,11 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(IStorageMod implementation, string identifier,
-            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite)
+            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IModelStructure modelStructure)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
+            _modelStructure = modelStructure;
             ParentStorage = parent;
             CanWrite = canWrite;
             Implementation = implementation;
@@ -80,6 +83,19 @@ namespace BSU.Core.Model
         public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.GetAsync(cancellationToken);
 
         public StorageModStateEnum GetState() => State;
+        public async Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken)
+        {
+            var repositoryMods = await _modelStructure.GetRepositoryMods();
+            var result = new List<IModelRepositoryMod>();
+            foreach (var repositoryMod in repositoryMods)
+            {
+                var selection = await repositoryMod.GetSelection(cancellationToken);
+                if (selection is RepositoryModActionStorageMod storageMod && storageMod.StorageMod == this)
+                    result.Add(repositoryMod);
+            }
+
+            return result;
+        }
 
         private UpdateTarget UpdateTarget
         {

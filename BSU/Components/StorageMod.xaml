@@ -4,16 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
+             xmlns:converters="clr-namespace:BSU.GUI.Converters"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:StorageMod}">
-    <WrapPanel>
-        <Border Margin="5">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                    <TextBlock FontWeight="Bold" Text="{Binding Path=Identifier}"></TextBlock>
-                    <TextBlock Text="[Status]"></TextBlock>
-                </StackPanel>
-            </DockPanel>
-        </Border>
-    </WrapPanel>
+    <StackPanel Orientation="Horizontal">
+        <StackPanel.Resources>
+            <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
+        </StackPanel.Resources>
+        <TextBlock FontWeight="Bold" Text="{Binding Path=Identifier}" />
+        <TextBlock Margin="4,0,0,0" Visibility="{Binding UsedBy, Converter={StaticResource NullToVisibility}}">
+            <Run>- Used by </Run>
+            <Run Text="{Binding UsedBy}"/>
+        </TextBlock>
+    </StackPanel>
 </UserControl>

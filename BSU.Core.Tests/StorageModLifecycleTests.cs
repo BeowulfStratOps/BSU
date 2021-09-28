@@ -25,7 +25,7 @@ namespace BSU.Core.Tests
 
             var state = new MockPersistedStorageModState {UpdateTarget = stateTarget};
 
-            var storageMod = new StorageMod(mockStorage, "mystorage", state, null, true);
+            var storageMod = new StorageMod(mockStorage, "mystorage", state, null, true, null);
 
             return (mockStorage, storageMod);
         }

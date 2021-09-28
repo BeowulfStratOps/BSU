@@ -11,6 +11,7 @@ namespace BSU.Core.Model
     internal class Storage : IModelStorage
     {
         private readonly IStorageState _internalState;
+        private readonly IModelStructure _modelStructure;
         public IStorage Implementation { get; }
         public string Name { get; }
         public Guid Identifier { get; }
@@ -19,9 +20,10 @@ namespace BSU.Core.Model
 
         private readonly Task _loading;
 
-        public Storage(IStorage implementation, string name, string location, IStorageState internalState)
+        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IModelStructure modelStructure)
         {
             _internalState = internalState;
+            _modelStructure = modelStructure;
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
@@ -31,10 +33,10 @@ namespace BSU.Core.Model
 
         private async Task Load(CancellationToken cancellationToken)
         {
-            foreach (KeyValuePair<string, IStorageMod> mod in await Implementation.GetMods(cancellationToken))
+            foreach (var (identifier, implementation) in await Implementation.GetMods(cancellationToken))
             {
-                var modelMod = new StorageMod(mod.Value, mod.Key, _internalState.GetMod(mod.Key),
-                    this, Implementation.CanWrite());
+                var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
+                    this, Implementation.CanWrite(), _modelStructure);
                 _mods.Add(modelMod);
                 ModAdded?.Invoke(modelMod);
             }
@@ -52,7 +54,7 @@ namespace BSU.Core.Model
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
             state.UpdateTarget = updateTarget;
-            var storageMod = new StorageMod(mod, identifier, state, this, true);
+            var storageMod = new StorageMod(mod, identifier, state, this, true, _modelStructure);
             _mods.Add(storageMod);
             return storageMod;
         }
@@ -69,6 +71,8 @@ namespace BSU.Core.Model
             // TODO: meh?
             return _mods.Any(m => m.GetStorageModIdentifiers().Mod == downloadIdentifier);
         }
+
+        public string GetLocation() => Location;
 
         public event Action<IModelStorageMod> ModAdded;
     }

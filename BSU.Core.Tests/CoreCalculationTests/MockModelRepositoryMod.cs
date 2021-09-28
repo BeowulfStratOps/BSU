@@ -33,6 +33,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public string DownloadIdentifier { get; set; }
         public string Identifier { get; }
+        public IModelRepository ParentRepository { get; }
         public Dictionary<IModelStorageMod, List<IModelRepositoryMod>> Conflicts { get; set; } = new();
 
         public Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)

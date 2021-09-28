@@ -13,7 +13,7 @@
             <DockPanel Dock="Top">
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
                     <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
-                    <TextBlock Text="[Status]"></TextBlock>
+                    <TextBlock Text="{Binding Path}"></TextBlock>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                     <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}"/>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BSU.Core.Annotations;
@@ -20,6 +21,9 @@ namespace BSU.Core.ViewModel
 
         public DelegateCommand Delete { get; }
         public Guid Identifier { get; }
+
+        public string Path { get; }
+
         private readonly IViewModelService _viewModelService;
 
         internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService)
@@ -31,6 +35,7 @@ namespace BSU.Core.ViewModel
             Identifier = storage.Identifier;
             _storage = storage;
             Name = storage.Name;
+            Path = storage.GetLocation();
         }
 
         internal async Task Load()
@@ -54,6 +59,11 @@ Cancel - Do not remove this storage";
             var removeMods =  _viewModelService.InteractionService.YesNoCancelPopup(text, "Remove Storage");
             if (removeMods == null) return;
             _model.DeleteStorage(_storage, (bool) removeMods);
+        }
+
+        public async Task Update()
+        {
+            await Task.WhenAll(Mods.ToList().Select(m => m.Update()));
         }
     }
 }

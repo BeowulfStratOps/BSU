@@ -40,6 +40,12 @@ namespace BSU.Core.ViewModel
         public async Task Load()
         {
             await Task.WhenAll(Storages.Select(s => s.Load()));
+            await Update();
+        }
+
+        public async Task Update()
+        {
+            await Task.WhenAll(Storages.Select(r => r.Update()));
         }
     }
 }

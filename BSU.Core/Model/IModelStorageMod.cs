@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
@@ -21,5 +22,6 @@ namespace BSU.Core.Model
         Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         StorageModStateEnum GetState();
+        Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken);
     }
 }

@@ -59,7 +59,7 @@ namespace BSU.Core.Model
         private Storage CreateStorage(IStorageEntry data, IStorageState state)
         {
             var implementation = _types.GetStorageImplementation(data.Type, data.Path);
-            var storage = new Storage(implementation, data.Name, data.Path, state);
+            var storage = new Storage(implementation, data.Name, data.Path, state, _structure);
             // TODO: kick off mods
             return storage;
         }

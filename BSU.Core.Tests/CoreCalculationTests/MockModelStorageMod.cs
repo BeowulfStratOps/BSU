@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
@@ -61,5 +62,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         public StorageModStateEnum GetState() => _state;
+        public Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

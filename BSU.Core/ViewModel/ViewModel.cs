@@ -42,7 +42,7 @@ namespace BSU.Core.ViewModel
         {
             try
             {
-                await _repoPage.Update();
+                await Task.WhenAll(_repoPage.Update(), _storagePage.Update());
             }
             catch (OperationCanceledException)
             {
