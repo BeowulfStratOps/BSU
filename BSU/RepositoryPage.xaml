@@ -40,6 +40,7 @@
             </StackPanel>
         </DockPanel>
         <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
+        <Rectangle DockPanel.Dock="Top" HorizontalAlignment="Stretch" Fill="Black" Height="1"/>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Border BorderBrush="Black" BorderThickness="1">

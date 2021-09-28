@@ -19,12 +19,12 @@
         <TextBlock Visibility="{Binding Stage, Converter={StaticResource NullToVisibilityConverter}}">
             <Run Text="{Binding Stage, Mode=OneWay}" />...
         </TextBlock>
-        <TextBlock Visibility="{Binding Stats, Converter={StaticResource NullToVisibilityConverter}}">
+        <TextBlock HorizontalAlignment="Center" Visibility="{Binding Stats, Converter={StaticResource NullToVisibilityConverter}}">
             Download:
             <Run Text="{Binding Stats.DownloadDone, Converter={StaticResource ByteSizeConverter}}" />
             /
             <Run Text="{Binding Stats.DownloadTotal, Converter={StaticResource ByteSizeConverter}}" />
-            <LineBreak />
+            |
             Update:
             <Run Text="{Binding Stats.UpdateDone, Converter={StaticResource ByteSizeConverter}}" />
             /

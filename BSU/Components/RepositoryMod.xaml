@@ -8,40 +8,63 @@
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
              xmlns:components="clr-namespace:BSU.GUI.Components"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
+             xmlns:util="clr-namespace:BSU.Core.ViewModel.Util;assembly=BSU.Core"
              mc:Ignorable="d"
+             x:Name="RepoMod"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
-    <Border Margin="5">
-        <Border.Resources>
-            <BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter" />
-            <converters:BoolToVisibilityConverter x:Key="VisibleOrHiddenConverter" />
-        </Border.Resources>
+    <Border Margin="2">
         <DockPanel>
-            <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                <TextBlock FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
-                <TextBlock Text="{Binding Path=DisplayName}"></TextBlock>
-            </StackPanel>
-            <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Width="200">
-                <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Path=Actions}" SelectedItem="{Binding Selection}"
-                          IsEnabled="{Binding CanChangeSelection}">
-                    <ComboBox.Resources>
-                        <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
-                            <components:SelectDoNothing></components:SelectDoNothing>
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type viewModel:SelectMod}">
-                            <components:SelectMod></components:SelectMod>
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
-                            <components:SelectStorage></components:SelectStorage>
-                        </DataTemplate>
-                    </ComboBox.Resources>
-                </ComboBox>
-                <DockPanel Visibility="{Binding ShowDownloadIdentifier, Converter={StaticResource VisibleIfTrueConverter}}">
-                    <TextBlock DockPanel.Dock="Left">Folder:</TextBlock>
-                    <TextBox Text="{Binding DownloadIdentifier, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+            <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
+            <TextBlock DockPanel.Dock="Left" Margin="4,0" Text="{Binding Path=DisplayName}"></TextBlock>
+
+            <Grid DockPanel.Dock="Right">
+                <DockPanel x:Name="ComboBoxSelected">
+                    <userControls:SvgButton DockPanel.Dock="Right" Width="15" Height="15" Command="{Binding Actions.Open}" Svg="{StaticResource SvgComboOpen}"/>
+
+                    <ContentControl Content="{Binding Actions.Selection}">
+                        <ContentControl.Resources>
+                            <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
+                                <TextBlock>Do Nothing</TextBlock>
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type viewModel:SelectMod}">
+                                <TextBlock><Run Text="{Binding StorageName, Mode=OneWay}" /> / <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock><Run Text="{Binding Name, Mode=OneWay}" /> / </TextBlock>
+                                    <TextBox Text="{Binding DataContext.DownloadIdentifier, ElementName=RepoMod, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ContentControl.Resources>
+                    </ContentControl>
                 </DockPanel>
+
+                <userControls:ComboBoxPopup IsOpen="{Binding Actions.IsOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=ComboBoxSelected}">
+                    <Border BorderBrush="Black" BorderThickness="1">
+                        <ItemsControl Background="White" ItemsSource="{Binding Actions.Storages}">
+                            <ItemsControl.Resources>
+                                <DataTemplate DataType="{x:Type util:SelectableModAction}">
+                                    <userControls:SelectableAction />
+                                </DataTemplate>
+                                <DataTemplate DataType="{x:Type util:StorageModActionList}">
+                                    <Border BorderBrush="Black" BorderThickness="1" Margin="0" Padding="2">
+                                        <StackPanel>
+                                            <TextBlock FontWeight="Bold" Foreground="DimGray" Text="{Binding Name}" />
+                                            <ItemsControl Margin="4,0,0,0" ItemsSource="{Binding Mods}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.Resources>
+                        </ItemsControl>
+                    </Border>
+                </userControls:ComboBoxPopup>
+            </Grid>
+
+
+            <Grid>
+                <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
                 <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
-            </StackPanel>
-            <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
+            </Grid>
         </DockPanel>
     </Border>
 </UserControl>

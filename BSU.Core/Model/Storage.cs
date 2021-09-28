@@ -34,7 +34,7 @@ namespace BSU.Core.Model
             foreach (KeyValuePair<string, IStorageMod> mod in await Implementation.GetMods(cancellationToken))
             {
                 var modelMod = new StorageMod(mod.Value, mod.Key, _internalState.GetMod(mod.Key),
-                    Identifier, Implementation.CanWrite());
+                    this, Implementation.CanWrite());
                 _mods.Add(modelMod);
                 ModAdded?.Invoke(modelMod);
             }
@@ -52,7 +52,7 @@ namespace BSU.Core.Model
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
             state.UpdateTarget = updateTarget;
-            var storageMod = new StorageMod(mod, identifier, state, Identifier, true);
+            var storageMod = new StorageMod(mod, identifier, state, this, true);
             _mods.Add(storageMod);
             return storageMod;
         }

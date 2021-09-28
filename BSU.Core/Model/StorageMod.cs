@@ -15,9 +15,9 @@ namespace BSU.Core.Model
     internal class StorageMod : IModelStorageMod
     {
         private readonly IPersistedStorageModState _internalState;
-        private readonly Guid _parentIdentifier;
         public bool CanWrite { get; }
         public string Identifier { get; }
+        public IModelStorage ParentStorage { get; }
         public IStorageMod Implementation { get; }
 
         private readonly ResettableLazyAsync<MatchHash> _matchHash;
@@ -43,11 +43,11 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(IStorageMod implementation, string identifier,
-            IPersistedStorageModState internalState, Guid parentIdentifier, bool canWrite)
+            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
-            _parentIdentifier = parentIdentifier;
+            ParentStorage = parent;
             CanWrite = canWrite;
             Implementation = implementation;
             Identifier = identifier;
@@ -140,7 +140,7 @@ namespace BSU.Core.Model
 
         public PersistedSelection GetStorageModIdentifiers()
         {
-            return new PersistedSelection(PersistedSelectionType.StorageMod, _parentIdentifier, Identifier);
+            return new PersistedSelection(PersistedSelectionType.StorageMod, ParentStorage.Identifier, Identifier);
         }
 
         public override string ToString() => Identifier;

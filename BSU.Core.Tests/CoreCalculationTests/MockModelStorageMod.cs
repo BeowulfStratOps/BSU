@@ -46,6 +46,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public bool CanWrite { get; }
         public string Identifier { get; }
+        public IModelStorage ParentStorage { get; }
+
         public Task<VersionHash> GetVersionHash(CancellationToken cancellationToken)
         {
             RequiredVersionHash = true;

@@ -17,6 +17,7 @@ namespace BSU.Core.Model
         PersistedSelection GetStorageModIdentifiers();
         bool CanWrite { get; }
         string Identifier { get; }
+        IModelStorage ParentStorage { get; }
         Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         StorageModStateEnum GetState();

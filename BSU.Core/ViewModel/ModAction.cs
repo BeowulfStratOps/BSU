@@ -57,7 +57,8 @@ namespace BSU.Core.ViewModel
     {
         internal IModelStorageMod StorageMod { get; }
         public string ActionType { get; }
-        public string Name => StorageMod.Identifier; // TODO: name
+        public string Name => StorageMod.Identifier;
+        public string StorageName => StorageMod.ParentStorage.Name;
 
         internal SelectMod(IModelStorageMod storageMod, ModActionEnum actionType)
         {

@@ -14,48 +14,28 @@ namespace BSU.Core.ViewModel
         internal readonly IModelRepositoryMod Mod;
         private readonly IViewModelService _viewModelService;
 
-        public string Name => _name;
+        public string Name { get; }
 
-        public string DisplayName
-        {
-            private set => _displayName = value;
-            get => _displayName;
-        }
+        public string DisplayName { private set; get; }
 
         private string _downloadIdentifier = "";
-        private bool _showDownloadIdentifier;
 
-        public FileSyncProgress UpdateProgress => _updateProgress;
+        public FileSyncProgress UpdateProgress { get; } = new();
 
-        public ModActionTree Actions => _actions;
+        public ModActionTree Actions { get; } = new();
 
-        private ModAction _selection;
-        public ModAction Selection
+        private void SetSelectionFromView(ModAction value)
         {
-            get => _selection;
-            set
-            {
-                if (value == null) return; // can happen when the collection is modified
-                SetSelection(value, true);
-            }
-        }
-
-        private void SetSelection(ModAction value, bool fromUi = false)
-        {
-            if (Equals(_selection, value)) return;
-            _selection = value;
             Mod.SetSelection(value.AsSelection);
-            ShowDownloadIdentifier = _selection is SelectStorage;
-            OnPropertyChanged();
-            UpdateErrorText(); // TODO: await? :(
-            if (fromUi) _viewModelService.Update(); // TODO: await? pls? somewhere? :(
+            _viewModelService.Update(); // TODO: await? pls? somewhere? :(
         }
 
         internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)
         {
+            Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
             Mod = mod;
             _viewModelService = viewModelService;
-            _name = mod.Identifier;
+            Name = mod.Identifier;
 
             DownloadIdentifier = mod.DownloadIdentifier;
 
@@ -67,59 +47,50 @@ namespace BSU.Core.ViewModel
 
         private async Task<ModAction> UpdateAction(IModelStorageMod storageMod)
         {
-            var isCurrentlySelected = Selection?.AsSelection is RepositoryModActionStorageMod actionStorageMod && actionStorageMod.StorageMod == storageMod;
             var action = await CoreCalculation.GetModAction(Mod, storageMod, CancellationToken.None);
             if (action == ModActionEnum.Unusable)
             {
-                var removeAction = Actions.SingleOrDefault(a => a.AsSelection is RepositoryModActionStorageMod storageModSelection && storageModSelection.StorageMod == storageMod);
-                if (isCurrentlySelected)
-                    SetSelection(new SelectDoNothing());
-                if (removeAction != null)
-                    Actions.Remove(removeAction);
-                return Selection;
+                Actions.RemoveMod(storageMod);
+                return Actions.Selection;
             }
             var selection = new SelectMod(storageMod, action);
-            Actions.Update(selection);
-            if (isCurrentlySelected)
-                SetSelection(selection);
+            Actions.UpdateMod(selection);
             return selection;
         }
 
         internal void AddStorage(IModelStorage storage)
         {
-            if (!storage.CanWrite) return; // TODO
-            Actions.Update(new SelectStorage(storage));
+            if (!storage.CanWrite) return;
+            Actions.AddStorage(storage);
         }
 
         internal void RemoveStorage(IModelStorage storage)
         {
-            if (!storage.CanWrite) return;
-            var selection = Actions.OfType<SelectStorage>().Single(s => s.DownloadStorage == storage);
-            Actions.Remove(selection);
+            Actions.RemoveStorage(storage);
         }
 
         private async Task UpdateErrorText()
         {
             // TODO: make sure it updates itself when e.g. conflict states change
 
-            if (Selection == null)
+            if (Actions.Selection == null)
             {
                 ErrorText = "Select an action";
                 return;
             }
 
-            if (Selection is SelectDoNothing)
+            if (Actions.Selection is SelectDoNothing)
             {
                 ErrorText = "";
             }
 
-            if (Selection is SelectStorage selectStorage)
+            if (Actions.Selection is SelectStorage selectStorage)
             {
                 var folderExists = await selectStorage.DownloadStorage.HasMod(DownloadIdentifier);
                 ErrorText = folderExists ? "Name in use" : "";
             }
 
-            if (Selection is SelectMod selectMod)
+            if (Actions.Selection is SelectMod selectMod)
             {
                 var conflicts = await Mod.GetConflictsUsingMod(selectMod.StorageMod, CancellationToken.None);
                 if (!conflicts.Any())
@@ -147,22 +118,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public bool ShowDownloadIdentifier
-        {
-            get => _showDownloadIdentifier;
-            private set
-            {
-                if (value == _showDownloadIdentifier) return;
-                _showDownloadIdentifier = value;
-                OnPropertyChanged();
-            }
-        }
-
         private string _errorText;
-        private readonly string _name;
-        private string _displayName;
-        private readonly FileSyncProgress _updateProgress = new();
-        private readonly ModActionTree _actions = new();
         private bool _canChangeSelection = true;
 
         public string ErrorText
@@ -198,12 +154,15 @@ namespace BSU.Core.ViewModel
             if (selection is RepositoryModActionStorageMod actionStorageMod)
             {
                 var updatedAction = await UpdateAction(actionStorageMod.StorageMod);
-                SetSelection(updatedAction);
+                Actions.SetSelection(updatedAction);
             }
             else
             {
-                SetSelection(await ModAction.Create(selection, Mod, CancellationToken.None));
+                var action = await ModAction.Create(selection, Mod, CancellationToken.None);
+                Actions.SetSelection(action);
             }
+
+            await UpdateErrorText();
 
             var actions = await Mod.GetModActions(CancellationToken.None);
             foreach (var (mod, _) in actions)
