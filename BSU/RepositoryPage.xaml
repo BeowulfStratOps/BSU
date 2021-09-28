@@ -32,7 +32,7 @@
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                 <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}"/>
 
-                <userControls:SvgButton Width="50" Height="50" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" HideIfDisabled="True" SvgBrush="{Binding UpdateButtonColor, Converter={StaticResource ColorConverter}}" />
+                <userControls:SvgButton Width="50" Height="50" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" Visibility="{Binding UpdateButtonVisible, Converter={StaticResource CollapseConverter}}" SvgBrush="{Binding UpdateButtonColor, Converter={StaticResource ColorConverter}}" />
                 <userControls:SvgButton Width="50" Height="50" Command="{Binding Pause}" Svg="{StaticResource SvgPause}" HideIfDisabled="True" />
                 <userControls:Spinner Width="50" Height="50" Visibility="{Binding UpdateLoading, Converter={StaticResource CollapseConverter}}" />
 

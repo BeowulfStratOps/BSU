@@ -12,5 +12,8 @@ namespace BSU.Core.Model
         ReadyPartial
     }
 
-    public record CalculatedRepositoryState(CalculatedRepositoryStateEnum State);
+    public record CalculatedRepositoryState(CalculatedRepositoryStateEnum State)
+    {
+        public override string ToString() => State.ToString();
+    }
 }

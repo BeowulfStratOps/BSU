@@ -27,12 +27,12 @@
                                 <TextBlock>Do Nothing</TextBlock>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type viewModel:SelectMod}">
-                                <TextBlock><Run Text="{Binding StorageName, Mode=OneWay}" /> / <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
+                                <TextBlock>Update <Run Text="{Binding StorageName, Mode=OneWay}" /> / <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock><Run Text="{Binding Name, Mode=OneWay}" /> / </TextBlock>
-                                    <TextBox Text="{Binding DataContext.DownloadIdentifier, ElementName=RepoMod, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock>Download to <Run Text="{Binding Name, Mode=OneWay}" /> / </TextBlock>
+                                    <TextBox MinWidth="100" Text="{Binding DataContext.DownloadIdentifier, ElementName=RepoMod, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </DataTemplate>
                         </ContentControl.Resources>
@@ -62,8 +62,8 @@
 
 
             <Grid>
-                <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
-                <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
+                <userControls:FileSyncProgressBar Margin="15, 0" DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
+                <TextBlock HorizontalAlignment="Right" Margin="5,0" Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
             </Grid>
         </DockPanel>
     </Border>

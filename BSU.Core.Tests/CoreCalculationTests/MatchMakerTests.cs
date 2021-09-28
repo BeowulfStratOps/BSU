@@ -76,6 +76,16 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
+        private void AbortAndUpdate()
+        {
+            var (action, requiresMatchHash, requireVersionHash) = DoCheck(2, 1, 1, 1, StorageModStateEnum.CreatedWithUpdateTarget);
+
+            Assert.Equal(ModActionEnum.ContinueUpdate, action);
+            Assert.False(requiresMatchHash);
+            Assert.True(requireVersionHash);
+        }
+
+        [Fact]
         private void Await()
         {
             var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 1, StorageModStateEnum.Updating);
@@ -86,11 +96,11 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void AbortAndUpdate()
+        private void AbortActiveAndUpdate()
         {
             var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 2, StorageModStateEnum.Updating);
 
-            Assert.Equal(ModActionEnum.AbortAndUpdate, action);
+            Assert.Equal(ModActionEnum.AbortActiveAndUpdate, action);
             Assert.True(requiresMatchHash);
             Assert.True(requireVersionHash);
         }

@@ -42,7 +42,7 @@ namespace BSU.Core.ViewModel.Util
             SetIsSelected(action);
         }
 
-        public ICommand Open { get; }
+        public DelegateCommand Open { get; }
 
         public ModActionTree()
         {
@@ -107,7 +107,7 @@ namespace BSU.Core.ViewModel.Util
     public class StorageModActionList : IActionListEntry
     {
         internal IModelStorage Storage { get; }
-        private ModActionTree Parent;
+        private readonly ModActionTree _parent;
 
         public string Name => Storage.Name;
 
@@ -115,9 +115,9 @@ namespace BSU.Core.ViewModel.Util
 
         internal StorageModActionList(IModelStorage storage, ModActionTree parent)
         {
-            Parent = parent;
+            _parent = parent;
             Storage = storage;
-            Mods.Add( new SelectableModAction(new SelectStorage(storage), Parent, false));
+            Mods.Add( new SelectableModAction(new SelectStorage(storage), _parent, false));
         }
 
         public void UpdateMod(SelectMod mod)
@@ -126,11 +126,11 @@ namespace BSU.Core.ViewModel.Util
 
             if (index == -1)
             {
-                Mods.Insert(0, new SelectableModAction(mod, Parent, false));
+                Mods.Insert(0, new SelectableModAction(mod, _parent, false));
                 return;
             }
 
-            Mods[index] = new SelectableModAction(mod, Parent, Mods[index].IsSelected);
+            Mods[index] = new SelectableModAction(mod, _parent, Mods[index].IsSelected);
         }
 
         private int FindIndex(IModelStorageMod mod)

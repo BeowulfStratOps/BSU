@@ -1,6 +1,6 @@
 ﻿namespace BSU.Core.Model
 {
-    internal enum ModActionEnum
+    public enum ModActionEnum
     {
         Update,
         ContinueUpdate,
@@ -8,5 +8,6 @@
         Use,
         AbortAndUpdate,
         Unusable, // should never reach the user
+        AbortActiveAndUpdate
     }
 }

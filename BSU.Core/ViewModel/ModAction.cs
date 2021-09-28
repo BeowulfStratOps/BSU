@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
-using NLog.Targets.Wrappers;
 
 namespace BSU.Core.ViewModel
 {
@@ -56,14 +55,14 @@ namespace BSU.Core.ViewModel
     public class SelectMod : ModAction
     {
         internal IModelStorageMod StorageMod { get; }
-        public string ActionType { get; }
+        public ModActionEnum ActionType { get; }
         public string Name => StorageMod.Identifier;
         public string StorageName => StorageMod.ParentStorage.Name;
 
         internal SelectMod(IModelStorageMod storageMod, ModActionEnum actionType)
         {
             StorageMod = storageMod;
-            ActionType = actionType.ToString();
+            ActionType = actionType;
         }
 
         public override bool Equals(ModAction other)

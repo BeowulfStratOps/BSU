@@ -26,6 +26,7 @@ namespace BSU.Core.ViewModel
 
         private void SetSelectionFromView(ModAction value)
         {
+            DownloadIdentifier = Mod.Identifier;
             Mod.SetSelection(value.AsSelection);
             _viewModelService.Update(); // TODO: await? pls? somewhere? :(
         }
@@ -82,16 +83,28 @@ namespace BSU.Core.ViewModel
             if (Actions.Selection is SelectDoNothing)
             {
                 ErrorText = "";
+                return;
             }
 
             if (Actions.Selection is SelectStorage selectStorage)
             {
+                if (string.IsNullOrWhiteSpace(DownloadIdentifier)) // TODO: check file name validity
+                {
+                    ErrorText = "Name must be a valid folder name";
+                    return;
+                }
                 var folderExists = await selectStorage.DownloadStorage.HasMod(DownloadIdentifier);
                 ErrorText = folderExists ? "Name in use" : "";
             }
 
             if (Actions.Selection is SelectMod selectMod)
             {
+                if (selectMod.ActionType == ModActionEnum.AbortActiveAndUpdate)
+                {
+                    ErrorText = "This mod is currently being updated";
+                    return;
+                }
+
                 var conflicts = await Mod.GetConflictsUsingMod(selectMod.StorageMod, CancellationToken.None);
                 if (!conflicts.Any())
                 {
@@ -119,7 +132,6 @@ namespace BSU.Core.ViewModel
         }
 
         private string _errorText;
-        private bool _canChangeSelection = true;
 
         public string ErrorText
         {
@@ -128,17 +140,6 @@ namespace BSU.Core.ViewModel
             {
                 if (value == _errorText) return;
                 _errorText = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool CanChangeSelection
-        {
-            get => _canChangeSelection;
-            set
-            {
-                if (_canChangeSelection == value) return;
-                _canChangeSelection = value;
                 OnPropertyChanged();
             }
         }

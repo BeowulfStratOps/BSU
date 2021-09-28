@@ -39,6 +39,7 @@ namespace BSU.Core.ViewModel
             {
                 case CalculatedRepositoryStateEnum.NeedsSync:
                     Update.SetCanExecute(true);
+                    UpdateButtonVisible = true;
                     UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Primary;
 
@@ -50,6 +51,7 @@ namespace BSU.Core.ViewModel
                     break;
                 case CalculatedRepositoryStateEnum.Ready:
                     Update.SetCanExecute(false);
+                    UpdateButtonVisible = true;
                     UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
@@ -61,6 +63,7 @@ namespace BSU.Core.ViewModel
                     break;
                 case CalculatedRepositoryStateEnum.RequiresUserIntervention:
                     Update.SetCanExecute(false);
+                    UpdateButtonVisible = true;
                     UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
@@ -72,6 +75,7 @@ namespace BSU.Core.ViewModel
                     break;
                 case CalculatedRepositoryStateEnum.Syncing:
                     Update.SetCanExecute(false);
+                    UpdateButtonVisible = false;
                     UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
@@ -83,6 +87,7 @@ namespace BSU.Core.ViewModel
                     break;
                 case CalculatedRepositoryStateEnum.Loading:
                     Update.SetCanExecute(false);
+                    UpdateButtonVisible = false;
                     UpdateLoading = true;
                     UpdateButtonColor = ColorIndication.Normal;
 
@@ -94,6 +99,7 @@ namespace BSU.Core.ViewModel
                     break;
                 case CalculatedRepositoryStateEnum.ReadyPartial:
                     Update.SetCanExecute(false);
+                    UpdateButtonVisible = true;
                     UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
@@ -194,7 +200,7 @@ Cancel - Do not remove this repository";
             _cts = new CancellationTokenSource();
             foreach (var mod in Mods)
             {
-                mod.CanChangeSelection = false;
+                mod.Actions.Open.SetCanExecute(false);
             }
 
             try
@@ -228,7 +234,7 @@ Cancel - Do not remove this repository";
             {
                 foreach (var mod in Mods)
                 {
-                    mod.CanChangeSelection = true;
+                    mod.Actions.Open.SetCanExecute(true);
                 }
                 await _viewModelService.Update();
             }
@@ -278,6 +284,8 @@ Cancel - Do not remove this repository";
         }
 
         private bool _updateLoading;
+        private bool _updateButtonVisible = true;
+
         public bool UpdateLoading
         {
             get => _updateLoading;
@@ -285,6 +293,17 @@ Cancel - Do not remove this repository";
             {
                 if (_updateLoading == value) return;
                 _updateLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool UpdateButtonVisible
+        {
+            get => _updateButtonVisible;
+            set
+            {
+                if (_updateButtonVisible == value) return;
+                _updateButtonVisible = value;
                 OnPropertyChanged();
             }
         }

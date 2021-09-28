@@ -24,7 +24,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 ModActionEnum.ContinueUpdate => new MockModelStorageMod(1, 1, StorageModStateEnum.CreatedWithUpdateTarget),
                 ModActionEnum.Await => new MockModelStorageMod(1, 1, StorageModStateEnum.Updating),
                 ModActionEnum.Use => new MockModelStorageMod(1, 1, StorageModStateEnum.Created),
-                ModActionEnum.AbortAndUpdate => new MockModelStorageMod(1, 2, StorageModStateEnum.Updating),
+                ModActionEnum.AbortAndUpdate => new MockModelStorageMod(1, 2, StorageModStateEnum.CreatedWithUpdateTarget),
+                ModActionEnum.AbortActiveAndUpdate => new MockModelStorageMod(1, 2, StorageModStateEnum.Updating),
                 ModActionEnum.Unusable => new MockModelStorageMod(2, 2, StorageModStateEnum.Created),
                 _ => throw new ArgumentOutOfRangeException(nameof(actionType), actionType, null)
             };

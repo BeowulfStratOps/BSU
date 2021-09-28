@@ -169,6 +169,7 @@ namespace BSU.Core.Model
             if (Selection is RepositoryModActionStorageMod actionStorageMod)
             {
                 var action = await CoreCalculation.GetModAction(this, actionStorageMod.StorageMod, cancellationToken);
+                if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
                 var update = await actionStorageMod.StorageMod.PrepareUpdate(Implementation, displayName, matchHash, versionHash, progress);

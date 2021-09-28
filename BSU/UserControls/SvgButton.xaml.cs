@@ -48,7 +48,7 @@ namespace BSU.GUI.UserControls
             {
                 Brush = SvgBrush;
                 IsEnabled = true;
-                Visibility = Visibility.Visible;
+                if (HideIfDisabled) Visibility = Visibility.Visible;
             }
             else
             {

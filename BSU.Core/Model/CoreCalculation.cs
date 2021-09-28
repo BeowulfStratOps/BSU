@@ -45,7 +45,7 @@ namespace BSU.Core.Model
                 case StorageModStateEnum.Updating:
                 {
                     if (await CheckVersion()) return ModActionEnum.Await;
-                    if (await CheckMatch()) return ModActionEnum.AbortAndUpdate;
+                    if (await CheckMatch()) return ModActionEnum.AbortActiveAndUpdate;
                     return ModActionEnum.Unusable;
                 }
                 case StorageModStateEnum.Error:
@@ -120,7 +120,7 @@ namespace BSU.Core.Model
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.ReadyPartial);
             }
 
-            if (mods.Any(mod => mod.selection == null))
+            if (mods.Any(mod => mod.selection == null || mod.selection is RepositoryModActionStorageMod && mod.action == ModActionEnum.AbortActiveAndUpdate))
                 return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.RequiresUserIntervention);
 
             if (mods.Any(mod => mod.action == ModActionEnum.Await))

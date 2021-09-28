@@ -6,18 +6,23 @@
              xmlns:local="clr-namespace:BSU.GUI.UserControls"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:util="clr-namespace:BSU.Core.ViewModel.Util;assembly=BSU.Core"
+             xmlns:converters="clr-namespace:BSU.GUI.Converters"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance util:SelectableModAction}">
     <Border x:Name="Border" MouseEnter="Border_OnMouseEnter" MouseLeave="Border_OnMouseLeave" MouseLeftButtonDown="Border_OnMouseLeftButtonDown">
         <Border.Resources>
+            <converters:ActionToColorConverter x:Key="ActionToColor" />
             <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
                 <TextBlock>Do Nothing</TextBlock>
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:SelectMod}">
-                <TextBlock Text="{Binding Name}" />
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="15" Height="15" Fill="{Binding ActionType, Converter={StaticResource ActionToColor}}" />
+                    <TextBlock Text="{Binding Name}" />
+                </StackPanel>
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
-                <TextBlock>Add</TextBlock>
+                <TextBlock><Run FontWeight="Bold">+</Run> Add</TextBlock>
             </DataTemplate>
         </Border.Resources>
         <ContentPresenter Content="{Binding Action}"/>
