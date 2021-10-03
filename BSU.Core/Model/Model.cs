@@ -11,6 +11,7 @@ namespace BSU.Core.Model
         private readonly Types _types;
 
         private readonly ModelStructure _structure = new();
+        private readonly ErrorPresenter _errorPresenter = new();
 
         private InternalState PersistentState { get; }
 
@@ -24,34 +25,20 @@ namespace BSU.Core.Model
         {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
-                try
-                {
-                    var repository = CreateRepository(repositoryEntry, repositoryState);
-                    _structure.AddRepository(repository);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+                var repository = CreateRepository(repositoryEntry, repositoryState);
+                _structure.AddRepository(repository);
             }
             foreach (var (storageEntry, storageState) in PersistentState.GetStorages())
             {
-                try
-                {
-                    var storage = CreateStorage(storageEntry, storageState);
-                    _structure.AddStorage(storage);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+                var storage = CreateStorage(storageEntry, storageState);
+                _structure.AddStorage(storage);
             }
         }
 
         private Repository CreateRepository(IRepositoryEntry data, IRepositoryState state)
         {
             var implementation = _types.GetRepoImplementation(data.Type, data.Url);
-            var repository = new Repository(implementation, data.Name, data.Url, state, _structure);
+            var repository = new Repository(implementation, data.Name, data.Url, state, _structure, _errorPresenter);
             // TODO: kick off mods
             return repository;
         }
@@ -59,7 +46,7 @@ namespace BSU.Core.Model
         private Storage CreateStorage(IStorageEntry data, IStorageState state)
         {
             var implementation = _types.GetStorageImplementation(data.Type, data.Path);
-            var storage = new Storage(implementation, data.Name, data.Path, state, _structure);
+            var storage = new Storage(implementation, data.Name, data.Path, state, _structure, _errorPresenter);
             // TODO: kick off mods
             return storage;
         }
@@ -81,6 +68,11 @@ namespace BSU.Core.Model
         public IEnumerable<IModelStorage> GetStorages() => _structure.GetStorages();
 
         public IEnumerable<IModelRepository> GetRepositories() => _structure.GetRepositories();
+        public void ConnectErrorPresenter(IErrorPresenter presenter)
+        {
+            _errorPresenter.Connect(presenter);
+        }
+
         public void DeleteRepository(IModelRepository repository, bool removeMods)
         {
             if (removeMods) throw new NotImplementedException();

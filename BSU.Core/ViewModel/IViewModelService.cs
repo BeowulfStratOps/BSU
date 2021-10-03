@@ -10,5 +10,6 @@ namespace BSU.Core.ViewModel
         void NavigateToRepository(Repository repository);
         void NavigateBack();
         IInteractionService InteractionService { get; }
+        IAsyncVoidExecutor AsyncVoidExecutor { get; }
     }
 }

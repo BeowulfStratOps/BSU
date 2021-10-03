@@ -30,7 +30,7 @@ namespace BSU.Core.Model.Updating
 
         public event Action OnEnded;
 
-        public async Task Prepare(CancellationToken cancellationToken)
+        public async Task<UpdateResult> Prepare(CancellationToken cancellationToken)
         {
             if (_prepared) throw new InvalidOperationException();
             _prepared = true;
@@ -42,12 +42,13 @@ namespace BSU.Core.Model.Updating
                 _repoSync = await Task.Run(() =>
                     RepoSync.BuildAsync(_repositoryMod, _storageMod, cancellationToken, _guid), cancellationToken);
                 IsPrepared = true;
+                return UpdateResult.Success;
             }
             catch
             {
                 ReportProgress(new FileSyncStats(FileSyncState.None));
                 OnEnded?.Invoke();
-                throw;
+                return UpdateResult.Failed;
             }
         }
 
@@ -57,7 +58,7 @@ namespace BSU.Core.Model.Updating
             _progress?.Report(stats);
         }
 
-        public async Task Update(CancellationToken cancellationToken)
+        public async Task<UpdateResult> Update(CancellationToken cancellationToken)
         {
             if (_updated) throw new InvalidOperationException();
             _updated = true;
@@ -68,7 +69,7 @@ namespace BSU.Core.Model.Updating
 
             try
             {
-                await Task.Run(() => _repoSync.UpdateAsync(cancellationToken, _progress), cancellationToken);
+                return await Task.Run(() => _repoSync.UpdateAsync(cancellationToken, _progress), cancellationToken);
             }
             finally
             {
@@ -77,5 +78,6 @@ namespace BSU.Core.Model.Updating
             }
         }
         public bool IsPrepared { get; private set; }
+        public IModelStorageMod GetStorageMod() => _storageMod;
     }
 }

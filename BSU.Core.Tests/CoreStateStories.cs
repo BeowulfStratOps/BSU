@@ -57,7 +57,7 @@ namespace BSU.Core.Tests
 
             var mockStorage = new MockStorage();
             var storageState = new MockStorageState();
-            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, null);
+            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, null, null);
 
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
 

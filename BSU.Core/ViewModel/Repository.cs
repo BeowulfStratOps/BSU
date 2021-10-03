@@ -38,6 +38,8 @@ namespace BSU.Core.ViewModel
             switch (CalculatedState.State)
             {
                 case CalculatedRepositoryStateEnum.NeedsSync:
+                    Details.SetCanExecute(true);
+
                     Update.SetCanExecute(true);
                     UpdateButtonVisible = true;
                     UpdateLoading = false;
@@ -50,6 +52,8 @@ namespace BSU.Core.ViewModel
                     PlayButtonColor = ColorIndication.Warning;
                     break;
                 case CalculatedRepositoryStateEnum.Ready:
+                    Details.SetCanExecute(true);
+
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
                     UpdateLoading = false;
@@ -62,6 +66,8 @@ namespace BSU.Core.ViewModel
                     PlayButtonColor = ColorIndication.Primary;
                     break;
                 case CalculatedRepositoryStateEnum.RequiresUserIntervention:
+                    Details.SetCanExecute(true);
+
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
                     UpdateLoading = false;
@@ -74,6 +80,8 @@ namespace BSU.Core.ViewModel
                     PlayButtonColor = ColorIndication.Normal;
                     break;
                 case CalculatedRepositoryStateEnum.Syncing:
+                    Details.SetCanExecute(true);
+
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = false;
                     UpdateLoading = false;
@@ -86,6 +94,8 @@ namespace BSU.Core.ViewModel
                     PlayButtonColor = ColorIndication.Normal;
                     break;
                 case CalculatedRepositoryStateEnum.Loading:
+                    Details.SetCanExecute(true);
+
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = false;
                     UpdateLoading = true;
@@ -98,6 +108,8 @@ namespace BSU.Core.ViewModel
                     PlayButtonColor = ColorIndication.Warning;
                     break;
                 case CalculatedRepositoryStateEnum.ReadyPartial:
+                    Details.SetCanExecute(true);
+
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
                     UpdateLoading = false;
@@ -108,6 +120,20 @@ namespace BSU.Core.ViewModel
 
                     Play.SetCanExecute(true);
                     PlayButtonColor = ColorIndication.Warning;
+                    break;
+                case CalculatedRepositoryStateEnum.Error:
+                    Details.SetCanExecute(false);
+
+                    Update.SetCanExecute(false);
+                    UpdateButtonVisible = true;
+                    UpdateLoading = false;
+                    UpdateButtonColor = ColorIndication.Normal;
+
+                    Pause.SetCanExecute(false);
+                    Delete.SetCanExecute(true);
+
+                    Play.SetCanExecute(false);
+                    PlayButtonColor = ColorIndication.Normal;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -218,13 +244,23 @@ Cancel - Do not remove this repository";
 
                 await _viewModelService.Update();
 
-                if (updateStats.FailedCount == 0)
+                if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {
                     _viewModelService.InteractionService.MessagePopup("Update Complete", "Update Complete");
                     return;
                 }
 
-                var updatedText = $"{updateStats.SucceededCount} Mods updated. {updateStats.FailedCount} Mods failed.";
+                var updatedText = $"{updateStats.SucceededCount} Mods updated.";
+                if (updateStats.FailedSharingViolation.Any())
+                {
+                    updatedText += "\nFailed due to being open in another process: " + string.Join(", ",
+                        updateStats.FailedSharingViolation.Select(s => $"{s.ParentStorage.Name}/{s.Identifier}"));
+                }
+                if (updateStats.Failed.Any())
+                {
+                    updatedText += "\nFailed due unknown reason (see logs): " + string.Join(", ",
+                        updateStats.Failed.Select(s => $"{s.ParentStorage.Name}/{s.Identifier}"));
+                }
                 _viewModelService.InteractionService.MessagePopup(updatedText, "Update finished");
             }
             catch (OperationCanceledException)
@@ -242,13 +278,21 @@ Cancel - Do not remove this repository";
 
         public async Task Load()
         {
-            (Title, ServerUrl) = await _repository.GetServerInfo(CancellationToken.None);
-            var mods = await _repository.GetMods();
-            foreach (var mod in mods)
+            try
             {
-                Mods.Add(new RepositoryMod(mod, _model, _viewModelService));
+                (Title, ServerUrl) = await _repository.GetServerInfo(CancellationToken.None);
+                var mods = await _repository.GetMods();
+                foreach (var mod in mods)
+                {
+                    Mods.Add(new RepositoryMod(mod, _model, _viewModelService));
+                }
+                await Task.WhenAll(Mods.Select(m => m.Load()));
             }
-            await Task.WhenAll(Mods.Select(m => m.Load()));
+            catch (Exception)
+            {
+                Title = "";
+                ServerUrl = "";
+            }
         }
 
         public async Task UpdateMods()

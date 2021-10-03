@@ -9,7 +9,8 @@ namespace BSU.Core.Model
         RequiresUserIntervention, // Else
         Syncing, // All are ready or being worked on
         Loading,
-        ReadyPartial
+        ReadyPartial,
+        Error
     }
 
     public record CalculatedRepositoryState(CalculatedRepositoryStateEnum State)

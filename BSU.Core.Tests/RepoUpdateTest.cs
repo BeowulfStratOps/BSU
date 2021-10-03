@@ -20,7 +20,7 @@ namespace BSU.Core.Tests
         private void CheckCounts(StageStats args, int expectedSuccesses, int expectedFails)
         {
             var successes = args.SucceededCount;
-            var fails = args.FailedCount;
+            var fails = args.Failed.Count + args.FailedSharingViolation.Count;
             Assert.Equal(expectedSuccesses, successes);
             Assert.Equal(expectedFails, fails);
         }

@@ -12,5 +12,6 @@ namespace BSU.Core.Model
         IModelStorage AddStorage(string type, DirectoryInfo path, string name);
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();
+        void ConnectErrorPresenter(IErrorPresenter presenter);
     }
 }

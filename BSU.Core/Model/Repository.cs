@@ -25,13 +25,15 @@ namespace BSU.Core.Model
         private readonly Task _loading;
 
         private readonly ILogger _logger;
+        private readonly IErrorPresenter _errorPresenter;
 
         public Repository(IRepository implementation, string name, string location,
-            IRepositoryState internalState, IModelStructure modelStructure)
+            IRepositoryState internalState, IModelStructure modelStructure, IErrorPresenter errorPresenter)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
             _modelStructure = modelStructure;
+            _errorPresenter = errorPresenter;
             Location = location;
             Implementation = implementation;
             Name = name;
@@ -41,21 +43,46 @@ namespace BSU.Core.Model
 
         private async Task LoadInternal(CancellationToken cancellationToken)
         {
-            foreach (var (key, mod) in await Implementation.GetMods(cancellationToken))
+            try
             {
-                var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), _modelStructure, this);
-                _mods.Add(modelMod);
+                foreach (var (key, mod) in await Implementation.GetMods(cancellationToken))
+                {
+                    var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), _modelStructure, this);
+                    _mods.Add(modelMod);
+                }
+            }
+            catch (Exception e)
+            {
+                _errorPresenter.AddError($"Failed to load repository {Name}.");
+                _logger.Error(e);
+                throw;
             }
         }
 
         public async Task<List<IModelRepositoryMod>> GetMods()
         {
-            await _loading;
+            try
+            {
+                await _loading;
+            }
+            catch (Exception e)
+            {
+                return new List<IModelRepositoryMod>();
+            }
             return new List<IModelRepositoryMod>(_mods);
         }
 
         public async Task<CalculatedRepositoryState> GetState(CancellationToken cancellationToken)
         {
+            try
+            {
+                await _loading;
+            }
+            catch (Exception e)
+            {
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Error);
+            }
+
             var mods = await GetMods();
 
             async Task<(RepositoryModActionSelection selection, ModActionEnum? action)> GetModSelection(IModelRepositoryMod mod)

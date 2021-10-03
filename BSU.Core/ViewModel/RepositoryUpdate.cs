@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Sync;
 using NLog;
@@ -11,7 +12,7 @@ using NLog;
 namespace BSU.Core.ViewModel
 {
 
-    public class RepositoryUpdate : IRepositoryUpdate
+    internal class RepositoryUpdate : IRepositoryUpdate
     {
         private readonly List<(IModUpdate update, Progress<FileSyncStats> progress)> _updates;
         private readonly IProgress<FileSyncStats> _progress;
@@ -29,7 +30,11 @@ namespace BSU.Core.ViewModel
 
             cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
 
-            var tasks = _updates.Select(s => s.update.Prepare(cancellationToken)).ToList();
+            var tasks = _updates.Select(async s =>
+            {
+                var result = await s.update.Prepare(cancellationToken);
+                return (result, s);
+            }).ToList();
 
             try
             {
@@ -45,7 +50,9 @@ namespace BSU.Core.ViewModel
                 // we handle those separately
             }
 
-            return new StageStats(tasks.Count(t => t.IsCompletedSuccessfully), tasks.Count(t => t.IsFaulted));
+            var failedMods = tasks.Where(t => t.Result.result == UpdateResult.Failed).Select(t => t.Result.s.update.GetStorageMod()).ToList();
+
+            return new StageStats(tasks.Count(t => t.IsCompletedSuccessfully), failedMods, new List<IModelStorageMod>());
         }
 
         public async Task<StageStats> Update(CancellationToken cancellationToken)
@@ -55,28 +62,26 @@ namespace BSU.Core.ViewModel
 
             cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
 
-            var tasks = _updates.Where(u => u.update.IsPrepared).Select(s => s.update.Update(cancellationToken)).ToList();
+            var tasks = _updates.Where(u => u.update.IsPrepared).Select(async s =>
+            {
+                var result = await s.update.Update(cancellationToken);
+                return (result, s);
+            }).ToList();
             var whenAll = Task.WhenAll(tasks);
 
             try
             {
                 await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () => ReportProgress(GetProgress()));
             }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch
-            {
-                // ignored
-                // we handle those separately
-            }
             finally
             {
                 ReportProgress(new FileSyncStats(FileSyncState.None));
             }
 
-            return new StageStats(tasks.Count(t => t.IsCompletedSuccessfully), tasks.Count(t => t.IsFaulted));
+            var failedMods = tasks.Where(t => t.Result.result == UpdateResult.Failed).Select(t => t.Result.s.update.GetStorageMod()).ToList();
+            var failedSvMods = tasks.Where(t => t.Result.result == UpdateResult.FailedSharingViolation).Select(t => t.Result.s.update.GetStorageMod()).ToList();
+
+            return new StageStats(tasks.Count(t => t.IsCompletedSuccessfully), failedMods, failedSvMods);
         }
 
         private FileSyncStats GetProgress()
@@ -119,14 +124,14 @@ namespace BSU.Core.ViewModel
             foreach (var (update, modProgress) in updates)
             {
                 _lastProgress.Add(update, new FileSyncStats(FileSyncState.Waiting));
-                modProgress.ProgressChanged += (s, e) => ModProgressOnProgressChanged(s, e, update);
+                modProgress.ProgressChanged += (_, e) => ModProgressOnProgressChanged(e, update);
             }
 
             _logger.Trace("Progress Waiting");
             _progress?.Report(new FileSyncStats(FileSyncState.Waiting));
         }
 
-        private void ModProgressOnProgressChanged(object sender, FileSyncStats progress, IModUpdate update)
+        private void ModProgressOnProgressChanged(FileSyncStats progress, IModUpdate update)
         {
             lock (_progressLock)
             {
@@ -135,15 +140,17 @@ namespace BSU.Core.ViewModel
         }
     }
 
-    public class StageStats
+    internal class StageStats
     {
         public int SucceededCount { get; }
-        public int FailedCount { get; }
+        public List<IModelStorageMod> Failed { get; }
+        public List<IModelStorageMod> FailedSharingViolation { get; }
 
-        public StageStats(int succeededCount, int failed)
+        public StageStats(int succeededCount, List<IModelStorageMod> failed, List<IModelStorageMod> failedSharingViolation)
         {
             SucceededCount = succeededCount;
-            FailedCount = failed;
+            Failed = failed;
+            FailedSharingViolation = failedSharingViolation;
         }
     }
 }

@@ -13,8 +13,16 @@ namespace BSU.Core.Model.Updating
 
     internal interface IModUpdate
     {
-        Task Prepare(CancellationToken cancellationToken);
-        Task Update(CancellationToken cancellationToken);
+        Task<UpdateResult> Prepare(CancellationToken cancellationToken);
+        Task<UpdateResult> Update(CancellationToken cancellationToken);
         bool IsPrepared { get; }
+        IModelStorageMod GetStorageMod();
+    }
+
+    internal enum UpdateResult
+    {
+        Success,
+        Failed,
+        FailedSharingViolation
     }
 }

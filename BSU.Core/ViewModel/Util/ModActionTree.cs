@@ -17,7 +17,7 @@ namespace BSU.Core.ViewModel.Util
             get => _selection;
             private set
             {
-                if (value.Equals(_selection)) return;
+                if (Equals(value, _selection)) return;
                 _selection = value;
                 OnPropertyChanged();
             }
@@ -80,7 +80,7 @@ namespace BSU.Core.ViewModel.Util
         {
             IsOpen = false;
             SetIsSelected(action);
-            if (Selection.Equals(action)) return;
+            if (Equals(Selection, action)) return;
             Selection = action;
             SelectionChanged?.Invoke();
         }

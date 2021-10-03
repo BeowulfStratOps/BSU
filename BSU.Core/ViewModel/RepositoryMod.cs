@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Sync;
@@ -12,6 +13,7 @@ namespace BSU.Core.ViewModel
     public class RepositoryMod : ObservableBase
     {
         internal readonly IModelRepositoryMod Mod;
+        private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
 
         public string Name { get; }
@@ -28,22 +30,18 @@ namespace BSU.Core.ViewModel
         {
             DownloadIdentifier = Mod.Identifier;
             Mod.SetSelection(value.AsSelection);
-            _viewModelService.Update(); // TODO: await? pls? somewhere? :(
+            _viewModelService.AsyncVoidExecutor.Execute(_viewModelService.Update);
         }
 
         internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)
         {
             Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
             Mod = mod;
+            _model = model;
             _viewModelService = viewModelService;
             Name = mod.Identifier;
 
             DownloadIdentifier = mod.DownloadIdentifier;
-
-            foreach (var storage in model.GetStorages())
-            {
-                AddStorage(storage);
-            }
         }
 
         private async Task<ModAction> UpdateAction(IModelStorageMod storageMod)
@@ -127,7 +125,7 @@ namespace BSU.Core.ViewModel
                 Mod.DownloadIdentifier = value;
                 _downloadIdentifier = value;
                 OnPropertyChanged();
-                UpdateErrorText(); // TODO: await :(
+                _viewModelService.AsyncVoidExecutor.Execute(UpdateErrorText);
             }
         }
 
@@ -147,6 +145,10 @@ namespace BSU.Core.ViewModel
         public async Task Load()
         {
             DisplayName = await Mod.GetDisplayName(CancellationToken.None);
+            foreach (var storage in await _model.GetStorages().WhereAsync(s => s.IsAvailable()))
+            {
+                AddStorage(storage);
+            }
         }
 
         public async Task Update()

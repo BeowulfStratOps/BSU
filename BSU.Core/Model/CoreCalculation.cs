@@ -12,19 +12,24 @@ namespace BSU.Core.Model
         internal static async Task<ModActionEnum> GetModAction(IModelRepositoryMod repoMod,
             IModelStorageMod storageMod, CancellationToken cancellationToken)
         {
-            // TODO: lock to make sure we get valid state?
+            // TODO: handle errors
+
+            // make sure that we abort if the state changes in between calls
+            // TODO: might not be needed right now. probably needs some more investigation
+            var stateToken = storageMod.GetStateToken();
+            var combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, stateToken).Token;
 
             async Task<bool> CheckMatch()
             {
-                var repoTask = repoMod.GetMatchHash(cancellationToken);
-                var storageTask = storageMod.GetMatchHash(cancellationToken);
+                var repoTask = repoMod.GetMatchHash(combinedToken);
+                var storageTask = storageMod.GetMatchHash(combinedToken);
                 return (await repoTask).IsMatch(await storageTask);
             }
 
             async Task<bool> CheckVersion()
             {
-                var repoTask = repoMod.GetVersionHash(cancellationToken);
-                var storageTask = storageMod.GetVersionHash(cancellationToken);
+                var repoTask = repoMod.GetVersionHash(combinedToken);
+                var storageTask = storageMod.GetVersionHash(combinedToken);
                 return (await repoTask).IsMatch(await storageTask);
             }
 

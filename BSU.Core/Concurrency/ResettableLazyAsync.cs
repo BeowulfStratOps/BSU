@@ -93,7 +93,8 @@ namespace BSU.Core.Concurrency
 
             await Task.WhenAny(task, cancellationToken.AsTask());
             cancellationToken.ThrowIfCancellationRequested();
-            return task.Result;
+
+            return task.GetAwaiter().GetResult();
         }
 
         public async Task Set(T value)

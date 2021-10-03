@@ -24,7 +24,19 @@ namespace BSU.Core.ViewModel
 
         public string Path { get; }
 
+        public string Error
+        {
+            get => _error;
+            set
+            {
+                if (_error == value) return;
+                _error = value;
+                OnPropertyChanged();
+            }
+        }
+
         private readonly IViewModelService _viewModelService;
+        private string _error;
 
         internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService)
         {
@@ -45,6 +57,8 @@ namespace BSU.Core.ViewModel
             {
                 Mods.Add(new StorageMod(mod));
             }
+
+            Error = await _storage.IsAvailable() ? null : "Failed to load";
         }
 
         private async Task DoDelete()

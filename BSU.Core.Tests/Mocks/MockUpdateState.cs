@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.ViewModel;
 
@@ -20,17 +21,17 @@ namespace BSU.Core.Tests.Mocks
             State = UpdateState.Created;
         }
 
-        public Task Prepare(CancellationToken cancellationToken)
+        public Task<UpdateResult> Prepare(CancellationToken cancellationToken)
         {
             if (State != UpdateState.Created) throw new InvalidOperationException();
             if (_errorPrepare)
                 return Error();
             else
                 State = UpdateState.Prepared;
-            return Task.CompletedTask;
+            return Task.FromResult(UpdateResult.Success);
         }
 
-        public Task Update(CancellationToken cancellationToken)
+        public Task<UpdateResult> Update(CancellationToken cancellationToken)
         {
             if (State != UpdateState.Prepared) throw new InvalidOperationException();
             CommitCalled = true;
@@ -42,15 +43,19 @@ namespace BSU.Core.Tests.Mocks
                 OnEnded?.Invoke();
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(UpdateResult.Success);
         }
 
         public bool IsPrepared => State == UpdateState.Prepared;
+        public IModelStorageMod GetStorageMod()
+        {
+            throw new NotImplementedException();
+        }
 
-        private Task Error()
+        private Task<UpdateResult> Error()
         {
             OnEnded?.Invoke();
-            return Task.FromException(new TestException());
+            return Task.FromException<UpdateResult>(new TestException());
         }
 
         public void Abort()

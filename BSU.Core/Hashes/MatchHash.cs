@@ -27,16 +27,7 @@ namespace BSU.Core.Hashes
         // TODO: use more specialized interface to get files
         public static async Task<MatchHash> CreateAsync(IStorageMod mod, CancellationToken cancellationToken)
         {
-            Stream modCpp = null;
-            try
-            {
-                modCpp = await mod.OpenFile("/mod.cpp", FileAccess.Read, cancellationToken);
-            }
-            catch (IOException)
-            {
-                // File is in use. nothing we can do for now
-                // TODO: cache to the rescue!
-            }
+            var modCpp = await mod.OpenFile("/mod.cpp", FileAccess.Read, cancellationToken);
 
             string name = null;
 

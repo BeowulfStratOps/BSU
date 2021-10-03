@@ -20,5 +20,6 @@ namespace BSU.Core.Model
         PersistedSelection AsStorageIdentifier();
         Task<bool> HasMod(string downloadIdentifier);
         string GetLocation();
+        Task<bool> IsAvailable();
     }
 }

@@ -23,5 +23,6 @@ namespace BSU.Core.Model
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         StorageModStateEnum GetState();
         Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken);
+        CancellationToken GetStateToken();
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Model
 {
@@ -17,13 +19,17 @@ namespace BSU.Core.Model
         public Guid Identifier { get; }
         public string Location { get; }
         private readonly List<IModelStorageMod> _mods = new();
+        private readonly IErrorPresenter _errorPresenter;
+        private readonly ILogger _logger;
 
         private readonly Task _loading;
 
-        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IModelStructure modelStructure)
+        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IModelStructure modelStructure, IErrorPresenter errorPresenter)
         {
+            _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
             _modelStructure = modelStructure;
+            _errorPresenter = errorPresenter;
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
@@ -33,18 +39,40 @@ namespace BSU.Core.Model
 
         private async Task Load(CancellationToken cancellationToken)
         {
-            foreach (var (identifier, implementation) in await Implementation.GetMods(cancellationToken))
+            try
             {
-                var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
-                    this, Implementation.CanWrite(), _modelStructure);
-                _mods.Add(modelMod);
-                ModAdded?.Invoke(modelMod);
+                foreach (var (identifier, implementation) in await Implementation.GetMods(cancellationToken))
+                {
+                    var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
+                        this, Implementation.CanWrite(), _modelStructure);
+                    _mods.Add(modelMod);
+                    ModAdded?.Invoke(modelMod);
+                }
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                _errorPresenter.AddError($"Failed to load storage {Name}, directory '{Location}' could not be found.");
+                _logger.Error(e);
+                throw;
+            }
+            catch (Exception e)
+            {
+                _errorPresenter.AddError($"Failed to load storage {Name}.");
+                _logger.Error(e);
+                throw;
             }
         }
 
         public async Task<List<IModelStorageMod>> GetMods()
         {
-            await _loading;
+            try
+            {
+                await _loading;
+            }
+            catch (Exception e)
+            {
+                return new List<IModelStorageMod>();
+            }
             return new List<IModelStorageMod>(_mods);
         }
 
@@ -73,6 +101,18 @@ namespace BSU.Core.Model
         }
 
         public string GetLocation() => Location;
+        public async Task<bool> IsAvailable()
+        {
+            try
+            {
+                await _loading;
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
 
         public event Action<IModelStorageMod> ModAdded;
     }

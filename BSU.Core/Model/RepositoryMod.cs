@@ -93,9 +93,7 @@ namespace BSU.Core.Model
         public async Task<List<(IModelStorageMod mod, ModActionEnum action)>> GetModActions(CancellationToken cancellationToken)
         {
             var mods = await _modelStructure.GetStorageMods();
-            var tasks = mods.Select(async m => (m, await GetActionForMod(m, cancellationToken))).ToList();
-            await Task.WhenAll(tasks);
-            return tasks.Select(t => t.Result).ToList();
+            return (await mods.SelectAsync(async m => (m, await GetActionForMod(m, cancellationToken)))).ToList();
         }
 
         public async Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken)
@@ -121,13 +119,26 @@ namespace BSU.Core.Model
             // TODO: check previously selected storage for download?
 
             var (result, selectedMod) = await CoreCalculation.AutoSelect(this, storageMods, cancellationToken);
-            RepositoryModActionSelection selection = result switch
+            RepositoryModActionSelection selection;
+
+            switch (result)
             {
-                AutoSelectResult.Success => new RepositoryModActionStorageMod(selectedMod),
-                AutoSelectResult.Download => new RepositoryModActionDownload(_modelStructure.GetStorages().First()),
-                AutoSelectResult.None => null,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                case AutoSelectResult.Success:
+                    selection = new RepositoryModActionStorageMod(selectedMod);
+                    break;
+                case AutoSelectResult.Download:
+                    var availableStorages = (await _modelStructure.GetStorages().WhereAsync(s => s.IsAvailable())).ToList();
+                    selection = null;
+                    if (availableStorages.Any())
+                        selection = new RepositoryModActionDownload(availableStorages.First());
+                    break;
+                case AutoSelectResult.None:
+                    selection = null;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             Selection = selection;
             return selection;
         }

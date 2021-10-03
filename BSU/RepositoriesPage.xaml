@@ -11,7 +11,7 @@
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoriesPage}">
     <DockPanel>
         <!-- TODO: figure out how to reuse this for all pages -->
-        <DockPanel DockPanel.Dock="Top">
+        <DockPanel DockPanel.Dock="Top" LastChildFill="False">
             <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding ShowStorage}" Svg="{StaticResource SvgStorage}" />
         </DockPanel>
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,36 +69,51 @@ namespace BSU.Core.Sync
             return new RepoSync(allActions, logger);
         }
 
-        public async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
+        public async Task<UpdateResult> UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
         {
             var tasks = _allActions.Select(a =>
                 ConcurrencyThrottle.Do(() => a.DoAsync(cancellationToken), cancellationToken));
             var whenAll = Task.WhenAll(tasks);
 
-            await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () =>
+            try
             {
-                long sumDownloadDone = 0;
-                long sumDownloadTotal = 0;
-                long sumUpdateDone = 0;
-                long sumUpdateTotal = 0;
-
-                foreach (var syncWorkUnit in _allActions)
-                {
-                    // not synchronized, but that's ok. we're just looking for a snapshot
-                    var stats = syncWorkUnit.GetStats();
-                    sumDownloadDone += stats.DownloadDone;
-                    sumDownloadTotal += stats.DownloadTotal;
-                    sumUpdateDone += stats.UpdateDone;
-                    sumUpdateTotal += stats.UpdateTotal;
-                }
-
-                _logger.Trace("Progress: Updating");
-                progress?.Report(new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal,
-                    sumDownloadDone, sumUpdateDone));
-            });
+                await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () => ProgressCallback(progress));
+            }
+            catch (IOException e) when ((e.HResult & 0xFFFF) == 32) // 32: sharing violation, aka open in arma
+            {
+                _logger.Error(e);
+                return UpdateResult.FailedSharingViolation;
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+                return UpdateResult.Failed;
+            }
 
             _logger.Trace("Progress: None");
             progress?.Report(new FileSyncStats(FileSyncState.None));
+            return UpdateResult.Success;
+        }
+
+        private void ProgressCallback(IProgress<FileSyncStats> progress)
+        {
+            long sumDownloadDone = 0;
+            long sumDownloadTotal = 0;
+            long sumUpdateDone = 0;
+            long sumUpdateTotal = 0;
+
+            foreach (var syncWorkUnit in _allActions)
+            {
+                // not synchronized, but that's ok. we're just looking for a snapshot
+                var stats = syncWorkUnit.GetStats();
+                sumDownloadDone += stats.DownloadDone;
+                sumDownloadTotal += stats.DownloadTotal;
+                sumUpdateDone += stats.UpdateDone;
+                sumUpdateTotal += stats.UpdateTotal;
+            }
+
+            _logger.Trace("Progress: Updating");
+            progress?.Report(new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal, sumDownloadDone, sumUpdateDone));
         }
     }
 }

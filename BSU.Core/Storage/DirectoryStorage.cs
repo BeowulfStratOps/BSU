@@ -26,13 +26,13 @@ namespace BSU.Core.Storage
         public DirectoryStorage(string path)
         {
             _path = path;
-            if (!new DirectoryInfo(path).Exists) throw new DirectoryNotFoundException();
             _logger = LogHelper.GetLoggerWithIdentifier(this, path.Split(new[]{'/','\\'})[^1]);
             _loading = Task.Run(() => Load(CancellationToken.None));
         }
 
         private async Task Load(CancellationToken cancellationToken)
         {
+            if (!new DirectoryInfo(_path).Exists) throw new DirectoryNotFoundException();
             // TODO: async?
             _mods = new DirectoryInfo(_path).EnumerateDirectories("@*")
                 .ToDictionary(di => di.Name, di => (IStorageMod) new DirectoryMod(di, this));

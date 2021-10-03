@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using Xunit;
 using Xunit.Abstractions;
@@ -159,6 +160,31 @@ namespace BSU.Core.Tests.Concurrency
             await lazy.Set("set");
 
             Assert.Equal("set", await lazy.GetAsync(CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task Exception()
+        {
+            var lazy = new ResettableLazyAsync<string>(async ct => throw new TestException());
+
+            await Assert.ThrowsAsync<TestException>(() => lazy.GetAsync(CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task ExceptionCached()
+        {
+            var lazy = new ResettableLazyAsync<string>(async ct => throw new TestException());
+
+            try
+            {
+                await lazy.GetAsync(CancellationToken.None);
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            await Assert.ThrowsAsync<TestException>(() => lazy.GetAsync(CancellationToken.None));
         }
     }
 }

@@ -64,6 +64,7 @@ namespace BSU.Core.Storage
         /// <returns></returns>
         public async Task<Stream> OpenFile(string path, FileAccess access, CancellationToken cancellationToken)
         {
+            //throw new Exception("TALK TO DA HAND");
             try
             {
                 _logger.Trace("Reading file {0}", path);
@@ -76,7 +77,7 @@ namespace BSU.Core.Storage
                     Directory.CreateDirectory(new FileInfo(GetFullFilePath(path)).Directory.FullName);
                 }
                 // TODO: async?
-                return File.Open(GetFullFilePath(path), FileMode.OpenOrCreate);
+                return File.Open(GetFullFilePath(path), FileMode.OpenOrCreate, access, (access & FileAccess.Write) != 0 ? FileShare.None : FileShare.Read);
             }
             catch (FileNotFoundException)
             {

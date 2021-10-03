@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
         xmlns:gui="clr-namespace:BSU.GUI"
+        xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
         mc:Ignorable="d"
         Title="BSO Sync Utility" Height="450" Width="800" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
         Closing="MainWindow_OnClosing" WindowState="Normal">
@@ -30,6 +31,20 @@
                 <MenuItem Header="_Show Logs"></MenuItem>
             </MenuItem>
         </Menu>
-        <ContentControl Content="{Binding Content}"></ContentControl>
+        <Grid>
+            <ContentControl Content="{Binding Content}"></ContentControl>
+            <ItemsControl VerticalAlignment="Bottom" ItemsSource="{Binding Errors}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="5" Padding="5" Background="#DDFF0000" CornerRadius="3">
+                            <DockPanel LastChildFill="False">
+                                <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Text}" />
+                                <userControls:SvgButton Width="20" Height="20" DockPanel.Dock="Right" Command="{Binding Dismiss}" Svg="{StaticResource SvgClose}"/>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
     </DockPanel>
 </Window>

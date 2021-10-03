@@ -6,14 +6,19 @@
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:components="clr-namespace:BSU.GUI.Components"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
+             xmlns:converters="clr-namespace:BSU.GUI.Converters"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Storage}">
     <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
+        <Border.Resources>
+            <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
+        </Border.Resources>
         <DockPanel>
             <DockPanel Dock="Top">
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
                     <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
                     <TextBlock Text="{Binding Path}"></TextBlock>
+                    <TextBlock Foreground="Red" Visibility="{Binding Error, Converter={StaticResource NullToVisibility}}" Text="{Binding Error}" />
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                     <userControls:SvgButton DockPanel.Dock="Right" Width="50" Height="50" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}"/>

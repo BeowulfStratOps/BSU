@@ -31,6 +31,7 @@ namespace BSU.Core.Model
 
         private readonly SemaphoreSlim _stateLock = new(1);
         private StorageModStateEnum _state = StorageModStateEnum.Created; // TODO: should not be directly accessible
+        private CancellationTokenSource _stateCts = new();
 
         private StorageModStateEnum State
         {
@@ -97,6 +98,12 @@ namespace BSU.Core.Model
             return result;
         }
 
+        public CancellationToken GetStateToken()
+        {
+            // becomes invalid when the state changes
+            return _stateCts.Token;
+        }
+
         private UpdateTarget UpdateTarget
         {
             get => _updateTarget;
@@ -134,6 +141,8 @@ namespace BSU.Core.Model
         private async Task SetState(StorageModStateEnum newState, StorageModStateEnum[] acceptableCurrent, Func<Task> setValues = null)
         {
             await _stateLock.WaitAsync();
+            _stateCts.Cancel();
+            _stateCts = new CancellationTokenSource();
             // TODO: handle errors?
             try
             {

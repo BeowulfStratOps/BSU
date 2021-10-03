@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using BSU.Core.ViewModel;
 using BSU.GUI.Actions;
 using NLog;
 using NLog.Config;
@@ -19,30 +18,17 @@ namespace BSU.GUI
     public partial class MainWindow : Window
     {
         private readonly Core.Core _core;
-        private readonly ViewModel _viewModel;
 
         public MainWindow()
         {
             Thread.CurrentThread.Name = "main";
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             _core = new Core.Core(settingsFile);
-            _viewModel = _core.ViewModel;
-            _viewModel.InteractionService = new InteractionService();
-            DataContext = _viewModel;
+            var viewModel = _core.ViewModel;
+            viewModel.InteractionService = new InteractionService();
+            DataContext = viewModel;
             InitializeComponent();
-            Run(); // TODO: this is terrible. it should be awaited _somewhere_
-        }
-
-        private async void Run()
-        {
-            try
-            {
-                await _viewModel.Load();
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
+            viewModel.Run();
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
