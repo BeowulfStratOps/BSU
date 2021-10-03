@@ -13,6 +13,9 @@
              x:Name="RepoMod"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
     <Border Margin="2">
+        <Border.Resources>
+            <converters:ActionToTextConverter x:Key="ActionToText"></converters:ActionToTextConverter>
+        </Border.Resources>
         <DockPanel>
             <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
             <TextBlock DockPanel.Dock="Left" Margin="4,0" Text="{Binding Path=DisplayName}"></TextBlock>
@@ -27,7 +30,7 @@
                                 <TextBlock>Do Nothing</TextBlock>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type viewModel:SelectMod}">
-                                <TextBlock>Update <Run Text="{Binding StorageName, Mode=OneWay}" /> / <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
+                                <TextBlock><Run Text="{Binding ActionType, Mode=OneWay, Converter={StaticResource ActionToText}}" /> <Run Text="{Binding StorageName, Mode=OneWay}" /> / <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
                                 <StackPanel Orientation="Horizontal">
@@ -39,7 +42,7 @@
                     </ContentControl>
                 </DockPanel>
 
-                <userControls:ComboBoxPopup IsOpen="{Binding Actions.IsOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=ComboBoxSelected}">
+                <userControls:ComboBoxPopup IsOpen="{Binding Actions.IsOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=ComboBoxSelected}" MinWidth="{Binding ElementName=ComboBoxSelected, Path=ActualWidth}">
                     <Border BorderBrush="Black" BorderThickness="1">
                         <ItemsControl Background="White" ItemsSource="{Binding Actions.Storages}">
                             <ItemsControl.Resources>

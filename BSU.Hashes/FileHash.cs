@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace BSU.Hashes
 {
@@ -12,8 +13,13 @@ namespace BSU.Hashes
 
         public override bool Equals(object obj)
         {
-            if (!(obj is FileHash otherHash)) return false;
+            if (obj is not FileHash otherHash) return false;
             return GetBytes().SequenceEqual(otherHash.GetBytes());
+        }
+
+        public override string ToString()
+        {
+            return BitConverter.ToString(GetBytes()).Replace("-", "");
         }
 
         /// <summary>

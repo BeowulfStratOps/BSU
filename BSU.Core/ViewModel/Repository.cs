@@ -155,17 +155,6 @@ namespace BSU.Core.ViewModel
         public DelegateCommand ShowStorage { get; }
         public Guid Identifier { get; }
 
-        private string _title = "Loading...";
-        public string Title
-        {
-            get => _title;
-            set
-            {
-                if (_title == value) return;
-                _title = value;
-                OnPropertyChanged();
-            }
-        }
 
         private string _serverUrl = "Loading...";
 
@@ -199,7 +188,33 @@ namespace BSU.Core.ViewModel
 
         private void DoPlay()
         {
-            throw new NotImplementedException();
+            string warningMessage = null;
+            switch (CalculatedState.State)
+            {
+                case CalculatedRepositoryStateEnum.NeedsSync:
+                    warningMessage = "Your mods are not up to date.";
+                    break;
+                case CalculatedRepositoryStateEnum.Ready:
+                    break; // ok
+                case CalculatedRepositoryStateEnum.Loading:
+                    warningMessage = "The sync utility is still checking your mods.";
+                    break;
+                case CalculatedRepositoryStateEnum.ReadyPartial:
+                    warningMessage = "You have disabled some mods.";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (warningMessage != null)
+            {
+                warningMessage += " Are your sure you want to launch the game?";
+                var goAhead = _viewModelService.InteractionService.YesNoPopup(warningMessage, "Launch Game");
+                if (!goAhead) return;
+            }
+
+            // TODO: implement
+            _viewModelService.InteractionService.MessagePopup("Launching the game is not supported yet.", "Launch Game");
         }
 
         private void DoPause()
@@ -217,8 +232,15 @@ No - Keep local mods
 Cancel - Do not remove this repository";
 
             var removeData = _viewModelService.InteractionService.YesNoCancelPopup(text, "Remove Repository");
-            if (removeData != null) // not canceled
-                _model.DeleteRepository(_repository, (bool)removeData);
+            if (removeData == null) return;
+
+            if (removeData == true)
+            {
+                _viewModelService.InteractionService.MessagePopup("Removing mods is not supported yet.", "Not supported");
+                return;
+            }
+
+            _model.DeleteRepository(_repository, (bool)removeData);
         }
 
         private async Task DoUpdate()
@@ -280,7 +302,7 @@ Cancel - Do not remove this repository";
         {
             try
             {
-                (Title, ServerUrl) = await _repository.GetServerInfo(CancellationToken.None);
+                (_, ServerUrl) = await _repository.GetServerInfo(CancellationToken.None);
                 var mods = await _repository.GetMods();
                 foreach (var mod in mods)
                 {
@@ -290,7 +312,6 @@ Cancel - Do not remove this repository";
             }
             catch (Exception)
             {
-                Title = "";
                 ServerUrl = "";
             }
         }

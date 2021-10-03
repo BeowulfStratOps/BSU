@@ -72,6 +72,14 @@ Cancel - Do not remove this storage";
 
             var removeMods =  _viewModelService.InteractionService.YesNoCancelPopup(text, "Remove Storage");
             if (removeMods == null) return;
+
+
+            if (removeMods == true)
+            {
+                _viewModelService.InteractionService.MessagePopup("Removing mods is not supported yet.", "Not supported");
+                return;
+            }
+
             _model.DeleteStorage(_storage, (bool) removeMods);
         }
 

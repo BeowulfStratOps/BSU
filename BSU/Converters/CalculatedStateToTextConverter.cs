@@ -1,0 +1,32 @@
+﻿using System;
+using System.Globalization;
+using System.Windows;
+using System.Windows.Data;
+using BSU.Core.Model;
+
+namespace BSU.GUI.Converters
+{
+    public class CalculatedStateToTextConverter : IValueConverter
+    {
+        public object Convert(object objValue, Type targetType, object parameter, CultureInfo culture)
+        {
+            var value = (CalculatedRepositoryState)objValue;
+            return value.State switch
+            {
+                CalculatedRepositoryStateEnum.NeedsSync => "Requires Syncing",
+                CalculatedRepositoryStateEnum.Ready => "Ready",
+                CalculatedRepositoryStateEnum.RequiresUserIntervention => "Requires Changes",
+                CalculatedRepositoryStateEnum.Syncing => "Syncing...",
+                CalculatedRepositoryStateEnum.Loading => "Loading...",
+                CalculatedRepositoryStateEnum.ReadyPartial => "Ready (partial preset)",
+                CalculatedRepositoryStateEnum.Error => "Failed to load",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+}

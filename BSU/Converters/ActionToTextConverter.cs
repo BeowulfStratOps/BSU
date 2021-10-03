@@ -6,7 +6,7 @@ using BSU.Core.Model;
 
 namespace BSU.GUI.Converters
 {
-    public class ActionToColorConverter : IValueConverter
+    public class ActionToTextConverter : IValueConverter
     {
         public object Convert(object objValue, Type targetType, object parameter, CultureInfo culture)
         {
@@ -17,13 +17,12 @@ namespace BSU.GUI.Converters
                 case ModActionEnum.ContinueUpdate:
                 case ModActionEnum.AbortAndUpdate:
                 case ModActionEnum.Await:
-                    return new SolidColorBrush(Colors.Blue);
+                case ModActionEnum.AbortActiveAndUpdate:
+                    return "Update";
                 case ModActionEnum.Use:
-                    return new SolidColorBrush(Colors.Green);
+                    return "Use";
                 case ModActionEnum.Unusable:
                     throw new InvalidOperationException();
-                case ModActionEnum.AbortActiveAndUpdate:
-                    return new SolidColorBrush(Colors.Red);
                 default:
                     throw new ArgumentOutOfRangeException();
             }

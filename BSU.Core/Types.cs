@@ -12,8 +12,7 @@ namespace BSU.Core
         private readonly Dictionary<string, Func<string, IRepository>> _repoTypes =
             new Dictionary<string, Func<string, IRepository>>
             {
-                {"BSO", url => new BsoRepo(url)},
-                {"FILE", path => new FileRepository(path)}
+                {"BSO", url => new BsoRepo(url)}
             };
 
         private readonly Dictionary<string, Func<string, IStorage>> _storageTypes =
