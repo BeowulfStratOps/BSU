@@ -78,7 +78,6 @@ namespace BSU.Core.ViewModel
         }
 
         public IInteractionService InteractionService { get; set; }
-        public IAsyncVoidExecutor AsyncVoidExecutor { get; } = new AsyncVoidExecutor();
 
         public ObservableCollection<DismissError> Errors { get; } = new();
 

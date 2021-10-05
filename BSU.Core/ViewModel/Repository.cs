@@ -176,7 +176,7 @@ namespace BSU.Core.ViewModel
             _viewModelService = viewModelService;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete, false);
-            Update = new DelegateCommand(DoUpdate);
+            Update = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoUpdate));
             Back = new DelegateCommand(viewModelService.NavigateBack);
             ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));

@@ -6,14 +6,14 @@ namespace BSU.GUI.Actions
 {
     public class InteractionService : IInteractionService
     {
-        public bool? AddRepository(AddRepository viewModel)
+        public bool AddRepository(AddRepository viewModel)
         {
-            return new AddRepositoryDialog(viewModel).ShowDialog();
+            return (bool)new AddRepositoryDialog(viewModel).ShowDialog();
         }
 
-        public bool? AddStorage(AddStorage viewModel)
+        public bool AddStorage(AddStorage viewModel)
         {
-            return new AddStorageDialog(viewModel).ShowDialog();
+            return (bool)new AddStorageDialog(viewModel).ShowDialog();
         }
 
         public void MessagePopup(string message, string title)
@@ -35,6 +35,11 @@ namespace BSU.GUI.Actions
         {
             var q = MessageBox.Show(message, title, MessageBoxButton.YesNo);
             return q == MessageBoxResult.Yes;
+        }
+
+        public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

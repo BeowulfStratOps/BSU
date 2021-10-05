@@ -5,30 +5,53 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
         mc:Ignorable="d"
-        Title="Add Repository" Width="350" d:DataContext="{d:DesignInstance viewModel:AddRepository}"
-        SizeToContent="Height">
+        Title="Add Preset" Width="500" d:DataContext="{d:DesignInstance viewModel:AddRepository}"
+        SizeToContent="Height" ResizeMode="NoResize"
+        x:Name="Window">
     <Grid Margin="15">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
-        <Label>Name:</Label>
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}"></TextBox>
-        <Label Grid.Row="1" Grid.Column="0">Url:</Label>
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Url}"></TextBox>
-        <Label Grid.Row="2" Grid.Column="0">Type:</Label>
-        <ComboBox Grid.Row="2" Grid.Column="1">
-            <ComboBoxItem IsSelected="True">FILE</ComboBoxItem>
-            <ComboBoxItem>BSO</ComboBoxItem>
+
+
+        <Label Grid.Row="0" Grid.Column="0">Url:</Label>
+        <ComboBox Grid.Row="0" Grid.Column="1" IsEditable="True" Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding KnownUrls}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        <Run FontWeight="Bold" Text="{Binding Title, Mode=OneWay}" />
+                        <Run Text="{Binding Url, Mode=OneWay}" />
+                    </TextBlock>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
         </ComboBox>
-        <WrapPanel Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right" Margin="15">
-            <Button IsDefault="True" Margin="15, 0" MinWidth="50" Click="ButtonBase_OnClick">Ok</Button>
+
+
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid Margin="0,0,0,6" >
+                <TextBlock Text="{Binding CheckResult}"></TextBlock>
+                <TextBlock Foreground="Red" Text="{Binding CheckError}"></TextBlock>
+            </Grid>
+        </Grid>
+
+        <Label Grid.Row="2" Grid.Column="0">Name:</Label>
+        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+
+        <Grid Grid.Row="3" Grid.Column="1">
+            <TextBlock Foreground="Red" Text="{Binding NameValidation}"></TextBlock>
+        </Grid>
+
+        <WrapPanel Grid.Row="4" Grid.Column="1" HorizontalAlignment="Right" Margin="15">
+            <Button IsDefault="True" Margin="15, 0" MinWidth="50" Command="{Binding Ok}" CommandParameter="{Binding ElementName=Window}">Ok</Button>
             <Button IsCancel="True" MinWidth="50">Cancel</Button>
         </WrapPanel>
     </Grid>

@@ -32,12 +32,19 @@ namespace BSU.Core.ViewModel
 
         private void DoAddRepository()
         {
-            var vm = new AddRepository();
-            var doAdd = _viewModelService.InteractionService.AddRepository(vm);;
+            var vm = new AddRepository(_model);
+            if (!_viewModelService.InteractionService.AddRepository(vm)) return;
 
-            if (doAdd != true) return;
-            var repo = _model.AddRepository("BSO", vm.Url, vm.Name);
-            Repositories.Add(new Repository(repo, _model, _viewModelService));
+            var repo = _model.AddRepository("BSO", vm.Url.Trim(), vm.Name.Trim());
+            var vmRepo = new Repository(repo, _model, _viewModelService);
+            Repositories.Add(vmRepo);
+
+            var selectStorageVm = new SelectRepositoryStorage(repo, _model);
+            if (!_viewModelService.InteractionService.SelectRepositoryStorage(selectStorageVm)) return;
+
+            if (!vmRepo.Update.CanExecute(null)) return;
+
+            vmRepo.Update.Execute(null);
         }
 
         public async Task Update()

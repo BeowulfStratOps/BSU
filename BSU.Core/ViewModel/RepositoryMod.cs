@@ -30,7 +30,7 @@ namespace BSU.Core.ViewModel
         {
             DownloadIdentifier = Mod.Identifier;
             Mod.SetSelection(value.AsSelection);
-            _viewModelService.AsyncVoidExecutor.Execute(_viewModelService.Update);
+            AsyncVoidExecutor.Execute(_viewModelService.Update);
         }
 
         internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)
@@ -125,7 +125,7 @@ namespace BSU.Core.ViewModel
                 Mod.DownloadIdentifier = value;
                 _downloadIdentifier = value;
                 OnPropertyChanged();
-                _viewModelService.AsyncVoidExecutor.Execute(UpdateErrorText);
+                AsyncVoidExecutor.Execute(UpdateErrorText);
             }
         }
 

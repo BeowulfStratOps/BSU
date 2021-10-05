@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Persistence;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
@@ -71,6 +74,11 @@ namespace BSU.Core.Model
         public void ConnectErrorPresenter(IErrorPresenter presenter)
         {
             _errorPresenter.Connect(presenter);
+        }
+
+        public async Task<ServerInfo> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
+        {
+            return await _types.CheckUrl(url, cancellationToken);
         }
 
         public void DeleteRepository(IModelRepository repository, bool removeMods)

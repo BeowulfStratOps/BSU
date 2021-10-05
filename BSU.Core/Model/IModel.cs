@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
@@ -13,5 +15,6 @@ namespace BSU.Core.Model
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();
         void ConnectErrorPresenter(IErrorPresenter presenter);
+        Task<ServerInfo> CheckRepositoryUrl(string url, CancellationToken cancellationToken);
     }
 }

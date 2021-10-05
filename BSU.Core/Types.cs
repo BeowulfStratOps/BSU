@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.BSO;
 using BSU.Core.Storage;
 using BSU.CoreCommon;
@@ -44,6 +46,11 @@ namespace BSU.Core
             if (!_storageTypes.TryGetValue(stroageType, out var create))
                 throw new NotSupportedException($"Repo type {stroageType} is not supported.");
             return create(path);
+        }
+
+        public async Task<ServerInfo> CheckUrl(string url, CancellationToken cancellationToken)
+        {
+            return await BsoRepo.CheckUrl(url, cancellationToken);
         }
     }
 }

@@ -40,7 +40,7 @@ namespace BSU.Core.ViewModel
 
         internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService)
         {
-            Delete = new DelegateCommand(DoDelete);
+            Delete = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoDelete));
             ModelStorage = storage;
             _model = model;
             _viewModelService = viewModelService;
@@ -63,6 +63,12 @@ namespace BSU.Core.ViewModel
 
         private async Task DoDelete()
         {
+            if (!await _storage.IsAvailable()) // Errored loading, probably because the folder doesn't exist anymore
+            {
+                _model.DeleteStorage(_storage, false);
+                return;
+            }
+
             // TODO: this doesn't look like it belongs here
             var text = $@"Removing storage {Name}. Do you want to delete the files?
 

@@ -57,5 +57,20 @@ namespace BSU.BSO
             await _loading;
             return new ServerInfo(_serverFile.ServerName, _serverFile.ServerAddress);
         }
+
+        public static async Task<ServerInfo> CheckUrl(string url, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                var serverFileJson = await client.GetStringAsync(url, cancellationToken);
+                var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
+                return new ServerInfo(serverFile.ServerName, serverFile.ServerAddress);
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

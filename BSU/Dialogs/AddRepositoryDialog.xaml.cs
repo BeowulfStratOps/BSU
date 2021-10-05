@@ -1,9 +1,10 @@
 ﻿using System.Windows;
 using BSU.Core.ViewModel;
+using BSU.Core.ViewModel.Util;
 
 namespace BSU.GUI.Dialogs
 {
-    public partial class AddRepositoryDialog : Window
+    public partial class AddRepositoryDialog : Window, ICloseable
     {
         public AddRepositoryDialog(AddRepository viewModel)
         {
@@ -12,9 +13,9 @@ namespace BSU.GUI.Dialogs
             Owner = Application.Current.MainWindow;
         }
 
-        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        public void Close(bool result)
         {
-            DialogResult = true;
+            DialogResult = result;
         }
     }
 }
