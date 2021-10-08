@@ -36,7 +36,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
             return storageMod;
         }
-        private (AutoSelectResult result, IModelStorageMod mod) AutoSelect(IModelRepositoryMod repoMod,
+        private IModelStorageMod AutoSelect(IModelRepositoryMod repoMod,
             params IModelStorageMod[] storageMods)
         {
             return CoreCalculation.AutoSelect(repoMod, storageMods.ToList(), CancellationToken.None).Result;
@@ -48,9 +48,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var repoMod = new MockModelRepositoryMod(1, 1);
             var storageMod = FromAction(ModActionEnum.Use);
 
-            var (result, mod) = AutoSelect(repoMod, storageMod);
+            var mod = AutoSelect(repoMod, storageMod);
 
-            Assert.Equal(AutoSelectResult.Success, result);
             Assert.Equal(storageMod, mod);
         }
 
@@ -61,9 +60,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var storageMod = FromAction(ModActionEnum.Use);
             repoMod.Conflicts[storageMod] = new List<IModelRepositoryMod> { new MockModelRepositoryMod(1, 3) }; // TODO: this whole conflict thing is kinda messy..
 
-            var (result, _) = AutoSelect(repoMod, storageMod);
+            var result = AutoSelect(repoMod, storageMod);
 
-            Assert.Equal(AutoSelectResult.None, result);
+            Assert.Null(result);
         }
 
         [Fact]
@@ -73,9 +72,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var storageMod = FromAction(ModActionEnum.Use);
             var storageMod2 = FromAction(ModActionEnum.Update);
 
-            var (result, mod) = AutoSelect(repoMod, storageMod);
+            var mod = AutoSelect(repoMod, storageMod);
 
-            Assert.Equal(AutoSelectResult.Success, result);
             Assert.Equal(storageMod, mod);
         }
     }

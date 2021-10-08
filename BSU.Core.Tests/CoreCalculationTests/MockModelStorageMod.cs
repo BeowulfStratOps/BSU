@@ -69,7 +69,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public CancellationToken GetStateToken()
         {
-            throw new NotImplementedException();
+            return new CancellationToken();
         }
     }
 }

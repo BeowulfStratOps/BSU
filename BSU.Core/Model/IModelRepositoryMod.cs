@@ -12,7 +12,7 @@ namespace BSU.Core.Model
     internal interface IModelRepositoryMod
     {
         public void SetSelection(RepositoryModActionSelection selection);
-        public Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken);
+        public Task<RepositoryModActionSelection> GetSelection(bool reset = false, CancellationToken cancellationToken = default);
         string DownloadIdentifier { get; set; }
         string Identifier { get; }
         IModelRepository ParentRepository { get; }

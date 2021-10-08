@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
+
 namespace BSU.Core.Model
 {
     public static class CoreCalculation
@@ -60,7 +62,7 @@ namespace BSU.Core.Model
             }
         }
 
-        internal static async Task<(AutoSelectResult result, IModelStorageMod mod)> AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelStorageMod> storageMods, CancellationToken cancellationToken)
+        internal static async Task<IModelStorageMod> AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelStorageMod> storageMods, CancellationToken cancellationToken)
         {
             async Task<(IModelStorageMod mod, ModActionEnum action, bool hasConflcts)> GetModInfo(IModelStorageMod mod)
             {
@@ -70,9 +72,7 @@ namespace BSU.Core.Model
                 return (mod, actionTask.Result, conflictTask.Result.Any());
             }
 
-            var infoTasks = storageMods.Select(GetModInfo).ToList();
-            await Task.WhenAll(infoTasks);
-            var infos = infoTasks.Select(t => t.Result).ToList();
+            var infos = (await  storageMods.SelectAsync(GetModInfo)).ToList();
 
             // Order of precedence
             var precedence = new[]
@@ -83,11 +83,10 @@ namespace BSU.Core.Model
                 var info = infos.FirstOrDefault(info => info.action == actionType && !info.hasConflcts);
                 if (info == default) continue;
 
-                return (AutoSelectResult.Success, info.mod);
+                return info.mod;
             }
 
-            if (infos.All(info => info.action == ModActionEnum.Unusable)) return (AutoSelectResult.Download, null);
-            return (AutoSelectResult.None, null);
+            return null;
         }
 
         internal static async Task<bool> IsConflicting(IModelRepositoryMod origin, IModelRepositoryMod otherMod,

@@ -1,8 +1,9 @@
 ﻿using System.Threading.Tasks;
+using BSU.Core.Model;
 
 namespace BSU.Core.ViewModel
 {
-    public interface IViewModelService
+    internal interface IViewModelService
     {
         Task Update();
         void NavigateToRepositories();
@@ -10,5 +11,6 @@ namespace BSU.Core.ViewModel
         void NavigateToRepository(Repository repository);
         void NavigateBack();
         IInteractionService InteractionService { get; }
+        IModelStorage AddStorage();
     }
 }

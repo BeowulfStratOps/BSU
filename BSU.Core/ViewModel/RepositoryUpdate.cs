@@ -51,8 +51,9 @@ namespace BSU.Core.ViewModel
             }
 
             var failedMods = tasks.Where(t => t.Result.result == UpdateResult.Failed).Select(t => t.Result.s.update.GetStorageMod()).ToList();
+            var successCount = tasks.Count(t => t.Result.result == UpdateResult.Success);
 
-            return new StageStats(tasks.Count(t => t.IsCompletedSuccessfully), failedMods, new List<IModelStorageMod>());
+            return new StageStats(successCount, failedMods, new List<IModelStorageMod>());
         }
 
         public async Task<StageStats> Update(CancellationToken cancellationToken)
@@ -80,8 +81,9 @@ namespace BSU.Core.ViewModel
 
             var failedMods = tasks.Where(t => t.Result.result == UpdateResult.Failed).Select(t => t.Result.s.update.GetStorageMod()).ToList();
             var failedSvMods = tasks.Where(t => t.Result.result == UpdateResult.FailedSharingViolation).Select(t => t.Result.s.update.GetStorageMod()).ToList();
+            var successCount = tasks.Count(t => t.Result.result == UpdateResult.Success);
 
-            return new StageStats(tasks.Count(t => t.IsCompletedSuccessfully), failedMods, failedSvMods);
+            return new StageStats(successCount, failedMods, failedSvMods);
         }
 
         private FileSyncStats GetProgress()

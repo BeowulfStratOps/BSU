@@ -26,7 +26,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             throw new NotImplementedException();
         }
 
-        public Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken)
+        public Task<RepositoryModActionSelection> GetSelection(bool reset = false, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

@@ -153,7 +153,7 @@ namespace BSU.Core.ViewModel
 
         public async Task Update()
         {
-            var selection = await Mod.GetSelection(CancellationToken.None);
+            var selection = await Mod.GetSelection(cancellationToken: CancellationToken.None);
             if (selection is RepositoryModActionStorageMod actionStorageMod)
             {
                 var updatedAction = await UpdateAction(actionStorageMod.StorageMod);

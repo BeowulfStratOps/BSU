@@ -11,13 +11,15 @@ namespace BSU.Core.Tests.Mocks
     {
         private readonly bool _errorPrepare;
         private readonly bool _errorUpdate;
+        private readonly IModelStorageMod _storageMod;
 
         public bool CommitCalled, AbortCalled;
 
-        public MockUpdateState(bool errorPrepare, bool errorUpdate)
+        public MockUpdateState(bool errorPrepare, bool errorUpdate, IModelStorageMod storageMod)
         {
             _errorPrepare = errorPrepare;
             _errorUpdate = errorUpdate;
+            _storageMod = storageMod;
             State = UpdateState.Created;
         }
 
@@ -47,15 +49,12 @@ namespace BSU.Core.Tests.Mocks
         }
 
         public bool IsPrepared => State == UpdateState.Prepared;
-        public IModelStorageMod GetStorageMod()
-        {
-            throw new NotImplementedException();
-        }
+        public IModelStorageMod GetStorageMod() => _storageMod;
 
         private Task<UpdateResult> Error()
         {
             OnEnded?.Invoke();
-            return Task.FromException<UpdateResult>(new TestException());
+            return Task.FromResult(UpdateResult.Failed);
         }
 
         public void Abort()

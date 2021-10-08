@@ -48,6 +48,7 @@ namespace BSU.Core.ViewModel
                 return false;
             }
 
+            // TODO: trying to create 2 presets after another with the same name works for some reason
             if (_model.GetRepositories()
                 .Any(r => string.Equals(r.Name, Name, StringComparison.InvariantCultureIgnoreCase)))
             {
@@ -156,7 +157,7 @@ namespace BSU.Core.ViewModel
             }
             CheckResult = $"Found Preset: {result.Name}";
             CheckError = "";
-            if (string.IsNullOrWhiteSpace(Name))
+            if (string.IsNullOrWhiteSpace(Name)) // TODO: also replace it if the current value came from a repo as well / wasn't modified by the user
             {
                 Name = result.Name;
                 OnPropertyChanged(nameof(Name));

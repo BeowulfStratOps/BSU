@@ -28,13 +28,11 @@ namespace BSU.Core.Model
         {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
-                var repository = CreateRepository(repositoryEntry, repositoryState);
-                _structure.AddRepository(repository);
+                CreateRepository(repositoryEntry, repositoryState);
             }
             foreach (var (storageEntry, storageState) in PersistentState.GetStorages())
             {
-                var storage = CreateStorage(storageEntry, storageState);
-                _structure.AddStorage(storage);
+                CreateStorage(storageEntry, storageState);
             }
         }
 
@@ -43,6 +41,7 @@ namespace BSU.Core.Model
             var implementation = _types.GetRepoImplementation(data.Type, data.Url);
             var repository = new Repository(implementation, data.Name, data.Url, state, _structure, _errorPresenter);
             // TODO: kick off mods
+            _structure.AddRepository(repository);
             return repository;
         }
 
@@ -51,6 +50,7 @@ namespace BSU.Core.Model
             var implementation = _types.GetStorageImplementation(data.Type, data.Path);
             var storage = new Storage(implementation, data.Name, data.Path, state, _structure, _errorPresenter);
             // TODO: kick off mods
+            _structure.AddStorage(storage);
             return storage;
         }
 

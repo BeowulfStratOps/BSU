@@ -96,7 +96,7 @@ namespace BSU.Core.Model
             return (await mods.SelectAsync(async m => (m, await GetActionForMod(m, cancellationToken)))).ToList();
         }
 
-        public async Task<RepositoryModActionSelection> GetSelection(CancellationToken cancellationToken)
+        public async Task<RepositoryModActionSelection> GetSelection(bool reset = false, CancellationToken cancellationToken = default)
         {
             // TODO: check if a better option became available and notify user ??
 
@@ -118,25 +118,19 @@ namespace BSU.Core.Model
 
             // TODO: check previously selected storage for download?
 
-            var (result, selectedMod) = await CoreCalculation.AutoSelect(this, storageMods, cancellationToken);
+            var selectedMod = await CoreCalculation.AutoSelect(this, storageMods, cancellationToken);
             RepositoryModActionSelection selection;
 
-            switch (result)
+            if (selectedMod != null)
             {
-                case AutoSelectResult.Success:
-                    selection = new RepositoryModActionStorageMod(selectedMod);
-                    break;
-                case AutoSelectResult.Download:
-                    var availableStorages = (await _modelStructure.GetStorages().WhereAsync(s => s.IsAvailable())).ToList();
-                    selection = null;
-                    if (availableStorages.Any())
-                        selection = new RepositoryModActionDownload(availableStorages.First());
-                    break;
-                case AutoSelectResult.None:
-                    selection = null;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                selection = new RepositoryModActionStorageMod(selectedMod);
+            }
+            else
+            {
+                var availableStorages = (await _modelStructure.GetStorages().WhereAsync(s => s.IsAvailable())).ToList();
+                selection = null;
+                if (availableStorages.Any())
+                    selection = new RepositoryModActionDownload(availableStorages.First());
             }
 
             Selection = selection;
@@ -145,7 +139,7 @@ namespace BSU.Core.Model
 
         public async Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken)
         {
-            var selection = await GetSelection(cancellationToken);
+            var selection = await GetSelection(cancellationToken: cancellationToken);
             if (selection is not RepositoryModActionStorageMod actionStorageMod) return new List<IModelRepositoryMod>();
             return await GetConflictsUsingMod(actionStorageMod.StorageMod, cancellationToken);
         }

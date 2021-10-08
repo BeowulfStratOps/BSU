@@ -241,7 +241,10 @@ Cancel - Do not remove this repository";
             }
 
             _model.DeleteRepository(_repository, (bool)removeData);
+            OnDelete?.Invoke(this);
         }
+
+        public Action<Repository> OnDelete;
 
         private async Task DoUpdate()
         {

@@ -90,7 +90,7 @@ namespace BSU.Core.Model
             var result = new List<IModelRepositoryMod>();
             foreach (var repositoryMod in repositoryMods)
             {
-                var selection = await repositoryMod.GetSelection(cancellationToken);
+                var selection = await repositoryMod.GetSelection(cancellationToken: cancellationToken);
                 if (selection is RepositoryModActionStorageMod storageMod && storageMod.StorageMod == this)
                     result.Add(repositoryMod);
             }

@@ -87,7 +87,10 @@ Cancel - Do not remove this storage";
             }
 
             _model.DeleteStorage(_storage, (bool) removeMods);
+            OnDeleted?.Invoke(this);
         }
+
+        public event Action<Storage> OnDeleted;
 
         public async Task Update()
         {

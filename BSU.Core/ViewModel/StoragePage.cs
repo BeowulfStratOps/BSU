@@ -21,20 +21,30 @@ namespace BSU.Core.ViewModel
             Back = new DelegateCommand(viewModelService.NavigateBack);
             _model = model;
             _viewModelService = viewModelService;
-            AddStorage = new DelegateCommand(DoAddStorage);
+            AddStorage = new DelegateCommand(() => DoAddStorage());
             foreach (var modelStorage in model.GetStorages())
             {
-                Storages.Add(new Storage(modelStorage, model, _viewModelService));
+                var storage = new Storage(modelStorage, model, _viewModelService);
+                storage.OnDeleted += StorageOnOnDeleted;
+                Storages.Add(storage);
             }
         }
 
-        private void DoAddStorage()
+        private void StorageOnOnDeleted(Storage storage)
+        {
+            Storages.Remove(storage);
+            storage.OnDeleted -= StorageOnOnDeleted;
+        }
+
+        internal IModelStorage DoAddStorage()
         {
             var vm = new AddStorage();
-            var doAdd = _viewModelService.InteractionService.AddStorage(vm);
-            if (doAdd != true) return;
+            if (!_viewModelService.InteractionService.AddStorage(vm)) return null;
             var storage = _model.AddStorage("DIRECTORY", new DirectoryInfo(vm.Path), vm.Name);
-            Storages.Add(new Storage(storage, _model, _viewModelService));
+            var vmStorage = new Storage(storage, _model, _viewModelService);
+            Storages.Add(vmStorage);
+            vmStorage.OnDeleted += StorageOnOnDeleted;
+            return storage;
         }
 
         public async Task Load()

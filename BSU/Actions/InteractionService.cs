@@ -39,7 +39,7 @@ namespace BSU.GUI.Actions
 
         public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel)
         {
-            throw new System.NotImplementedException();
+            return (bool)new SelectRepositoryStorageDialog(viewModel).ShowDialog();
         }
     }
 }

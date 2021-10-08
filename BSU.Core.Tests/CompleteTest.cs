@@ -94,7 +94,7 @@ namespace BSU.Core.Tests
             var repoMod1 = model.GetRepositories().Single(s => s.Name == "repo1").GetMods().Result
                 .Single(m => m.Identifier == "mod1");
             Assert.Equal(storageMod1,
-                ((RepositoryModActionStorageMod)repoMod1.GetSelection(CancellationToken.None).Result).StorageMod);
+                ((RepositoryModActionStorageMod)repoMod1.GetSelection(cancellationToken: CancellationToken.None).Result).StorageMod);
         }
     }
 

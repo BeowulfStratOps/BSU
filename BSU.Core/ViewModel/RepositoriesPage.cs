@@ -26,8 +26,16 @@ namespace BSU.Core.ViewModel
             AddRepository = new DelegateCommand(DoAddRepository);
             foreach (var modelRepository in model.GetRepositories())
             {
-                Repositories.Add(new Repository(modelRepository, model, viewModelService));
+                var repository = new Repository(modelRepository, model, viewModelService);
+                repository.OnDelete += OnDelete;
+                Repositories.Add(repository);
             }
+        }
+
+        private void OnDelete(Repository repository)
+        {
+            Repositories.Remove(repository);
+            repository.OnDelete -= OnDelete;
         }
 
         private void DoAddRepository()
@@ -38,11 +46,12 @@ namespace BSU.Core.ViewModel
             var repo = _model.AddRepository("BSO", vm.Url.Trim(), vm.Name.Trim());
             var vmRepo = new Repository(repo, _model, _viewModelService);
             Repositories.Add(vmRepo);
+            vmRepo.OnDelete += OnDelete;
+            _viewModelService.Update();
+            AsyncVoidExecutor.Execute(vmRepo.Load);
 
-            var selectStorageVm = new SelectRepositoryStorage(repo, _model);
+            var selectStorageVm = new SelectRepositoryStorage(repo, _model, _viewModelService);
             if (!_viewModelService.InteractionService.SelectRepositoryStorage(selectStorageVm)) return;
-
-            if (!vmRepo.Update.CanExecute(null)) return;
 
             vmRepo.Update.Execute(null);
         }

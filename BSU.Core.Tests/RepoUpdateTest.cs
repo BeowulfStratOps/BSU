@@ -33,7 +33,7 @@ namespace BSU.Core.Tests
         [Fact]
         private void Success()
         {
-            var updateState = new MockUpdateState(false, false);
+            var updateState = new MockUpdateState(false, false, null);
             var repoUpdate = GetRepoUpdate(updateState);
 
             var prepared = repoUpdate.Prepare(CancellationToken.None).Result;
@@ -76,7 +76,7 @@ namespace BSU.Core.Tests
         [Fact]
         private void UpdateError()
         {
-            var updateState = new MockUpdateState(false, true);
+            var updateState = new MockUpdateState(false, true, null);
             var repoUpdate = GetRepoUpdate(updateState);
 
             var prepared = repoUpdate.Prepare(CancellationToken.None).Result;
@@ -91,8 +91,8 @@ namespace BSU.Core.Tests
         [Fact]
         private void PrepareError_KeepGoing()
         {
-            var updateState = new MockUpdateState(false, false);
-            var updateStateFail = new MockUpdateState(true, false);
+            var updateState = new MockUpdateState(false, false, null);
+            var updateStateFail = new MockUpdateState(true, false, null);
             var repoUpdate = GetRepoUpdate(updateState, updateStateFail);
 
             var prepared = repoUpdate.Prepare(CancellationToken.None).Result;

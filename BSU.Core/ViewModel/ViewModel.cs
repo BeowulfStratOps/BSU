@@ -12,6 +12,7 @@ namespace BSU.Core.ViewModel
 {
     public class ViewModel : ObservableBase, IViewModelService, IErrorPresenter
     {
+        private readonly IModel _model;
         private object _content;
         public object Content
         {
@@ -29,6 +30,7 @@ namespace BSU.Core.ViewModel
 
         internal ViewModel(IModel model)
         {
+            _model = model;
             model.ConnectErrorPresenter(this);
             _repoPage = new RepositoriesPage(model, this);
             _storagePage = new StoragePage(model, this);
@@ -78,6 +80,11 @@ namespace BSU.Core.ViewModel
         }
 
         public IInteractionService InteractionService { get; set; }
+
+        IModelStorage IViewModelService.AddStorage()
+        {
+            return _storagePage.DoAddStorage();
+        }
 
         public ObservableCollection<DismissError> Errors { get; } = new();
 
