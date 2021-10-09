@@ -51,5 +51,14 @@ namespace BSU.Core.Tests
             newFile.Close();
             // TODO: check file contents, file still in use
         }
+
+        [Fact]
+        private void DontCreateFileWhenReading()
+        {
+            Create("@ace", "some_other_file").Dispose();
+            var storage = new DirectoryStorage(_tmpDir.FullName);
+            storage.GetMods(CancellationToken.None).Result.Values.Single().OpenFile("/mod.cpp", FileAccess.Read, CancellationToken.None);
+            Assert.False(File.Exists(Path.Join(_tmpDir.FullName, "@ace", "mod.cpp")));
+        }
     }
 }

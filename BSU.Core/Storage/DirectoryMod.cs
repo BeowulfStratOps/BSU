@@ -67,16 +67,21 @@ namespace BSU.Core.Storage
             try
             {
                 Logger.Trace("Reading file {0}", path);
+                var mode = FileMode.Open;
+                var share = FileShare.Read;
                 if (access.HasFlag(FileAccess.Write))
                 {
                     if (!_parentStorage.CanWrite()) throw new NotSupportedException();
+
+                    mode = FileMode.OpenOrCreate;
+                    share = FileShare.None;
 
                     // TODO: looks ugly
                     // TODO: async
                     Directory.CreateDirectory(new FileInfo(GetFullFilePath(path)).Directory.FullName);
                 }
                 // TODO: async?
-                return File.Open(GetFullFilePath(path), FileMode.OpenOrCreate, access, (access & FileAccess.Write) != 0 ? FileShare.None : FileShare.Read);
+                return File.Open(GetFullFilePath(path), mode, access, share);
             }
             catch (FileNotFoundException)
             {

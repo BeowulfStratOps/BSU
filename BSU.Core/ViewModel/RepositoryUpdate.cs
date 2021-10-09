@@ -18,6 +18,7 @@ namespace BSU.Core.ViewModel
         private readonly IProgress<FileSyncStats> _progress;
 
         private readonly Dictionary<IModUpdate, FileSyncStats> _lastProgress = new();
+        private readonly Dictionary<IModUpdate, (long download, long update)> _totalSizes = new ();
         private readonly object _progressLock = new();
         private readonly ILogger _logger;
 
@@ -100,12 +101,23 @@ namespace BSU.Core.ViewModel
                 long sumDownloadDone = 0;
                 long sumUpdateTotal = 0;
                 long sumUpdateDone = 0;
-                foreach (var progressValue in _lastProgress.Values)
+                foreach (var mod in _lastProgress.Keys)
                 {
-                    sumDownloadTotal += progressValue.DownloadTotal;
-                    sumDownloadDone += progressValue.DownloadDone;
-                    sumUpdateTotal += progressValue.UpdateTotal;
-                    sumUpdateDone += progressValue.UpdateDone;
+                    var (downloadTotal, updateTotal) = _totalSizes[mod];
+                    sumDownloadTotal += downloadTotal;
+                    sumUpdateTotal += updateTotal;
+
+                    var lastProgress = _lastProgress[mod];
+                    if (lastProgress.State == FileSyncState.Updating)
+                    {
+                        sumDownloadDone += lastProgress.DownloadDone;
+                        sumUpdateDone += lastProgress.UpdateDone;
+                    }
+                    else
+                    {
+                        sumDownloadDone += downloadTotal;
+                        sumUpdateDone += updateTotal;
+                    }
                 }
 
                 return new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal, sumDownloadDone, sumUpdateDone);
@@ -126,6 +138,7 @@ namespace BSU.Core.ViewModel
             foreach (var (update, modProgress) in updates)
             {
                 _lastProgress.Add(update, new FileSyncStats(FileSyncState.Waiting));
+                _totalSizes.Add(update, (0, 0));
                 modProgress.ProgressChanged += (_, e) => ModProgressOnProgressChanged(e, update);
             }
 
@@ -138,6 +151,8 @@ namespace BSU.Core.ViewModel
             lock (_progressLock)
             {
                 _lastProgress[update] = progress;
+                if (progress.State == FileSyncState.Updating)
+                    _totalSizes[update] = (progress.DownloadTotal, progress.UpdateTotal);
             }
         }
     }
