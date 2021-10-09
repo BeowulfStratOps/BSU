@@ -104,12 +104,24 @@ namespace BSU.Core.ViewModel.Util
     {
     }
 
-    public class StorageModActionList : IActionListEntry
+    public class StorageModActionList : ObservableBase, IActionListEntry
     {
         internal IModelStorage Storage { get; }
         private readonly ModActionTree _parent;
+        private bool _isShown;
 
         public string Name => Storage.Name;
+
+        public bool IsShown
+        {
+            get => _isShown;
+            private set
+            {
+                if (_isShown == value) return;
+                _isShown = value;
+                OnPropertyChanged();
+            }
+        }
 
         public ObservableCollection<SelectableModAction> Mods { get; } = new();
 
@@ -117,8 +129,9 @@ namespace BSU.Core.ViewModel.Util
         {
             _parent = parent;
             Storage = storage;
-            if (storage.CanWrite)
-                Mods.Add( new SelectableModAction(new SelectStorage(storage), _parent, false));
+            if (!storage.CanWrite) return;
+            Mods.Add(new SelectableModAction(new SelectStorage(storage), _parent, false));
+            IsShown = true;
         }
 
         public void UpdateMod(SelectMod mod)
@@ -128,6 +141,7 @@ namespace BSU.Core.ViewModel.Util
             if (index == -1)
             {
                 Mods.Insert(0, new SelectableModAction(mod, _parent, false));
+                IsShown = true;
                 return;
             }
 
@@ -151,6 +165,7 @@ namespace BSU.Core.ViewModel.Util
         {
             var index = FindIndex(mod);
             if (index != -1) Mods.RemoveAt(index);
+            if (!Mods.Any()) IsShown = false;
         }
     }
 

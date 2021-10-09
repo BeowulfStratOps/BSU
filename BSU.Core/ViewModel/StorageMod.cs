@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Storage;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -10,8 +11,18 @@ namespace BSU.Core.ViewModel
     {
         private string _usedBy = "Loading...";
         private readonly IModelStorageMod _modelStorageMod;
+        private string _title;
 
-        public string Identifier { get; set; }
+        public string Title
+        {
+            get => _title;
+            set
+            {
+                if (_title == value) return;
+                _title = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string UsedBy
         {
@@ -27,7 +38,8 @@ namespace BSU.Core.ViewModel
         internal StorageMod(IModelStorageMod mod)
         {
             _modelStorageMod = mod;
-            Identifier = mod.Identifier;
+            Title = mod.Identifier;
+            AsyncVoidExecutor.Execute(async () => Title = await mod.GetTitle(CancellationToken.None));
         }
 
         internal async Task Update()

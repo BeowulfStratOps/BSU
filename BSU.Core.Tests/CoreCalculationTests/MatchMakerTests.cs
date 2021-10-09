@@ -14,11 +14,14 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        private (ModActionEnum action, bool requiresMatchHash, bool requireVersionHash) DoCheck(int repoHash, int repoVersion, int? storageHash, int? storageVersion,  StorageModStateEnum state)
+        private (ModActionEnum action, bool requiresMatchHash, bool requireVersionHash) DoCheck(int repoHash, int repoVersion, int? storageHash, int? storageVersion,  StorageModStateEnum state, bool canWrite = true)
         {
             // TODO: restructure a bit for less parameter passing all over the place
             var repoMod = new MockModelRepositoryMod(repoHash, repoVersion);
-            var storageMod = new MockModelStorageMod(storageHash, storageVersion, state);
+            var storageMod = new MockModelStorageMod(storageHash, storageVersion, state)
+            {
+                CanWrite = canWrite
+            };
 
             var result = CoreCalculation.GetModAction(repoMod, storageMod, CancellationToken.None).Result;
             return (result, storageMod.RequiredMatchHash, storageMod.RequiredVersionHash);
@@ -103,6 +106,14 @@ namespace BSU.Core.Tests.CoreCalculationTests
             Assert.Equal(ModActionEnum.AbortActiveAndUpdate, action);
             Assert.True(requiresMatchHash);
             Assert.True(requireVersionHash);
+        }
+
+        [Fact]
+        private void DontUpdateSteam()
+        {
+            var (action, _, _) = DoCheck(1, 1, 1, 2, StorageModStateEnum.Created, false);
+
+            Assert.Equal(ModActionEnum.Unusable, action);
         }
     }
 }

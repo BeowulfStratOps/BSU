@@ -14,7 +14,8 @@
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
     <Border Margin="2">
         <Border.Resources>
-            <converters:ActionToTextConverter x:Key="ActionToText"></converters:ActionToTextConverter>
+            <converters:ActionToTextConverter x:Key="ActionToText" />
+            <converters:CollapseConverter x:Key="CollapseConverter" />
         </Border.Resources>
         <DockPanel>
             <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
@@ -50,7 +51,7 @@
                                     <userControls:SelectableAction />
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type util:StorageModActionList}">
-                                    <Border BorderBrush="Black" BorderThickness="1" Margin="0" Padding="2">
+                                    <Border BorderBrush="Black" BorderThickness="1" Margin="0" Padding="2" Visibility="{Binding IsShown, Converter={StaticResource CollapseConverter}}">
                                         <StackPanel>
                                             <TextBlock FontWeight="Bold" Foreground="DimGray" Text="{Binding Name}" />
                                             <ItemsControl Margin="4,0,0,0" ItemsSource="{Binding Mods}" />

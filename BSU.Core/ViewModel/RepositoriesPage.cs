@@ -53,7 +53,8 @@ namespace BSU.Core.ViewModel
             var selectStorageVm = new SelectRepositoryStorage(repo, _model, _viewModelService);
             if (!_viewModelService.InteractionService.SelectRepositoryStorage(selectStorageVm)) return;
 
-            vmRepo.Update.Execute(null);
+            // Might be in ready state already, or smth broken
+            if (vmRepo.Update.CanExecute(null)) vmRepo.Update.Execute(null);
         }
 
         public async Task Update()

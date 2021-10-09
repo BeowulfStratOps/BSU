@@ -101,7 +101,7 @@ namespace BSU.Core.Model
             // TODO: check if a better option became available and notify user ??
 
             // never change a selection once it was made. Would be clickjacking on the user
-            if (Selection != null) return Selection;
+            if (Selection != null && !reset) return Selection;
 
             _logger.Trace("Checking auto-selection for mod {0}", Identifier);
 

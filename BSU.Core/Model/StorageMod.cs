@@ -104,6 +104,12 @@ namespace BSU.Core.Model
             return _stateCts.Token;
         }
 
+        private string _title;
+        public async Task<string> GetTitle(CancellationToken cancellationToken)
+        {
+            return _title ??= await Implementation.GetTitle(cancellationToken);
+        }
+
         private UpdateTarget UpdateTarget
         {
             get => _updateTarget;

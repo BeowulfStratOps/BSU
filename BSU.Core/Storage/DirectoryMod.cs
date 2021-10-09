@@ -16,16 +16,16 @@ namespace BSU.Core.Storage
     /// </summary>
     public class DirectoryMod : IStorageMod
     {
-        private readonly ILogger _logger;
+        protected readonly ILogger Logger;
 
-        private readonly DirectoryInfo _dir;
+        protected readonly DirectoryInfo Dir;
         private readonly IStorage _parentStorage;
         private string _displayName;
 
         public DirectoryMod(DirectoryInfo dir, IStorage parentStorage)
         {
-            _logger = LogHelper.GetLoggerWithIdentifier(this, dir.Name);
-            _dir = dir;
+            Logger = LogHelper.GetLoggerWithIdentifier(this, dir.Name);
+            Dir = dir;
             _parentStorage = parentStorage;
         }
 
@@ -64,10 +64,9 @@ namespace BSU.Core.Storage
         /// <returns></returns>
         public async Task<Stream> OpenFile(string path, FileAccess access, CancellationToken cancellationToken)
         {
-            //throw new Exception("TALK TO DA HAND");
             try
             {
-                _logger.Trace("Reading file {0}", path);
+                Logger.Trace("Reading file {0}", path);
                 if (access.HasFlag(FileAccess.Write))
                 {
                     if (!_parentStorage.CanWrite()) throw new NotSupportedException();
@@ -97,8 +96,8 @@ namespace BSU.Core.Storage
         public Task<List<string>> GetFileList(CancellationToken cancellationToken)
         {
             // TODO: make async
-            var files = _dir.EnumerateFiles("*", SearchOption.AllDirectories);
-            var result = files.Select(fi => fi.FullName.Replace(_dir.FullName, "").Replace('\\', '/').ToLowerInvariant())
+            var files = Dir.EnumerateFiles("*", SearchOption.AllDirectories);
+            var result = files.Select(fi => fi.FullName.Replace(Dir.FullName, "").Replace('\\', '/').ToLowerInvariant())
                 .ToList();
             return Task.FromResult<List<string>>(result);
         }
@@ -126,16 +125,21 @@ namespace BSU.Core.Storage
         /// <exception cref="NotSupportedException">Not supported for read-only locations.</exception>
         public async Task DeleteFile(string path, CancellationToken cancellationToken)
         {
-            _logger.Trace("Deleting file {0}", path);
+            Logger.Trace("Deleting file {0}", path);
             if (!_parentStorage.CanWrite()) throw new NotSupportedException();
             // TODO: async?
             File.Delete(GetFullFilePath(path));
         }
 
+        public virtual Task<string> GetTitle(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Dir.Name);
+        }
+
         private string GetFullFilePath(string path)
         {
             Util.CheckPath(path);
-            return Path.Combine(_dir.FullName, path.Substring(1));
+            return Path.Combine(Dir.FullName, path.Substring(1));
         }
     }
 }

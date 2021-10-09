@@ -110,11 +110,6 @@ namespace BSU.Core.ViewModel
             _model = model;
             _viewModelService = viewModelService;
             AsyncVoidExecutor.Execute(Load);
-            foreach (var storage in model.GetStorages())
-            {
-                var selection = new StorageSelection(storage);
-                Storages.Add(selection);
-            }
         }
 
         private void HandleAdd()
@@ -145,7 +140,7 @@ namespace BSU.Core.ViewModel
                 {
                     var selection = await mod.GetSelection(cancellationToken: cancellationToken);
                     if (selection is RepositoryModActionDownload ||
-                        (selection is RepositoryModActionStorageMod storageMod && !storageMod.StorageMod.CanWrite))
+                        (selection is RepositoryModActionStorageMod storageMod && !storageMod.StorageMod.CanWrite && !UseSteam))
                         mod.SetSelection(new RepositoryModActionDownload(Storage.Storage));
                 }
 
@@ -191,6 +186,13 @@ namespace BSU.Core.ViewModel
 
             if (Storage != null)
                 Ok.SetCanExecute(true);
+
+            foreach (var storage in _model.GetStorages())
+            {
+                if (!storage.CanWrite || !await storage.IsAvailable()) continue;
+                var selection = new StorageSelection(storage);
+                Storages.Add(selection);
+            }
         }
 
         private void HandleOk(object objWindow)

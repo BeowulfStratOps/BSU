@@ -47,7 +47,7 @@ namespace BSU.Core.Model
                 {
                     if (!await CheckMatch())  return ModActionEnum.Unusable;
                     if (await CheckVersion()) return ModActionEnum.Use;
-                    return ModActionEnum.Update;
+                    return storageMod.CanWrite ? ModActionEnum.Update : ModActionEnum.Unusable;
                 }
                 case StorageModStateEnum.Updating:
                 {

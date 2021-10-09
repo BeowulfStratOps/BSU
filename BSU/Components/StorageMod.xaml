@@ -11,7 +11,7 @@
         <StackPanel.Resources>
             <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
         </StackPanel.Resources>
-        <TextBlock FontWeight="Bold" Text="{Binding Path=Identifier}" />
+        <TextBlock FontWeight="Bold" Text="{Binding Path=Title}" />
         <TextBlock Margin="4,0,0,0" Visibility="{Binding UsedBy, Converter={StaticResource NullToVisibility}}">
             <Run>- Used by </Run>
             <Run Text="{Binding UsedBy}"/>

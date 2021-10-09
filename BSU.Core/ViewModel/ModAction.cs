@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
@@ -54,15 +55,28 @@ namespace BSU.Core.ViewModel
 
     public class SelectMod : ModAction
     {
+        private string _name;
         internal IModelStorageMod StorageMod { get; }
         public ModActionEnum ActionType { get; }
-        public string Name => StorageMod.Identifier;
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (_name == value) return;
+                _name = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string StorageName => StorageMod.ParentStorage.Name;
 
         internal SelectMod(IModelStorageMod storageMod, ModActionEnum actionType)
         {
             StorageMod = storageMod;
             ActionType = actionType;
+            AsyncVoidExecutor.Execute(async () => Name = await storageMod.GetTitle(CancellationToken.None));
         }
 
         public override bool Equals(ModAction other)

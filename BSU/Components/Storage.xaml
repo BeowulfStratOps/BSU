@@ -29,7 +29,7 @@
                     <TextBlock>Mods</TextBlock>
                 </Expander.Header>
                 <Border BorderBrush="Black" BorderThickness="1">
-                    <ItemsControl ItemsSource="{Binding Path=Mods}">
+                    <ItemsControl ItemsSource="{Binding Path=Mods}" Padding="5">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <components:StorageMod></components:StorageMod>

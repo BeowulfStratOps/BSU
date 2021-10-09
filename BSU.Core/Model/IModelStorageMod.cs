@@ -24,5 +24,6 @@ namespace BSU.Core.Model
         StorageModStateEnum GetState();
         Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken);
         CancellationToken GetStateToken();
+        Task<string> GetTitle(CancellationToken cancellationToken);
     }
 }

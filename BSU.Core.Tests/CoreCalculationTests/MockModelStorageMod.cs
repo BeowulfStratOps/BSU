@@ -45,7 +45,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             throw new NotImplementedException();
         }
 
-        public bool CanWrite { get; }
+        public bool CanWrite { get; set; } = true;
         public string Identifier { get; }
         public IModelStorage ParentStorage { get; }
 
@@ -70,6 +70,11 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public CancellationToken GetStateToken()
         {
             return new CancellationToken();
+        }
+
+        public Task<string> GetTitle(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -269,6 +269,8 @@ Cancel - Do not remove this repository";
 
                 await _viewModelService.Update();
 
+                if (_cts.IsCancellationRequested) return;
+
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {
                     _viewModelService.InteractionService.MessagePopup("Update Complete", "Update Complete");
@@ -283,7 +285,7 @@ Cancel - Do not remove this repository";
                 }
                 if (updateStats.Failed.Any())
                 {
-                    updatedText += "\nFailed due unknown reason (see logs): " + string.Join(", ",
+                    updatedText += "\nFailed due to unknown reason (see logs): " + string.Join(", ",
                         updateStats.Failed.Select(s => $"{s.ParentStorage.Name}/{s.Identifier}"));
                 }
                 _viewModelService.InteractionService.MessagePopup(updatedText, "Update finished");

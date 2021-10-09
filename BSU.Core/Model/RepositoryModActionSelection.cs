@@ -48,7 +48,7 @@ namespace BSU.Core.Model
             DownloadStorage = storage;
         }
 
-        public override string ToString() => $"Storage:{DownloadStorage}";
+        public override string ToString() => $"Storage:{DownloadStorage.Name}";
         public override bool Equals(RepositoryModActionSelection other)
         {
             return other is RepositoryModActionDownload download && download.DownloadStorage.Equals(DownloadStorage);

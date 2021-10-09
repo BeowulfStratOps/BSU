@@ -34,5 +34,7 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         Task DeleteFile(string path, CancellationToken cancellationToken);
+
+        Task<string> GetTitle(CancellationToken cancellationToken);
     }
 }
