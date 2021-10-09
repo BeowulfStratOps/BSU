@@ -59,7 +59,6 @@ namespace BSU.Core.ViewModel
 
         internal void AddStorage(IModelStorage storage)
         {
-            if (!storage.CanWrite) return;
             Actions.AddStorage(storage);
         }
 

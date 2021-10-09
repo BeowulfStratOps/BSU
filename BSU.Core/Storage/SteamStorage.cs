@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
+using Microsoft.Win32;
+using NLog;
 
 namespace BSU.Core.Storage
 {
@@ -15,14 +17,15 @@ namespace BSU.Core.Storage
     {
         private readonly DirectoryInfo _basePath;
         private Dictionary<string, IStorageMod> _mods;
+        private readonly Task _loading;
 
         public SteamStorage(string path)
         {
-            // C:\Program Files (x86)\Steam\steamapps\workshop\content\107410
-            _basePath = new DirectoryInfo(Path.Combine(path, "steamapps", "workshop", "content", "107410"));
+            _basePath = new DirectoryInfo(path);
+            _loading = Load(CancellationToken.None);
         }
 
-        public async Task Load(CancellationToken cancellationToken)
+        private async Task Load(CancellationToken cancellationToken)
         {
             // TODO: async?
             var folders = new List<DirectoryInfo>();
@@ -38,7 +41,11 @@ namespace BSU.Core.Storage
             _mods = folders.ToDictionary(di => di.Name, di => (IStorageMod) new SteamMod(di, this));
         }
 
-        public Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken) => Task.FromResult(_mods);
+        public async Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
+        {
+            await _loading;
+            return _mods;
+        }
 
         public string GetLocation() => _basePath.FullName;
 
@@ -53,5 +60,19 @@ namespace BSU.Core.Storage
         }
 
         public bool CanWrite() => false;
+
+        public static string GetWorkshopPath()
+        {
+            var path = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
+            if (path == null)
+            {
+                LogManager.GetCurrentClassLogger().Error("Couldn't find steam install path");
+                return null;
+            }
+            path = Path.Join(path, "steamapps", "workshop", "content", "107410");
+            if (Directory.Exists(path)) return path;
+            LogManager.GetCurrentClassLogger().Error("Couldn't find arma workshop path");
+            return null;
+        }
     }
 }

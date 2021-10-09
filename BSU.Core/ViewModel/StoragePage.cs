@@ -38,9 +38,12 @@ namespace BSU.Core.ViewModel
 
         internal IModelStorage DoAddStorage()
         {
-            var vm = new AddStorage();
+            var vm = new AddStorage(_model);
             if (!_viewModelService.InteractionService.AddStorage(vm)) return null;
-            var storage = _model.AddStorage("DIRECTORY", new DirectoryInfo(vm.Path), vm.Name);
+            var type = vm.GetStorageType();
+            var name = vm.GetName();
+            var path = vm.GetPath();
+            var storage = _model.AddStorage(type, new DirectoryInfo(path), name);
             var vmStorage = new Storage(storage, _model, _viewModelService);
             Storages.Add(vmStorage);
             vmStorage.OnDeleted += StorageOnOnDeleted;

@@ -117,7 +117,8 @@ namespace BSU.Core.ViewModel.Util
         {
             _parent = parent;
             Storage = storage;
-            Mods.Add( new SelectableModAction(new SelectStorage(storage), _parent, false));
+            if (storage.CanWrite)
+                Mods.Add( new SelectableModAction(new SelectStorage(storage), _parent, false));
         }
 
         public void UpdateMod(SelectMod mod)

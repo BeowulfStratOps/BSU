@@ -4,34 +4,76 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
+        xmlns:converters="clr-namespace:BSU.GUI.Converters"
         mc:Ignorable="d"
         Title="Add Storage" Width="350" d:DataContext="{d:DesignInstance viewModel:AddStorage}"
-        SizeToContent="Height">
+        SizeToContent="Height" ResizeMode="NoResize"
+        x:Name="Window">
     <Grid Margin="15">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Label>Name:</Label>
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}"></TextBox>
-        <Label Grid.Row="1" Grid.Column="0">Path:</Label>
-        <DockPanel Grid.Row="1" Grid.Column="1">
-            <Button DockPanel.Dock="Right" Click="Path_OnClick">...</Button>
-            <TextBox Text="{Binding Path}"></TextBox>
-        </DockPanel>
-        <Label Grid.Row="2" Grid.Column="0">Type:</Label>
-        <ComboBox Grid.Row="2" Grid.Column="1">
-            <ComboBoxItem IsSelected="True">BSO</ComboBoxItem>
-        </ComboBox>
-        <WrapPanel Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right" Margin="15">
-            <Button IsDefault="True" Margin="15, 0" MinWidth="50" Click="Ok_OnClick">Ok</Button>
+        <Grid.Resources>
+            <Style BasedOn="{StaticResource {x:Type ToggleButton}}" TargetType="RadioButton"></Style>
+            <converters:BoolToVisibilityConverter x:Key="VisibilityConverter"></converters:BoolToVisibilityConverter>
+        </Grid.Resources>
+
+        <UniformGrid Grid.Row="0" Rows="1" Columns="2" Margin="0,0,0,15">
+            <RadioButton Margin="0,0,10,0" IsChecked="{Binding IsDirectory}">Directory</RadioButton>
+            <RadioButton Margin="10,0,0,0" IsChecked="{Binding IsSteam}" IsEnabled="{Binding SteamEnabled}">Steam Workshop</RadioButton>
+        </UniformGrid>
+
+        <Grid Grid.Row="1" Visibility="{Binding IsDirectory, Converter={StaticResource VisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" Grid.Column="0">Name:</Label>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+            <TextBlock Grid.Row="1" Grid.Column="1" Foreground="Red" Margin="0,0,0,5" Text="{Binding NameError}" />
+
+            <Label Grid.Row="2" Grid.Column="0">Path:</Label>
+            <Grid Grid.Row="2" Grid.Column="1">
+                <TextBox x:Name="Path" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True"></TextBox>
+                <Button HorizontalAlignment="Right" BorderThickness="0" Background="Transparent" Click="Path_OnClick">
+                    <TextBlock Margin="2, 0" FontWeight="ExtraBold">...</TextBlock>
+                </Button>
+            </Grid>
+            <TextBlock Grid.Row="3" Grid.Column="1" Foreground="Red" Text="{Binding PathError}" />
+        </Grid>
+
+        <Grid Grid.Row="1" Visibility="{Binding IsSteam, Converter={StaticResource VisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Margin="10">Name:</TextBlock>
+            <TextBlock Grid.Row="0" Grid.Column="1" Margin="10">Steam</TextBlock>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Margin="10">Path:</TextBlock>
+            <TextBlock Grid.Row="1" Grid.Column="1" Margin="10" Text="{Binding SteamPath}" TextWrapping="Wrap"/>
+        </Grid>
+
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Right" Margin="10">
+            <Button IsDefault="True" Margin="15, 0" MinWidth="50" Command="{Binding Ok}" CommandParameter="{Binding ElementName=Window}">Ok</Button>
             <Button IsCancel="True" MinWidth="50">Cancel</Button>
         </WrapPanel>
+
     </Grid>
 </Window>

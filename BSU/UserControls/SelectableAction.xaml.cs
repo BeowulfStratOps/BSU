@@ -37,7 +37,7 @@ namespace BSU.GUI.UserControls
             Border.Background = _isHovered ? new SolidColorBrush(Colors.CornflowerBlue) : SystemColors.WindowBrush;
         }
 
-        private void VmOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void VmOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName != nameof(SelectableModAction.IsSelected)) return;
             _isSelected = _vm.IsSelected;

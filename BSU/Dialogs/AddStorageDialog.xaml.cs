@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Forms;
 using BSU.Core.ViewModel;
-using Microsoft.Win32;
+using BSU.Core.ViewModel.Util;
+using Application = System.Windows.Application;
 
 namespace BSU.GUI.Dialogs
 {
-    public partial class AddStorageDialog : Window
+    public partial class AddStorageDialog : Window, ICloseable
     {
         public AddStorageDialog(AddStorage viewModel)
         {
@@ -14,14 +16,17 @@ namespace BSU.GUI.Dialogs
             Owner = Application.Current.MainWindow;
         }
 
-        private void Ok_OnClick(object sender, RoutedEventArgs e)
-        {
-            DialogResult = true;
-        }
-
         private void Path_OnClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            var dialog = new FolderBrowserDialog();
+            var result = dialog.ShowDialog();
+            if (result != System.Windows.Forms.DialogResult.OK) return;
+            Path.Text = dialog.SelectedPath;
+        }
+
+        public void Close(bool result)
+        {
+            DialogResult = result;
         }
     }
 }
