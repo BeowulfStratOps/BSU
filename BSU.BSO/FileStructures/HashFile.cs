@@ -35,9 +35,9 @@ namespace BSU.BSO.FileStructures
         /// Pbo / SHA1 hash
         /// </summary>
         public byte[] Hash { get; set; }
-        public long FileSize { get; set; }
+        public ulong FileSize { get; set; }
 
-        public HashType(string fileName, byte[] hash, long fileSize)
+        public HashType(string fileName, byte[] hash, ulong fileSize)
         {
             FileName = fileName;
             Hash = hash;

@@ -69,10 +69,18 @@ namespace BSU.Core.Model
             return await VersionHash.CreateAsync(Implementation, cancellationToken);
         }
 
-        public async Task<string> GetDisplayName(CancellationToken cancellationToken)
+        private ModInfo _modInfo;
+        public async Task<ModInfo> GetModInfo(CancellationToken cancellationToken)
         {
-            // TODO: cache
-            return await Task.Run(() => Implementation.GetDisplayName(cancellationToken), cancellationToken);
+            if (_modInfo != null) return _modInfo;
+            var (name, version) = await Implementation.GetDisplayInfo(cancellationToken);
+            var size = 0UL;
+            foreach (var file in await Implementation.GetFileList(cancellationToken))
+            {
+                size += await Implementation.GetFileSize(file, cancellationToken);
+            }
+            _modInfo = new ModInfo(name, version, size);
+            return _modInfo;
         }
 
         public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.GetAsync(cancellationToken);
@@ -171,7 +179,7 @@ namespace BSU.Core.Model
             // TODO: all at the same time
             var matchHash = await _matchHash.GetAsync(cancellationToken);
             var versionHash = await _versionHash.GetAsync(cancellationToken);
-            var displayName = await GetDisplayName(cancellationToken);
+            var displayName = await GetModInfo(cancellationToken);
 
             if (Selection is RepositoryModActionStorageMod actionStorageMod)
             {
@@ -179,16 +187,16 @@ namespace BSU.Core.Model
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
-                var update = await actionStorageMod.StorageMod.PrepareUpdate(Implementation, displayName, matchHash, versionHash, progress);
+                var update = await actionStorageMod.StorageMod.PrepareUpdate(Implementation, matchHash, versionHash, progress);
                 return update;
             }
 
             if (Selection is RepositoryModActionDownload actionDownload)
             {
-                var updateTarget = new UpdateTarget(versionHash.GetHashString(), displayName);
+                var updateTarget = new UpdateTarget(versionHash.GetHashString());
                 var mod = await actionDownload.DownloadStorage.CreateMod("@" + DownloadIdentifier, updateTarget);
                 Selection = new RepositoryModActionStorageMod(mod);
-                var update = await mod.PrepareUpdate(Implementation, displayName, matchHash, versionHash, progress);
+                var update = await mod.PrepareUpdate(Implementation, matchHash, versionHash, progress);
                 return update;
             }
 

@@ -61,7 +61,7 @@ namespace BSU.Core.Tests.Mocks
             _load = load;
         }
 
-        public Task DownloadTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
+        public Task DownloadTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
         {
             for (int i = 0; i < SleepMs; i++)
             {
@@ -81,17 +81,17 @@ namespace BSU.Core.Tests.Mocks
             return Task.FromResult<FileHash>(hash);
         }
 
-        public Task<string> GetDisplayName(CancellationToken cancellationToken)
+        public Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)
         {
-            return Task.FromResult(DisplayName);
+            return Task.FromResult((DisplayName, "?"));
         }
 
-        public Task<long> GetFileSize(string path, CancellationToken cancellationToken)
+        public Task<ulong> GetFileSize(string path, CancellationToken cancellationToken)
         {
-            return Task.FromResult(GetFile(path, cancellationToken).Result.LongLength);
+            return Task.FromResult((ulong)GetFile(path, cancellationToken).Result.LongLength);
         }
 
-        public Task UpdateTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
+        public Task UpdateTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
         {
             return DownloadTo(path, fileStream, progress, token);
         }

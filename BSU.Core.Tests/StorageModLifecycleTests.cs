@@ -51,7 +51,7 @@ namespace BSU.Core.Tests
         [Fact]
         private void CreatedWithTarget()
         {
-            var target = new UpdateTarget("1234", "LeMod");
+            var target = new UpdateTarget("1234");
             var (implementation, storageMod) = CreateStorageMod(target);
             Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
             Assert.NotNull(storageMod.GetVersionHash());
@@ -61,12 +61,12 @@ namespace BSU.Core.Tests
         [Fact]
         private void UpdateWithTarget()
         {
-            var target = new UpdateTarget("1234", "LeMod");
+            var target = new UpdateTarget("1234");
             var (implementation, storageMod) = CreateStorageMod(target);
 
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target.Display, MatchHash.CreateEmpty(),
+            var update = storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(),
                 VersionHash.CreateEmpty(), null).Result;
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
@@ -77,12 +77,12 @@ namespace BSU.Core.Tests
         [Fact]
         private void Prepared()
         {
-            var target = new UpdateTarget("1234", "LeMod");
+            var target = new UpdateTarget("1234");
             var (implementation, storageMod) = CreateStorageMod(target);
 
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target.Display, MatchHash.CreateEmpty(),
+            var update = storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(),
                 VersionHash.CreateEmpty(), null).Result;
             update.Prepare(CancellationToken.None).Wait();
 
@@ -94,11 +94,11 @@ namespace BSU.Core.Tests
         [Fact]
         private void Updated()
         {
-            var target = new UpdateTarget("123", "LeMod");
+            var target = new UpdateTarget("123");
             var (implementation, storageMod) = CreateStorageMod();
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, target.Display, MatchHash.CreateEmpty(), VersionHash.CreateEmpty(), null).Result;
+            var update = storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(), VersionHash.CreateEmpty(), null).Result;
 
             update.Prepare(CancellationToken.None).Wait();
             update.Update(CancellationToken.None).Wait();

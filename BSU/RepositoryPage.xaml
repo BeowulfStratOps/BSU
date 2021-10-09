@@ -24,7 +24,7 @@
             <userControls:SvgButton DockPanel.Dock="Right" Width="25" Height="25" Command="{Binding ShowStorage}" Svg="{StaticResource SvgStorage}" />
         </DockPanel>
 
-        <DockPanel Dock="Top">
+        <DockPanel Margin="5" Dock="Top">
             <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
                 <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
                 <TextBlock Text="{Binding ServerUrl}"></TextBlock>
@@ -46,19 +46,17 @@
                 <userControls:SvgButton Width="40" Height="40" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}"/>
             </StackPanel>
         </DockPanel>
-        <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
+        <userControls:FileSyncProgressBar Margin="5, 3" DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
         <Rectangle DockPanel.Dock="Top" HorizontalAlignment="Stretch" Fill="Black" Height="1"/>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <Border BorderBrush="Black" BorderThickness="1">
-                <ItemsControl ItemsSource="{Binding Path=Mods}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <components:RepositoryMod></components:RepositoryMod>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Border>
+        <ScrollViewer Margin="5" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Path=Mods}" Grid.IsSharedSizeScope="True">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <components:RepositoryMod></components:RepositoryMod>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </ScrollViewer>
     </DockPanel>
 </UserControl>

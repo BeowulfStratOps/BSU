@@ -21,8 +21,8 @@ namespace BSU.Core.Sync
         public abstract FileSyncStats GetStats();
     }
 
-    public record FileSyncStats(FileSyncState State, long DownloadTotal = 0, long UpdateTotal = 0,
-        long DownloadDone = 0, long UpdateDone = 0);
+    public record FileSyncStats(FileSyncState State, ulong DownloadTotal = 0, ulong UpdateTotal = 0,
+        ulong DownloadDone = 0, ulong UpdateDone = 0);
 
     public enum FileSyncState
     {

@@ -20,41 +20,12 @@ namespace BSU.Core.Storage
 
         protected readonly DirectoryInfo Dir;
         private readonly IStorage _parentStorage;
-        private string _displayName;
 
         public DirectoryMod(DirectoryInfo dir, IStorage parentStorage)
         {
             Logger = LogHelper.GetLoggerWithIdentifier(this, dir.Name);
             Dir = dir;
             _parentStorage = parentStorage;
-        }
-
-        public async Task Load(CancellationToken cancellationToken)
-        {
-            await GetDisplayName(cancellationToken);
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a display name for this mod folder.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<string> GetDisplayName(CancellationToken cancellationToken)
-        {
-            if (_displayName != null) return _displayName;
-
-            var modCpp = await OpenFile("/mod.cpp", FileAccess.Read, cancellationToken);
-            string modCppData = null;
-            if (modCpp != null)
-            {
-                using var reader = new StreamReader(modCpp);
-                modCppData = await reader.ReadToEndAsync();
-            }
-
-            var files = await GetFileList(cancellationToken);
-            var keys = files.Where(p => Regex.IsMatch(p, "/keys/.*\\.bikey", RegexOptions.IgnoreCase))
-                .Select(p => p.Split('/').Last().Replace(".bikey", "")).ToList();
-
-            return _displayName = Util.GetDisplayName(modCppData, keys);
         }
 
         /// <summary>

@@ -11,7 +11,7 @@
         <Button Command="{Binding Command}" CommandParameter="{Binding CommandParameter}">
             <Button.Template>
                 <ControlTemplate>
-                    <Border x:Name="circle" Background="Transparent" CornerRadius="{Binding Path=ActualWidth, ElementName=circle}" BorderThickness="1">
+                    <Border x:Name="circle" Background="Transparent" CornerRadius="{Binding Path=ActualWidth, ElementName=circle}" BorderThickness="1" Cursor="Hand">
                         <Viewbox Stretch="Fill">
                             <Viewbox.Resources>
                                 <Style TargetType="Path">

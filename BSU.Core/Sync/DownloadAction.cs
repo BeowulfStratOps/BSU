@@ -13,10 +13,10 @@ namespace BSU.Core.Sync
     internal class DownloadAction : SyncWorkUnit
     {
         private readonly IRepositoryMod _repository;
-        private readonly long _fileSize;
-        private long _done;
+        private readonly ulong _fileSize;
+        private ulong _done;
 
-        public DownloadAction(IRepositoryMod repository, StorageMod storage, string path, long fileSize) : base(storage, path)
+        public DownloadAction(IRepositoryMod repository, StorageMod storage, string path, ulong fileSize) : base(storage, path)
         {
             _repository = repository;
             _fileSize = fileSize;
@@ -26,7 +26,7 @@ namespace BSU.Core.Sync
         {
             Logger.Trace("{0}, {1} Downloading {2}", _repository, _repository, Path);
             await using var target = await Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.Write, cancellationToken);
-            var progress = new Progress<long>();
+            var progress = new Progress<ulong>();
             progress.ProgressChanged += (_, count) => _done += count;
             await _repository.DownloadTo(Path, target, progress, cancellationToken);
         }

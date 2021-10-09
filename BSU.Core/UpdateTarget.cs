@@ -5,14 +5,13 @@
     /// </summary>
     public class UpdateTarget
     {
-        public readonly string Hash, Display;
+        public readonly string Hash;
 
-        public UpdateTarget(string hash, string display)
+        public UpdateTarget(string hash)
         {
-            Display = display;
             Hash = hash;
         }
 
-        public override string ToString() => $"{Hash}:{Display}";
+        public override string ToString() => $"{Hash}";
     }
 }

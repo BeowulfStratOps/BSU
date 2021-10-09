@@ -32,7 +32,7 @@ namespace BSU.CoreCommon
         /// Attempts to build or extract a display name for this mod.
         /// </summary>
         /// <returns></returns>
-        Task<string> GetDisplayName(CancellationToken cancellationToken);
+        Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns metadata for a file. Exception if file data not found.
@@ -40,7 +40,7 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        Task<long> GetFileSize(string path, CancellationToken cancellationToken);
+        Task<ulong> GetFileSize(string path, CancellationToken cancellationToken);
 
         /// <summary>
         /// Downloads a file. Exception if not found.
@@ -48,7 +48,7 @@ namespace BSU.CoreCommon
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        Task DownloadTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token);
+        Task DownloadTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token);
 
         /// <summary>
         /// Updates an existing file. Exception if not found.
@@ -56,6 +56,6 @@ namespace BSU.CoreCommon
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        Task UpdateTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token);
+        Task UpdateTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token);
     }
 }

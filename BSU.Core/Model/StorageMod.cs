@@ -122,7 +122,7 @@ namespace BSU.Core.Model
 
         public event Action StateChanged;
 
-        public async Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress)
+        public async Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress)
         {
             _logger.Trace("Progress: Waiting");
             progress?.Report(new FileSyncStats(FileSyncState.Waiting));
@@ -131,7 +131,7 @@ namespace BSU.Core.Model
                 {
                     await _matchHash.Set(targetMatch);
                     await _versionHash.Set(targetVersion);
-                    UpdateTarget = new UpdateTarget(targetVersion.GetHashString(), targetDisplayName);
+                    UpdateTarget = new UpdateTarget(targetVersion.GetHashString());
                 });
 
             var update = new StorageModUpdateState(this, repositoryMod, progress);

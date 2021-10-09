@@ -41,7 +41,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             throw new NotImplementedException();
         }
 
-        public Task<string> GetDisplayName(CancellationToken cancellationToken)
+        public Task<ModInfo> GetModInfo(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

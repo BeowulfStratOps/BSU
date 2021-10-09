@@ -16,24 +16,24 @@ namespace BSU.CoreCommon
         /// <param name="modCpp">/mod.cpp content</param>
         /// <param name="keynames">Names of .bikey files</param>
         /// <returns></returns>
-        public static string GetDisplayName(string modCpp, List<string> keynames)
+        public static (string name, string version) GetDisplayInfo(string modCpp, List<string> keynames)
         {
             // TODO: do something way smarter here
 
-            if (modCpp == null) return "Unknown";
+            if (modCpp == null) return ("Unknown", "Unknown");
             var modData = ParseModCpp(modCpp);
 
             var name = modData.GetValueOrDefault("name");
-            if (name == null) return "Unknown";
+            if (name == null) return ("Unknown", "Unknown");
 
-            if (modData.TryGetValue("version", out var version)) return name + " - " + version;
+            if (modData.TryGetValue("version", out var version)) return (name, version);
 
-            if (keynames == null || keynames.Count == 0) return name + " - Unknown version";
+            if (keynames == null || keynames.Count == 0) return (name, "Unknown");
 
             version = keynames[0];
             version = string.Join("", version.Where(c => "01234556789._".Contains(c)));
             version = version.Trim('.', '_');
-            return name + " - " + version;
+            return (name,  version);
         }
 
         /// <summary>

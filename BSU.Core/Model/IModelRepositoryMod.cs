@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
 using BSU.Core.Sync;
-using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
@@ -17,7 +16,7 @@ namespace BSU.Core.Model
         string Identifier { get; }
         IModelRepository ParentRepository { get; }
         Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken);
-        Task<string> GetDisplayName(CancellationToken cancellationToken);
+        Task<ModInfo> GetModInfo(CancellationToken cancellationToken);
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
         Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken);

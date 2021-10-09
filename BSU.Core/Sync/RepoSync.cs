@@ -97,10 +97,10 @@ namespace BSU.Core.Sync
 
         private void ProgressCallback(IProgress<FileSyncStats> progress)
         {
-            long sumDownloadDone = 0;
-            long sumDownloadTotal = 0;
-            long sumUpdateDone = 0;
-            long sumUpdateTotal = 0;
+            ulong sumDownloadDone = 0;
+            ulong sumDownloadTotal = 0;
+            ulong sumUpdateDone = 0;
+            ulong sumUpdateTotal = 0;
 
             foreach (var syncWorkUnit in _allActions)
             {

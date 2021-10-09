@@ -18,8 +18,18 @@ namespace BSU.Core.ViewModel
         private readonly IViewModelService _viewModelService;
 
         public string Name { get; }
+        private ModInfo _info = new("Loading...", "Loading...", 0);
 
-        public string DisplayName { private set; get; }
+        public ModInfo Info
+        {
+            get => _info;
+            private set
+            {
+                if (_info == value) return;
+                _info = value;
+                OnPropertyChanged();
+            }
+        }
 
         private string _downloadIdentifier = "";
 
@@ -42,6 +52,7 @@ namespace BSU.Core.ViewModel
             _model = model;
             _viewModelService = viewModelService;
             Name = mod.Identifier;
+            ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded);
 
             var downloadIdentifier = mod.DownloadIdentifier;
             if (downloadIdentifier.StartsWith("@")) downloadIdentifier = downloadIdentifier[1..];
@@ -139,6 +150,22 @@ namespace BSU.Core.ViewModel
             }
         }
 
+        private bool _isExpanded;
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                if (_isExpanded == value) return;
+                _isExpanded = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(NotIsExpanded));
+            }
+        }
+
+        public DelegateCommand ToggleExpand { get; }
+
         private string _errorText;
 
         public string ErrorText
@@ -152,9 +179,11 @@ namespace BSU.Core.ViewModel
             }
         }
 
+        public bool NotIsExpanded => !IsExpanded;
+
         public async Task Load()
         {
-            DisplayName = await Mod.GetDisplayName(CancellationToken.None);
+            Info = await Mod.GetModInfo(CancellationToken.None);
             foreach (var storage in await _model.GetStorages().WhereAsync(s => s.IsAvailable()))
             {
                 AddStorage(storage);

@@ -29,7 +29,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public event Action StateChanged;
 
-        public Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, string targetDisplayName, MatchHash targetMatch,
+        public Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch,
             VersionHash targetVersion, IProgress<FileSyncStats> progress)
         {
             throw new NotImplementedException();

@@ -8,11 +8,6 @@ namespace BSU.CoreCommon
 {
     public interface IStorageMod
     {
-        /// <summary>
-        /// Attempts to retrieve a display name for this mod folder.
-        /// </summary>
-        /// <returns></returns>
-        Task<string> GetDisplayName(CancellationToken cancellationToken);
         Task<List<string>> GetFileList(CancellationToken cancellationToken);
 
         /// <summary>

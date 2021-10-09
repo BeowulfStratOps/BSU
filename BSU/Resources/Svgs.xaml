@@ -16,4 +16,6 @@
         </Path.RenderTransform>
     </Path>
     <Path x:Key="SvgClose" x:Shared="False" Data="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></Path>
+    <Path x:Key="SvgCaretRight" x:Shared="False" Fill="Black" Data="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z" />
+    <Path x:Key="SvgCaretDown" x:Shared="False" Fill="Black" Data="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z" />
 </ResourceDictionary>

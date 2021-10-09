@@ -18,7 +18,7 @@ namespace BSU.Core.ViewModel
         private readonly IProgress<FileSyncStats> _progress;
 
         private readonly Dictionary<IModUpdate, FileSyncStats> _lastProgress = new();
-        private readonly Dictionary<IModUpdate, (long download, long update)> _totalSizes = new ();
+        private readonly Dictionary<IModUpdate, (ulong download, ulong update)> _totalSizes = new ();
         private readonly object _progressLock = new();
         private readonly ILogger _logger;
 
@@ -97,10 +97,10 @@ namespace BSU.Core.ViewModel
                     return new FileSyncStats(FileSyncState.Stopping);
                 if (_lastProgress.Values.All(p => p.State == FileSyncState.None))
                     return new FileSyncStats(FileSyncState.None);
-                long sumDownloadTotal = 0;
-                long sumDownloadDone = 0;
-                long sumUpdateTotal = 0;
-                long sumUpdateDone = 0;
+                ulong sumDownloadTotal = 0;
+                ulong sumDownloadDone = 0;
+                ulong sumUpdateTotal = 0;
+                ulong sumUpdateDone = 0;
                 foreach (var mod in _lastProgress.Keys)
                 {
                     var (downloadTotal, updateTotal) = _totalSizes[mod];

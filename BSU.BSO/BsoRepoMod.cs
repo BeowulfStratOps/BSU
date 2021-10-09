@@ -25,7 +25,6 @@ namespace BSU.BSO
 
         private readonly string _url;
         private HashFile _hashFile;
-        private string _displayName;
         private readonly Task _loading;
 
 
@@ -76,9 +75,8 @@ namespace BSU.BSO
         /// Attempts to build a extract a display name for this mod. Cached.
         /// </summary>
         /// <returns></returns>
-        public async Task<string> GetDisplayName(CancellationToken cancellationToken)
+        public async Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)
         {
-            if (_displayName != null) return _displayName;
             await _loading;
 
             string modCpp = null;
@@ -96,7 +94,7 @@ namespace BSU.BSO
 
             keys = keys.Any() ? keys : null;
 
-            return _displayName = Util.GetDisplayName(modCpp, keys);
+            return Util.GetDisplayInfo(modCpp, keys);
         }
 
         /// <summary>
@@ -119,7 +117,7 @@ namespace BSU.BSO
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <returns></returns>
-        public async Task<long> GetFileSize(string path, CancellationToken cancellationToken)
+        public async Task<ulong> GetFileSize(string path, CancellationToken cancellationToken)
         {
             await _loading;
             return GetFileEntry(path).FileSize;
@@ -131,7 +129,7 @@ namespace BSU.BSO
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        public async Task DownloadTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
+        public async Task DownloadTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
         {
             await _loading;
             // TODO: use .part file
@@ -152,7 +150,7 @@ namespace BSU.BSO
                     var len = await stream.ReadAsync(buffer, 0, buffer.Length, token);
                     if (len == 0) break;
                     await fileStream.WriteAsync(buffer, 0, len, token);
-                    progress.Report(len);
+                    progress.Report((ulong)len);
                 }
             }
             catch (OperationCanceledException)
@@ -171,7 +169,7 @@ namespace BSU.BSO
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
         /// <param name="token">Can be used to cancel this operation.</param>
-        public async Task UpdateTo(string path, Stream fileStream, IProgress<long> progress, CancellationToken token)
+        public async Task UpdateTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
         {
             await _loading;
             await DownloadTo(path, fileStream, progress, token);

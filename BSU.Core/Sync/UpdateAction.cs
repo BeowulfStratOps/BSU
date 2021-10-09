@@ -14,10 +14,10 @@ namespace BSU.Core.Sync
     internal class UpdateAction : SyncWorkUnit
     {
        private readonly IRepositoryMod _repository;
-       private readonly long _fileSize;
-       private long _done;
+       private readonly ulong _fileSize;
+       private ulong _done;
 
-       public UpdateAction(IRepositoryMod repository, StorageMod storage, string path, long fileSize)
+       public UpdateAction(IRepositoryMod repository, StorageMod storage, string path, ulong fileSize)
             : base(storage, path)
        {
            _repository = repository;
@@ -28,7 +28,7 @@ namespace BSU.Core.Sync
         {
             Logger.Trace("{0}, {1} Updating {2}", Storage, _repository, Path);
             await using var target = await Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.ReadWrite, cancellationToken);
-            var progress = new Progress<long>();
+            var progress = new Progress<ulong>();
             progress.ProgressChanged += (_, count) => _done += count;
             await _repository.UpdateTo(Path, target, progress, cancellationToken);
         }

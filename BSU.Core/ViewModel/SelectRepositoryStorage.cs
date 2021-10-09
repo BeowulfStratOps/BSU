@@ -19,7 +19,7 @@ namespace BSU.Core.ViewModel
         private bool _showSteamOption;
         private bool _useSteam;
         private bool _downloadEnabled;
-        private List<ModInfo> _mods;
+        private List<ModStorageSelectionInfo> _mods;
         private StorageSelection _storage;
 
         public StorageSelection Storage
@@ -90,7 +90,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public List<ModInfo> Mods
+        public List<ModStorageSelectionInfo> Mods
         {
             get => _mods;
             set
@@ -147,12 +147,12 @@ namespace BSU.Core.ViewModel
                 Ok.SetCanExecute(true);
             }
 
-            var modInfos = new List<ModInfo>();
+            var modInfos = new List<ModStorageSelectionInfo>();
             foreach (var mod in mods)
             {
                 var selection = await mod.GetSelection(cancellationToken: CancellationToken.None);
                 var action = await ModAction.Create(selection, mod, CancellationToken.None);
-                modInfos.Add(new ModInfo(mod.Identifier, action));
+                modInfos.Add(new ModStorageSelectionInfo(mod.Identifier, action));
             }
 
             Mods = modInfos;
@@ -179,7 +179,7 @@ namespace BSU.Core.ViewModel
                 .Select(s =>
                 {
                     var (mod, action) = s;
-                    return new ModInfo(mod.Identifier, action);
+                    return new ModStorageSelectionInfo(mod.Identifier, action);
                 }).ToList();
 
             IsLoading = false;
@@ -200,7 +200,7 @@ namespace BSU.Core.ViewModel
             ((ICloseable) objWindow).Close(true);
         }
 
-        public record ModInfo(string ModName, ModAction Action);
+        public record ModStorageSelectionInfo(string ModName, ModAction Action);
 
         public class StorageSelection
         {

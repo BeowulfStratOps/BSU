@@ -8,7 +8,7 @@ namespace BSU.GUI.Converters
     {
         public object Convert(object objValue, Type targetType, object parameter, CultureInfo culture)
         {
-            var value = (long)objValue;
+            var value = (ulong)objValue;
             var gb = (decimal)value / (1024 * 1024 * 1024);
             return $"{gb:n2} GB";
         }
