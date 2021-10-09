@@ -222,7 +222,7 @@ namespace BSU.Core.ViewModel
             _cts.Cancel();
         }
 
-        private void DoDelete()
+        private void DoDelete(object objOnDetailsPage)
         {
             // TODO: this doesn't look like it belongs here
             var text = $@"Removing repository {Name}. Do you want to remove mods used by this repository?
@@ -242,11 +242,13 @@ Cancel - Do not remove this repository";
 
             _model.DeleteRepository(_repository, (bool)removeData);
             OnDelete?.Invoke(this);
+
+            if ((bool) objOnDetailsPage) _viewModelService.NavigateBack();
         }
 
         public Action<Repository> OnDelete;
 
-        private async Task DoUpdate()
+        public async Task DoUpdate()
         {
             _cts = new CancellationTokenSource();
             foreach (var mod in Mods)

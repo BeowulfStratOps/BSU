@@ -114,7 +114,7 @@ namespace BSU.Core.ViewModel
 
         private void HandleAdd()
         {
-            var storage = _viewModelService.AddStorage();
+            var storage = _viewModelService.AddStorage(false);
             var selection = new StorageSelection(storage);
             Storages.Add(selection);
             Storage = selection;
@@ -172,7 +172,7 @@ namespace BSU.Core.ViewModel
                 s.action is SelectMod storageMod &&
                 !storageMod.StorageMod.ParentStorage.CanWrite);
 
-            _hasNonSteamDownloads = DownloadEnabled = selections.Any(s => s.action is SelectStorage);
+            _hasNonSteamDownloads = DownloadEnabled = selections.Any(s => s.action is SelectStorage or null);
             AddStorage.SetCanExecute(DownloadEnabled);
 
             Mods = selections

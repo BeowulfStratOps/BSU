@@ -6,6 +6,13 @@ namespace BSU.GUI.Actions
 {
     public class InteractionService : IInteractionService
     {
+        private readonly Window _owner;
+
+        public InteractionService(Window owner)
+        {
+            _owner = owner;
+        }
+
         public bool AddRepository(AddRepository viewModel)
         {
             return (bool)new AddRepositoryDialog(viewModel).ShowDialog();
@@ -18,12 +25,12 @@ namespace BSU.GUI.Actions
 
         public void MessagePopup(string message, string title)
         {
-            MessageBox.Show(message, title, MessageBoxButton.OK);
+            MessageBox.Show(_owner, message, title, MessageBoxButton.OK);
         }
 
         public bool? YesNoCancelPopup(string message, string title)
         {
-            var q = MessageBox.Show(message, title, MessageBoxButton.YesNoCancel);
+            var q = MessageBox.Show(_owner, message, title, MessageBoxButton.YesNoCancel);
             if (q == MessageBoxResult.Cancel)
             {
                 return null;
@@ -33,7 +40,7 @@ namespace BSU.GUI.Actions
 
         public bool YesNoPopup(string message, string title)
         {
-            var q = MessageBox.Show(message, title, MessageBoxButton.YesNo);
+            var q = MessageBox.Show(_owner, message, title, MessageBoxButton.YesNo);
             return q == MessageBoxResult.Yes;
         }
 

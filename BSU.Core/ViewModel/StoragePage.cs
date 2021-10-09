@@ -36,9 +36,9 @@ namespace BSU.Core.ViewModel
             storage.OnDeleted -= StorageOnOnDeleted;
         }
 
-        internal IModelStorage DoAddStorage()
+        internal IModelStorage DoAddStorage(bool allowSteam = true)
         {
-            var vm = new AddStorage(_model);
+            var vm = new AddStorage(_model, allowSteam);
             if (!_viewModelService.InteractionService.AddStorage(vm)) return null;
             var type = vm.GetStorageType();
             var name = vm.GetName();

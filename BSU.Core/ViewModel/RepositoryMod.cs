@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace BSU.Core.ViewModel
         private void SetSelectionFromView(ModAction value)
         {
             DownloadIdentifier = Mod.Identifier;
+            if (DownloadIdentifier.StartsWith("@")) DownloadIdentifier = DownloadIdentifier[1..];
             Mod.SetSelection(value.AsSelection);
             AsyncVoidExecutor.Execute(_viewModelService.Update);
         }
@@ -41,7 +43,10 @@ namespace BSU.Core.ViewModel
             _viewModelService = viewModelService;
             Name = mod.Identifier;
 
-            DownloadIdentifier = mod.DownloadIdentifier;
+            var downloadIdentifier = mod.DownloadIdentifier;
+            if (downloadIdentifier.StartsWith("@")) downloadIdentifier = downloadIdentifier[1..];
+
+            DownloadIdentifier = downloadIdentifier;
         }
 
         private async Task<ModAction> UpdateAction(IModelStorageMod storageMod)
@@ -85,12 +90,18 @@ namespace BSU.Core.ViewModel
 
             if (Actions.Selection is SelectStorage selectStorage)
             {
-                if (string.IsNullOrWhiteSpace(DownloadIdentifier)) // TODO: check file name validity
+                if (string.IsNullOrWhiteSpace(DownloadIdentifier))
                 {
                     ErrorText = "Name must be a valid folder name";
                     return;
                 }
-                var folderExists = await selectStorage.DownloadStorage.HasMod(DownloadIdentifier);
+
+                if (DownloadIdentifier.IndexOfAny(Path.GetInvalidPathChars()) >= 0 || DownloadIdentifier.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                {
+                    ErrorText = "Invalid characters in name";
+                    return;
+                }
+                var folderExists = await selectStorage.DownloadStorage.HasMod("@" + DownloadIdentifier);
                 ErrorText = folderExists ? "Name in use" : "";
             }
 

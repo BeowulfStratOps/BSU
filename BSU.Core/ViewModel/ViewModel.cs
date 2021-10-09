@@ -56,12 +56,6 @@ namespace BSU.Core.ViewModel
 
         private readonly Stack<object> _navigationStack = new();
 
-        public void NavigateToRepositories()
-        {
-            _navigationStack.Push(Content);
-            Content = _repoPage;
-        }
-
         public void NavigateToStorages()
         {
             _navigationStack.Push(Content);
@@ -81,9 +75,9 @@ namespace BSU.Core.ViewModel
 
         public IInteractionService InteractionService { get; set; }
 
-        IModelStorage IViewModelService.AddStorage()
+        IModelStorage IViewModelService.AddStorage(bool allowSteam)
         {
-            return _storagePage.DoAddStorage();
+            return _storagePage.DoAddStorage(allowSteam);
         }
 
         public ObservableCollection<DismissError> Errors { get; } = new();

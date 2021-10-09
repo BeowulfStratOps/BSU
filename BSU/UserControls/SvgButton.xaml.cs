@@ -74,6 +74,7 @@ namespace BSU.GUI.UserControls
         public bool HideIfDisabled { get; set; }
 
         private Brush _brush = Brushes.Black;
+        public static readonly DependencyProperty CommandParameterProperty = DependencyProperty.Register("CommandParameter", typeof(object), typeof(SvgButton), new PropertyMetadata(default(object)));
 
         public Brush Brush
         {
@@ -90,6 +91,12 @@ namespace BSU.GUI.UserControls
         {
             get => (Brush)GetValue(SvgBrushProperty);
             set => SetValue(SvgBrushProperty, value);
+        }
+
+        public object CommandParameter
+        {
+            get => GetValue(CommandParameterProperty);
+            set => SetValue(CommandParameterProperty, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

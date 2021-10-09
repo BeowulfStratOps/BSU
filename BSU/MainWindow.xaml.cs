@@ -25,7 +25,7 @@ namespace BSU.GUI
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             _core = new Core.Core(settingsFile);
             var viewModel = _core.ViewModel;
-            viewModel.InteractionService = new InteractionService();
+            viewModel.InteractionService = new InteractionService(this);
             DataContext = viewModel;
             InitializeComponent();
             viewModel.Run();

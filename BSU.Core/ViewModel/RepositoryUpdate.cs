@@ -94,7 +94,7 @@ namespace BSU.Core.ViewModel
                     return new FileSyncStats(FileSyncState.Waiting);
                 if (_lastProgress.Values.Any(p => p.State == FileSyncState.Stopping))
                     return new FileSyncStats(FileSyncState.Stopping);
-                if (_lastProgress.Values.Any(p => p.State == FileSyncState.Stopping))
+                if (_lastProgress.Values.All(p => p.State == FileSyncState.None))
                     return new FileSyncStats(FileSyncState.None);
                 long sumDownloadTotal = 0;
                 long sumDownloadDone = 0;
@@ -129,7 +129,7 @@ namespace BSU.Core.ViewModel
                 modProgress.ProgressChanged += (_, e) => ModProgressOnProgressChanged(e, update);
             }
 
-            _logger.Trace("Progress Waiting");
+            _logger.Trace("Progress: Waiting");
             _progress?.Report(new FileSyncStats(FileSyncState.Waiting));
         }
 

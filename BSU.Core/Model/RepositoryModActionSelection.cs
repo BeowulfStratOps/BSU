@@ -17,7 +17,7 @@ namespace BSU.Core.Model
 
     internal sealed class RepositoryModActionDoNothing : RepositoryModActionSelection
     {
-        public override string ToString() => "Do Nothing";
+        public override string ToString() => "Disabled";
         public override bool Equals(RepositoryModActionSelection other) => other is RepositoryModActionDoNothing;
 
         public override int GetHashCode() => typeof(RepositoryModActionDoNothing).GetHashCode();

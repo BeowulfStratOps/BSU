@@ -13,7 +13,7 @@
         <Border.Resources>
             <converters:ActionToColorConverter x:Key="ActionToColor" />
             <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
-                <TextBlock>Do Nothing</TextBlock>
+                <TextBlock>Disabled</TextBlock>
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:SelectMod}">
                 <StackPanel Orientation="Horizontal">

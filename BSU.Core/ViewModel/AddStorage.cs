@@ -13,12 +13,13 @@ namespace BSU.Core.ViewModel
         private bool _isDirectory = true;
         private bool _isSteam;
 
-        internal AddStorage(IModel model)
+        internal AddStorage(IModel model, bool allowSteam)
         {
-            SteamPath = SteamStorage.GetWorkshopPath();
-            SteamEnabled = SteamPath != null;
             _model = model;
             Ok = new DelegateCommand(HandleOk);
+            if (!allowSteam || _model.GetStorages().Any(s => s.Name.ToLowerInvariant() == "steam")) return;
+            SteamPath = SteamStorage.GetWorkshopPath();
+            SteamEnabled = SteamPath != null ;
         }
 
         public bool SteamEnabled { get; }

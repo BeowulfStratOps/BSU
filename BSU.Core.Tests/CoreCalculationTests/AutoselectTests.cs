@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using BSU.Core.Model;
-using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,7 +15,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        internal static IModelStorageMod FromAction(ModActionEnum actionType)
+        internal static IModelStorageMod FromAction(ModActionEnum actionType, bool canWrite = true)
         {
             var storageMod = actionType switch
             {
@@ -29,6 +28,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 ModActionEnum.Unusable => new MockModelStorageMod(2, 2, StorageModStateEnum.Created),
                 _ => throw new ArgumentOutOfRangeException(nameof(actionType), actionType, null)
             };
+            storageMod.CanWrite = canWrite;
 
             // just checking that we got the setup right
             var testRepoMod = new MockModelRepositoryMod(1, 1);
@@ -72,9 +72,21 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var storageMod = FromAction(ModActionEnum.Use);
             var storageMod2 = FromAction(ModActionEnum.Update);
 
-            var mod = AutoSelect(repoMod, storageMod);
+            var mod = AutoSelect(repoMod, storageMod, storageMod2);
 
             Assert.Equal(storageMod, mod);
+        }
+
+        [Fact]
+        private void PreferNonSteam()
+        {
+            var repoMod = new MockModelRepositoryMod(1, 1);
+            var storageMod = FromAction(ModActionEnum.Use, false);
+            var storageMod2 = FromAction(ModActionEnum.Use);
+
+            var mod = AutoSelect(repoMod, storageMod, storageMod2);
+
+            Assert.Equal(storageMod2, mod);
         }
     }
 }

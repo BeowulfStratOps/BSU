@@ -16,9 +16,10 @@ namespace BSU.GUI.Converters
                 case ModActionEnum.Update:
                 case ModActionEnum.ContinueUpdate:
                 case ModActionEnum.AbortAndUpdate:
-                case ModActionEnum.Await:
                 case ModActionEnum.AbortActiveAndUpdate:
                     return "Update";
+                case ModActionEnum.Await:
+                    return "Updating";
                 case ModActionEnum.Use:
                     return "Use";
                 case ModActionEnum.Unusable:

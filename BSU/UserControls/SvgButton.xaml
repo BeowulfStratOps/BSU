@@ -8,7 +8,7 @@
              Name="Uc"
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid DataContext="{Binding ElementName=Uc}">
-        <Button Command="{Binding Command}">
+        <Button Command="{Binding Command}" CommandParameter="{Binding CommandParameter}">
             <Button.Template>
                 <ControlTemplate>
                     <Border x:Name="circle" Background="Transparent" CornerRadius="{Binding Path=ActualWidth, ElementName=circle}" BorderThickness="1">

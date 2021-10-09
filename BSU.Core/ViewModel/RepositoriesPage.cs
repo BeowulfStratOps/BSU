@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
@@ -47,14 +48,18 @@ namespace BSU.Core.ViewModel
             var vmRepo = new Repository(repo, _model, _viewModelService);
             Repositories.Add(vmRepo);
             vmRepo.OnDelete += OnDelete;
-            _viewModelService.Update();
+            AsyncVoidExecutor.Execute(_viewModelService.Update);
             AsyncVoidExecutor.Execute(vmRepo.Load);
 
             var selectStorageVm = new SelectRepositoryStorage(repo, _model, _viewModelService);
             if (!_viewModelService.InteractionService.SelectRepositoryStorage(selectStorageVm)) return;
 
-            // Might be in ready state already, or smth broken
-            if (vmRepo.Update.CanExecute(null)) vmRepo.Update.Execute(null);
+            AsyncVoidExecutor.Execute(async () =>
+            {
+                var state = await repo.GetState(CancellationToken.None);
+                if (state.State == CalculatedRepositoryStateEnum.NeedsSync)
+                    await vmRepo.DoUpdate();
+            });
         }
 
         public async Task Update()

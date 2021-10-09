@@ -28,14 +28,14 @@
                     <ContentControl Content="{Binding Actions.Selection}">
                         <ContentControl.Resources>
                             <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
-                                <TextBlock>Do Nothing</TextBlock>
+                                <TextBlock>Disabled</TextBlock>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type viewModel:SelectMod}">
                                 <TextBlock><Run Text="{Binding ActionType, Mode=OneWay, Converter={StaticResource ActionToText}}" /> <Run Text="{Binding StorageName, Mode=OneWay}" /> / <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock>Download to <Run Text="{Binding Name, Mode=OneWay}" /> / </TextBlock>
+                                    <TextBlock>Download to <Run Text="{Binding Name, Mode=OneWay}" /> / @</TextBlock>
                                     <TextBox MinWidth="100" Text="{Binding DataContext.DownloadIdentifier, ElementName=RepoMod, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </DataTemplate>

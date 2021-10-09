@@ -80,10 +80,13 @@ namespace BSU.Core.Model
 
             foreach (var actionType in precedence)
             {
-                var info = infos.FirstOrDefault(info => info.action == actionType && !info.hasConflcts);
-                if (info == default) continue;
+                // no steam
+                var foundInfo = infos.FirstOrDefault(info => info.action == actionType && !info.hasConflcts && info.mod.CanWrite);
+                if (foundInfo != default) return foundInfo.mod;
 
-                return info.mod;
+                // steam
+                foundInfo = infos.FirstOrDefault(info => info.action == actionType && !info.hasConflcts && !info.mod.CanWrite);
+                if (foundInfo != default) return foundInfo.mod;
             }
 
             return null;

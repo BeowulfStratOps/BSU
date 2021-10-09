@@ -186,7 +186,7 @@ namespace BSU.Core.Model
             if (Selection is RepositoryModActionDownload actionDownload)
             {
                 var updateTarget = new UpdateTarget(versionHash.GetHashString(), displayName);
-                var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
+                var mod = await actionDownload.DownloadStorage.CreateMod("@" + DownloadIdentifier, updateTarget);
                 Selection = new RepositoryModActionStorageMod(mod);
                 var update = await mod.PrepareUpdate(Implementation, displayName, matchHash, versionHash, progress);
                 return update;
