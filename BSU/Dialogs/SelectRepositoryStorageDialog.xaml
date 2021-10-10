@@ -7,7 +7,7 @@
         xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
         xmlns:converters="clr-namespace:BSU.GUI.Converters"
         mc:Ignorable="d"
-        Title="Select Storage" Width="500" d:DataContext="{d:DesignInstance viewModel:SelectRepositoryStorage}"
+        Title="Select Download Location" Width="500" d:DataContext="{d:DesignInstance viewModel:SelectRepositoryStorage}"
         SizeToContent="Height" ResizeMode="NoResize"
         x:Name="Window">
     <DockPanel Margin="15">
@@ -25,7 +25,8 @@
 
             <StackPanel Orientation="Vertical" Visibility="{Binding NotIsLoading, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
-                    BSU automatically determined which mods you already have on your system, and which need to be downloaded.
+                    BSU automatically determined which mods you already have on your system, and which need to be downloaded or updated.
+                    <LineBreak />
                     You can review the selection below and continue if you agree with the selection, or select Cancel to make changes manually.
                 </TextBlock>
 
@@ -34,8 +35,8 @@
                     Use mods you have downloaded from Steam Workshop.
                 </CheckBox>
 
-                <Label>Storage Location</Label>
-                <DockPanel>
+                <Label Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">Download Location</Label>
+                <DockPanel Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">
                     <userControls:SvgButton DockPanel.Dock="Right" Command="{Binding AddStorage}" Svg="{StaticResource SvgAdd}" SvgBrush="Black"
                                             Width="25" Height="{Binding Path=Height, ElementName=ComboBox}"/>
                     <ComboBox ItemsSource="{Binding Storages}" IsSynchronizedWithCurrentItem="True" SelectedIndex="0"

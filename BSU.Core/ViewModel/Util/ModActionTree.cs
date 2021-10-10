@@ -58,7 +58,7 @@ namespace BSU.Core.ViewModel.Util
         private StorageModActionList FindStorageByMod(IModelStorageMod mod)
         {
             var storageId = (Guid)mod.GetStorageModIdentifiers().Storage;
-            return Storages.OfType<StorageModActionList>().Single(s => s.Storage.Identifier == storageId);
+            return Storages.OfType<StorageModActionList>().SingleOrDefault(s => s.Storage.Identifier == storageId);
         }
 
         internal void AddStorage(IModelStorage storage)
@@ -73,7 +73,7 @@ namespace BSU.Core.ViewModel.Util
 
         internal void RemoveMod(IModelStorageMod mod)
         {
-            FindStorageByMod(mod).RemoveMod(mod);
+            FindStorageByMod(mod)?.RemoveMod(mod);
         }
 
         public void Select(ModAction action)

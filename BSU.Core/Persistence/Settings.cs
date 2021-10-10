@@ -45,6 +45,12 @@ namespace BSU.Core.Persistence
         public List<RepositoryEntry> Repositories => _data.Repositories;
         public List<StorageEntry> Storages => _data.Storages;
 
+        public bool FirstStartDone
+        {
+            get => _data.FirstStartDone;
+            set => _data.FirstStartDone = value;
+        }
+
         private class SettingsData
         {
             public SettingsData()
@@ -55,6 +61,7 @@ namespace BSU.Core.Persistence
 
             public readonly List<RepositoryEntry> Repositories;
             public readonly List<StorageEntry> Storages;
+            public bool FirstStartDone { get; set; }
         }
     }
 }

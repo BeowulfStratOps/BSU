@@ -5,7 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Persistence;
+using BSU.Core.Storage;
 using BSU.CoreCommon;
+using NLog;
 
 namespace BSU.Core.Model
 {
@@ -17,11 +19,29 @@ namespace BSU.Core.Model
         private readonly ErrorPresenter _errorPresenter = new();
 
         private InternalState PersistentState { get; }
+        private ILogger _logger = LogManager.GetCurrentClassLogger();
 
         public Model(InternalState persistentState, Types types)
         {
             _types = types;
             PersistentState = persistentState;
+            if (PersistentState.CheckIsFirstStart())
+            {
+                DoFirstStartSetup();
+            }
+        }
+
+        private void DoFirstStartSetup()
+        {
+            _logger.Info("First start setup");
+            var steamPath = SteamStorage.GetWorkshopPath();
+            if (steamPath == null)
+            {
+                _logger.Info("No steam workshop path found. not adding steam storage");
+                return;
+            }
+            _logger.Info($"Found steam at {steamPath}. Adding steam storage");
+            PersistentState.AddStorage("Steam", new DirectoryInfo(steamPath), "STEAM");
         }
 
         public void Load()

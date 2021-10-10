@@ -69,5 +69,14 @@ namespace BSU.Core.Persistence
             _settings.Storages.Remove(storageEntry);
             _settings.Store();
         }
+
+        public bool CheckIsFirstStart()
+        {
+            if (_settings.FirstStartDone) return false;
+            _logger.Debug("First startup");
+            _settings.FirstStartDone = true;
+            _settings.Store();
+            return true;
+        }
     }
 }

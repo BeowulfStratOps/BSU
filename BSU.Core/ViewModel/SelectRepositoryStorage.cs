@@ -148,7 +148,7 @@ namespace BSU.Core.ViewModel
             }
 
             var modInfos = new List<ModStorageSelectionInfo>();
-            foreach (var mod in mods)
+            foreach (var mod in mods.OrderBy(m => m.Identifier))
             {
                 var selection = await mod.GetSelection(cancellationToken: CancellationToken.None);
                 var action = await ModAction.Create(selection, mod, CancellationToken.None);
@@ -173,6 +173,7 @@ namespace BSU.Core.ViewModel
                 !storageMod.StorageMod.ParentStorage.CanWrite);
 
             _hasNonSteamDownloads = DownloadEnabled = selections.Any(s => s.action is SelectStorage or null);
+            ShowDownload = DownloadEnabled || ShowSteamOption;
             AddStorage.SetCanExecute(DownloadEnabled);
 
             Mods = selections
@@ -180,7 +181,7 @@ namespace BSU.Core.ViewModel
                 {
                     var (mod, action) = s;
                     return new ModStorageSelectionInfo(mod.Identifier, action);
-                }).ToList();
+                }).OrderBy(t => t.ModName).ToList();
 
             IsLoading = false;
 
@@ -192,6 +193,18 @@ namespace BSU.Core.ViewModel
                 if (!storage.CanWrite || !await storage.IsAvailable()) continue;
                 var selection = new StorageSelection(storage);
                 Storages.Add(selection);
+            }
+        }
+
+        private bool _showDownload;
+        public bool ShowDownload
+        {
+            get => _showDownload;
+            private set
+            {
+                if (_showDownload == value) return;
+                _showDownload = value;
+                OnPropertyChanged();
             }
         }
 

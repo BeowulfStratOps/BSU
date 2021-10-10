@@ -6,7 +6,7 @@
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
         xmlns:converters="clr-namespace:BSU.GUI.Converters"
         mc:Ignorable="d"
-        Title="Add Storage" Width="350" d:DataContext="{d:DesignInstance viewModel:AddStorage}"
+        Title="Add Download Location" Width="350" d:DataContext="{d:DesignInstance viewModel:AddStorage}"
         SizeToContent="Height" ResizeMode="NoResize"
         x:Name="Window">
     <Grid Margin="15">

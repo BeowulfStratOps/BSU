@@ -63,7 +63,7 @@ namespace BSU.Core.ViewModel
 
         private async Task DoDelete()
         {
-            if (!await _storage.IsAvailable()) // Errored loading, probably because the folder doesn't exist anymore
+            if (!await _storage.IsAvailable() || !_storage.CanWrite) // Errored loading, probably because the folder doesn't exist anymore, or steam
             {
                 _model.DeleteStorage(_storage, false);
                 return;

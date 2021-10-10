@@ -136,11 +136,4 @@ namespace BSU.Core.Model
             return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.NeedsSync);
         }
     }
-
-    internal enum AutoSelectResult
-    {
-        Success,
-        Download,
-        None
-    }
 }

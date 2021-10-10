@@ -135,7 +135,7 @@ namespace BSU.Core.Model
             }
             else
             {
-                var availableStorages = (await _modelStructure.GetStorages().WhereAsync(s => s.IsAvailable())).ToList();
+                var availableStorages = (await _modelStructure.GetStorages().WhereAsync(async s => s.CanWrite && await s.IsAvailable())).ToList();
                 selection = null;
                 if (availableStorages.Any())
                     selection = new RepositoryModActionDownload(availableStorages.First());

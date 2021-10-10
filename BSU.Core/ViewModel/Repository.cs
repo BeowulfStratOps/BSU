@@ -311,7 +311,7 @@ Cancel - Do not remove this repository";
             {
                 (_, ServerUrl) = await _repository.GetServerInfo(CancellationToken.None);
                 var mods = await _repository.GetMods();
-                foreach (var mod in mods)
+                foreach (var mod in mods.OrderBy(m => m.Identifier))
                 {
                     Mods.Add(new RepositoryMod(mod, _model, _viewModelService));
                 }
