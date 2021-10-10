@@ -106,10 +106,14 @@ namespace BSU.Core.Model
 
         public async Task<RepositoryModActionSelection> GetSelection(bool reset = false, CancellationToken cancellationToken = default)
         {
-            // TODO: check if a better option became available and notify user ??
-
             // never change a selection once it was made. Would be clickjacking on the user
-            if (Selection != null && !reset) return Selection;
+            // exceptions are a forced reset, or the current selection not being available anymore
+            if (Selection != null && !reset)
+            {
+                var deleted = Selection is RepositoryModActionDownload download && download.DownloadStorage.IsDeleted ||
+                              Selection is RepositoryModActionStorageMod storageMod && storageMod.StorageMod.IsDeleted;
+                if (!deleted) return Selection;
+            }
 
             _logger.Trace("Checking auto-selection for mod {0}", Identifier);
 
@@ -127,7 +131,7 @@ namespace BSU.Core.Model
             // TODO: check previously selected storage for download?
 
             var selectedMod = await CoreCalculation.AutoSelect(this, storageMods, cancellationToken);
-            RepositoryModActionSelection selection;
+            RepositoryModActionSelection selection = null;
 
             if (selectedMod != null)
             {
@@ -135,10 +139,12 @@ namespace BSU.Core.Model
             }
             else
             {
-                var availableStorages = (await _modelStructure.GetStorages().WhereAsync(async s => s.CanWrite && await s.IsAvailable())).ToList();
-                selection = null;
-                if (availableStorages.Any())
-                    selection = new RepositoryModActionDownload(availableStorages.First());
+                var storage = (await _modelStructure.GetStorages().WhereAsync(async s => s.CanWrite && await s.IsAvailable())).FirstOrDefault();
+                if (storage != null)
+                {
+                    selection = new RepositoryModActionDownload(storage);
+                    DownloadIdentifier = await storage.GetAvailableDownloadIdentifier(Identifier);
+                }
             }
 
             Selection = selection;

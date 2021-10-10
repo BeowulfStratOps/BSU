@@ -65,7 +65,8 @@ namespace BSU.Core.ViewModel
         {
             if (!await _storage.IsAvailable() || !_storage.CanWrite) // Errored loading, probably because the folder doesn't exist anymore, or steam
             {
-                _model.DeleteStorage(_storage, false);
+                OnDeleted?.Invoke(this);
+                await _model.DeleteStorage(_storage, false);
                 return;
             }
 
@@ -86,8 +87,9 @@ Cancel - Do not remove this storage";
                 return;
             }
 
-            _model.DeleteStorage(_storage, (bool) removeMods);
             OnDeleted?.Invoke(this);
+            await _model.DeleteStorage(_storage, (bool) removeMods);
+            await _viewModelService.Update();
         }
 
         public event Action<Storage> OnDeleted;

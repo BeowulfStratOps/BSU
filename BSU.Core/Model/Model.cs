@@ -109,9 +109,9 @@ namespace BSU.Core.Model
             // TODO: dispose / stop actions
         }
 
-        public void DeleteStorage(IModelStorage storage, bool removeMods)
+        public async Task DeleteStorage(IModelStorage storage, bool removeMods)
         {
-            if (removeMods) throw new NotImplementedException();
+            await storage.Delete(removeMods);
             _structure.RemoveStorage(storage);
             PersistentState.RemoveStorage(storage.Identifier);
             // TODO: dispose / stop actions

@@ -48,6 +48,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public bool CanWrite { get; set; } = true;
         public string Identifier { get; }
         public IModelStorage ParentStorage { get; }
+        public bool IsDeleted { get; }
 
         public Task<VersionHash> GetVersionHash(CancellationToken cancellationToken)
         {
@@ -73,6 +74,11 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         public Task<string> GetTitle(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Delete(bool removeData)
         {
             throw new NotImplementedException();
         }

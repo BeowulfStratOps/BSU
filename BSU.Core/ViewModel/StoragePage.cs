@@ -47,6 +47,11 @@ namespace BSU.Core.ViewModel
             var vmStorage = new Storage(storage, _model, _viewModelService);
             Storages.Add(vmStorage);
             vmStorage.OnDeleted += StorageOnOnDeleted;
+            AsyncVoidExecutor.Execute(async () =>
+            {
+                await vmStorage.Load();
+                await _viewModelService.Update();
+            });
             return storage;
         }
 

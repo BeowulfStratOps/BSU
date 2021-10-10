@@ -57,18 +57,24 @@ namespace BSU.Core.ViewModel.Util
 
         private StorageModActionList FindStorageByMod(IModelStorageMod mod)
         {
-            var storageId = (Guid)mod.GetStorageModIdentifiers().Storage;
-            return Storages.OfType<StorageModActionList>().SingleOrDefault(s => s.Storage.Identifier == storageId);
+            var storage = Storages.OfType<StorageModActionList>().SingleOrDefault(s => s.Storage == mod.ParentStorage);
+            if (storage == null && mod.ParentStorage.CanWrite)
+                storage = AddStorage(mod.ParentStorage);
+            return storage;
         }
 
-        internal void AddStorage(IModelStorage storage)
+        internal StorageModActionList AddStorage(IModelStorage storage)
         {
-            Storages.Add(new StorageModActionList(storage, this));
+            var storageEntry = new StorageModActionList(storage, this);
+            Storages.Add(storageEntry);
+            return storageEntry;
         }
 
         internal void RemoveStorage(IModelStorage storage)
         {
-            throw new NotImplementedException();
+            var storageEntry = Storages.OfType<StorageModActionList>().SingleOrDefault(s => s.Storage == storage);
+            if (storageEntry != null)
+                Storages.Remove(storageEntry);
         }
 
         internal void RemoveMod(IModelStorageMod mod)
@@ -96,6 +102,17 @@ namespace BSU.Core.ViewModel.Util
                 {
                     selectableModAction.IsSelected = selectableModAction.Action.Equals(action);
                 }
+            }
+        }
+
+        public void Update()
+        {
+            // just purging removed storages for now.
+            // TODO: ideally, this should rebuild the entire list, to keep it functional / state-less
+            foreach (var storageModActionList in Storages.OfType<StorageModActionList>().ToList())
+            {
+                if (storageModActionList.Storage.IsDeleted)
+                    Storages.Remove(storageModActionList);
             }
         }
     }

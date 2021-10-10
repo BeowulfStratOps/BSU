@@ -17,9 +17,12 @@ namespace BSU.Core.Model
         bool CanWrite { get; }
         Guid Identifier { get; }
         string Name { get; }
+        bool IsDeleted { get; }
         PersistedSelection AsStorageIdentifier();
         Task<bool> HasMod(string downloadIdentifier);
         string GetLocation();
         Task<bool> IsAvailable();
+        Task<string> GetAvailableDownloadIdentifier(string baseIdentifier);
+        Task Delete(bool removeMods);
     }
 }

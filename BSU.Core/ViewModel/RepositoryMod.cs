@@ -211,6 +211,9 @@ namespace BSU.Core.ViewModel
             {
                 await UpdateAction(mod);
             }
+
+            // TODO: really, this should be the only thing happening in this method. keep it all functional/state-less.
+            Actions.Update();
         }
 
         internal async Task<(IModUpdate update, Progress<FileSyncStats> progress)> StartUpdate(CancellationToken cancellationToken)

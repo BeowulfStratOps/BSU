@@ -20,6 +20,7 @@ namespace BSU.Core.Model
         public bool CanWrite { get; }
         public string Identifier { get; }
         public IModelStorage ParentStorage { get; }
+        public bool IsDeleted { get; private set; }
         public IStorageMod Implementation { get; }
 
         private readonly ResettableLazyAsync<MatchHash> _matchHash;
@@ -108,6 +109,12 @@ namespace BSU.Core.Model
         public async Task<string> GetTitle(CancellationToken cancellationToken)
         {
             return _title ??= await Implementation.GetTitle(cancellationToken);
+        }
+
+        public async Task Delete(bool removeData)
+        {
+            if (removeData) throw new NotImplementedException();
+            IsDeleted = true;
         }
 
         private UpdateTarget UpdateTarget

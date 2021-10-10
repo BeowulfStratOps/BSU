@@ -19,11 +19,13 @@ namespace BSU.Core.Model
         bool CanWrite { get; }
         string Identifier { get; }
         IModelStorage ParentStorage { get; }
+        bool IsDeleted { get; }
         Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         StorageModStateEnum GetState();
         Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken);
         CancellationToken GetStateToken();
         Task<string> GetTitle(CancellationToken cancellationToken);
+        Task Delete(bool removeData);
     }
 }

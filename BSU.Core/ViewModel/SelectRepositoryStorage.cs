@@ -140,8 +140,12 @@ namespace BSU.Core.ViewModel
                 {
                     var selection = await mod.GetSelection(cancellationToken: cancellationToken);
                     if (selection is RepositoryModActionDownload ||
-                        (selection is RepositoryModActionStorageMod storageMod && !storageMod.StorageMod.CanWrite && !UseSteam))
+                        (selection is RepositoryModActionStorageMod storageMod && !storageMod.StorageMod.CanWrite &&
+                         !UseSteam))
+                    {
                         mod.SetSelection(new RepositoryModActionDownload(Storage.Storage));
+                        mod.DownloadIdentifier = await Storage.Storage.GetAvailableDownloadIdentifier(mod.Identifier);
+                    }
                 }
 
                 Ok.SetCanExecute(true);
@@ -156,6 +160,7 @@ namespace BSU.Core.ViewModel
             }
 
             Mods = modInfos;
+            await _viewModelService.Update();
         }
 
         private async Task Load()

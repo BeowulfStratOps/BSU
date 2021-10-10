@@ -11,5 +11,6 @@ namespace BSU.Core.Tests.Mocks
 
         public List<RepositoryEntry> Repositories { get; } = new List<RepositoryEntry>();
         public List<StorageEntry> Storages { get; } = new List<StorageEntry>();
+        public bool FirstStartDone { get; set; }
     }
 }

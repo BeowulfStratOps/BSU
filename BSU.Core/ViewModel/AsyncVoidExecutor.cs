@@ -10,6 +10,7 @@ namespace BSU.Core.ViewModel
 
         public static async void Execute(Func<Task> action)
         {
+            // TODO: capture current stacktrace here, so that we have that info when an exception occurs
             try
             {
                 await action();

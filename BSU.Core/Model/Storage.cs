@@ -16,6 +16,7 @@ namespace BSU.Core.Model
         private readonly IModelStructure _modelStructure;
         public IStorage Implementation { get; }
         public string Name { get; }
+        public bool IsDeleted { get; private set; }
         public Guid Identifier { get; }
         public string Location { get; }
         private readonly List<IModelStorageMod> _mods = new();
@@ -46,7 +47,6 @@ namespace BSU.Core.Model
                     var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
                         this, Implementation.CanWrite(), _modelStructure);
                     _mods.Add(modelMod);
-                    ModAdded?.Invoke(modelMod);
                 }
             }
             catch (DirectoryNotFoundException e)
@@ -96,8 +96,7 @@ namespace BSU.Core.Model
         public async Task<bool> HasMod(string downloadIdentifier)
         {
             await _loading;
-            // TODO: meh?
-            return _mods.Any(m => m.GetStorageModIdentifiers().Mod == downloadIdentifier);
+            return _mods.Any(m => string.Equals(m.Identifier, downloadIdentifier, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public string GetLocation() => Location;
@@ -114,6 +113,34 @@ namespace BSU.Core.Model
             }
         }
 
-        public event Action<IModelStorageMod> ModAdded;
+        public async Task<string> GetAvailableDownloadIdentifier(string baseIdentifier)
+        {
+            bool Exists(string name)
+            {
+                return _mods.Any(
+                    m => string.Equals(m.Identifier, name, StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            await _loading;
+            if (!Exists(baseIdentifier))
+                return baseIdentifier;
+            var i = 1;
+            while (true)
+            {
+                var name = $"{baseIdentifier}_{i}";
+                if (!Exists(name))
+                    return name;
+                i++;
+            }
+        }
+
+        public async Task Delete(bool removeMods)
+        {
+            IsDeleted = true;
+            foreach (var mod in _mods)
+            {
+                await mod.Delete(removeMods);
+            }
+        }
     }
 }

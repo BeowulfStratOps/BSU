@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ namespace BSU.GUI
         public MainWindow()
         {
             Thread.CurrentThread.Name = "main";
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
             _core = new Core.Core(settingsFile);
             var viewModel = _core.ViewModel;
