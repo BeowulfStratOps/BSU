@@ -38,5 +38,16 @@ namespace BSU.GUI
         {
             _core.Dispose();
         }
+
+        private void ShowLogs_Click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException("Need to figure out how packing/updater work...");
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(
+                "Beowulf Sync Utility, developed by Beowulf Strategic Operations (https://beowulfso.com).\nSee https://github.com/BeowulfStratOps/BSU for more information.", "About BSU");
+        }
     }
 }

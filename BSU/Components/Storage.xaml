@@ -21,7 +21,7 @@
                     <TextBlock Foreground="Red" Visibility="{Binding Error, Converter={StaticResource NullToVisibility}}" Text="{Binding Error}" />
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}"/>
+                    <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Download Location"/>
                 </StackPanel>
             </DockPanel>
             <Expander>

@@ -53,7 +53,7 @@
 
                 <Grid Grid.Column="2" DockPanel.Dock="Right">
                     <DockPanel x:Name="ComboBoxSelected">
-                        <userControls:SvgButton DockPanel.Dock="Right" Width="15" Height="15" Command="{Binding Actions.Open}" Svg="{StaticResource SvgComboOpen}"/>
+                        <userControls:SvgButton DockPanel.Dock="Right" Width="15" Height="15" Command="{Binding Actions.Open}" Svg="{StaticResource SvgComboOpen}" ToolTip="Show available Download Locations"/>
 
                         <ContentControl Content="{Binding Actions.Selection}">
                             <ContentControl.Resources>

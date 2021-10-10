@@ -12,7 +12,7 @@
     <DockPanel>
         <!-- TODO: figure out how to reuse this for all pages -->
         <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-            <userControls:SvgButton DockPanel.Dock="Left" Width="25" Height="25" Command="{Binding Back}" Svg="{StaticResource SvgBack}" />
+            <userControls:SvgButton DockPanel.Dock="Left" Width="25" Height="25" Command="{Binding Back}" Svg="{StaticResource SvgBack}" ToolTip="Back" />
         </DockPanel>
 
         <ScrollViewer>
@@ -24,7 +24,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <userControls:SvgButton Width="40" Height="40" Command="{Binding AddStorage}" Svg="{StaticResource SvgAdd}"></userControls:SvgButton>
+                <userControls:SvgButton Width="40" Height="40" Command="{Binding AddStorage}" Svg="{StaticResource SvgAdd}" ToolTip="Add Download Location"/>
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

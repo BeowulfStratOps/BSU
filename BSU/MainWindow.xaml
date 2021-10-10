@@ -25,10 +25,9 @@
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_Manage"></MenuItem>
             <MenuItem Header="_Help">
-                <MenuItem Header="_About"></MenuItem>
-                <MenuItem Header="_Show Logs"></MenuItem>
+                <MenuItem Header="_Show Logs" Click="ShowLogs_Click"></MenuItem>
+                <MenuItem Header="_About" Click="About_Click"></MenuItem>
             </MenuItem>
         </Menu>
         <Grid>
@@ -39,7 +38,7 @@
                         <Border Margin="5" Padding="5" Background="#DDFF0000" CornerRadius="3">
                             <DockPanel LastChildFill="False">
                                 <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Text}" />
-                                <userControls:SvgButton Width="20" Height="20" DockPanel.Dock="Right" Command="{Binding Dismiss}" Svg="{StaticResource SvgClose}"/>
+                                <userControls:SvgButton Width="20" Height="20" DockPanel.Dock="Right" Command="{Binding Dismiss}" Svg="{StaticResource SvgClose}" ToolTip="Dismiss"/>
                             </DockPanel>
                         </Border>
                     </DataTemplate>

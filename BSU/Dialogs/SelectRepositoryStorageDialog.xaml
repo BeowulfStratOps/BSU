@@ -38,7 +38,7 @@
                 <Label Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">Download Location</Label>
                 <DockPanel Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">
                     <userControls:SvgButton DockPanel.Dock="Right" Command="{Binding AddStorage}" Svg="{StaticResource SvgAdd}" SvgBrush="Black"
-                                            Width="25" Height="{Binding Path=Height, ElementName=ComboBox}"/>
+                                            Width="25" Height="{Binding Path=Height, ElementName=ComboBox}" ToolTip="Add new Download Location"/>
                     <ComboBox ItemsSource="{Binding Storages}" IsSynchronizedWithCurrentItem="True" SelectedIndex="0"
                               SelectedItem="{Binding Storage}" IsEnabled="{Binding DownloadEnabled}"
                               x:Name="ComboBox" Margin="0,0,5,0">
