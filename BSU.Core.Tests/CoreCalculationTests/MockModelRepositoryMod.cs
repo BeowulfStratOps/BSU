@@ -76,5 +76,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             throw new NotImplementedException();
         }
+
+        public Task<string> GetErrorForSelection(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

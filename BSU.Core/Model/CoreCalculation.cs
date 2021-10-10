@@ -105,7 +105,7 @@ namespace BSU.Core.Model
             return repoMatch.IsMatch(await selected.GetMatchHash(cancellationToken));
         }
 
-        internal static CalculatedRepositoryState CalculateRepositoryState(List<(RepositoryModActionSelection selection, ModActionEnum? action)> mods)
+        internal static CalculatedRepositoryState CalculateRepositoryState(List<(RepositoryModActionSelection selection, ModActionEnum? action, bool hasError)> mods)
         {
             /*
             NeedsSync, // auto selected previously used, other auto selection worked without any conflicts, no internal conflicts.
@@ -114,6 +114,11 @@ namespace BSU.Core.Model
             Syncing, // All are ready or being worked on
             Loading
             */
+
+            if (mods.Any(mod => mod.hasError))
+            {
+                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.RequiresUserIntervention);
+            }
 
             if (mods.All(mod =>
                 mod.selection is RepositoryModActionStorageMod && mod.action == ModActionEnum.Use))

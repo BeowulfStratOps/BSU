@@ -23,5 +23,6 @@ namespace BSU.Core.Model
         Task<List<IModelRepositoryMod>> GetConflictsUsingMod(IModelStorageMod mod, CancellationToken cancellationToken);
         Task<ModActionEnum> GetActionForMod(IModelStorageMod storageMod, CancellationToken cancellationToken);
         Task<List<(IModelStorageMod mod, ModActionEnum action)>> GetModActions(CancellationToken cancellationToken); // TODO: this method is kinda useless...
+        Task<string> GetErrorForSelection(CancellationToken cancellationToken);
     }
 }

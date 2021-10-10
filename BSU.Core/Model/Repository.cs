@@ -85,13 +85,14 @@ namespace BSU.Core.Model
 
             var mods = await GetMods();
 
-            async Task<(RepositoryModActionSelection selection, ModActionEnum? action)> GetModSelection(IModelRepositoryMod mod)
+            async Task<(RepositoryModActionSelection selection, ModActionEnum? action, bool hasError)> GetModSelection(IModelRepositoryMod mod)
             {
                 var selection = await mod.GetSelection(cancellationToken: cancellationToken);
                 var action = selection is not RepositoryModActionStorageMod actionStorageMod
                     ? null
                     : (ModActionEnum?)await CoreCalculation.GetModAction(mod, actionStorageMod.StorageMod, cancellationToken);
-                return (selection, action);
+                var hasError = await mod.GetErrorForSelection(cancellationToken) != null;
+                return (selection, action, hasError);
             }
 
             var infoTasks = mods.Select(GetModSelection).ToList();

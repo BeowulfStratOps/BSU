@@ -13,30 +13,30 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?) Null()
+        private (RepositoryModActionSelection, ModActionEnum?, bool) Null()
         {
-            return (null, null);
+            return (null, null, false);
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?) DoNothing()
+        private (RepositoryModActionSelection, ModActionEnum?, bool) DoNothing()
         {
-            return (new RepositoryModActionDoNothing(), null);
+            return (new RepositoryModActionDoNothing(), null, false);
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?) Download()
+        private (RepositoryModActionSelection, ModActionEnum?, bool) Download()
         {
             var storage = new Mock<IModelStorage>(MockBehavior.Strict).Object;
-            return (new RepositoryModActionDownload(storage), null);
+            return (new RepositoryModActionDownload(storage), null, false);
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?) StorageMod(ModActionEnum? action)
+        private (RepositoryModActionSelection, ModActionEnum?, bool) StorageMod(ModActionEnum? action)
         {
             var storageMod = AutoselectTests.FromAction((ModActionEnum)action);
-            return (new RepositoryModActionStorageMod(storageMod), action);
+            return (new RepositoryModActionStorageMod(storageMod), action, false);
         }
 
         private CalculatedRepositoryState CalculateState(
-            params (RepositoryModActionSelection, ModActionEnum?)[] modData)
+            params (RepositoryModActionSelection, ModActionEnum?, bool)[] modData)
         {
             return CoreCalculation.CalculateRepositoryState(modData.ToList());
         }

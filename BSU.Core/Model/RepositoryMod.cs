@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -104,6 +105,41 @@ namespace BSU.Core.Model
             return (await mods.SelectAsync(async m => (m, await GetActionForMod(m, cancellationToken)))).ToList();
         }
 
+        public async Task<string> GetErrorForSelection(CancellationToken cancellationToken)
+        {
+            var selection = await GetSelection(cancellationToken: cancellationToken);
+
+            switch (selection)
+            {
+                case null:
+                    return "Select an action";
+                case RepositoryModActionDoNothing:
+                    return null;
+                case RepositoryModActionDownload when string.IsNullOrWhiteSpace(DownloadIdentifier):
+                    return "Name must be a valid folder name";
+                case RepositoryModActionDownload when DownloadIdentifier.IndexOfAny(Path.GetInvalidPathChars()) >= 0 || DownloadIdentifier.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0:
+                    return "Invalid characters in name";
+                case RepositoryModActionDownload selectStorage:
+                {
+                    var folderExists = await selectStorage.DownloadStorage.HasMod(DownloadIdentifier);
+                    return folderExists ? "Name in use" : null;
+                }
+                case RepositoryModActionStorageMod selectMod when await GetActionForMod(selectMod.StorageMod, cancellationToken) == ModActionEnum.AbortActiveAndUpdate:
+                    return "This mod is currently being updated";
+                case RepositoryModActionStorageMod selectMod:
+                {
+                    var conflicts = await GetConflictsUsingMod(selectMod.StorageMod, CancellationToken.None);
+                    if (!conflicts.Any())
+                        return null;
+
+                    var conflictNames = conflicts.Select(c => $"{c}");
+                    return "In conflict with: " + string.Join(", ", conflictNames);
+                }
+                default:
+                    return null;
+            }
+        }
+
         public async Task<RepositoryModActionSelection> GetSelection(bool reset = false, CancellationToken cancellationToken = default)
         {
             // never change a selection once it was made. Would be clickjacking on the user
@@ -185,7 +221,6 @@ namespace BSU.Core.Model
             // TODO: all at the same time
             var matchHash = await _matchHash.GetAsync(cancellationToken);
             var versionHash = await _versionHash.GetAsync(cancellationToken);
-            var displayName = await GetModInfo(cancellationToken);
 
             if (Selection is RepositoryModActionStorageMod actionStorageMod)
             {

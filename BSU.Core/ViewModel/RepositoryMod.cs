@@ -83,70 +83,16 @@ namespace BSU.Core.ViewModel
             Actions.RemoveStorage(storage);
         }
 
-        private async Task UpdateErrorText()
-        {
-            // TODO: make sure it updates itself when e.g. conflict states change
-
-            if (Actions.Selection == null)
-            {
-                ErrorText = "Select an action";
-                return;
-            }
-
-            if (Actions.Selection is SelectDoNothing)
-            {
-                ErrorText = "";
-                return;
-            }
-
-            if (Actions.Selection is SelectStorage selectStorage)
-            {
-                if (string.IsNullOrWhiteSpace(DownloadIdentifier))
-                {
-                    ErrorText = "Name must be a valid folder name";
-                    return;
-                }
-
-                if (DownloadIdentifier.IndexOfAny(Path.GetInvalidPathChars()) >= 0 || DownloadIdentifier.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-                {
-                    ErrorText = "Invalid characters in name";
-                    return;
-                }
-                var folderExists = await selectStorage.DownloadStorage.HasMod("@" + DownloadIdentifier);
-                ErrorText = folderExists ? "Name in use" : "";
-            }
-
-            if (Actions.Selection is SelectMod selectMod)
-            {
-                if (selectMod.ActionType == ModActionEnum.AbortActiveAndUpdate)
-                {
-                    ErrorText = "This mod is currently being updated";
-                    return;
-                }
-
-                var conflicts = await Mod.GetConflictsUsingMod(selectMod.StorageMod, CancellationToken.None);
-                if (!conflicts.Any())
-                {
-                    ErrorText = "";
-                    return;
-                }
-
-                var conflictNames = conflicts.Select(c => $"{c}");
-                ErrorText = "Conflicts: " + string.Join(", ", conflictNames);
-            }
-        }
-
-        // TODO: validate folder name: invalid chars, leading '@'
         public string DownloadIdentifier
         {
             get => _downloadIdentifier;
             set
             {
                 if (value == _downloadIdentifier) return;
-                Mod.DownloadIdentifier = value;
+                Mod.DownloadIdentifier = "@" + value;
                 _downloadIdentifier = value;
                 OnPropertyChanged();
-                AsyncVoidExecutor.Execute(UpdateErrorText);
+                AsyncVoidExecutor.Execute(_viewModelService.Update);
             }
         }
 
@@ -193,6 +139,7 @@ namespace BSU.Core.ViewModel
         public async Task Update()
         {
             var selection = await Mod.GetSelection(cancellationToken: CancellationToken.None);
+            DownloadIdentifier = Mod.DownloadIdentifier[1..];
             if (selection is RepositoryModActionStorageMod actionStorageMod)
             {
                 var updatedAction = await UpdateAction(actionStorageMod.StorageMod);
@@ -204,7 +151,7 @@ namespace BSU.Core.ViewModel
                 Actions.SetSelection(action);
             }
 
-            await UpdateErrorText();
+            ErrorText = await Mod.GetErrorForSelection(CancellationToken.None) ?? "";
 
             var actions = await Mod.GetModActions(CancellationToken.None);
             foreach (var (mod, _) in actions)

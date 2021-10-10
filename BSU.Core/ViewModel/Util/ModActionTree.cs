@@ -65,6 +65,8 @@ namespace BSU.Core.ViewModel.Util
 
         internal StorageModActionList AddStorage(IModelStorage storage)
         {
+            var existing = Storages.OfType<StorageModActionList>().SingleOrDefault(s => s.Storage == storage);
+            if (existing != null) return existing;
             var storageEntry = new StorageModActionList(storage, this);
             Storages.Add(storageEntry);
             return storageEntry;
