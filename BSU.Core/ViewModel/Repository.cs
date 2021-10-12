@@ -184,8 +184,15 @@ namespace BSU.Core.ViewModel
             Pause = new DelegateCommand(DoPause, false);
             Settings = new DelegateCommand(() =>
                 _viewModelService.InteractionService.MessagePopup("Not supported yet.", "Settings"));
+            ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
             UpdateButtonStates();
             Name = repository.Name;
+        }
+
+        private void DoChooseDownloadLocation()
+        {
+            var vm = new SelectRepositoryStorage(_repository, _model, _viewModelService, false);
+            _viewModelService.InteractionService.SelectRepositoryStorage(vm);
         }
 
         private void DoPlay()
@@ -383,6 +390,8 @@ Cancel - Do not remove this repository";
         }
 
         public DelegateCommand Settings { get; }
+
+        public DelegateCommand ChooseDownloadLocation { get; }
 
         #endregion
     }

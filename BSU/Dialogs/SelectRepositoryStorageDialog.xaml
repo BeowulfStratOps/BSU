@@ -17,14 +17,14 @@
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button IsDefault="True" Margin="15, 0" MinWidth="50" Command="{Binding Ok}" CommandParameter="{Binding ElementName=Window}">Ok</Button>
-            <Button IsCancel="True" MinWidth="50">Cancel</Button>
+            <Button IsCancel="True" MinWidth="50" Visibility="{Binding UpdateAfter, Converter={StaticResource BoolToVisibility}}">Cancel</Button>
         </StackPanel>
 
         <Grid>
             <userControls:Spinner Width="50" Height="50" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"/>
 
             <StackPanel Orientation="Vertical" Visibility="{Binding NotIsLoading, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
+                <TextBlock Visibility="{Binding UpdateAfter, Converter={StaticResource BoolToVisibility}}" TextWrapping="Wrap" Margin="0,0,0,15">
                     BSU automatically determined which mods you already have on your system, and which need to be downloaded or updated.
                     <LineBreak />
                     You can review the selection below and continue if you agree with the selection, or select Cancel to make changes manually.

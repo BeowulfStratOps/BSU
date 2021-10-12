@@ -11,6 +11,7 @@ namespace BSU.Core.ViewModel
 {
     public class SelectRepositoryStorage : ObservableBase
     {
+        public bool UpdateAfter { get; }
         private readonly IModelRepository _repository;
         private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
@@ -102,9 +103,11 @@ namespace BSU.Core.ViewModel
         }
 
 
-        internal SelectRepositoryStorage(IModelRepository repository, IModel model, IViewModelService viewModelService)
+        internal SelectRepositoryStorage(IModelRepository repository, IModel model, IViewModelService viewModelService,
+            bool updateAfter)
         {
-            Ok = new DelegateCommand(HandleOk, false);
+            UpdateAfter = updateAfter;
+            Ok = new DelegateCommand(HandleOk, !updateAfter);
             AddStorage = new DelegateCommand(HandleAdd, false);
             _repository = repository;
             _model = model;
@@ -115,6 +118,7 @@ namespace BSU.Core.ViewModel
         private void HandleAdd()
         {
             var storage = _viewModelService.AddStorage(false);
+            if (storage == null) return;
             var selection = new StorageSelection(storage);
             Storages.Add(selection);
             Storage = selection;

@@ -51,7 +51,7 @@ namespace BSU.Core.ViewModel
             AsyncVoidExecutor.Execute(_viewModelService.Update);
             AsyncVoidExecutor.Execute(vmRepo.Load);
 
-            var selectStorageVm = new SelectRepositoryStorage(repo, _model, _viewModelService);
+            var selectStorageVm = new SelectRepositoryStorage(repo, _model, _viewModelService, true);
             if (!_viewModelService.InteractionService.SelectRepositoryStorage(selectStorageVm)) return;
 
             AsyncVoidExecutor.Execute(async () =>
