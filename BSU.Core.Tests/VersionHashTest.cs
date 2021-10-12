@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Tests.Mocks;
 using Xunit;
@@ -9,15 +10,15 @@ namespace BSU.Core.Tests
     public class VersionHashTests
     {
         [Fact]
-        private void Simple1()
+        private async Task Simple1()
         {
-            Assert.True(Check(new Dictionary<string, string>(), new Dictionary<string, string>()));
+            Assert.True(await Check(new Dictionary<string, string>(), new Dictionary<string, string>()));
         }
 
         [Fact]
-        private void Simple2()
+        private async Task Simple2()
         {
-            Assert.True(Check(new Dictionary<string, string>
+            Assert.True(await Check(new Dictionary<string, string>
                 {
                     {"some.file", "stuff!"}
                 },
@@ -28,9 +29,9 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void Simple3()
+        private async Task Simple3()
         {
-            Assert.True(Check(new Dictionary<string, string>
+            Assert.True(await Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"}
                 },
@@ -41,9 +42,9 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void PboTrust()
+        private async Task PboTrust()
         {
-            Assert.True(Check(new Dictionary<string, string>
+            Assert.True(await Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"}
                 },
@@ -54,9 +55,9 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void False1()
+        private async Task False1()
         {
-            Assert.False(Check(new Dictionary<string, string>
+            Assert.False(await Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"}
                 },
@@ -67,9 +68,9 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void True1()
+        private async Task True1()
         {
-            Assert.True(Check(new Dictionary<string, string>
+            Assert.True(await Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
                     {"qwer.dll", "www"}
@@ -82,9 +83,9 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void False2()
+        private async Task False2()
         {
-            Assert.False(Check(new Dictionary<string, string>
+            Assert.False(await Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
                     {"qwer.dll", "www"}
@@ -97,9 +98,9 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void False3()
+        private async Task False3()
         {
-            Assert.False(Check(new Dictionary<string, string>
+            Assert.False(await Check(new Dictionary<string, string>
                 {
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
                     {"qwer.dll", "xyz"}
@@ -119,24 +120,24 @@ namespace BSU.Core.Tests
             }
         }
 
-        private static VersionHash CreateStorageMod(Dictionary<string, string> files)
+        private static async Task<VersionHash> CreateStorageMod(Dictionary<string, string> files)
         {
             var storageMod = new MockStorageMod();
             AddFiles(storageMod, files);
-            return VersionHash.CreateAsync(storageMod, CancellationToken.None).Result;
+            return await VersionHash.CreateAsync(storageMod, CancellationToken.None);
         }
 
-        private static VersionHash CreateRepositoryMod(Dictionary<string, string> files)
+        private static async Task<VersionHash> CreateRepositoryMod(Dictionary<string, string> files)
         {
             var repoMod = new MockRepositoryMod();
             AddFiles(repoMod, files);
-            return VersionHash.CreateAsync(repoMod, CancellationToken.None).Result;
+            return await VersionHash.CreateAsync(repoMod, CancellationToken.None);
         }
 
-        private static bool Check(Dictionary<string, string> files1, Dictionary<string, string> files2)
+        private static async Task<bool> Check(Dictionary<string, string> files1, Dictionary<string, string> files2)
         {
-            var res1 = CreateStorageMod(files1).IsMatch(CreateRepositoryMod(files2));
-            var res2 = CreateRepositoryMod(files1).IsMatch(CreateStorageMod(files2));
+            var res1 = (await CreateStorageMod(files1)).IsMatch(await CreateRepositoryMod(files2));
+            var res2 = (await CreateRepositoryMod(files1)).IsMatch(await CreateStorageMod(files2));
             Assert.Equal(res1, res2);
             return res1;
         }

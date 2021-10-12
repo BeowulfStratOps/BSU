@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model.Updating;
 using BSU.Core.Sync;
 using BSU.Core.Tests.Mocks;
@@ -31,13 +32,13 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void Success()
+        private async Task Success()
         {
             var updateState = new MockUpdateState(false, false, null);
             var repoUpdate = GetRepoUpdate(updateState);
 
-            var prepared = repoUpdate.Prepare(CancellationToken.None).Result;
-            var done = repoUpdate.Update(CancellationToken.None).Result;
+            var prepared = await repoUpdate.Prepare(CancellationToken.None);
+            var done = await repoUpdate.Update(CancellationToken.None);
 
             CheckCounts(prepared, 1, 0);
             CheckCounts(done, 1, 0);
@@ -74,13 +75,13 @@ namespace BSU.Core.Tests
         }*/
 
         [Fact]
-        private void UpdateError()
+        private async Task UpdateError()
         {
             var updateState = new MockUpdateState(false, true, null);
             var repoUpdate = GetRepoUpdate(updateState);
 
-            var prepared = repoUpdate.Prepare(CancellationToken.None).Result;
-            var done = repoUpdate.Update(CancellationToken.None).Result;
+            var prepared = await repoUpdate.Prepare(CancellationToken.None);
+            var done = await repoUpdate.Update(CancellationToken.None);
 
             CheckCounts(prepared, 1, 0);
             CheckCounts(done, 0, 1);
@@ -89,14 +90,14 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void PrepareError_KeepGoing()
+        private async Task PrepareError_KeepGoing()
         {
             var updateState = new MockUpdateState(false, false, null);
             var updateStateFail = new MockUpdateState(true, false, null);
             var repoUpdate = GetRepoUpdate(updateState, updateStateFail);
 
-            var prepared = repoUpdate.Prepare(CancellationToken.None).Result;
-            var done = repoUpdate.Update(CancellationToken.None).Result;
+            var prepared = await repoUpdate.Prepare(CancellationToken.None);
+            var done = await repoUpdate.Update(CancellationToken.None);
 
             CheckCounts(prepared, 1, 1);
             CheckCounts(done, 1, 0);

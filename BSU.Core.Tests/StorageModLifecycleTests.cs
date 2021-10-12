@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
@@ -49,63 +50,64 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void CreatedWithTarget()
+        private async Task CreatedWithTarget()
         {
             var target = new UpdateTarget("1234");
             var (implementation, storageMod) = CreateStorageMod(target);
             Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
             Assert.NotNull(storageMod.GetVersionHash());
-            Assert.True(storageMod.GetVersionHash(CancellationToken.None).Result.IsMatch(VersionHash.FromDigest("1234")));
+            var versionHash = await storageMod.GetVersionHash(CancellationToken.None);
+            Assert.True(versionHash.IsMatch(VersionHash.FromDigest("1234")));
         }
 
         [Fact]
-        private void UpdateWithTarget()
+        private async Task UpdateWithTarget()
         {
             var target = new UpdateTarget("1234");
             var (implementation, storageMod) = CreateStorageMod(target);
 
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(),
-                VersionHash.CreateEmpty(), null).Result;
+            var update = await storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(),
+                VersionHash.CreateEmpty(), null);
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
-            Assert.True(storageMod.GetMatchHash().IsMatch(MatchHash.CreateEmpty()));
-            Assert.True(storageMod.GetVersionHash().IsMatch(VersionHash.CreateEmpty()));
+            Assert.True((await storageMod.GetMatchHash()).IsMatch(MatchHash.CreateEmpty()));
+            Assert.True((await storageMod.GetVersionHash()).IsMatch(VersionHash.CreateEmpty()));
         }
 
         [Fact]
-        private void Prepared()
+        private async Task Prepared()
         {
             var target = new UpdateTarget("1234");
             var (implementation, storageMod) = CreateStorageMod(target);
 
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(),
-                VersionHash.CreateEmpty(), null).Result;
-            update.Prepare(CancellationToken.None).Wait();
+            var update = await storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(),
+                VersionHash.CreateEmpty(), null);
+            await update.Prepare(CancellationToken.None);
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
-            Assert.True(storageMod.GetMatchHash().IsMatch(MatchHash.CreateEmpty()));
-            Assert.True(storageMod.GetVersionHash().IsMatch(VersionHash.CreateEmpty()));
+            Assert.True((await storageMod.GetMatchHash()).IsMatch(MatchHash.CreateEmpty()));
+            Assert.True((await storageMod.GetVersionHash()).IsMatch(VersionHash.CreateEmpty()));
         }
 
         [Fact]
-        private void Updated()
+        private async Task Updated()
         {
             var target = new UpdateTarget("123");
             var (implementation, storageMod) = CreateStorageMod();
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(), VersionHash.CreateEmpty(), null).Result;
+            var update = await storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(), VersionHash.CreateEmpty(), null);
 
-            update.Prepare(CancellationToken.None).Wait();
-            update.Update(CancellationToken.None).Wait();
+            await update.Prepare(CancellationToken.None);
+            await update.Update(CancellationToken.None);
 
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
-            Assert.True(storageMod.GetMatchHash().IsMatch(MatchHash.CreateAsync(repo, CancellationToken.None).Result));
-            Assert.True(storageMod.GetVersionHash().IsMatch(VersionHash.CreateAsync(repo, CancellationToken.None).Result));
+            Assert.True((await storageMod.GetMatchHash()).IsMatch(await MatchHash.CreateAsync(repo, CancellationToken.None)));
+            Assert.True((await storageMod.GetVersionHash()).IsMatch(await VersionHash.CreateAsync(repo, CancellationToken.None)));
         }
 
         /*[Fact]

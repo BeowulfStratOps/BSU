@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Tests.Util;
 using Xunit;
@@ -13,7 +14,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void HasConflict()
+        private async Task HasConflict()
         {
             var repoMod1 = new MockModelRepositoryMod(1, 1);
 
@@ -21,11 +22,11 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
             var storageMod = new MockModelStorageMod(1, 1, StorageModStateEnum.Created);
 
-            Assert.True(CoreCalculation.IsConflicting(repoMod1, repoMod2, storageMod, CancellationToken.None).Result);
+            Assert.True(await CoreCalculation.IsConflicting(repoMod1, repoMod2, storageMod, CancellationToken.None));
         }
 
         [Fact]
-        private void NoConflict()
+        private async Task NoConflict()
         {
             var repoMod1 = new MockModelRepositoryMod(1, 1);
 
@@ -33,7 +34,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
             var storageMod = new MockModelStorageMod(1, 1, StorageModStateEnum.Created);
 
-            Assert.False(CoreCalculation.IsConflicting(repoMod1, repoMod2, storageMod, CancellationToken.None).Result);
+            Assert.False(await CoreCalculation.IsConflicting(repoMod1, repoMod2, storageMod, CancellationToken.None));
         }
     }
 }

@@ -22,8 +22,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public MockModelStorageMod(int? match, int? version, StorageModStateEnum state)
         {
-            _matchHash = TestUtils.GetMatchHash(match);
-            _versionHash = TestUtils.GetVersionHash(version);
+            _matchHash = TestUtils.GetMatchHash(match).Result;
+            _versionHash = TestUtils.GetVersionHash(version).Result;
             _state = state;
         }
 

@@ -17,8 +17,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public MockModelRepositoryMod(int? match, int? version)
         {
-            _matchHash = TestUtils.GetMatchHash(match);
-            _versionHash = TestUtils.GetVersionHash(version);
+            _matchHash = TestUtils.GetMatchHash(match).Result;
+            _versionHash = TestUtils.GetVersionHash(version).Result;
         }
 
         public void SetSelection(RepositoryModActionSelection selection)

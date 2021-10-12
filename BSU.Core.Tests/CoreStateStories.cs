@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
@@ -50,7 +51,7 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void Download()
+        private async Task Download()
         {
             var structure = new MockModelStructure();
             var (repoFiles, repoMod) = CreateRepoMod("1", "1", structure);
@@ -61,13 +62,13 @@ namespace BSU.Core.Tests
 
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
 
-            var update = repoMod.StartUpdate(null, CancellationToken.None).Result;
-            update.Prepare(CancellationToken.None).Wait();
-            update.Update(CancellationToken.None).Wait();
+            var update = await repoMod.StartUpdate(null, CancellationToken.None);
+            await update.Prepare(CancellationToken.None);
+            await update.Update(CancellationToken.None);
 
-            var storageMod = storage.GetMods().Result.Single();
+            var storageMod = (await storage.GetMods()).Single();
 
-            Assert.Equal(ModActionEnum.Use, repoMod.GetActionForMod(storageMod, CancellationToken.None).Result);
+            Assert.Equal(ModActionEnum.Use, await repoMod.GetActionForMod(storageMod, CancellationToken.None));
 
             Assert.True(FilesEqual(repoFiles, mockStorage.Mods.Values.First()));
         }

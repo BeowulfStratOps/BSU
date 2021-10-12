@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Tests.Util;
 using Moq;
@@ -14,7 +15,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        private (ModActionEnum action, bool requiresMatchHash, bool requireVersionHash) DoCheck(int repoHash, int repoVersion, int? storageHash, int? storageVersion,  StorageModStateEnum state, bool canWrite = true)
+        private async Task<(ModActionEnum action, bool requiresMatchHash, bool requireVersionHash)> DoCheck(int repoHash, int repoVersion, int? storageHash, int? storageVersion,  StorageModStateEnum state, bool canWrite = true)
         {
             // TODO: restructure a bit for less parameter passing all over the place
             var repoMod = new MockModelRepositoryMod(repoHash, repoVersion);
@@ -23,15 +24,15 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 CanWrite = canWrite
             };
 
-            var result = CoreCalculation.GetModAction(repoMod, storageMod, CancellationToken.None).Result;
+            var result = await CoreCalculation.GetModAction(repoMod, storageMod, CancellationToken.None);
             return (result, storageMod.RequiredMatchHash, storageMod.RequiredVersionHash);
         }
 
 
         [Fact]
-        private void NoMatch()
+        private async Task NoMatch()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 2, null, StorageModStateEnum.Created);
+            var (action, requiresMatchHash, requireVersionHash) = await DoCheck(1, 1, 2, null, StorageModStateEnum.Created);
 
             Assert.Equal(ModActionEnum.Unusable, action);
             Assert.True(requiresMatchHash);
@@ -39,9 +40,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void Use()
+        private async Task Use()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 1, StorageModStateEnum.Created);
+            var (action, requiresMatchHash, requireVersionHash) = await DoCheck(1, 1, 1, 1, StorageModStateEnum.Created);
 
             Assert.Equal(ModActionEnum.Use, action);
             Assert.True(requiresMatchHash);
@@ -49,9 +50,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void Update()
+        private async Task Update()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 2, StorageModStateEnum.Created);
+            var (action, requiresMatchHash, requireVersionHash) = await DoCheck(1, 1, 1, 2, StorageModStateEnum.Created);
 
             Assert.Equal(ModActionEnum.Update, action);
             Assert.True(requiresMatchHash);
@@ -59,9 +60,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void Error()
+        private async Task Error()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, null, null, StorageModStateEnum.Error);
+            var (action, requiresMatchHash, requireVersionHash) = await DoCheck(1, 1, null, null, StorageModStateEnum.Error);
 
             Assert.Equal(ModActionEnum.Unusable, action);
             Assert.False(requiresMatchHash);
@@ -69,9 +70,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void ContinueUpdate()
+        private async Task ContinueUpdate()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 1, StorageModStateEnum.CreatedWithUpdateTarget);
+            var (action, requiresMatchHash, requireVersionHash) = await DoCheck(1, 1, 1, 1, StorageModStateEnum.CreatedWithUpdateTarget);
 
             Assert.Equal(ModActionEnum.ContinueUpdate, action);
             Assert.False(requiresMatchHash);
@@ -79,9 +80,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void AbortAndUpdate()
+        private async Task AbortAndUpdate()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(2, 1, 1, 1, StorageModStateEnum.CreatedWithUpdateTarget);
+            var (action, requiresMatchHash, requireVersionHash) = await DoCheck(2, 1, 1, 1, StorageModStateEnum.CreatedWithUpdateTarget);
 
             Assert.Equal(ModActionEnum.ContinueUpdate, action);
             Assert.False(requiresMatchHash);
@@ -89,9 +90,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void Await()
+        private async Task Await()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 1, StorageModStateEnum.Updating);
+            var (action, requiresMatchHash, requireVersionHash) = await DoCheck(1, 1, 1, 1, StorageModStateEnum.Updating);
 
             Assert.Equal(ModActionEnum.Await, action);
             Assert.False(requiresMatchHash);
@@ -99,9 +100,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void AbortActiveAndUpdate()
+        private async Task AbortActiveAndUpdate()
         {
-            var (action, requiresMatchHash, requireVersionHash) = DoCheck(1, 1, 1, 2, StorageModStateEnum.Updating);
+            var (action, requiresMatchHash, requireVersionHash) = await DoCheck(1, 1, 1, 2, StorageModStateEnum.Updating);
 
             Assert.Equal(ModActionEnum.AbortActiveAndUpdate, action);
             Assert.True(requiresMatchHash);
@@ -109,9 +110,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void DontUpdateSteam()
+        private async Task DontUpdateSteam()
         {
-            var (action, _, _) = DoCheck(1, 1, 1, 2, StorageModStateEnum.Created, false);
+            var (action, _, _) = await DoCheck(1, 1, 1, 2, StorageModStateEnum.Created, false);
 
             Assert.Equal(ModActionEnum.Unusable, action);
         }

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Tests.Util;
 using Moq;
@@ -29,9 +30,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
             return (new RepositoryModActionDownload(storage), null, false);
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?, bool) StorageMod(ModActionEnum? action)
+        private async Task<(RepositoryModActionSelection, ModActionEnum?, bool)> StorageMod(ModActionEnum action)
         {
-            var storageMod = AutoselectTests.FromAction((ModActionEnum)action);
+            var storageMod = await AutoselectTests.FromAction(action);
             return (new RepositoryModActionStorageMod(storageMod), action, false);
         }
 
@@ -51,19 +52,19 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void Single_Ready()
+        private async Task Single_Ready()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Use)
+                await StorageMod(ModActionEnum.Use)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
         }
 
         [Fact]
-        private void Single_Update()
+        private async Task Single_Update()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Update)
+                await StorageMod(ModActionEnum.Update)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
@@ -78,130 +79,130 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void Single_Await()
+        private async Task Single_Await()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Await)
+                await StorageMod(ModActionEnum.Await)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.Syncing, result.State);
         }
 
         [Fact]
-        private void Single_ContinueUpdate()
+        private async Task Single_ContinueUpdate()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.ContinueUpdate)
+                await StorageMod(ModActionEnum.ContinueUpdate)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
-        private void Single_AbortAndUpdate()
+        private async Task Single_AbortAndUpdate()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.AbortAndUpdate)
+                await StorageMod(ModActionEnum.AbortAndUpdate)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
-        private void UseAnd_Download()
+        private async Task UseAnd_Download()
         {
             var result = CalculateState(
                 Download(),
-                StorageMod(ModActionEnum.Use)
+                await StorageMod(ModActionEnum.Use)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
-        private void UseAnd_Ready()
+        private async Task UseAnd_Ready()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Use),
-                StorageMod(ModActionEnum.Use)
+                await StorageMod(ModActionEnum.Use),
+                await StorageMod(ModActionEnum.Use)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.Ready, result.State);
         }
 
         [Fact]
-        private void UseAnd_Update()
+        private async Task UseAnd_Update()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Update),
-                StorageMod(ModActionEnum.Use)
+                await StorageMod(ModActionEnum.Update),
+                await StorageMod(ModActionEnum.Use)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
-        private void UseAnd_UserIntervention()
+        private async Task UseAnd_UserIntervention()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Use),
+                await StorageMod(ModActionEnum.Use),
                 Null()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
         }
 
         [Fact]
-        private void UseAnd_Await()
+        private async Task UseAnd_Await()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Use),
-                StorageMod(ModActionEnum.Await)
+                await StorageMod(ModActionEnum.Use),
+                await StorageMod(ModActionEnum.Await)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.Syncing, result.State);
         }
 
         [Fact]
-        private void UseAnd_ContinueUpdate()
+        private async Task UseAnd_ContinueUpdate()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.ContinueUpdate),
-                StorageMod(ModActionEnum.Use)
+                await StorageMod(ModActionEnum.ContinueUpdate),
+                await StorageMod(ModActionEnum.Use)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
-        private void UseAnd_AbortAndUpdate()
+        private async Task UseAnd_AbortAndUpdate()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.AbortAndUpdate),
-                StorageMod(ModActionEnum.Use)
+                await StorageMod(ModActionEnum.AbortAndUpdate),
+                await StorageMod(ModActionEnum.Use)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
-        private void UserIntervention_AndUpdate()
+        private async Task UserIntervention_AndUpdate()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Update),
+                await StorageMod(ModActionEnum.Update),
                 Null()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result.State);
         }
 
         [Fact]
-        private void MoreDownload()
+        private async Task MoreDownload()
         {
             var result = CalculateState(
                 Download(),
                 Download(),
-                StorageMod(ModActionEnum.Update)
+                await StorageMod(ModActionEnum.Update)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
-        private void MoreUpdate()
+        private async Task MoreUpdate()
         {
             var result = CalculateState(
                 Download(),
-                StorageMod(ModActionEnum.Update),
-                StorageMod(ModActionEnum.Update)
+                await StorageMod(ModActionEnum.Update),
+                await StorageMod(ModActionEnum.Update)
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
@@ -217,20 +218,20 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void DoNothingAnd_Ready()
+        private async Task DoNothingAnd_Ready()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Use),
+                await StorageMod(ModActionEnum.Use),
                 DoNothing()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.ReadyPartial, result.State);
         }
 
         [Fact]
-        private void DoNothingAnd_Update()
+        private async Task DoNothingAnd_Update()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Update),
+                await StorageMod(ModActionEnum.Update),
                 DoNothing()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
@@ -247,30 +248,30 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void DoNothingAnd_Await()
+        private async Task DoNothingAnd_Await()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.Await),
+                await StorageMod(ModActionEnum.Await),
                 DoNothing()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.Syncing, result.State);
         }
 
         [Fact]
-        private void DoNothingAnd_ContinueUpdate()
+        private async Task DoNothingAnd_ContinueUpdate()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.ContinueUpdate),
+                await StorageMod(ModActionEnum.ContinueUpdate),
                 DoNothing()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);
         }
 
         [Fact]
-        private void DoNothingAnd_AbortAndUpdate()
+        private async Task DoNothingAnd_AbortAndUpdate()
         {
             var result = CalculateState(
-                StorageMod(ModActionEnum.AbortAndUpdate),
+                await StorageMod(ModActionEnum.AbortAndUpdate),
                 DoNothing()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result.State);

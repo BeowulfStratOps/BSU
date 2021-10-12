@@ -76,7 +76,7 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void Load()
+        private async Task Load()
         {
             var types = new Types();
             types.AddRepoType("mock", CreateRepo);
@@ -89,12 +89,12 @@ namespace BSU.Core.Tests
             var state = new InternalState(settings);
             var model = new Model.Model(state, types);
             model.Load();
-            var storageMod1 = model.GetStorages().Single(s => s.Name == "storage1").GetMods().Result
+            var storageMod1 = (await model.GetStorages().Single(s => s.Name == "storage1").GetMods())
                 .Single(m => m.Identifier == "mod5");
-            var repoMod1 = model.GetRepositories().Single(s => s.Name == "repo1").GetMods().Result
+            var repoMod1 = (await model.GetRepositories().Single(s => s.Name == "repo1").GetMods())
                 .Single(m => m.Identifier == "mod1");
             Assert.Equal(storageMod1,
-                ((RepositoryModActionStorageMod)repoMod1.GetSelection(cancellationToken: CancellationToken.None).Result).StorageMod);
+                ((RepositoryModActionStorageMod) await repoMod1.GetSelection(cancellationToken: CancellationToken.None)).StorageMod);
         }
     }
 

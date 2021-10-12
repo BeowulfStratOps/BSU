@@ -73,12 +73,12 @@ namespace BSU.Core.Tests.Mocks
             return Task.CompletedTask;
         }
 
-        public Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
+        public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
-            var data = GetFile(path, cancellationToken).Result;
+            var data = await GetFile(path, cancellationToken);
             using var stream = new MemoryStream(data);
-            var hash = SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None).Result;
-            return Task.FromResult<FileHash>(hash);
+            var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None);
+            return hash;
         }
 
         public Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)
@@ -86,9 +86,9 @@ namespace BSU.Core.Tests.Mocks
             return Task.FromResult((DisplayName, "?"));
         }
 
-        public Task<ulong> GetFileSize(string path, CancellationToken cancellationToken)
+        public async Task<ulong> GetFileSize(string path, CancellationToken cancellationToken)
         {
-            return Task.FromResult((ulong)GetFile(path, cancellationToken).Result.LongLength);
+            return (ulong)(await GetFile(path, cancellationToken)).LongLength;
         }
 
         public Task UpdateTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)

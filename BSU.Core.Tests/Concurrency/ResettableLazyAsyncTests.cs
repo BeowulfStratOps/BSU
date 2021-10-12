@@ -54,8 +54,8 @@ namespace BSU.Core.Tests.Concurrency
             await Task.Delay(TimeSpan.FromSeconds(0.5));
             var resultTask2 = lazy.GetAsync(CancellationToken.None);
             await Task.WhenAll(resultTask1, resultTask2);
-            Assert.Equal("ok", resultTask1.Result);
-            Assert.Equal("ok", resultTask2.Result);
+            Assert.Equal("ok", await resultTask1);
+            Assert.Equal("ok", await resultTask2);
             Assert.Equal(1, callCounter);
         }
 

@@ -223,8 +223,8 @@ namespace BSU.Core.ViewModel
         public class StorageSelection
         {
             internal readonly IModelStorage Storage;
-            public string Name => Storage.Name;
-            public string Location => Storage.GetLocation();
+            public string Name => Storage?.Name;
+            public string Location => Storage?.GetLocation();
 
             internal StorageSelection(IModelStorage storage)
             {

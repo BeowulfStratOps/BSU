@@ -19,9 +19,15 @@ namespace BSU.Core.Concurrency
 
         public static async Task WithUpdates(this Task task, TimeSpan interval, Action callback)
         {
+            await task.WithUpdates(() => Task.Delay(interval), callback);
+        }
+
+        // Mostly for testing...
+        internal static async Task WithUpdates(this Task task, Func<Task> delayFactory, Action callback)
+        {
             while (true)
             {
-                await Task.WhenAny(task, Task.Delay(interval));
+                await Task.WhenAny(task, delayFactory());
                 if (task.IsCompleted)
                 {
                     await task;
@@ -30,5 +36,6 @@ namespace BSU.Core.Concurrency
                 callback();
             }
         }
+
     }
 }

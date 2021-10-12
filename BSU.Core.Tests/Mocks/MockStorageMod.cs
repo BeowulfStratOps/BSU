@@ -117,11 +117,11 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        public Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
+        public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
-            using var stream = OpenFile(path, FileAccess.Read, cancellationToken).Result;
-            var hash = SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None).Result;
-            return Task.FromResult<FileHash>(hash);
+            using var stream = await OpenFile(path, FileAccess.Read, cancellationToken);
+            var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None);
+            return hash;
         }
 
         public Task DeleteFile(string path, CancellationToken cancellationToken)
