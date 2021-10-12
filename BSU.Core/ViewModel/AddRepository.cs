@@ -97,7 +97,7 @@ namespace BSU.Core.ViewModel
 
         public List<KnownUrl> KnownUrls { get; } = new()
         {
-            new KnownUrl("Beowulf", "http://u.beowulfso.com/synctest/server.json"),
+            new KnownUrl("Beowulf", "http://u.beowulfso.com/synctest/server-bsu.json"),
             new KnownUrl("Beowulf 'NAAAAAM", "http://u.beowulfso.com/synctest/server-vn.json"),
         };
 

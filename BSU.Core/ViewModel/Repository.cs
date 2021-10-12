@@ -182,6 +182,8 @@ namespace BSU.Core.ViewModel
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
             Pause = new DelegateCommand(DoPause, false);
+            Settings = new DelegateCommand(() =>
+                _viewModelService.InteractionService.MessagePopup("Not supported yet.", "Settings"));
             UpdateButtonStates();
             Name = repository.Name;
         }
@@ -379,6 +381,8 @@ Cancel - Do not remove this repository";
                 OnPropertyChanged();
             }
         }
+
+        public DelegateCommand Settings { get; }
 
         #endregion
     }

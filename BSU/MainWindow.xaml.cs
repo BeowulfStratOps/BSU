@@ -78,6 +78,10 @@ namespace BSU.GUI
 
         private async Task Update()
         {
+#if DEBUG
+            return;
+#endif
+
             try
             {
                 using var mgr = new UpdateManager("https://beowulfstratops.github.io/BSU-releases/files/");
