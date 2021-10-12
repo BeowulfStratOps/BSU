@@ -140,6 +140,8 @@ namespace BSU.Core.Model
             }
         }
 
+        public RepositoryModActionSelection GetCurrentSelection() => Selection;
+
         public async Task<RepositoryModActionSelection> GetSelection(bool reset = false, CancellationToken cancellationToken = default)
         {
             // never change a selection once it was made. Would be clickjacking on the user
@@ -187,15 +189,9 @@ namespace BSU.Core.Model
             return selection;
         }
 
-        public async Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken)
-        {
-            var selection = await GetSelection(cancellationToken: cancellationToken);
-            if (selection is not RepositoryModActionStorageMod actionStorageMod) return new List<IModelRepositoryMod>();
-            return await GetConflictsUsingMod(actionStorageMod.StorageMod, cancellationToken);
-        }
-
         public async Task<List<IModelRepositoryMod>> GetConflictsUsingMod(IModelStorageMod storageMod, CancellationToken cancellationToken)
         {
+            // TODO: test case
             var result = new List<IModelRepositoryMod>();
             var otherMods = await _modelStructure.GetRepositoryMods();
 
@@ -203,6 +199,7 @@ namespace BSU.Core.Model
             foreach (var mod in otherMods)
             {
                 if (mod == this) continue;
+                if (mod.GetCurrentSelection() is not RepositoryModActionStorageMod otherMod || otherMod.StorageMod != storageMod) continue;
                 if (await CoreCalculation.IsConflicting(this, mod, storageMod, cancellationToken))
                     result.Add(mod);
             }

@@ -56,11 +56,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
             return Task.FromResult(_versionHash);
         }
 
-        public Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<List<IModelRepositoryMod>> GetConflictsUsingMod(IModelStorageMod mod, CancellationToken cancellationToken)
         {
             var conflicts = Conflicts.TryGetValue(mod, out var mods) ? mods : new List<IModelRepositoryMod>();
@@ -78,6 +73,11 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         public Task<string> GetErrorForSelection(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RepositoryModActionSelection GetCurrentSelection()
         {
             throw new NotImplementedException();
         }

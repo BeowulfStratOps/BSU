@@ -19,10 +19,10 @@ namespace BSU.Core.Model
         Task<ModInfo> GetModInfo(CancellationToken cancellationToken);
         Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
         Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
-        Task<List<IModelRepositoryMod>> GetConflicts(CancellationToken cancellationToken);
         Task<List<IModelRepositoryMod>> GetConflictsUsingMod(IModelStorageMod mod, CancellationToken cancellationToken);
         Task<ModActionEnum> GetActionForMod(IModelStorageMod storageMod, CancellationToken cancellationToken);
         Task<List<(IModelStorageMod mod, ModActionEnum action)>> GetModActions(CancellationToken cancellationToken); // TODO: this method is kinda useless...
         Task<string> GetErrorForSelection(CancellationToken cancellationToken);
+        RepositoryModActionSelection GetCurrentSelection();
     }
 }
