@@ -59,7 +59,16 @@ namespace BSU.Core.Hashes
         // TODO: use more specialized interface to get files
         public static async Task<MatchHash> CreateAsync(IRepositoryMod mod, CancellationToken cancellationToken)
         {
-            var modCppData = await mod.GetFile("/mod.cpp", cancellationToken);
+            byte[] modCppData = null;
+            try
+            {
+                modCppData = await mod.GetFile("/mod.cpp", cancellationToken);
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
+
             string name = null;
             if (modCppData != null)
             {

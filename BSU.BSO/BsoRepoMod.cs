@@ -45,7 +45,16 @@ namespace BSU.BSO
             await _loading;
             using var client = new HttpClient();
             _logger.Debug("Downloading file from {0} / {1}", _url, path);
-            var data = await client.GetByteArrayAsync(_url + GetRealPath(path), cancellationToken);
+            byte[] data;
+            try
+            {
+                data = await client.GetByteArrayAsync(_url + GetRealPath(path), cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Failed to download {0} / {1}", _url, path);
+                throw;
+            }
             _logger.Debug("Finsihed downloading {0} / {1}", _url, path);
             return data;
         }
