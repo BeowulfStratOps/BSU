@@ -1,0 +1,55 @@
+name: build-and-publish
+on: push
+
+jobs:
+  build:
+    name: build-test-package
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.301
+    - name: Install dependencies
+      run: dotnet restore --packages packages
+    - name: Build
+      run: dotnet build --configuration Release --no-restore BSU
+    - name: Test
+      run: dotnet test
+    - name: Publish
+      run: dotnet publish -c Release -o publish BSU
+    - name: Package
+      run: nuget pack
+    - name: Releasify
+      run: powershell.exe -ExecutionPolicy Bypass -Command "packages\squirrel.windows\1.9.0\tools\Squirrel.exe -r releases --releasify  BSU.0.2.0.nupkg ... | Write-Output"
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: releases
+        path: releases/*
+
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        repository: BeowulfStratOps/BSU-releases
+    - name: Download new releases
+      uses: actions/download-artifact@v2
+      with:
+        name: releases
+        path: files
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@4.1.3
+      with:
+        branch: master
+        folder: files
+        ssh-key: ${{ secrets.BSU_RELEASES_SSH_KEY }}
+        repository-name: BeowulfStratOps/BSU-releases
+        target-folder: files
+
