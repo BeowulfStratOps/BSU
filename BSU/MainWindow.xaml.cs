@@ -1,15 +1,19 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using BSU.Core.ViewModel;
 using BSU.GUI.Actions;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using Squirrel;
 
 namespace BSU.GUI
 {
@@ -19,19 +23,29 @@ namespace BSU.GUI
     public partial class MainWindow : Window
     {
         private readonly Core.Core _core;
+        private readonly ViewModel _viewModel;
+        private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
         public MainWindow()
         {
             Thread.CurrentThread.Name = "main";
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "settings.json"));
-            _core = new Core.Core(settingsFile);
-            var viewModel = _core.ViewModel;
-            viewModel.InteractionService = new InteractionService(this);
-            DataContext = viewModel;
+            try
+            {
+                var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+                var settingsLocation = Path.Combine(Directory.GetParent(assemblyLocation).Parent.FullName, "settings.json");
+                _core = new Core.Core(new FileInfo(settingsLocation));
+                _viewModel = _core.ViewModel;
+                _viewModel.InteractionService = new InteractionService(this);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+                throw;
+            }
+            DataContext = _viewModel;
             InitializeComponent();
-            viewModel.Run();
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
@@ -41,13 +55,38 @@ namespace BSU.GUI
 
         private void ShowLogs_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException("Need to figure out how packing/updater work...");
+            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            Process.Start("explorer.exe", logPath);
         }
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show(
                 "Beowulf Sync Utility, developed by Beowulf Strategic Operations (https://beowulfso.com).\nSee https://github.com/BeowulfStratOps/BSU for more information.", "About BSU");
+        }
+
+        private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            AsyncVoidExecutor.Execute(OnLoaded);
+        }
+
+        private async Task OnLoaded()
+        {
+            await Update();
+            await _viewModel.Load();
+        }
+
+        private async Task Update()
+        {
+            try
+            {
+                using var mgr = new UpdateManager("https://beowulfstratops.github.io/BSU-releases/files/");
+                await mgr.UpdateApp();
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+            }
         }
     }
 }

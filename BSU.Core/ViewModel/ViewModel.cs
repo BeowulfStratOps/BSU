@@ -86,11 +86,6 @@ namespace BSU.Core.ViewModel
         {
             Errors.Add(new DismissError(error, de => Errors.Remove(de)));
         }
-
-        public void Run()
-        {
-            AsyncVoidExecutor.Execute(Load);
-        }
     }
 
     public class DismissError

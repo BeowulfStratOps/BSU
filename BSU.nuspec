@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <!-- Required elements-->
+        <id>BSU</id>
+        <title>Beowulf Sync Utility</title>
+        <version>0.2.0</version>
+        <description>Beowulf Sync Utility</description>
+        <authors>Keithen</authors>
+
+        <!-- Optional elements -->
+        <!-- ... -->
+    </metadata>
+    <files>
+        <file src="publish\**" target="lib\net45" />
+    </files>
+</package>
