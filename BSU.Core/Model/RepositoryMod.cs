@@ -232,7 +232,7 @@ namespace BSU.Core.Model
             if (Selection is RepositoryModActionDownload actionDownload)
             {
                 var updateTarget = new UpdateTarget(versionHash.GetHashString());
-                var mod = await actionDownload.DownloadStorage.CreateMod("@" + DownloadIdentifier, updateTarget);
+                var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
                 Selection = new RepositoryModActionStorageMod(mod);
                 var update = await mod.PrepareUpdate(Implementation, matchHash, versionHash, progress);
                 return update;
@@ -241,7 +241,17 @@ namespace BSU.Core.Model
             throw new InvalidOperationException();
         }
 
-        public string DownloadIdentifier { get; set; }
+        private string _downloadIdentifier;
+
+        public string DownloadIdentifier
+        {
+            get => _downloadIdentifier;
+            set
+            {
+                if (!value.StartsWith("@")) throw new ArgumentException();
+                _downloadIdentifier = value;
+            }
+        }
 
         public override string ToString() => Identifier;
     }
