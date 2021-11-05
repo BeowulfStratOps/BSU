@@ -24,7 +24,7 @@ namespace BSU.Core.Tests
             {
                 mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);
             }
-            var repoMod = new RepositoryMod(mockRepo, "myrepo", new MockPersistedRepositoryModState(), structure, null);
+            var repoMod = new RepositoryMod(mockRepo, "@myrepo", new MockPersistedRepositoryModState(), structure, null);
             return (mockRepo, repoMod);
         }
 

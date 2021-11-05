@@ -47,7 +47,7 @@ namespace BSU.Core.Tests
             {
                 if (url == "r1")
                 {
-                    repo.Mods.Add("mod1", CreateRepoMod("r1", "1"));
+                    repo.Mods.Add("@mod1", CreateRepoMod("r1", "1"));
                     //repo.Mods.Add("mod2", CreateRepoMod("r2", "1"));
                 }
                 /*else
@@ -92,7 +92,7 @@ namespace BSU.Core.Tests
             var storageMod1 = (await model.GetStorages().Single(s => s.Name == "storage1").GetMods())
                 .Single(m => m.Identifier == "mod5");
             var repoMod1 = (await model.GetRepositories().Single(s => s.Name == "repo1").GetMods())
-                .Single(m => m.Identifier == "mod1");
+                .Single(m => m.Identifier == "@mod1");
             Assert.Equal(storageMod1,
                 ((RepositoryModActionStorageMod) await repoMod1.GetSelection(cancellationToken: CancellationToken.None)).StorageMod);
         }
