@@ -11,9 +11,12 @@
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:StoragePage}">
     <DockPanel>
         <!-- TODO: figure out how to reuse this for all pages -->
-        <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-            <userControls:SvgButton DockPanel.Dock="Left" Width="25" Height="25" Command="{Binding Back}" Svg="{StaticResource SvgBack}" ToolTip="Back" />
-        </DockPanel>
+        <Grid DockPanel.Dock="Top">
+            <DockPanel LastChildFill="False">
+                <userControls:SvgButton DockPanel.Dock="Left" Width="25" Height="25" Command="{Binding Back}" Svg="{StaticResource SvgBack}" ToolTip="Back" />
+            </DockPanel>
+            <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center">Download Locations</TextBlock>
+        </Grid>
 
         <ScrollViewer>
             <StackPanel>

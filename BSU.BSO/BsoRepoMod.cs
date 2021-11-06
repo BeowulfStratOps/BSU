@@ -148,28 +148,36 @@ namespace BSU.BSO
             _logger.Debug("Downloading content {0} / {1}", _url, path);
 
             var req = WebRequest.CreateHttp(url);
-            using var resp = await req.GetResponseAsync();
-            await using var stream = resp.GetResponseStream();
-
-            var buffer = new byte[10 * 1024 * 1024];
             try
             {
-                while (!token.IsCancellationRequested)
+                using var resp = await req.GetResponseAsync();
+                await using var stream = resp.GetResponseStream();
+
+                var buffer = new byte[10 * 1024 * 1024];
+                try
                 {
-                    var len = await stream.ReadAsync(buffer, 0, buffer.Length, token);
-                    if (len == 0) break;
-                    await fileStream.WriteAsync(buffer, 0, len, token);
-                    progress.Report((ulong)len);
+                    while (!token.IsCancellationRequested)
+                    {
+                        var len = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                        if (len == 0) break;
+                        await fileStream.WriteAsync(buffer, 0, len, token);
+                        progress.Report((ulong)len);
+                    }
                 }
+                catch (OperationCanceledException)
+                {
+                    _logger.Debug("Aborted downloading content {0} / {1}", _url, path);
+                    throw;
+                }
+
+                fileStream.SetLength(fileStream.Position);
+                _logger.Debug("Finished downloading content {0} / {1}", _url, path);
             }
-            catch (OperationCanceledException)
+            catch (Exception e)
             {
-                _logger.Debug("Aborted downloading content {0} / {1}", _url, path);
+                _logger.Error(e, $"Error while trying to download {path}");
                 throw;
             }
-
-            fileStream.SetLength(fileStream.Position);
-            _logger.Debug("Finished downloading content {0} / {1}", _url, path);
         }
 
         /// <summary>

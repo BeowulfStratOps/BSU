@@ -18,15 +18,17 @@
             <converters:CalculatedStateToTextConverter x:Key="CalculatedStateToText" />
         </DockPanel.Resources>
 
-        <!-- TODO: figure out how to reuse this for all pages -->
-        <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-            <userControls:SvgButton DockPanel.Dock="Left" Width="25" Height="25" Command="{Binding Back}" Svg="{StaticResource SvgBack}" ToolTip="Back" />
-            <userControls:SvgButton DockPanel.Dock="Right" Width="25" Height="25" Command="{Binding ShowStorage}" Svg="{StaticResource SvgStorage}" ToolTip="Show Download Locations" />
-        </DockPanel>
+        <Grid DockPanel.Dock="Top">
+            <DockPanel LastChildFill="False">
+                <userControls:SvgButton DockPanel.Dock="Left" Width="25" Height="25" Command="{Binding Back}" Svg="{StaticResource SvgBack}" ToolTip="Back" />
+                <userControls:SvgButton DockPanel.Dock="Right" Width="25" Height="25" Command="{Binding ShowStorage}" Svg="{StaticResource SvgStorage}" ToolTip="Show Download Locations" />
+            </DockPanel>
+            <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center"><Run>Preset:</Run> <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
+        </Grid>
 
         <DockPanel Margin="5" Dock="Top">
             <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
+                <TextBlock>Info:</TextBlock>
                 <TextBlock Text="{Binding ServerUrl}"></TextBlock>
                 <TextBlock Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}}"></TextBlock>
             </StackPanel>
