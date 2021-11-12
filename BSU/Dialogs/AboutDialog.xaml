@@ -1,0 +1,21 @@
+﻿<Window x:Class="BSU.GUI.Dialogs.AboutDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:BSU.GUI.Dialogs"
+        mc:Ignorable="d"
+        Title="About BSU" Height="450" Width="800" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+    <StackPanel Margin="15">
+        <TextBlock>
+            Beowulf Sync Utility, developed by Beowulf Strategic Operations (<Hyperlink NavigateUri="https://beowulfso.com" RequestNavigate="Hyperlink_OnRequestNavigate">https://beowulfso.com</Hyperlink>).
+            <LineBreak/>
+            <LineBreak/>
+            See <Hyperlink NavigateUri="https://github.com/BeowulfStratOps/BSU" RequestNavigate="Hyperlink_OnRequestNavigate">https://github.com/BeowulfStratOps/BSU</Hyperlink>  for more information.
+            <LineBreak/>
+            <LineBreak/>
+            Version: <Run x:Name="Version"></Run>
+        </TextBlock>
+        <Button Padding="15, 2" HorizontalAlignment="Right" IsCancel="True">OK</Button>
+    </StackPanel>
+</Window>

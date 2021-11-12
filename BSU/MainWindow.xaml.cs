@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Threading;
 using BSU.Core.ViewModel;
 using BSU.GUI.Actions;
+using BSU.GUI.Dialogs;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -61,8 +62,7 @@ namespace BSU.GUI
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                "Beowulf Sync Utility, developed by Beowulf Strategic Operations (https://beowulfso.com).\nSee https://github.com/BeowulfStratOps/BSU for more information.", "About BSU");
+            new AboutDialog().ShowDialog();
         }
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
