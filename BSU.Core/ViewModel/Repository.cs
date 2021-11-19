@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -17,11 +18,11 @@ namespace BSU.Core.ViewModel
 
         public FileSyncProgress UpdateProgress { get; } = new();
 
-        private CalculatedRepositoryState _calculatedState = new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Loading);
+        private CalculatedRepositoryStateEnum _calculatedState = CalculatedRepositoryStateEnum.Loading;
 
         private CancellationTokenSource _cts;
 
-        public CalculatedRepositoryState CalculatedState
+        public CalculatedRepositoryStateEnum CalculatedState
         {
             get => _calculatedState;
             private set
@@ -35,7 +36,7 @@ namespace BSU.Core.ViewModel
 
         private void UpdateButtonStates()
         {
-            switch (CalculatedState.State)
+            switch (CalculatedState)
             {
                 case CalculatedRepositoryStateEnum.NeedsSync:
                     Details.SetCanExecute(true);
@@ -169,11 +170,12 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        internal Repository(IModelRepository repository, IModel model, IViewModelService viewModelService)
+        internal Repository(IModelRepository repository, IModel model, IViewModelService viewModelService, Helper helper)
         {
             _repository = repository;
             _model = model;
             _viewModelService = viewModelService;
+            _helper = helper;
             Identifier = repository.Identifier;
             Delete = new DelegateCommand(DoDelete, false);
             Update = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoUpdate));
@@ -185,8 +187,30 @@ namespace BSU.Core.ViewModel
             Settings = new DelegateCommand(() =>
                 _viewModelService.InteractionService.MessagePopup("Not supported yet.", "Settings"));
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
-            UpdateButtonStates();
+            repository.StateChanged += _ => OnStateChanged();
             Name = repository.Name;
+            _helper.AnyChange += UpdateState;
+        }
+
+        private void UpdateState()
+        {
+            CalculatedState = _helper.GetRepositoryState(_repository);
+            UpdateButtonStates();
+        }
+
+        private void OnStateChanged()
+        {
+            if (_repository.State == LoadingState.Error)
+            {
+                ServerUrl = "";
+            }
+
+            (_, ServerUrl) = _repository.GetServerInfo();
+            var mods = _repository.GetMods();
+            foreach (var mod in mods.OrderBy(m => m.Identifier))
+            {
+                Mods.Add(new RepositoryMod(mod, _model, _viewModelService, _helper));
+            }
         }
 
         private void DoChooseDownloadLocation()
@@ -197,23 +221,14 @@ namespace BSU.Core.ViewModel
 
         private void DoPlay()
         {
-            string warningMessage = null;
-            switch (CalculatedState.State)
+            var warningMessage = CalculatedState switch
             {
-                case CalculatedRepositoryStateEnum.NeedsSync:
-                    warningMessage = "Your mods are not up to date.";
-                    break;
-                case CalculatedRepositoryStateEnum.Ready:
-                    break; // ok
-                case CalculatedRepositoryStateEnum.Loading:
-                    warningMessage = "The sync utility is still checking your mods.";
-                    break;
-                case CalculatedRepositoryStateEnum.ReadyPartial:
-                    warningMessage = "You have disabled some mods.";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                CalculatedRepositoryStateEnum.NeedsSync => "Your mods are not up to date.",
+                CalculatedRepositoryStateEnum.Ready => null,
+                CalculatedRepositoryStateEnum.Loading => "The sync utility is still checking your mods.",
+                CalculatedRepositoryStateEnum.ReadyPartial => "You have disabled some mods.",
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
             if (warningMessage != null)
             {
@@ -278,8 +293,6 @@ Cancel - Do not remove this repository";
                 await update.Prepare(_cts.Token);
                 var updateStats = await update.Update(_cts.Token);
 
-                await _viewModelService.Update();
-
                 if (_cts.IsCancellationRequested) return;
 
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
@@ -310,32 +323,7 @@ Cancel - Do not remove this repository";
                 {
                     mod.Actions.Open.SetCanExecute(true);
                 }
-                await _viewModelService.Update();
             }
-        }
-
-        public async Task Load()
-        {
-            try
-            {
-                (_, ServerUrl) = await _repository.GetServerInfo(CancellationToken.None);
-                var mods = await _repository.GetMods();
-                foreach (var mod in mods.OrderBy(m => m.Identifier))
-                {
-                    Mods.Add(new RepositoryMod(mod, _model, _viewModelService));
-                }
-                await Task.WhenAll(Mods.Select(m => m.Load()));
-            }
-            catch (Exception)
-            {
-                ServerUrl = "";
-            }
-        }
-
-        public async Task UpdateMods()
-        {
-            await Task.WhenAll(Mods.Select(m => m.Update()));
-            CalculatedState = await _repository.GetState(CancellationToken.None);
         }
 
         #region UI Properties
@@ -366,6 +354,7 @@ Cancel - Do not remove this repository";
 
         private bool _updateLoading;
         private bool _updateButtonVisible = true;
+        private readonly Helper _helper;
 
         public bool UpdateLoading
         {

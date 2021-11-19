@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -11,59 +12,39 @@ namespace BSU.Core.ViewModel
     {
         private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
+        private readonly Helper _helper;
         public ObservableCollection<Storage> Storages { get; } = new();
         public DelegateCommand AddStorage { get; }
 
         public DelegateCommand Back { get; }
 
-        internal StoragePage(IModel model, IViewModelService viewModelService)
+        internal StoragePage(IModel model, IViewModelService viewModelService, Helper helper)
         {
             Back = new DelegateCommand(viewModelService.NavigateBack);
             _model = model;
             _viewModelService = viewModelService;
+            _helper = helper;
             AddStorage = new DelegateCommand(() => DoAddStorage());
-            foreach (var modelStorage in model.GetStorages())
-            {
-                var storage = new Storage(modelStorage, model, _viewModelService);
-                storage.OnDeleted += StorageOnOnDeleted;
-                Storages.Add(storage);
-            }
+            model.AddedStorage += OnAddStorage;
+            // TODO: deletes
         }
 
-        private void StorageOnOnDeleted(Storage storage)
+        private void OnAddStorage(IModelStorage modelStorage)
         {
-            Storages.Remove(storage);
-            storage.OnDeleted -= StorageOnOnDeleted;
+            var storage = new Storage(modelStorage, _model, _viewModelService, _helper);
+            Storages.Add(storage);
         }
 
         internal IModelStorage DoAddStorage(bool allowSteam = true)
         {
+            // TODO: could be in a separate class
             var vm = new AddStorage(_model, allowSteam);
             if (!_viewModelService.InteractionService.AddStorage(vm)) return null;
             var type = vm.GetStorageType();
             var name = vm.GetName();
             var path = vm.GetPath();
             var storage = _model.AddStorage(type, new DirectoryInfo(path), name);
-            var vmStorage = new Storage(storage, _model, _viewModelService);
-            Storages.Add(vmStorage);
-            vmStorage.OnDeleted += StorageOnOnDeleted;
-            AsyncVoidExecutor.Execute(async () =>
-            {
-                await vmStorage.Load();
-                await _viewModelService.Update();
-            });
             return storage;
-        }
-
-        public async Task Load()
-        {
-            await Task.WhenAll(Storages.Select(s => s.Load()));
-            await Update();
-        }
-
-        public async Task Update()
-        {
-            await Task.WhenAll(Storages.Select(r => r.Update()));
         }
     }
 }

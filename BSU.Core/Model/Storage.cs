@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -13,76 +14,90 @@ namespace BSU.Core.Model
     internal class Storage : IModelStorage
     {
         private readonly IStorageState _internalState;
-        private readonly IModelStructure _modelStructure;
         public IStorage Implementation { get; }
         public string Name { get; }
         public bool IsDeleted { get; private set; }
         public Guid Identifier { get; }
         public string Location { get; }
-        private readonly List<IModelStorageMod> _mods = new();
+        private List<IModelStorageMod> _mods;
         private readonly IErrorPresenter _errorPresenter;
         private readonly ILogger _logger;
+        private LoadingState _state;
 
-        private readonly Task _loading;
+        public event Action<IModelStorage> StateChanged;
 
-        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IModelStructure modelStructure, IErrorPresenter errorPresenter)
+        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IErrorPresenter errorPresenter)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
-            _modelStructure = modelStructure;
             _errorPresenter = errorPresenter;
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
             Location = location;
-            _loading = Load(CancellationToken.None); // TODO: cts, task.run?
+            Load();
         }
 
-        private async Task Load(CancellationToken cancellationToken)
+        private async Task<Dictionary<string, IStorageMod>> LoadAsync()
         {
-            try
+            return await Implementation.GetMods(CancellationToken.None);
+        }
+
+        public LoadingState State
+        {
+            get => _state;
+            set
             {
-                foreach (var (identifier, implementation) in await Implementation.GetMods(cancellationToken))
+                if (_state == value) return;
+                _logger.Debug($"Changing state from {_state} to {value}");
+                _state = value;
+                StateChanged?.Invoke(this);
+            }
+        }
+
+        private void Load()
+        {
+            Task.Run(LoadAsync).ContinueInCurrentContext(getResult =>
+            {
+                try
                 {
-                    var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
-                        this, Implementation.CanWrite(), _modelStructure);
-                    _mods.Add(modelMod);
+                    foreach (var (identifier, implementation) in getResult())
+                    {
+                        _mods = new List<IModelStorageMod>();
+                        var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
+                            this, Implementation.CanWrite());
+                        _mods.Add(modelMod);
+                    }
+
+                    State = LoadingState.Loaded;
                 }
-            }
-            catch (DirectoryNotFoundException e)
-            {
-                _errorPresenter.AddError($"Failed to load storage {Name}, directory '{Location}' could not be found.");
-                _logger.Error(e);
-                throw;
-            }
-            catch (Exception e)
-            {
-                _errorPresenter.AddError($"Failed to load storage {Name}.");
-                _logger.Error(e);
-                throw;
-            }
+                catch (DirectoryNotFoundException e)
+                {
+                    _errorPresenter.AddError(
+                        $"Failed to load storage {Name}, directory '{Location}' could not be found.");
+                    _logger.Error(e);
+                    _state = LoadingState.Error;
+                }
+                catch (Exception e)
+                {
+                    _errorPresenter.AddError($"Failed to load storage {Name}.");
+                    _logger.Error(e);
+                    _state = LoadingState.Error;
+                }
+            });
         }
 
-        public async Task<List<IModelStorageMod>> GetMods()
+        public List<IModelStorageMod> GetMods()
         {
-            try
-            {
-                await _loading;
-            }
-            catch (Exception e)
-            {
-                return new List<IModelStorageMod>();
-            }
             return new List<IModelStorageMod>(_mods);
         }
 
         public async Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget)
         {
-            await _loading;
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
             state.UpdateTarget = updateTarget;
-            var storageMod = new StorageMod(mod, identifier, state, this, true, _modelStructure);
+            var storageMod = new StorageMod(mod, identifier, state, this, true);
             _mods.Add(storageMod);
             return storageMod;
         }
@@ -93,53 +108,20 @@ namespace BSU.Core.Model
             return new PersistedSelection(PersistedSelectionType.Download, Identifier, null);
         }
 
-        public async Task<bool> HasMod(string downloadIdentifier)
+        public bool HasMod(string downloadIdentifier)
         {
-            await _loading;
             return _mods.Any(m => string.Equals(m.Identifier, downloadIdentifier, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public string GetLocation() => Location;
-        public async Task<bool> IsAvailable()
-        {
-            try
-            {
-                await _loading;
-                return true;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
-        }
+        public bool IsAvailable() => _state != LoadingState.Error;
 
-        public async Task<string> GetAvailableDownloadIdentifier(string baseIdentifier)
-        {
-            bool Exists(string name)
-            {
-                return _mods.Any(
-                    m => string.Equals(m.Identifier, name, StringComparison.InvariantCultureIgnoreCase));
-            }
-
-            await _loading;
-            if (!Exists(baseIdentifier))
-                return baseIdentifier;
-            var i = 1;
-            while (true)
-            {
-                var name = $"{baseIdentifier}_{i}";
-                if (!Exists(name))
-                    return name;
-                i++;
-            }
-        }
-
-        public async Task Delete(bool removeMods)
+        public void Delete(bool removeMods)
         {
             IsDeleted = true;
             foreach (var mod in _mods)
             {
-                await mod.Delete(removeMods);
+                mod.Delete(removeMods);
             }
         }
     }

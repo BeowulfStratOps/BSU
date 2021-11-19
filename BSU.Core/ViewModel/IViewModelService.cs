@@ -5,7 +5,6 @@ namespace BSU.Core.ViewModel
 {
     internal interface IViewModelService
     {
-        Task Update();
         void NavigateToStorages();
         void NavigateToRepository(Repository repository);
         void NavigateBack();

@@ -12,20 +12,18 @@ namespace BSU.Core.Model
 {
     internal interface IModelStorageMod
     {
-        event Action StateChanged;
-        Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress);
-        Task Abort();
+        event Action<IModelStorageMod> StateChanged;
+        IModUpdate PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress);
+        void Abort();
         PersistedSelection GetStorageModIdentifiers();
         bool CanWrite { get; }
         string Identifier { get; }
         IModelStorage ParentStorage { get; }
         bool IsDeleted { get; }
-        Task<VersionHash> GetVersionHash(CancellationToken cancellationToken);
-        Task<MatchHash> GetMatchHash(CancellationToken cancellationToken);
+        VersionHash GetVersionHash();
+        MatchHash GetMatchHash();
         StorageModStateEnum GetState();
-        Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken);
-        CancellationToken GetStateToken();
-        Task<string> GetTitle(CancellationToken cancellationToken);
-        Task Delete(bool removeData);
+        string GetTitle();
+        void Delete(bool removeData);
     }
 }

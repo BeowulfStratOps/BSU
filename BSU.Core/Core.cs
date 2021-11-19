@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
+using BSU.Core.Services;
 using BSU.CoreCommon;
 using NLog;
 
@@ -37,13 +38,21 @@ namespace BSU.Core
             var state = new InternalState(settings);
 
             Model = new Model.Model(state, Types);
-            Model.Load();
-            ViewModel = new ViewModel.ViewModel(Model);
+
+            // TODO: proper service stuff?
+            var eventCombiner = new StructureEventCombiner(Model);
+            new AutoSelector(Model, eventCombiner);
+            ViewModel = new ViewModel.ViewModel(Model, eventCombiner);
         }
 
         public void Dispose()
         {
             // TODO: cancel operations
+        }
+
+        public async Task Load()
+        {
+            Model.Load();
         }
     }
 }

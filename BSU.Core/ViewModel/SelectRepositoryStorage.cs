@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -31,7 +32,7 @@ namespace BSU.Core.ViewModel
                 if (_storage == value) return;
                 _storage = value;
                 OnPropertyChanged();
-                AsyncVoidExecutor.Execute(() => AdjustSelection(CancellationToken.None));
+                AdjustSelection();
             }
         }
 
@@ -75,7 +76,7 @@ namespace BSU.Core.ViewModel
                 _useSteam = value;
                 OnPropertyChanged();
                 DownloadEnabled = !value || _hasNonSteamDownloads;
-                AsyncVoidExecutor.Execute(() => AdjustSelection(CancellationToken.None));
+                AdjustSelection();
             }
         }
 
@@ -112,7 +113,7 @@ namespace BSU.Core.ViewModel
             _repository = repository;
             _model = model;
             _viewModelService = viewModelService;
-            AsyncVoidExecutor.Execute(Load);
+            Load();
         }
 
         private void HandleAdd()
@@ -124,16 +125,16 @@ namespace BSU.Core.ViewModel
             Storage = selection;
         }
 
-        private async Task AdjustSelection(CancellationToken cancellationToken)
+        private void AdjustSelection()
         {
-            var mods = await _repository.GetMods();
+            var mods = _repository.GetMods();
             if (UseSteam)
             {
                 foreach (var mod in mods)
                 {
-                    if (await mod.GetSelection(cancellationToken: cancellationToken) is RepositoryModActionDownload)
+                    if (mod.GetCurrentSelection() is RepositoryModActionDownload)
                     {
-                        await mod.GetSelection(true, cancellationToken);
+                        mod.SetSelection(null);
                     }
                 }
             }
@@ -142,13 +143,13 @@ namespace BSU.Core.ViewModel
             {
                 foreach (var mod in mods)
                 {
-                    var selection = await mod.GetSelection(cancellationToken: cancellationToken);
+                    var selection = mod.GetCurrentSelection();
                     if (selection is RepositoryModActionDownload ||
                         (selection is RepositoryModActionStorageMod storageMod && !storageMod.StorageMod.CanWrite &&
                          !UseSteam))
                     {
                         mod.SetSelection(new RepositoryModActionDownload(Storage.Storage));
-                        mod.DownloadIdentifier = await Storage.Storage.GetAvailableDownloadIdentifier(mod.Identifier);
+                        mod.DownloadIdentifier = Helper.GetAvailableDownloadIdentifier(Storage.Storage, mod.Identifier);
                     }
                 }
 
@@ -158,24 +159,23 @@ namespace BSU.Core.ViewModel
             var modInfos = new List<ModStorageSelectionInfo>();
             foreach (var mod in mods.OrderBy(m => m.Identifier))
             {
-                var selection = await mod.GetSelection(cancellationToken: CancellationToken.None);
-                var action = await ModAction.Create(selection, mod, CancellationToken.None);
+                var selection = mod.GetCurrentSelection();
+                var action = ModAction.Create(selection, mod);
                 modInfos.Add(new ModStorageSelectionInfo(mod.Identifier, action));
             }
 
             Mods = modInfos;
-            await _viewModelService.Update();
         }
 
-        private async Task Load()
+        private void Load()
         {
-            var mods = await _repository.GetMods();
-            var selections = (await mods.SelectAsync(async m =>
+            var mods = _repository.GetMods();
+            var selections = mods.Select(m =>
             {
-                var selection = await m.GetSelection(cancellationToken: CancellationToken.None);
-                var action = await ModAction.Create(selection, m, CancellationToken.None);
+                var selection = m.GetCurrentSelection();
+                var action = ModAction.Create(selection, m);
                 return (m, action);
-            })).ToList();
+            }).ToList();
 
             UseSteam = ShowSteamOption = selections.Any(s =>
                 s.action is SelectMod storageMod &&
@@ -199,7 +199,7 @@ namespace BSU.Core.ViewModel
 
             foreach (var storage in _model.GetStorages())
             {
-                if (!storage.CanWrite || !await storage.IsAvailable()) continue;
+                if (!storage.CanWrite || !storage.IsAvailable()) continue;
                 var selection = new StorageSelection(storage);
                 Storages.Add(selection);
             }

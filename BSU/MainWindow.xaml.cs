@@ -67,13 +67,7 @@ namespace BSU.GUI
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
-            AsyncVoidExecutor.Execute(OnLoaded);
-        }
-
-        private async Task OnLoaded()
-        {
-            await Update();
-            await _viewModel.Load();
+            AsyncVoidExecutor.Execute(_core.Load);
         }
 
         private async Task Update()

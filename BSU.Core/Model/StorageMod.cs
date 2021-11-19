@@ -16,23 +16,21 @@ namespace BSU.Core.Model
     internal class StorageMod : IModelStorageMod
     {
         private readonly IPersistedStorageModState _internalState;
-        private readonly IModelStructure _modelStructure;
         public bool CanWrite { get; }
         public string Identifier { get; }
         public IModelStorage ParentStorage { get; }
         public bool IsDeleted { get; private set; }
         public IStorageMod Implementation { get; }
 
-        private readonly ResettableLazyAsync<MatchHash> _matchHash;
-        private readonly ResettableLazyAsync<VersionHash> _versionHash;
+        private MatchHash _matchHash;
+        private VersionHash _versionHash;
+        private string _title;
 
         private UpdateTarget _updateTarget;
 
         private readonly ILogger _logger;
 
-        private readonly SemaphoreSlim _stateLock = new(1);
-        private StorageModStateEnum _state = StorageModStateEnum.Created; // TODO: should not be directly accessible
-        private CancellationTokenSource _stateCts = new();
+        private StorageModStateEnum _state = StorageModStateEnum.Loading; // TODO: should not be directly accessible
 
         private StorageModStateEnum State
         {
@@ -42,76 +40,59 @@ namespace BSU.Core.Model
                 var old = _state;
                 _state = value;
                 _logger.Debug("State changed from {1} to {2}.", Identifier, old, value);
-                StateChanged?.Invoke();
+                StateChanged?.Invoke(this);
             }
         }
 
         public StorageMod(IStorageMod implementation, string identifier,
-            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IModelStructure modelStructure)
+            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
-            _modelStructure = modelStructure;
             ParentStorage = parent;
             CanWrite = canWrite;
             Implementation = implementation;
             Identifier = identifier;
 
-            VersionHash initialVersionHash = null;
-
             _updateTarget = _internalState.UpdateTarget;
             if (_updateTarget != null)
             {
                 _state = StorageModStateEnum.CreatedWithUpdateTarget;
-                initialVersionHash = VersionHash.FromDigest(_updateTarget.Hash);
+                _versionHash = VersionHash.FromDigest(_updateTarget.Hash);
             }
-
-            _matchHash = new ResettableLazyAsync<MatchHash>(CreateMatchHash, null, evt => _logger.Debug($"MatchHash job: {evt}"));
-            _versionHash = new ResettableLazyAsync<VersionHash>(CreateVersionHash, initialVersionHash, evt => _logger.Debug($"VersionHash job: {evt}"));
+            else
+            {
+                Load();
+            }
         }
 
-        private async Task<VersionHash> CreateVersionHash(CancellationToken cancellationToken)
+        private async Task<(MatchHash matchHash, VersionHash versionHash, string title)> LoadAsync(CancellationToken cancellationToken)
         {
-            return await VersionHash.CreateAsync(Implementation, cancellationToken);
+            var versionHash = await VersionHash.CreateAsync(Implementation, cancellationToken);
+            var matchHash = await MatchHash.CreateAsync(Implementation, cancellationToken);
+            var title = await Implementation.GetTitle(cancellationToken);
+
+            return (matchHash, versionHash, title);
         }
 
-        private async Task<MatchHash> CreateMatchHash(CancellationToken cancellationToken)
+        private void Load()
         {
-            return await MatchHash.CreateAsync(Implementation, cancellationToken);
+            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInCurrentContext(getResult =>
+            {
+                (_matchHash, _versionHash, _title) = getResult();
+                SetState(StorageModStateEnum.Created, StorageModStateEnum.Loading);
+            });
         }
 
-        public async Task<VersionHash> GetVersionHash(CancellationToken cancellationToken) => await _versionHash.GetAsync(cancellationToken);
+        public VersionHash GetVersionHash() => _versionHash;
 
-        public async Task<MatchHash> GetMatchHash(CancellationToken cancellationToken) => await _matchHash.GetAsync(cancellationToken);
+        public MatchHash GetMatchHash() => _matchHash;
 
         public StorageModStateEnum GetState() => State;
-        public async Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken)
-        {
-            var repositoryMods = await _modelStructure.GetRepositoryMods();
-            var result = new List<IModelRepositoryMod>();
-            foreach (var repositoryMod in repositoryMods)
-            {
-                var selection = await repositoryMod.GetSelection(cancellationToken: cancellationToken);
-                if (selection is RepositoryModActionStorageMod storageMod && storageMod.StorageMod == this)
-                    result.Add(repositoryMod);
-            }
 
-            return result;
-        }
+        public string GetTitle() => _title;
 
-        public CancellationToken GetStateToken()
-        {
-            // becomes invalid when the state changes
-            return _stateCts.Token;
-        }
-
-        private string _title;
-        public async Task<string> GetTitle(CancellationToken cancellationToken)
-        {
-            return _title ??= await Implementation.GetTitle(cancellationToken);
-        }
-
-        public async Task Delete(bool removeData)
+        public void Delete(bool removeData)
         {
             if (removeData) throw new NotImplementedException();
             IsDeleted = true;
@@ -127,53 +108,34 @@ namespace BSU.Core.Model
             }
         }
 
-        public event Action StateChanged;
+        public event Action<IModelStorageMod> StateChanged;
 
-        public async Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress)
+        public IModUpdate PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress)
         {
             _logger.Trace("Progress: Waiting");
             progress?.Report(new FileSyncStats(FileSyncState.Waiting));
-            await SetState(StorageModStateEnum.Updating, new [] { StorageModStateEnum.Created , StorageModStateEnum.CreatedWithUpdateTarget},
-                async () =>
-                {
-                    await _matchHash.Set(targetMatch);
-                    await _versionHash.Set(targetVersion);
-                    UpdateTarget = new UpdateTarget(targetVersion.GetHashString());
-                });
+            _matchHash = targetMatch;
+            _versionHash = targetVersion;
+            UpdateTarget = new UpdateTarget(targetVersion.GetHashString());
+            SetState(StorageModStateEnum.Updating, StorageModStateEnum.Created, StorageModStateEnum.CreatedWithUpdateTarget);
 
             var update = new StorageModUpdateState(this, repositoryMod, progress);
 
-            update.OnEnded += async () => await SetState(StorageModStateEnum.Created, new[]
-            {
-                StorageModStateEnum.Updating
-            });
+            // TODO: needs to be synchronized
+            update.OnEnded += () => SetState(StorageModStateEnum.Created, StorageModStateEnum.Updating);
 
             return update;
         }
 
-        private async Task SetState(StorageModStateEnum newState, StorageModStateEnum[] acceptableCurrent, Func<Task> setValues = null)
+        private void SetState(StorageModStateEnum newState, params StorageModStateEnum[] acceptableCurrent)
         {
-            await _stateLock.WaitAsync();
-            _stateCts.Cancel();
-            _stateCts = new CancellationTokenSource();
-            // TODO: handle errors?
-            try
-            {
-                if (!acceptableCurrent.Contains(State)) throw new InvalidOperationException($"Tried to transition from {State} to {newState}");
-                await Task.WhenAll(_matchHash.ResetAndWaitAsync(), _versionHash.ResetAndWaitAsync());
-                UpdateTarget = null;
-                if (setValues != null) await setValues();
-                State = newState;
-            }
-            finally
-            {
-                _stateLock.Release();
-            }
+            if (!acceptableCurrent.Contains(State)) throw new InvalidOperationException($"Tried to transition from {State} to {newState}");
+            State = newState;
         }
 
-        public async Task Abort()
+        public void Abort()
         {
-            await SetState(StorageModStateEnum.Created, new[] { StorageModStateEnum.CreatedWithUpdateTarget });
+            SetState(StorageModStateEnum.Created, StorageModStateEnum.CreatedWithUpdateTarget);
         }
 
         public PersistedSelection GetStorageModIdentifiers()

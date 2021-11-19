@@ -10,8 +10,8 @@ namespace BSU.GUI.Converters
     {
         public object Convert(object objValue, Type targetType, object parameter, CultureInfo culture)
         {
-            var value = (CalculatedRepositoryState)objValue;
-            return value.State switch
+            var value = (CalculatedRepositoryStateEnum)objValue;
+            return value switch
             {
                 CalculatedRepositoryStateEnum.NeedsSync => "Requires Syncing",
                 CalculatedRepositoryStateEnum.Ready => "Ready",

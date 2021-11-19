@@ -37,5 +37,15 @@ namespace BSU.Core.Concurrency
             }
         }
 
+        // TODO: feels like the continuation could be expressed as an async function
+        internal static void ContinueInCurrentContext<T>(this Task<T> task, Action<Func<T>> continuation)
+        {
+            // TODO: catch errors.
+            var ctx = SynchronizationContext.Current ?? throw new InvalidOperationException();
+            task.ContinueWith((taskResult, _) =>
+            {
+                ctx.Send(_ => continuation(() => taskResult.Result), null);
+            }, null);
+        }
     }
 }

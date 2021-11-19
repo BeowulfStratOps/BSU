@@ -3,13 +3,14 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
     public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
-        internal static async Task<ModAction> Create(RepositoryModActionSelection selection, IModelRepositoryMod parent, CancellationToken cancellationToken)
+        internal static ModAction Create(RepositoryModActionSelection selection, IModelRepositoryMod parent)
         {
             if (selection == null) return null;
 
@@ -18,7 +19,7 @@ namespace BSU.Core.ViewModel
             if (selection is RepositoryModActionDownload download) return new SelectStorage(download.DownloadStorage);
 
             if (selection is RepositoryModActionStorageMod actionStorageMod)
-                return new SelectMod(actionStorageMod.StorageMod, await parent.GetActionForMod(actionStorageMod.StorageMod, cancellationToken));
+                return new SelectMod(actionStorageMod.StorageMod, CoreCalculation.GetModAction(parent, actionStorageMod.StorageMod));
 
             throw new ArgumentException();
         }
@@ -76,7 +77,7 @@ namespace BSU.Core.ViewModel
         {
             StorageMod = storageMod;
             ActionType = actionType;
-            AsyncVoidExecutor.Execute(async () => Name = await storageMod.GetTitle(CancellationToken.None));
+            Name = storageMod.GetTitle();
         }
 
         public override bool Equals(ModAction other)

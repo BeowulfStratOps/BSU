@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -12,31 +13,27 @@ namespace BSU.Core.ViewModel
     {
         private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
+        private readonly Helper _helper;
         public ObservableCollection<Repository> Repositories { get; } = new();
         public DelegateCommand AddRepository { get; }
 
-
-
         public DelegateCommand ShowStorage { get; }
 
-        internal RepositoriesPage(IModel model, IViewModelService viewModelService)
+        internal RepositoriesPage(IModel model, IViewModelService viewModelService, Helper helper)
         {
             ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages);
             _model = model;
             _viewModelService = viewModelService;
+            _helper = helper;
             AddRepository = new DelegateCommand(DoAddRepository);
-            foreach (var modelRepository in model.GetRepositories())
-            {
-                var repository = new Repository(modelRepository, model, viewModelService);
-                repository.OnDelete += OnDelete;
-                Repositories.Add(repository);
-            }
+            model.AddedRepository += repository => AddedRepository(repository, model, viewModelService);
+            // TODO: handler for deleted
         }
 
-        private void OnDelete(Repository repository)
+        private void AddedRepository(IModelRepository modelRepository, IModel model, IViewModelService viewModelService)
         {
-            Repositories.Remove(repository);
-            repository.OnDelete -= OnDelete;
+            var repository = new Repository(modelRepository, model, viewModelService, _helper);
+            Repositories.Add(repository);
         }
 
         private void DoAddRepository()
@@ -45,37 +42,20 @@ namespace BSU.Core.ViewModel
             if (!_viewModelService.InteractionService.AddRepository(vm)) return;
 
             var repo = _model.AddRepository("BSO", vm.Url.Trim(), vm.Name.Trim());
-            var vmRepo = new Repository(repo, _model, _viewModelService);
-            Repositories.Add(vmRepo);
-            vmRepo.OnDelete += OnDelete;
-            AsyncVoidExecutor.Execute(_viewModelService.Update);
-            AsyncVoidExecutor.Execute(vmRepo.Load);
+
+            // TODO: this should be handled by the model
+
+            var vmRepo = new Repository(repo, _model, _viewModelService, _helper);
 
             var selectStorageVm = new SelectRepositoryStorage(repo, _model, _viewModelService, true);
             if (!_viewModelService.InteractionService.SelectRepositoryStorage(selectStorageVm)) return;
 
             AsyncVoidExecutor.Execute(async () =>
             {
-                var state = await repo.GetState(CancellationToken.None);
-                if (state.State == CalculatedRepositoryStateEnum.NeedsSync)
+                var state = _helper.GetRepositoryState(repo);
+                if (state == CalculatedRepositoryStateEnum.NeedsSync)
                     await vmRepo.DoUpdate();
             });
-        }
-
-        public async Task Update()
-        {
-            await Task.WhenAll(Repositories.Select(r => r.UpdateMods()));
-        }
-
-        public async Task Load()
-        {
-            async Task LoadAndUpdate(Repository repository)
-            {
-                await repository.Load();
-                await repository.UpdateMods();
-            }
-
-            await Task.WhenAll(Repositories.Select(LoadAndUpdate));
         }
     }
 }

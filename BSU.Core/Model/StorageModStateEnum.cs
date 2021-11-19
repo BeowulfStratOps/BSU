@@ -5,6 +5,7 @@
         CreatedWithUpdateTarget,
         Created,
         Updating,
-        Error
+        Error,
+        Loading
     }
 }

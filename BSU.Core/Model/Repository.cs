@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
@@ -14,99 +15,90 @@ namespace BSU.Core.Model
     internal class Repository : IModelRepository
     {
         private readonly IRepositoryState _internalState;
-        private readonly IModelStructure _modelStructure;
         public IRepository Implementation { get; }
         public string Name { get; }
         public Guid Identifier { get; }
         public string Location { get; }
 
-        private readonly List<IModelRepositoryMod> _mods  = new();
+        private LoadingState _state = LoadingState.Loading;
+        public event Action<IModelRepository> StateChanged;
 
-        private readonly Task _loading;
+        private List<IModelRepositoryMod> _mods;
 
         private readonly ILogger _logger;
         private readonly IErrorPresenter _errorPresenter;
+        private ServerInfo _serverInfo;
 
         public Repository(IRepository implementation, string name, string location,
-            IRepositoryState internalState, IModelStructure modelStructure, IErrorPresenter errorPresenter)
+            IRepositoryState internalState, IErrorPresenter errorPresenter)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
-            _modelStructure = modelStructure;
             _errorPresenter = errorPresenter;
             Location = location;
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
-            _loading = LoadInternal(CancellationToken.None); // TODO: cts
+            Load();
         }
 
-        private async Task LoadInternal(CancellationToken cancellationToken)
+        public LoadingState State
         {
-            try
+            get => _state;
+            set
             {
-                foreach (var (key, mod) in await Implementation.GetMods(cancellationToken))
+                if (_state == value) return;
+                _logger.Debug($"Changing state from {_state} to {value}");
+                _state = value;
+                StateChanged?.Invoke(this);
+            }
+        }
+
+        private async Task<(Dictionary<string, IRepositoryMod> mods, ServerInfo serverInfo)> LoadAsync()
+        {
+            var mods = await Implementation.GetMods(CancellationToken.None);
+            var serverInfo = await Implementation.GetServerInfo(CancellationToken.None);
+            return (mods, serverInfo);
+        }
+
+        private void Load()
+        {
+            Task.Run(LoadAsync).ContinueInCurrentContext(getResult =>
+            {
+                try
                 {
-                    var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), _modelStructure, this);
-                    _mods.Add(modelMod);
+                    (var mods, _serverInfo) = getResult();
+
+                    _mods = new List<IModelRepositoryMod>();
+                    foreach (var (key, mod) in mods)
+                    {
+                        var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), this);
+                        _mods.Add(modelMod);
+                    }
+
+                    State = LoadingState.Loaded;
                 }
-            }
-            catch (Exception e)
-            {
-                _errorPresenter.AddError($"Failed to load repository {Name}.");
-                _logger.Error(e);
-                throw;
-            }
+                catch (Exception e)
+                {
+                    _errorPresenter.AddError($"Failed to load repository {Name}.");
+                    _logger.Error(e);
+                    State = LoadingState.Error;
+                }
+            });
         }
 
-        public async Task<List<IModelRepositoryMod>> GetMods()
+        public List<IModelRepositoryMod> GetMods() => _mods;
+
+        public ServerInfo GetServerInfo()
         {
-            try
-            {
-                await _loading;
-            }
-            catch (Exception e)
-            {
-                return new List<IModelRepositoryMod>();
-            }
-            return new List<IModelRepositoryMod>(_mods);
+            return _serverInfo;
         }
+    }
 
-        public async Task<CalculatedRepositoryState> GetState(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await _loading;
-            }
-            catch (Exception e)
-            {
-                return new CalculatedRepositoryState(CalculatedRepositoryStateEnum.Error);
-            }
-
-            var mods = await GetMods();
-
-            async Task<(RepositoryModActionSelection selection, ModActionEnum? action, bool hasError)> GetModSelection(IModelRepositoryMod mod)
-            {
-                var selection = await mod.GetSelection(cancellationToken: cancellationToken);
-                var action = selection is not RepositoryModActionStorageMod actionStorageMod
-                    ? null
-                    : (ModActionEnum?)await CoreCalculation.GetModAction(mod, actionStorageMod.StorageMod, cancellationToken);
-                var hasError = await mod.GetErrorForSelection(cancellationToken) != null;
-                return (selection, action, hasError);
-            }
-
-            var infoTasks = mods.Select(GetModSelection).ToList();
-            await Task.WhenAll(infoTasks);
-            var infos = infoTasks.Select(t => t.Result).ToList();
-
-            var calculatedState = CoreCalculation.CalculateRepositoryState(infos);
-            _logger.Trace("Repo {0} calculated state: {1}", Identifier, calculatedState);
-            return calculatedState;
-        }
-
-        public async Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
-        {
-            return await Implementation.GetServerInfo(cancellationToken);
-        }
+    internal enum LoadingState
+    {
+        Loading,
+        Loaded,
+        Error
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
+using BSU.Core.Services;
 using BSU.Core.Sync;
 using BSU.Core.ViewModel.Util;
 
@@ -35,22 +36,23 @@ namespace BSU.Core.ViewModel
 
         public FileSyncProgress UpdateProgress { get; } = new();
 
-        public ModActionTree Actions { get; } = new();
+        public ModActionTree Actions { get; }
 
         private void SetSelectionFromView(ModAction value)
         {
             DownloadIdentifier = Mod.Identifier;
             if (DownloadIdentifier.StartsWith("@")) DownloadIdentifier = DownloadIdentifier[1..];
             Mod.SetSelection(value.AsSelection);
-            AsyncVoidExecutor.Execute(_viewModelService.Update);
         }
 
-        internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)
+        internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService, Helper helper)
         {
+            Actions = new ModActionTree(mod, model);
             Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
             Mod = mod;
             _model = model;
             _viewModelService = viewModelService;
+            _helper = helper;
             Name = mod.Identifier;
             ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded);
 
@@ -58,29 +60,15 @@ namespace BSU.Core.ViewModel
             if (downloadIdentifier.StartsWith("@")) downloadIdentifier = downloadIdentifier[1..];
 
             DownloadIdentifier = downloadIdentifier;
+
+            mod.StateChanged += _ => OnStateChanged();
+            _helper.AnyChange += Actions.Update;
+            Actions.Update();
         }
 
-        private async Task<ModAction> UpdateAction(IModelStorageMod storageMod)
+        private void OnStateChanged()
         {
-            var action = await CoreCalculation.GetModAction(Mod, storageMod, CancellationToken.None);
-            if (action == ModActionEnum.Unusable)
-            {
-                Actions.RemoveMod(storageMod);
-                return Actions.Selection;
-            }
-            var selection = new SelectMod(storageMod, action);
-            Actions.UpdateMod(selection);
-            return selection;
-        }
-
-        internal void AddStorage(IModelStorage storage)
-        {
-            Actions.AddStorage(storage);
-        }
-
-        internal void RemoveStorage(IModelStorage storage)
-        {
-            Actions.RemoveStorage(storage);
+            Info = Mod.GetModInfo();
         }
 
         public string DownloadIdentifier
@@ -92,7 +80,6 @@ namespace BSU.Core.ViewModel
                 Mod.DownloadIdentifier = "@" + value;
                 _downloadIdentifier = value;
                 OnPropertyChanged();
-                AsyncVoidExecutor.Execute(_viewModelService.Update);
             }
         }
 
@@ -113,6 +100,7 @@ namespace BSU.Core.ViewModel
         public DelegateCommand ToggleExpand { get; }
 
         private string _errorText;
+        private readonly Helper _helper;
 
         public string ErrorText
         {
@@ -127,39 +115,10 @@ namespace BSU.Core.ViewModel
 
         public bool NotIsExpanded => !IsExpanded;
 
-        public async Task Load()
+        public void Update()
         {
-            Info = await Mod.GetModInfo(CancellationToken.None);
-            foreach (var storage in await _model.GetStorages().WhereAsync(s => s.IsAvailable()))
-            {
-                AddStorage(storage);
-            }
-        }
-
-        public async Task Update()
-        {
-            var selection = await Mod.GetSelection(cancellationToken: CancellationToken.None);
             DownloadIdentifier = Mod.DownloadIdentifier[1..];
-            if (selection is RepositoryModActionStorageMod actionStorageMod)
-            {
-                var updatedAction = await UpdateAction(actionStorageMod.StorageMod);
-                Actions.SetSelection(updatedAction);
-            }
-            else
-            {
-                var action = await ModAction.Create(selection, Mod, CancellationToken.None);
-                Actions.SetSelection(action);
-            }
-
-            ErrorText = await Mod.GetErrorForSelection(CancellationToken.None) ?? "";
-
-            var actions = await Mod.GetModActions(CancellationToken.None);
-            foreach (var (mod, _) in actions)
-            {
-                await UpdateAction(mod);
-            }
-
-            // TODO: really, this should be the only thing happening in this method. keep it all functional/state-less.
+            ErrorText = _helper.GetErrorForSelection(Mod) ?? "";
             Actions.Update();
         }
 
@@ -168,7 +127,6 @@ namespace BSU.Core.ViewModel
             var progress = UpdateProgress.Progress;
             var update = await Mod.StartUpdate(progress, cancellationToken);
             if (update == null) return default;
-            await _viewModelService.Update();
 
             return (update, progress);
         }

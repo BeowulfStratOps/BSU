@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.Tests.Util;
 using Moq;
 using Xunit;

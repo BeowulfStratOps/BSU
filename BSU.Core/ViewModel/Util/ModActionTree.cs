@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using BSU.Core.Model;
+using BSU.Core.Services;
 
 namespace BSU.Core.ViewModel.Util
 {
@@ -12,6 +15,9 @@ namespace BSU.Core.ViewModel.Util
         private bool _isOpen;
 
         private ModAction _selection;
+        private readonly IModel _model;
+        private readonly IModelRepositoryMod _repoMod;
+
         public ModAction Selection
         {
             get => _selection;
@@ -20,6 +26,7 @@ namespace BSU.Core.ViewModel.Util
                 if (Equals(value, _selection)) return;
                 _selection = value;
                 OnPropertyChanged();
+                SelectionChanged?.Invoke();
             }
         }
 
@@ -36,86 +43,52 @@ namespace BSU.Core.ViewModel.Util
 
         public event Action SelectionChanged;
 
-        public void SetSelection(ModAction action)
-        {
-            Selection = action;
-            SetIsSelected(action);
-        }
-
         public DelegateCommand Open { get; }
 
-        public ModActionTree()
+        internal ModActionTree(IModelRepositoryMod repoMod, IModel model)
         {
+            _repoMod = repoMod;
+            _model = model;
             Open = new DelegateCommand(() => IsOpen = true);
-            Storages.Add( new SelectableModAction(new SelectDoNothing(), this, false));
-        }
-
-        internal void UpdateMod(SelectMod mod)
-        {
-            FindStorageByMod(mod.StorageMod).UpdateMod(mod);
-        }
-
-        private StorageModActionList FindStorageByMod(IModelStorageMod mod)
-        {
-            var storage = Storages.OfType<StorageModActionList>().SingleOrDefault(s => s.Storage == mod.ParentStorage);
-            if (storage == null && mod.ParentStorage.CanWrite)
-                storage = AddStorage(mod.ParentStorage);
-            return storage;
-        }
-
-        internal StorageModActionList AddStorage(IModelStorage storage)
-        {
-            var existing = Storages.OfType<StorageModActionList>().SingleOrDefault(s => s.Storage == storage);
-            if (existing != null) return existing;
-            var storageEntry = new StorageModActionList(storage, this);
-            Storages.Add(storageEntry);
-            return storageEntry;
-        }
-
-        internal void RemoveStorage(IModelStorage storage)
-        {
-            var storageEntry = Storages.OfType<StorageModActionList>().SingleOrDefault(s => s.Storage == storage);
-            if (storageEntry != null)
-                Storages.Remove(storageEntry);
-        }
-
-        internal void RemoveMod(IModelStorageMod mod)
-        {
-            FindStorageByMod(mod)?.RemoveMod(mod);
-        }
-
-        public void Select(ModAction action)
-        {
-            IsOpen = false;
-            SetIsSelected(action);
-            if (Equals(Selection, action)) return;
-            Selection = action;
-            SelectionChanged?.Invoke();
-        }
-
-        private void SetIsSelected(ModAction action)
-        {
-            foreach (var listEntry in Storages)
-            {
-                if (listEntry is SelectableModAction selectableAction)
-                    selectableAction.IsSelected = selectableAction.Action.Equals(action);
-                if (listEntry is not StorageModActionList list) continue;
-                foreach (var selectableModAction in list.Mods)
-                {
-                    selectableModAction.IsSelected = selectableModAction.Action.Equals(action);
-                }
-            }
+            Update();
         }
 
         public void Update()
         {
-            // just purging removed storages for now.
-            // TODO: ideally, this should rebuild the entire list, to keep it functional / state-less
-            foreach (var storageModActionList in Storages.OfType<StorageModActionList>().ToList())
+            var currentSelection = _repoMod.GetCurrentSelection();
+            Selection = ModAction.Create(currentSelection, _repoMod);
+            Storages.Clear();
+            Storages.Add(new SelectableModAction(new SelectDoNothing(), SetSelection,
+                false));
+
+            foreach (var storage in _model.GetStorages())
             {
-                if (storageModActionList.Storage.IsDeleted)
-                    Storages.Remove(storageModActionList);
+                var actions = new List<SelectableModAction>();
+
+                foreach (var mod in storage.GetMods())
+                {
+                    var actionType = CoreCalculation.GetModAction(_repoMod, mod);
+                    if (actionType != ModActionEnum.Unusable)
+                    {
+                        var action = new SelectMod(mod, actionType);
+                        var isSelected = _repoMod.GetCurrentSelection() is RepositoryModActionStorageMod storageMod &&
+                                         storageMod.StorageMod == mod;
+                        actions.Add(new SelectableModAction(action, SetSelection, isSelected));
+                    }
+                }
+
+                if (actions.Any() || storage.CanWrite)
+                {
+                    var isSelected = _repoMod.GetCurrentSelection() is RepositoryModActionDownload download &&
+                                     download.DownloadStorage == storage;
+                    Storages.Add(new StorageModActionList(storage, SetSelection, actions, isSelected));
+                }
             }
+        }
+
+        private void SetSelection(ModAction action)
+        {
+            Selection = action;
         }
     }
 
@@ -126,80 +99,35 @@ namespace BSU.Core.ViewModel.Util
     public class StorageModActionList : ObservableBase, IActionListEntry
     {
         internal IModelStorage Storage { get; }
-        private readonly ModActionTree _parent;
-        private bool _isShown;
 
         public string Name => Storage.Name;
 
-        public bool IsShown
-        {
-            get => _isShown;
-            private set
-            {
-                if (_isShown == value) return;
-                _isShown = value;
-                OnPropertyChanged();
-            }
-        }
-
         public ObservableCollection<SelectableModAction> Mods { get; } = new();
 
-        internal StorageModActionList(IModelStorage storage, ModActionTree parent)
+        internal StorageModActionList(IModelStorage storage, Action<ModAction> selectStorage,
+            List<SelectableModAction> actions, bool isSelected)
         {
-            _parent = parent;
             Storage = storage;
             if (!storage.CanWrite) return;
-            Mods.Add(new SelectableModAction(new SelectStorage(storage), _parent, false));
-            IsShown = true;
-        }
-
-        public void UpdateMod(SelectMod mod)
-        {
-            var index = FindIndex(mod.StorageMod);
-
-            if (index == -1)
+            Mods.Add(new SelectableModAction(new SelectStorage(storage), selectStorage, isSelected));
+            foreach (var action in actions)
             {
-                Mods.Insert(0, new SelectableModAction(mod, _parent, false));
-                IsShown = true;
-                return;
+                Mods.Add(action);
             }
-
-            Mods[index] = new SelectableModAction(mod, _parent, Mods[index].IsSelected);
-        }
-
-        private int FindIndex(IModelStorageMod mod)
-        {
-            var index = -1;
-            for (var i = 0; i < Mods.Count; i++)
-            {
-                if (Mods[i].Action is not SelectMod selectMod || selectMod.StorageMod != mod) continue;
-                index = i;
-                break;
-            }
-
-            return index;
-        }
-
-        internal void RemoveMod(IModelStorageMod mod)
-        {
-            var index = FindIndex(mod);
-            if (index != -1) Mods.RemoveAt(index);
-            if (!Mods.Any()) IsShown = false;
         }
     }
 
     public class SelectableModAction : ObservableBase, IActionListEntry
     {
-        private readonly ModActionTree _parent;
-
-        public SelectableModAction(ModAction action, ModActionTree parent, bool isSelected)
+        public SelectableModAction(ModAction action, Action<ModAction> select, bool isSelected)
         {
+            _select = select;
             _isSelected = isSelected;
-            _parent = parent;
             Action = action;
         }
 
         public ModAction Action { get; }
+        private readonly Action<ModAction> _select;
         private bool _isSelected;
 
         public bool IsSelected
@@ -215,8 +143,7 @@ namespace BSU.Core.ViewModel.Util
 
         public void Select()
         {
-            IsSelected = true;
-            _parent.Select(Action);
+            _select(Action);
         }
     }
 }

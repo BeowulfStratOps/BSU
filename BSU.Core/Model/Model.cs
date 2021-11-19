@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Persistence;
+using BSU.Core.Services;
 using BSU.Core.Storage;
 using BSU.CoreCommon;
 using NLog;
@@ -15,11 +16,27 @@ namespace BSU.Core.Model
     {
         private readonly Types _types;
 
-        private readonly ModelStructure _structure = new();
+        private readonly List<IModelRepository> _repositories = new();
+        private readonly List<IModelStorage> _storages = new();
+
         private readonly ErrorPresenter _errorPresenter = new();
 
+        public event Action<IModelRepository> AddedRepository;
+        public event Action<IModelStorage> AddedStorage;
+        public List<IModelStorageMod> GetStorageMods()
+        {
+            return _storages.Where(r => r.State == LoadingState.Loaded)
+                .SelectMany(r => r.GetMods()).ToList();
+        }
+
+        public List<IModelRepositoryMod> GetRepositoryMods()
+        {
+            return _repositories.Where(r => r.State == LoadingState.Loaded)
+                .SelectMany(r => r.GetMods()).ToList();
+        }
+
         private InternalState PersistentState { get; }
-        private ILogger _logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
         public Model(InternalState persistentState, Types types)
         {
@@ -59,18 +76,18 @@ namespace BSU.Core.Model
         private Repository CreateRepository(IRepositoryEntry data, IRepositoryState state)
         {
             var implementation = _types.GetRepoImplementation(data.Type, data.Url);
-            var repository = new Repository(implementation, data.Name, data.Url, state, _structure, _errorPresenter);
-            // TODO: kick off mods
-            _structure.AddRepository(repository);
+            var repository = new Repository(implementation, data.Name, data.Url, state, _errorPresenter);
+            _repositories.Add(repository);
+            AddedRepository?.Invoke(repository);
             return repository;
         }
 
         private Storage CreateStorage(IStorageEntry data, IStorageState state)
         {
             var implementation = _types.GetStorageImplementation(data.Type, data.Path);
-            var storage = new Storage(implementation, data.Name, data.Path, state, _structure, _errorPresenter);
-            // TODO: kick off mods
-            _structure.AddStorage(storage);
+            var storage = new Storage(implementation, data.Name, data.Path, state, _errorPresenter);
+            _storages.Add(storage);
+            AddedStorage?.Invoke(storage);
             return storage;
         }
 
@@ -88,9 +105,9 @@ namespace BSU.Core.Model
             return CreateStorage(entry, storageState);
         }
 
-        public IEnumerable<IModelStorage> GetStorages() => _structure.GetStorages();
+        public IEnumerable<IModelStorage> GetStorages() => _storages;
 
-        public IEnumerable<IModelRepository> GetRepositories() => _structure.GetRepositories();
+        public IEnumerable<IModelRepository> GetRepositories() => _repositories;
         public void ConnectErrorPresenter(IErrorPresenter presenter)
         {
             _errorPresenter.Connect(presenter);
@@ -104,15 +121,17 @@ namespace BSU.Core.Model
         public void DeleteRepository(IModelRepository repository, bool removeMods)
         {
             if (removeMods) throw new NotImplementedException();
-            _structure.RemoveRepository(repository);
+            _repositories.Remove(repository);
+            // TODO: raise event
             PersistentState.RemoveRepository(repository.Identifier);
             // TODO: dispose / stop actions
         }
 
-        public async Task DeleteStorage(IModelStorage storage, bool removeMods)
+        public void DeleteStorage(IModelStorage storage, bool removeMods)
         {
-            await storage.Delete(removeMods);
-            _structure.RemoveStorage(storage);
+            storage.Delete(removeMods);
+            _storages.Remove(storage);
+            // TODO: raise event
             PersistentState.RemoveStorage(storage.Identifier);
             // TODO: dispose / stop actions
         }

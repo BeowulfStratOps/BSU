@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
+using BSU.Core.Services;
 using BSU.Core.Sync;
 using BSU.Core.Tests.Util;
 

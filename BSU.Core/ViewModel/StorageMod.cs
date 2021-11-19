@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.Storage;
 using BSU.Core.ViewModel.Util;
 
@@ -12,6 +13,7 @@ namespace BSU.Core.ViewModel
         private string _usedBy = "Loading...";
         private readonly IModelStorageMod _modelStorageMod;
         private string _title;
+        private readonly Helper _helper;
 
         public string Title
         {
@@ -35,16 +37,24 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        internal StorageMod(IModelStorageMod mod)
+        internal StorageMod(IModelStorageMod mod, Helper helper)
         {
             _modelStorageMod = mod;
+            _helper = helper;
             Title = mod.Identifier;
-            AsyncVoidExecutor.Execute(async () => Title = await mod.GetTitle(CancellationToken.None));
+
+            mod.StateChanged += _ => OnStateChanged();
+            _helper.AnyChange += Update;
         }
 
-        internal async Task Update()
+        private void OnStateChanged()
         {
-            var usedBy = await _modelStorageMod.GetUsedBy(CancellationToken.None);
+            Title = _modelStorageMod.GetTitle();
+        }
+
+        private void Update()
+        {
+            var usedBy = _helper.GetUsedBy(_modelStorageMod);
             var names = usedBy.Select(m => $"{m.ParentRepository.Name}/{m.Identifier}").ToList();
             UsedBy = names.Any() ? string.Join(", ", names) : null;
         }

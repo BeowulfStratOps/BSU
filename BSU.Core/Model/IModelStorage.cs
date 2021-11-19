@@ -1,28 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
-using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
-using BSU.CoreCommon;
 
 namespace BSU.Core.Model
 {
     internal interface IModelStorage
     {
-        Task<List<IModelStorageMod>> GetMods();
+        List<IModelStorageMod> GetMods();
 
         Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget);
         bool CanWrite { get; }
         Guid Identifier { get; }
         string Name { get; }
         bool IsDeleted { get; }
+        LoadingState State { get; }
         PersistedSelection AsStorageIdentifier();
-        Task<bool> HasMod(string downloadIdentifier);
+        bool HasMod(string downloadIdentifier);
         string GetLocation();
-        Task<bool> IsAvailable();
-        Task<string> GetAvailableDownloadIdentifier(string baseIdentifier);
-        Task Delete(bool removeMods);
+        bool IsAvailable();
+        void Delete(bool removeMods);
+        event Action<IModelStorage> StateChanged;
     }
 }

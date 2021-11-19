@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -28,30 +29,14 @@ namespace BSU.Core.ViewModel
         private readonly RepositoriesPage _repoPage;
         private readonly StoragePage _storagePage;
 
-        internal ViewModel(IModel model)
+        internal ViewModel(IModel model, StructureEventCombiner eventCombiner)
         {
             _model = model;
+            var helper = new Helper(model, eventCombiner);
             model.ConnectErrorPresenter(this);
-            _repoPage = new RepositoriesPage(model, this);
-            _storagePage = new StoragePage(model, this);
+            _repoPage = new RepositoriesPage(model, this, helper);
+            _storagePage = new StoragePage(model, this, helper);
             Content = _repoPage;
-        }
-
-        public async Task Load()
-        {
-            await Task.WhenAll(_repoPage.Load(), _storagePage.Load());
-        }
-
-        public async Task Update()
-        {
-            try
-            {
-                await Task.WhenAll(_repoPage.Update(), _storagePage.Update());
-            }
-            catch (OperationCanceledException)
-            {
-                // happens if something changes in the model. view model will call updated again after whatever cause the change is done
-            }
         }
 
         private readonly Stack<object> _navigationStack = new();

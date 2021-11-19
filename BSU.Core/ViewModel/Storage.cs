@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BSU.Core.Annotations;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -37,36 +38,42 @@ namespace BSU.Core.ViewModel
 
         private readonly IViewModelService _viewModelService;
         private string _error;
+        private readonly Helper _helper;
 
-        internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService)
+        internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService, Helper helper)
         {
-            Delete = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoDelete));
+            Delete = new DelegateCommand(DoDelete);
             ModelStorage = storage;
             _model = model;
             _viewModelService = viewModelService;
+            _helper = helper;
             Identifier = storage.Identifier;
             _storage = storage;
             Name = storage.Name;
             Path = storage.GetLocation();
+            storage.StateChanged += _ => OnStateChanged();
         }
 
-        internal async Task Load()
+        private void OnStateChanged()
         {
-            var mods = await ModelStorage.GetMods();
-            foreach (var mod in mods)
+            if (_storage.State == LoadingState.Error)
             {
-                Mods.Add(new StorageMod(mod));
+                Error = "Failed to load";
+                return;
             }
 
-            Error = await _storage.IsAvailable() ? null : "Failed to load";
+            foreach (var mod in ModelStorage.GetMods())
+            {
+                Mods.Add(new StorageMod(mod, _helper));
+            }
         }
 
-        private async Task DoDelete()
+        private void DoDelete()
         {
-            if (!await _storage.IsAvailable() || !_storage.CanWrite) // Errored loading, probably because the folder doesn't exist anymore, or steam
+            if (!_storage.IsAvailable() || !_storage.CanWrite) // Errored loading, probably because the folder doesn't exist anymore, or steam
             {
                 OnDeleted?.Invoke(this);
-                await _model.DeleteStorage(_storage, false);
+                _model.DeleteStorage(_storage, false);
                 return;
             }
 
@@ -88,15 +95,9 @@ Cancel - Do not remove this storage";
             }
 
             OnDeleted?.Invoke(this);
-            await _model.DeleteStorage(_storage, (bool) removeMods);
-            await _viewModelService.Update();
+            _model.DeleteStorage(_storage, (bool) removeMods);
         }
 
         public event Action<Storage> OnDeleted;
-
-        public async Task Update()
-        {
-            await Task.WhenAll(Mods.ToList().Select(m => m.Update()));
-        }
     }
 }
