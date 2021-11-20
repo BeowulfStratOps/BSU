@@ -26,7 +26,11 @@ namespace BSU.Core.ViewModel
             _helper = helper;
             AddStorage = new DelegateCommand(() => DoAddStorage());
             model.AddedStorage += OnAddStorage;
-            // TODO: deletes
+            model.RemovedStorage += storage =>
+            {
+                var vmStorage = Storages.Single(r => r.ModelStorage == storage);
+                Storages.Remove(vmStorage);
+            };
         }
 
         private void OnAddStorage(IModelStorage modelStorage)

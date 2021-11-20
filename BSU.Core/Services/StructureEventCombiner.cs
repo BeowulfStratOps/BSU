@@ -12,12 +12,15 @@ namespace BSU.Core.Services
         {
             model.AddedRepository += AddedRepository;
             model.AddedStorage += AddedStorage;
+            model.RemovedRepository += _ => OnAnyChange();
+            model.RemovedStorage += _ => OnAnyChange();
         }
 
         public event Action AnyChange;
 
         private void OnAnyChange()
         {
+            _logger.Trace("OnAnyChange");
             AnyChange?.Invoke();
         }
 
@@ -37,6 +40,10 @@ namespace BSU.Core.Services
             {
                 AddStorageMod(mod);
             }
+
+            storage.AddedMod += AddStorageMod;
+
+            OnAnyChange();
         }
 
         private void AddStorageMod(IModelStorageMod mod)

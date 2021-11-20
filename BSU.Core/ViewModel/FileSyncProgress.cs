@@ -22,7 +22,7 @@ namespace BSU.Core.ViewModel
         public bool Active
         {
             get => _active;
-            private set
+            internal set
             {
                 if (value == _active) return;
                 _active = value;

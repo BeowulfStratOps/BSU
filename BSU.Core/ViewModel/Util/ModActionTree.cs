@@ -63,6 +63,8 @@ namespace BSU.Core.ViewModel.Util
 
             foreach (var storage in _model.GetStorages())
             {
+                if (storage.State != LoadingState.Loaded) continue;
+
                 var actions = new List<SelectableModAction>();
 
                 foreach (var mod in storage.GetMods())
@@ -89,6 +91,7 @@ namespace BSU.Core.ViewModel.Util
         private void SetSelection(ModAction action)
         {
             Selection = action;
+            IsOpen = false;
         }
     }
 

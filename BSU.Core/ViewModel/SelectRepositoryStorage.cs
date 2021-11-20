@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using BSU.Core.Concurrency;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
@@ -13,8 +11,8 @@ namespace BSU.Core.ViewModel
     public class SelectRepositoryStorage : ObservableBase
     {
         public bool UpdateAfter { get; }
+        public string UpdateText { get; }
         private readonly IModelRepository _repository;
-        private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
         private bool _isLoading = true;
         private bool _hasNonSteamDownloads;
@@ -95,7 +93,7 @@ namespace BSU.Core.ViewModel
         public List<ModStorageSelectionInfo> Mods
         {
             get => _mods;
-            set
+            private set
             {
                 if (_mods == value) return;
                 _mods = value;
@@ -105,28 +103,57 @@ namespace BSU.Core.ViewModel
 
 
         internal SelectRepositoryStorage(IModelRepository repository, IModel model, IViewModelService viewModelService,
-            bool updateAfter)
+            bool updateAfter, Helper helper)
         {
             UpdateAfter = updateAfter;
+            UpdateText = updateAfter ? "Sync" : "OK";
             Ok = new DelegateCommand(HandleOk, !updateAfter);
             AddStorage = new DelegateCommand(HandleAdd, false);
             _repository = repository;
-            _model = model;
             _viewModelService = viewModelService;
-            Load();
+
+            if (_repository.State == LoadingState.Loaded)
+                Load();
+            else
+                _repository.StateChanged += _ => Load();
+
+            helper.AnyChange += Update;
+
+            foreach (var storage in model.GetStorages())
+            {
+                AddStorageToList(storage);
+            }
+            model.AddedStorage += AddStorageToList;
+        }
+
+        private void AddStorageToList(IModelStorage storage)
+        {
+            if (!storage.CanWrite || !storage.IsAvailable()) return;
+            Storages.Add(new StorageSelection(storage));
         }
 
         private void HandleAdd()
         {
             var storage = _viewModelService.AddStorage(false);
             if (storage == null) return;
-            var selection = new StorageSelection(storage);
-            Storages.Add(selection);
-            Storage = selection;
+
+            if (storage.State == LoadingState.Loaded)
+                Storage = new StorageSelection(storage);
+            else
+                storage.StateChanged += HandleAddWhenLoaded;
+        }
+
+        private void HandleAddWhenLoaded(IModelStorage storage)
+        {
+            if (storage.State != LoadingState.Loaded) return;
+            storage.StateChanged -= HandleAddWhenLoaded;
+            Storage = new StorageSelection(storage);
         }
 
         private void AdjustSelection()
         {
+            if (IsLoading) return;
+
             var mods = _repository.GetMods();
             if (UseSteam)
             {
@@ -139,36 +166,27 @@ namespace BSU.Core.ViewModel
                 }
             }
 
-            if (Storage != null)
-            {
-                foreach (var mod in mods)
-                {
-                    var selection = mod.GetCurrentSelection();
-                    if (selection is RepositoryModActionDownload ||
-                        (selection is RepositoryModActionStorageMod storageMod && !storageMod.StorageMod.CanWrite &&
-                         !UseSteam))
-                    {
-                        mod.SetSelection(new RepositoryModActionDownload(Storage.Storage));
-                        mod.DownloadIdentifier = Helper.GetAvailableDownloadIdentifier(Storage.Storage, mod.Identifier);
-                    }
-                }
+            if (Storage == null) return;
 
-                Ok.SetCanExecute(true);
-            }
-
-            var modInfos = new List<ModStorageSelectionInfo>();
-            foreach (var mod in mods.OrderBy(m => m.Identifier))
+            foreach (var mod in mods)
             {
                 var selection = mod.GetCurrentSelection();
-                var action = ModAction.Create(selection, mod);
-                modInfos.Add(new ModStorageSelectionInfo(mod.Identifier, action));
+                if (selection is RepositoryModActionDownload ||
+                    (selection is RepositoryModActionStorageMod storageMod && !storageMod.StorageMod.CanWrite &&
+                     !UseSteam))
+                {
+                    mod.SetSelection(new RepositoryModActionDownload(Storage.Storage));
+                    mod.DownloadIdentifier = Helper.GetAvailableDownloadIdentifier(Storage.Storage, mod.Identifier);
+                }
             }
 
-            Mods = modInfos;
+            Ok.SetCanExecute(true);
         }
 
         private void Load()
         {
+            if (_repository.State == LoadingState.Error) throw new InvalidOperationException(); // TODO: handle properly
+
             var mods = _repository.GetMods();
             var selections = mods.Select(m =>
             {
@@ -185,24 +203,23 @@ namespace BSU.Core.ViewModel
             ShowDownload = DownloadEnabled || ShowSteamOption;
             AddStorage.SetCanExecute(DownloadEnabled);
 
-            Mods = selections
-                .Select(s =>
-                {
-                    var (mod, action) = s;
-                    return new ModStorageSelectionInfo(mod.Identifier, action);
-                }).OrderBy(t => t.ModName).ToList();
-
             IsLoading = false;
 
             if (Storage != null)
                 Ok.SetCanExecute(true);
 
-            foreach (var storage in _model.GetStorages())
+            Update();
+        }
+
+        private void Update()
+        {
+            Mods = _repository.GetMods().Select(mod =>
             {
-                if (!storage.CanWrite || !storage.IsAvailable()) continue;
-                var selection = new StorageSelection(storage);
-                Storages.Add(selection);
-            }
+                var selection = mod.GetCurrentSelection();
+                var action = ModAction.Create(selection, mod);
+                var entry = new ModStorageSelectionInfo(mod.Identifier, action);
+                return entry;
+            }).OrderBy(t => t.ModName).ToList();
         }
 
         private bool _showDownload;

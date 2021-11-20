@@ -11,7 +11,7 @@ namespace BSU.Core.ViewModel
 {
     public class Repository : ObservableBase
     {
-        private readonly IModelRepository _repository;
+        internal readonly IModelRepository ModelRepository;
         private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
         public string Name { get; }
@@ -170,13 +170,13 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        internal Repository(IModelRepository repository, IModel model, IViewModelService viewModelService, Helper helper)
+        internal Repository(IModelRepository modelRepository, IModel model, IViewModelService viewModelService, Helper helper)
         {
-            _repository = repository;
+            ModelRepository = modelRepository;
             _model = model;
             _viewModelService = viewModelService;
             _helper = helper;
-            Identifier = repository.Identifier;
+            Identifier = modelRepository.Identifier;
             Delete = new DelegateCommand(DoDelete, false);
             Update = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoUpdate));
             Back = new DelegateCommand(viewModelService.NavigateBack);
@@ -187,26 +187,26 @@ namespace BSU.Core.ViewModel
             Settings = new DelegateCommand(() =>
                 _viewModelService.InteractionService.MessagePopup("Not supported yet.", "Settings"));
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
-            repository.StateChanged += _ => OnStateChanged();
-            Name = repository.Name;
+            modelRepository.StateChanged += _ => OnStateChanged();
+            Name = modelRepository.Name;
             _helper.AnyChange += UpdateState;
         }
 
         private void UpdateState()
         {
-            CalculatedState = _helper.GetRepositoryState(_repository);
+            CalculatedState = _helper.GetRepositoryState(ModelRepository);
             UpdateButtonStates();
         }
 
         private void OnStateChanged()
         {
-            if (_repository.State == LoadingState.Error)
+            if (ModelRepository.State == LoadingState.Error)
             {
                 ServerUrl = "";
             }
 
-            (_, ServerUrl) = _repository.GetServerInfo();
-            var mods = _repository.GetMods();
+            (_, ServerUrl) = ModelRepository.GetServerInfo();
+            var mods = ModelRepository.GetMods();
             foreach (var mod in mods.OrderBy(m => m.Identifier))
             {
                 Mods.Add(new RepositoryMod(mod, _model, _viewModelService, _helper));
@@ -215,7 +215,7 @@ namespace BSU.Core.ViewModel
 
         private void DoChooseDownloadLocation()
         {
-            var vm = new SelectRepositoryStorage(_repository, _model, _viewModelService, false);
+            var vm = new SelectRepositoryStorage(ModelRepository, _model, _viewModelService, false, _helper);
             _viewModelService.InteractionService.SelectRepositoryStorage(vm);
         }
 
@@ -264,7 +264,7 @@ Cancel - Do not remove this repository";
                 return;
             }
 
-            _model.DeleteRepository(_repository, (bool)removeData);
+            _model.DeleteRepository(ModelRepository, (bool)removeData);
             OnDelete?.Invoke(this);
 
             if ((bool) objOnDetailsPage) _viewModelService.NavigateBack();

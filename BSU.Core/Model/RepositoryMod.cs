@@ -64,7 +64,7 @@ namespace BSU.Core.Model
         public LoadingState State
         {
             get => _state;
-            set
+            private set
             {
                 if (_state == value) return;
                 _logger.Debug($"Changing state from {_state} to {value}");
@@ -103,11 +103,23 @@ namespace BSU.Core.Model
             return new ModInfo(name, version, size);
         }
 
-        public ModInfo GetModInfo() => _modInfo;
+        public ModInfo GetModInfo()
+        {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            return _modInfo;
+        }
 
-        public MatchHash GetMatchHash() => _matchHash;
+        public MatchHash GetMatchHash()
+        {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            return _matchHash;
+        }
 
-        public VersionHash GetVersionHash() => _versionHash;
+        public VersionHash GetVersionHash()
+        {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            return _versionHash;
+        }
 
         public void SetSelection(RepositoryModActionSelection selection)
         {
@@ -119,6 +131,8 @@ namespace BSU.Core.Model
 
         public async Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
         {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+
             if (Selection == null) throw new InvalidOperationException();
 
             // TODO: switch

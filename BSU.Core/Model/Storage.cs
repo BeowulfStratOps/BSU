@@ -22,9 +22,10 @@ namespace BSU.Core.Model
         private List<IModelStorageMod> _mods;
         private readonly IErrorPresenter _errorPresenter;
         private readonly ILogger _logger;
-        private LoadingState _state;
+        private LoadingState _state = LoadingState.Loading;
 
         public event Action<IModelStorage> StateChanged;
+        public event Action<IModelStorageMod> AddedMod;
 
         public Storage(IStorage implementation, string name, string location, IStorageState internalState, IErrorPresenter errorPresenter)
         {
@@ -46,7 +47,7 @@ namespace BSU.Core.Model
         public LoadingState State
         {
             get => _state;
-            set
+            private set
             {
                 if (_state == value) return;
                 _logger.Debug($"Changing state from {_state} to {value}");
@@ -61,9 +62,9 @@ namespace BSU.Core.Model
             {
                 try
                 {
+                    _mods = new List<IModelStorageMod>();
                     foreach (var (identifier, implementation) in getResult())
                     {
-                        _mods = new List<IModelStorageMod>();
                         var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
                             this, Implementation.CanWrite());
                         _mods.Add(modelMod);
@@ -89,6 +90,7 @@ namespace BSU.Core.Model
 
         public List<IModelStorageMod> GetMods()
         {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException();
             return new List<IModelStorageMod>(_mods);
         }
 
@@ -99,6 +101,7 @@ namespace BSU.Core.Model
             state.UpdateTarget = updateTarget;
             var storageMod = new StorageMod(mod, identifier, state, this, true);
             _mods.Add(storageMod);
+            AddedMod?.Invoke(storageMod);
             return storageMod;
         }
 
@@ -110,6 +113,7 @@ namespace BSU.Core.Model
 
         public bool HasMod(string downloadIdentifier)
         {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException();
             return _mods.Any(m => string.Equals(m.Identifier, downloadIdentifier, StringComparison.InvariantCultureIgnoreCase));
         }
 

@@ -56,20 +56,10 @@ namespace BSU.Core.ViewModel
 
     public class SelectMod : ModAction
     {
-        private string _name;
         internal IModelStorageMod StorageMod { get; }
         public ModActionEnum ActionType { get; }
 
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                if (_name == value) return;
-                _name = value;
-                OnPropertyChanged();
-            }
-        }
+        public string Name { get; }
 
         public string StorageName => StorageMod.ParentStorage.Name;
 

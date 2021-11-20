@@ -9,6 +9,7 @@
              xmlns:components="clr-namespace:BSU.GUI.Components"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              xmlns:util="clr-namespace:BSU.Core.ViewModel.Util;assembly=BSU.Core"
+             xmlns:sys="clr-namespace:System;assembly=System"
              mc:Ignorable="d"
              x:Name="RepoMod"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
@@ -55,19 +56,27 @@
                     <DockPanel x:Name="ComboBoxSelected">
                         <userControls:SvgButton DockPanel.Dock="Right" Width="15" Height="15" Command="{Binding Actions.Open}" Svg="{StaticResource SvgComboOpen}" ToolTip="Show available Download Locations"/>
 
-                        <ContentControl Content="{Binding Actions.Selection}">
+                        <ContentControl Content="{Binding Actions.Selection, TargetNullValue='Nothing selected'}">
                             <ContentControl.Resources>
                                 <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
                                     <TextBlock>Disabled</TextBlock>
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type viewModel:SelectMod}">
-                                    <TextBlock><Run Text="{Binding ActionType, Mode=OneWay, Converter={StaticResource ActionToText}}" /> <Run Text="{Binding StorageName, Mode=OneWay}" /> / <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
+                                    <TextBlock>
+                                        <Run Text="{Binding ActionType, Mode=OneWay, Converter={StaticResource ActionToText}}" />
+                                        <Run Text="{Binding StorageName, Mode=OneWay}" />
+                                        /
+                                        <Run Text="{Binding Name, Mode=OneWay}" />
+                                    </TextBlock>
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock>Download to <Run Text="{Binding Name, Mode=OneWay}" /> / @</TextBlock>
                                         <TextBox MinWidth="100" MaxWidth="200" Text="{Binding DataContext.DownloadIdentifier, ElementName=RepoMod, UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
+                                </DataTemplate>
+                                <DataTemplate DataType="{x:Type sys:String}">
+                                    <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding}" />
                                 </DataTemplate>
                             </ContentControl.Resources>
                         </ContentControl>

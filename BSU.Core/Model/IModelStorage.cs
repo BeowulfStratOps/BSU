@@ -21,5 +21,6 @@ namespace BSU.Core.Model
         bool IsAvailable();
         void Delete(bool removeMods);
         event Action<IModelStorage> StateChanged;
+        event Action<IModelStorageMod> AddedMod;
     }
 }

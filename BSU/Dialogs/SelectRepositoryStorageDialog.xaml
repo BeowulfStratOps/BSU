@@ -6,6 +6,7 @@
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
         xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
         xmlns:converters="clr-namespace:BSU.GUI.Converters"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
         mc:Ignorable="d"
         Title="Select Download Location" Width="500" d:DataContext="{d:DesignInstance viewModel:SelectRepositoryStorage}"
         SizeToContent="Height" ResizeMode="NoResize"
@@ -16,7 +17,7 @@
         </DockPanel.Resources>
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button IsDefault="True" Margin="15, 0" MinWidth="50" Command="{Binding Ok}" CommandParameter="{Binding ElementName=Window}">Ok</Button>
+            <Button IsDefault="True" Margin="15, 0" MinWidth="50" Command="{Binding Ok}" CommandParameter="{Binding ElementName=Window}"><TextBlock Text="{Binding UpdateText}" /></Button>
             <Button IsCancel="True" MinWidth="50" Visibility="{Binding UpdateAfter, Converter={StaticResource BoolToVisibility}}">Cancel</Button>
         </StackPanel>
 
@@ -60,7 +61,7 @@
                                 <DataTemplate>
                                     <DockPanel LastChildFill="False" Margin="0,0,5,0">
                                         <TextBlock DockPanel.Dock="Left" Text="{Binding ModName}" />
-                                        <ContentPresenter DockPanel.Dock="Right" Content="{Binding Action}">
+                                        <ContentPresenter DockPanel.Dock="Right" Content="{Binding Action, TargetNullValue='Nothing selected'}">
                                             <ContentPresenter.Resources>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectMod}">
                                                     <TextBlock>
@@ -72,6 +73,12 @@
                                                 </DataTemplate>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
                                                     <TextBlock>Download to <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
+                                                </DataTemplate>
+                                                <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
+                                                    <TextBlock>Disabled</TextBlock>
+                                                </DataTemplate>
+                                                <DataTemplate DataType="{x:Type system:String}">
+                                                    <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding}" />
                                                 </DataTemplate>
                                             </ContentPresenter.Resources>
                                         </ContentPresenter>

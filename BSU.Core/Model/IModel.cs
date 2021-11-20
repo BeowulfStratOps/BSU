@@ -18,9 +18,11 @@ namespace BSU.Core.Model
         void ConnectErrorPresenter(IErrorPresenter presenter);
         Task<ServerInfo> CheckRepositoryUrl(string url, CancellationToken cancellationToken);
 
-        public event Action<IModelRepository> AddedRepository;
-        public event Action<IModelStorage> AddedStorage;
+        event Action<IModelRepository> AddedRepository;
+        event Action<IModelStorage> AddedStorage;
         List<IModelStorageMod> GetStorageMods();
         List<IModelRepositoryMod> GetRepositoryMods();
+        event Action<IModelRepository> RemovedRepository;
+        event Action<IModelStorage> RemovedStorage;
     }
 }

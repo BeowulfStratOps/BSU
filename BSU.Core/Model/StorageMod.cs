@@ -39,7 +39,7 @@ namespace BSU.Core.Model
             {
                 var old = _state;
                 _state = value;
-                _logger.Debug("State changed from {1} to {2}.", Identifier, old, value);
+                _logger.Debug($"State changed from {old} to {value}");
                 StateChanged?.Invoke(this);
             }
         }
@@ -59,6 +59,7 @@ namespace BSU.Core.Model
             {
                 _state = StorageModStateEnum.CreatedWithUpdateTarget;
                 _versionHash = VersionHash.FromDigest(_updateTarget.Hash);
+                _title = identifier;
             }
             else
             {
@@ -84,9 +85,17 @@ namespace BSU.Core.Model
             });
         }
 
-        public VersionHash GetVersionHash() => _versionHash;
+        public VersionHash GetVersionHash()
+        {
+            if (State == StorageModStateEnum.Loading) throw new InvalidOperationException();
+            return _versionHash;
+        }
 
-        public MatchHash GetMatchHash() => _matchHash;
+        public MatchHash GetMatchHash()
+        {
+            if (State == StorageModStateEnum.Loading) throw new InvalidOperationException();
+            return _matchHash;
+        }
 
         public StorageModStateEnum GetState() => State;
 
@@ -121,8 +130,16 @@ namespace BSU.Core.Model
 
             var update = new StorageModUpdateState(this, repositoryMod, progress);
 
-            // TODO: needs to be synchronized
-            update.OnEnded += () => SetState(StorageModStateEnum.Created, StorageModStateEnum.Updating);
+            var syncContext = SynchronizationContext.Current ?? throw new InvalidOperationException();
+            update.OnEnded += () =>
+            {
+                syncContext.Post(_ =>
+                {
+
+                    UpdateTarget = null;
+                    SetState(StorageModStateEnum.Created, StorageModStateEnum.Updating);
+                }, null);
+            };
 
             return update;
         }

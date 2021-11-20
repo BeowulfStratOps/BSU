@@ -60,6 +60,7 @@ namespace BSU.Core.Services
                     return "Invalid characters in name";
                 case RepositoryModActionDownload selectStorage:
                 {
+                    if (selectStorage.DownloadStorage.State == LoadingState.Loading) return null;
                     var folderExists = selectStorage.DownloadStorage.HasMod(mod.DownloadIdentifier);
                     return folderExists ? "Name in use" : null;
                 }

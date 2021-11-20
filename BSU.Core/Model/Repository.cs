@@ -45,7 +45,7 @@ namespace BSU.Core.Model
         public LoadingState State
         {
             get => _state;
-            set
+            private set
             {
                 if (_state == value) return;
                 _logger.Debug($"Changing state from {_state} to {value}");
@@ -87,7 +87,11 @@ namespace BSU.Core.Model
             });
         }
 
-        public List<IModelRepositoryMod> GetMods() => _mods;
+        public List<IModelRepositoryMod> GetMods()
+        {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            return _mods;
+        }
 
         public ServerInfo GetServerInfo()
         {

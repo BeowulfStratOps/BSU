@@ -65,6 +65,11 @@ namespace BSU.Core.ViewModel
             return _storagePage.DoAddStorage(allowSteam);
         }
 
+        Repository IViewModelService.FindVmRepo(IModelRepository repo)
+        {
+            return _repoPage.Repositories.Single(r => r.ModelRepository == repo);
+        }
+
         public ObservableCollection<DismissError> Errors { get; } = new();
 
         public void AddError(string error)

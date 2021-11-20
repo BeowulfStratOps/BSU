@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Persistence;
-using BSU.Core.Services;
 using BSU.Core.Storage;
 using BSU.CoreCommon;
 using NLog;
@@ -34,6 +33,9 @@ namespace BSU.Core.Model
             return _repositories.Where(r => r.State == LoadingState.Loaded)
                 .SelectMany(r => r.GetMods()).ToList();
         }
+
+        public event Action<IModelRepository> RemovedRepository;
+        public event Action<IModelStorage> RemovedStorage;
 
         private InternalState PersistentState { get; }
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
@@ -122,7 +124,7 @@ namespace BSU.Core.Model
         {
             if (removeMods) throw new NotImplementedException();
             _repositories.Remove(repository);
-            // TODO: raise event
+            RemovedRepository?.Invoke(repository);
             PersistentState.RemoveRepository(repository.Identifier);
             // TODO: dispose / stop actions
         }
@@ -131,7 +133,7 @@ namespace BSU.Core.Model
         {
             storage.Delete(removeMods);
             _storages.Remove(storage);
-            // TODO: raise event
+            RemovedStorage?.Invoke(storage);
             PersistentState.RemoveStorage(storage.Identifier);
             // TODO: dispose / stop actions
         }
