@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29209.152
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.GUI", "BSU\BSU.GUI.csproj", "{17ED1F96-11FD-4E2A-9830-47513C6350B6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.CLI", "BSU.CLI\BSU.CLI.csproj", "{3BEA66CE-1BA4-4B9D-BF4B-861667D3AB52}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.CoreCommon", "BSU.CoreCommon\BSU.CoreCommon.csproj", "{B29110CC-DC16-4288-9161-8F8CD390915D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.Core", "BSU.Core\BSU.Core.csproj", "{5C791793-32C3-4B00-9A85-1D2DA7511122}"
@@ -19,8 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.Hashes", "BSU.Hashes\BS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BSU.Server", "BSU.Server\BSU.Server.csproj", "{1ADB9208-9B73-4843-8F24-F68402569A05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealTest", "RealTest\RealTest.csproj", "{BF70D16A-B864-444C-9D23-FA5E77514551}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,10 +27,6 @@ Global
 		{17ED1F96-11FD-4E2A-9830-47513C6350B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17ED1F96-11FD-4E2A-9830-47513C6350B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17ED1F96-11FD-4E2A-9830-47513C6350B6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3BEA66CE-1BA4-4B9D-BF4B-861667D3AB52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3BEA66CE-1BA4-4B9D-BF4B-861667D3AB52}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3BEA66CE-1BA4-4B9D-BF4B-861667D3AB52}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3BEA66CE-1BA4-4B9D-BF4B-861667D3AB52}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B29110CC-DC16-4288-9161-8F8CD390915D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B29110CC-DC16-4288-9161-8F8CD390915D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B29110CC-DC16-4288-9161-8F8CD390915D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -59,10 +51,6 @@ Global
 		{1ADB9208-9B73-4843-8F24-F68402569A05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1ADB9208-9B73-4843-8F24-F68402569A05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1ADB9208-9B73-4843-8F24-F68402569A05}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BF70D16A-B864-444C-9D23-FA5E77514551}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BF70D16A-B864-444C-9D23-FA5E77514551}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BF70D16A-B864-444C-9D23-FA5E77514551}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BF70D16A-B864-444C-9D23-FA5E77514551}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
