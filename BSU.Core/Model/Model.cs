@@ -44,17 +44,21 @@ namespace BSU.Core.Model
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
         private readonly IEventBus _eventBus;
 
-        public Model(InternalState persistentState, Types types, IEventBus eventBus)
+        public Model(InternalState persistentState, Types types, IEventBus eventBus, bool isFirstStart)
         {
             _types = types;
             _eventBus = eventBus;
             PersistentState = persistentState;
-            if (PersistentState.CheckIsFirstStart())
+            if (isFirstStart)
             {
                 DoFirstStartSetup();
             }
 
             var eventCombiner = new StructureEventCombiner(this);
+
+            // TODO: use proper service.. stuff?
+            new AutoSelector(this);
+
             eventCombiner.AnyChange += () => AnyChange?.Invoke();
         }
 

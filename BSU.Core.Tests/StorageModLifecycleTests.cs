@@ -48,7 +48,7 @@ namespace BSU.Core.Tests
         private void Created()
         {
             var (implementation, storageMod, eventBus) = CreateStorageMod();
-            eventBus.WorkUntil(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
+            eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
         }
 
@@ -84,7 +84,7 @@ namespace BSU.Core.Tests
         {
             var target = new UpdateTarget("1234");
             var (implementation, storageMod, eventBus) = CreateStorageMod(target);
-            eventBus.WorkUntil(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
+            eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
 
 
             var repo = CreateRepoMod();
@@ -104,13 +104,15 @@ namespace BSU.Core.Tests
             var (implementation, storageMod, eventBus) = CreateStorageMod();
 
             var repo = CreateRepoMod();
-            eventBus.WorkUntil(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
-            var update = storageMod.PrepareUpdate(repo, MatchHash.CreateEmpty(), VersionHash.CreateEmpty(), null);
+            eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
+            var targetMatchHash = await MatchHash.CreateAsync(repo, CancellationToken.None);
+            var targetVersionHash = await VersionHash.CreateAsync(repo, CancellationToken.None);
+            var update = storageMod.PrepareUpdate(repo, targetMatchHash, targetVersionHash, null);
 
             await update.Prepare(CancellationToken.None);
             await update.Update(CancellationToken.None);
 
-            eventBus.WorkUntil(100, () => storageMod.GetState() == StorageModStateEnum.Created);
+            eventBus.Work(100, () => storageMod.GetState() == StorageModStateEnum.Created);
 
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
             Assert.True(storageMod.GetMatchHash().IsMatch(await MatchHash.CreateAsync(repo, CancellationToken.None)));

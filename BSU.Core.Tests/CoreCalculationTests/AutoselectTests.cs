@@ -38,10 +38,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
             return storageMod;
         }
-        private IModelStorageMod AutoSelect(IModelRepositoryMod repoMod, List<IModelRepositoryMod> allRepoMods = null,
+        private IModelStorageMod AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelRepositoryMod> allRepoMods = null,
             params IModelStorageMod[] storageMods)
         {
-            return CoreCalculation.AutoSelect(repoMod, storageMods.ToList(), allRepoMods ?? new List<IModelRepositoryMod>());
+            return CoreCalculation.AutoSelect(repoMod, storageMods.ToList(), allRepoMods?.ToList() ?? new List<IModelRepositoryMod>());
         }
 
         [Fact]
@@ -61,7 +61,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var repoMod = new MockModelRepositoryMod(1, 1);
             var storageMod = FromAction(ModActionEnum.Use);
 
-            var result = AutoSelect(repoMod, new List<IModelRepositoryMod> { new MockModelRepositoryMod(1, 3) }, storageMod);
+            var conflict = new MockModelRepositoryMod(1, 3);
+            conflict.SetSelection(new RepositoryModActionStorageMod(storageMod));
+
+            var result = AutoSelect(repoMod, new[] { conflict }, storageMod);
 
             Assert.Null(result);
         }

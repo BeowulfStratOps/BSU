@@ -17,7 +17,8 @@ namespace BSU.Core.Services
             if (repoMod.State == LoadingState.Loading || storageMod.GetState() == StorageModStateEnum.Loading)
                 return ModActionEnum.Unusable;
 
-            // TODO: handle errors
+            if (repoMod.State == LoadingState.Error || storageMod.GetState() == StorageModStateEnum.Error)
+                return ModActionEnum.Unusable;
 
             bool CheckMatch()
             {
@@ -53,8 +54,6 @@ namespace BSU.Core.Services
                     if (CheckMatch()) return ModActionEnum.AbortActiveAndUpdate;
                     return ModActionEnum.Unusable;
                 }
-                case StorageModStateEnum.Error:
-                    return ModActionEnum.Unusable;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

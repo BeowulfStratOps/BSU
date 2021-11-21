@@ -88,8 +88,9 @@ namespace BSU.Core.Tests
             //settings.Storages.Add(new StorageEntry("storage2", "mock", "s2"));
             var state = new InternalState(settings);
             var eventBus = new TestEventBus();
-            var model = new Model.Model(state, types, eventBus);
+            var model = new Model.Model(state, types, eventBus, false);
             model.Load();
+            eventBus.Work(100);
             var storageMod1 = (model.GetStorages().Single(s => s.Name == "storage1").GetMods())
                 .Single(m => m.Identifier == "mod5");
             var repoMod1 = (model.GetRepositories().Single(s => s.Name == "repo1").GetMods())
@@ -118,7 +119,7 @@ namespace BSU.Core.Tests
 
         public Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<ServerInfo>(null);
         }
     }
 }

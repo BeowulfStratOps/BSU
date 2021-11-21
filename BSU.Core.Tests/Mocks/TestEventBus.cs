@@ -22,7 +22,7 @@ namespace BSU.Core.Tests.Mocks
             }
         }
 
-        public void WorkUntil(int timeOutMs, Func<bool> done = null)
+        public void Work(int timeOutMs, Func<bool> done = null)
         {
             for (var i = 0; i < timeOutMs; i++)
             {

@@ -20,8 +20,11 @@ namespace BSU.Core.Services
             foreach (var mod in _model.GetRepositories().Where(r => r.State == LoadingState.Loaded)
                 .SelectMany(r => r.GetMods()))
             {
-                // TODO: check if the current selection was deleted
-                if (mod.GetCurrentSelection() != null) continue;
+                var currentSelection = mod.GetCurrentSelection();
+                var deleted = currentSelection is RepositoryModActionDownload download && download.DownloadStorage.IsDeleted ||
+                              currentSelection is RepositoryModActionStorageMod storageMod && storageMod.StorageMod.IsDeleted;
+
+                if (currentSelection != null && !deleted) continue;
                 var selection = GetSelection(mod);
                 if (selection != null)
                     mod.SetSelection(selection);
@@ -30,13 +33,6 @@ namespace BSU.Core.Services
 
         private RepositoryModActionSelection GetSelection(IModelRepositoryMod mod)
         {
-            /*if (Selection != null && !reset)
-            {
-                var deleted = Selection is RepositoryModActionDownload download && download.DownloadStorage.IsDeleted ||
-                              Selection is RepositoryModActionStorageMod storageMod && storageMod.StorageMod.IsDeleted;
-                if (!deleted) return Selection;
-            }*/
-
             _logger.Trace("Checking auto-selection for mod {0}", mod.Identifier);
 
             var storageMods = _model.GetStorageMods().ToList();
@@ -49,12 +45,18 @@ namespace BSU.Core.Services
 
             // TODO: check previously selected storage for download?
 
+            // wait for everything to load.
+            if (_model.GetStorages().Any(s => s.State == LoadingState.Loading)) return null;
+            if (_model.GetRepositories().Any(s => s.State == LoadingState.Loading)) return null;
+            if (_model.GetRepositoryMods().Any(s => s.State == LoadingState.Loading)) return null;
+            if (_model.GetStorageMods().Any(s => s.GetState() == StorageModStateEnum.Loading)) return null;
+
             var selectedMod = CoreCalculation.AutoSelect(mod, storageMods, _model.GetRepositoryMods());
 
             if (selectedMod != null)
                 return new RepositoryModActionStorageMod(selectedMod);
 
-            var storage = (_model.GetStorages().Where(s => s.CanWrite && s.IsAvailable())).FirstOrDefault();
+            var storage = _model.GetStorages().FirstOrDefault(s => s.CanWrite && s.IsAvailable());
             if (storage != null)
             {
 

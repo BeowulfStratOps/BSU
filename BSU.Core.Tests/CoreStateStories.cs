@@ -50,8 +50,7 @@ namespace BSU.Core.Tests
             var storageState = new MockStorageState();
             var eventBus = new TestEventBus();
             var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, null, eventBus);
-            Thread.Sleep(50);
-            eventBus.WorkUntil(50);
+            eventBus.Work(50);
 
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
 
@@ -60,6 +59,8 @@ namespace BSU.Core.Tests
             await update.Update(CancellationToken.None);
 
             var storageMod = storage.GetMods().Single();
+
+            eventBus.Work(50);
 
             Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storageMod));
 

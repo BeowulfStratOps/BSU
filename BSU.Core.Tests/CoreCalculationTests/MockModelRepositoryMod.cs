@@ -16,6 +16,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
     {
         private readonly MatchHash _matchHash;
         private readonly VersionHash _versionHash;
+        private RepositoryModActionSelection _selection;
 
         public MockModelRepositoryMod(int? match, int? version)
         {
@@ -25,12 +26,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public void SetSelection(RepositoryModActionSelection selection)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<RepositoryModActionSelection> GetSelection(bool reset = false, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
+            _selection = selection;
         }
 
         public string DownloadIdentifier { get; set; }
@@ -53,10 +49,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public VersionHash GetVersionHash() => _versionHash;
 
-        public RepositoryModActionSelection GetCurrentSelection()
-        {
-            throw new NotImplementedException();
-        }
+        public RepositoryModActionSelection GetCurrentSelection() => _selection;
 
         public event Action<IModelRepositoryMod> StateChanged;
         public PersistedSelection GetPreviousSelection()

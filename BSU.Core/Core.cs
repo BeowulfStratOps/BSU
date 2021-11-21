@@ -41,9 +41,7 @@ namespace BSU.Core
 
             var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current);
 
-            Model = new Model.Model(state, Types, eventBus);
-
-            new AutoSelector(Model);
+            Model = new Model.Model(state, Types, eventBus, state.CheckIsFirstStart());
             ViewModel = new ViewModel.ViewModel(Model);
         }
 
