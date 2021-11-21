@@ -129,10 +129,7 @@ namespace BSU.Core.Tests.Mocks
             throw new NotImplementedException();
         }
 
-        public Task<string> GetTitle(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
+        public async Task<string> GetTitle(CancellationToken cancellationToken) => "Test";
     }
 
     internal class TestException : Exception

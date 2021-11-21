@@ -17,8 +17,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
         private readonly MatchHash _matchHash;
         private readonly VersionHash _versionHash;
         private readonly StorageModStateEnum _state;
-        public bool RequiredMatchHash { get; private set; }
-        public bool RequiredVersionHash { get; private set; }
 
         public MockModelStorageMod(int? match, int? version, StorageModStateEnum state)
         {
@@ -27,15 +25,16 @@ namespace BSU.Core.Tests.CoreCalculationTests
             _state = state;
         }
 
-        public event Action StateChanged;
 
-        public Task<IModUpdate> PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch,
-            VersionHash targetVersion, IProgress<FileSyncStats> progress)
+        public event Action<IModelStorageMod> StateChanged;
+
+        public IModUpdate PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion,
+            IProgress<FileSyncStats> progress)
         {
             throw new NotImplementedException();
         }
 
-        public Task Abort()
+        public void Abort()
         {
             throw new NotImplementedException();
         }
@@ -49,36 +48,18 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public string Identifier { get; }
         public IModelStorage ParentStorage { get; }
         public bool IsDeleted { get; }
+        public VersionHash GetVersionHash() => _versionHash;
 
-        public Task<VersionHash> GetVersionHash(CancellationToken cancellationToken)
-        {
-            RequiredVersionHash = true;
-            return Task.FromResult(_versionHash);
-        }
+        public MatchHash GetMatchHash() => _matchHash;
 
-        public Task<MatchHash> GetMatchHash(CancellationToken cancellationToken)
-        {
-            RequiredMatchHash = true;
-            return Task.FromResult(_matchHash);
-        }
 
         public StorageModStateEnum GetState() => _state;
-        public Task<IEnumerable<IModelRepositoryMod>> GetUsedBy(CancellationToken cancellationToken)
+        public string GetTitle()
         {
             throw new NotImplementedException();
         }
 
-        public CancellationToken GetStateToken()
-        {
-            return new CancellationToken();
-        }
-
-        public Task<string> GetTitle(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task Delete(bool removeData)
+        public void Delete(bool removeData)
         {
             throw new NotImplementedException();
         }

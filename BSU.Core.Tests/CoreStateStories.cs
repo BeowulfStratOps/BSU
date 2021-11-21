@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.Core.Services;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using Xunit;
@@ -24,22 +25,11 @@ namespace BSU.Core.Tests
             {
                 mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);
             }
-            var repoMod = new RepositoryMod(mockRepo, "@myrepo", new MockPersistedRepositoryModState(), structure, null);
+            var eventBus = new TestEventBus();
+            var repoMod = new RepositoryMod(mockRepo, "@myrepo", new MockPersistedRepositoryModState(), null, eventBus);
+            Thread.Sleep(50);
+            eventBus.Work();
             return (mockRepo, repoMod);
-        }
-
-        internal static (MockStorageMod, StorageMod) CreateStorageMod(string match, string version, MockModelStructure structure, UpdateTarget stateTarget = null)
-        {
-            var mockStorage = new MockStorageMod();
-            for (int i = 0; i < 3; i++)
-            {
-                mockStorage.SetFile($"/addons/{match}_{i}.pbo", version);
-            }
-
-            var state = new MockPersistedStorageModState {UpdateTarget = stateTarget};
-            var storageMod = new StorageMod(mockStorage, "mystorage", state, null, true, null);
-            structure.StorageMods.Add(storageMod);
-            return (mockStorage, storageMod);
         }
 
         internal static bool FilesEqual(IMockedFiles f1, IMockedFiles f2)
@@ -58,7 +48,10 @@ namespace BSU.Core.Tests
 
             var mockStorage = new MockStorage();
             var storageState = new MockStorageState();
-            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, null, null);
+            var eventBus = new TestEventBus();
+            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, null, eventBus);
+            Thread.Sleep(50);
+            eventBus.WorkUntil(50);
 
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
 
@@ -66,9 +59,9 @@ namespace BSU.Core.Tests
             await update.Prepare(CancellationToken.None);
             await update.Update(CancellationToken.None);
 
-            var storageMod = (await storage.GetMods()).Single();
+            var storageMod = storage.GetMods().Single();
 
-            Assert.Equal(ModActionEnum.Use, await repoMod.GetActionForMod(storageMod, CancellationToken.None));
+            Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storageMod));
 
             Assert.True(FilesEqual(repoFiles, mockStorage.Mods.Values.First()));
         }

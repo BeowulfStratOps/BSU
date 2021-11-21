@@ -17,7 +17,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        internal static async Task<IModelStorageMod> FromAction(ModActionEnum actionType, bool canWrite = true)
+        internal static IModelStorageMod FromAction(ModActionEnum actionType, bool canWrite = true)
         {
             var storageMod = actionType switch
             {
@@ -34,59 +34,58 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
             // just checking that we got the setup right
             var testRepoMod = new MockModelRepositoryMod(1, 1);
-            Assert.Equal(actionType, await CoreCalculation.GetModAction(testRepoMod, storageMod, CancellationToken.None));
+            Assert.Equal(actionType, CoreCalculation.GetModAction(testRepoMod, storageMod));
 
             return storageMod;
         }
-        private async Task<IModelStorageMod> AutoSelect(IModelRepositoryMod repoMod,
+        private IModelStorageMod AutoSelect(IModelRepositoryMod repoMod, List<IModelRepositoryMod> allRepoMods = null,
             params IModelStorageMod[] storageMods)
         {
-            return await CoreCalculation.AutoSelect(repoMod, storageMods.ToList(), CancellationToken.None);
+            return CoreCalculation.AutoSelect(repoMod, storageMods.ToList(), allRepoMods ?? new List<IModelRepositoryMod>());
         }
 
         [Fact]
-        private async Task SingleUse_AllLoaded_NoConflict()
+        private void SingleUse_AllLoaded_NoConflict()
         {
             var repoMod = new MockModelRepositoryMod(1, 1);
-            var storageMod = await FromAction(ModActionEnum.Use);
+            var storageMod = FromAction(ModActionEnum.Use);
 
-            var mod = await AutoSelect(repoMod, storageMod);
+            var mod = AutoSelect(repoMod, null, storageMod);
 
             Assert.Equal(storageMod, mod);
         }
 
         [Fact]
-        private async Task SingleUse_AllLoaded_Conflict()
+        private void SingleUse_AllLoaded_Conflict()
         {
             var repoMod = new MockModelRepositoryMod(1, 1);
-            var storageMod = await FromAction(ModActionEnum.Use);
-            repoMod.Conflicts[storageMod] = new List<IModelRepositoryMod> { new MockModelRepositoryMod(1, 3) }; // TODO: this whole conflict thing is kinda messy..
+            var storageMod = FromAction(ModActionEnum.Use);
 
-            var result = await AutoSelect(repoMod, storageMod);
+            var result = AutoSelect(repoMod, new List<IModelRepositoryMod> { new MockModelRepositoryMod(1, 3) }, storageMod);
 
             Assert.Null(result);
         }
 
         [Fact]
-        private async Task Precedence()
+        private void Precedence()
         {
             var repoMod = new MockModelRepositoryMod(1, 1);
-            var storageMod = await FromAction(ModActionEnum.Use);
-            var storageMod2 = await FromAction(ModActionEnum.Update);
+            var storageMod = FromAction(ModActionEnum.Use);
+            var storageMod2 = FromAction(ModActionEnum.Update);
 
-            var mod = await AutoSelect(repoMod, storageMod, storageMod2);
+            var mod = AutoSelect(repoMod, null, storageMod, storageMod2);
 
             Assert.Equal(storageMod, mod);
         }
 
         [Fact]
-        private async Task PreferNonSteam()
+        private void PreferNonSteam()
         {
             var repoMod = new MockModelRepositoryMod(1, 1);
-            var storageMod = await FromAction(ModActionEnum.Use, false);
-            var storageMod2 = await FromAction(ModActionEnum.Use);
+            var storageMod = FromAction(ModActionEnum.Use, false);
+            var storageMod2 = FromAction(ModActionEnum.Use);
 
-            var mod = await AutoSelect(repoMod, storageMod, storageMod2);
+            var mod = AutoSelect(repoMod, null, storageMod, storageMod2);
 
             Assert.Equal(storageMod2, mod);
         }

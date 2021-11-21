@@ -87,14 +87,15 @@ namespace BSU.Core.Tests
             settings.Storages.Add(new StorageEntry("storage1", "mock", "s1", Guid.NewGuid()));
             //settings.Storages.Add(new StorageEntry("storage2", "mock", "s2"));
             var state = new InternalState(settings);
-            var model = new Model.Model(state, types);
+            var eventBus = new TestEventBus();
+            var model = new Model.Model(state, types, eventBus);
             model.Load();
-            var storageMod1 = (await model.GetStorages().Single(s => s.Name == "storage1").GetMods())
+            var storageMod1 = (model.GetStorages().Single(s => s.Name == "storage1").GetMods())
                 .Single(m => m.Identifier == "mod5");
-            var repoMod1 = (await model.GetRepositories().Single(s => s.Name == "repo1").GetMods())
+            var repoMod1 = (model.GetRepositories().Single(s => s.Name == "repo1").GetMods())
                 .Single(m => m.Identifier == "@mod1");
             Assert.Equal(storageMod1,
-                ((RepositoryModActionStorageMod) await repoMod1.GetSelection(cancellationToken: CancellationToken.None)).StorageMod);
+                ((RepositoryModActionStorageMod) repoMod1.GetCurrentSelection()).StorageMod);
         }
     }
 
