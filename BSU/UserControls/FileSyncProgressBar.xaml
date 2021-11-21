@@ -20,15 +20,10 @@
             <Run Text="{Binding Stage, Mode=OneWay}" />...
         </TextBlock>
         <TextBlock HorizontalAlignment="Center" Visibility="{Binding Stats, Converter={StaticResource NullToVisibilityConverter}}">
-            Download:
-            <Run Text="{Binding Stats.DownloadDone, Converter={StaticResource ByteSizeConverter}}" />
+            Sync:
+            <Run Text="{Binding Stats.Done, Converter={StaticResource ByteSizeConverter}}" />
             /
-            <Run Text="{Binding Stats.DownloadTotal, Converter={StaticResource ByteSizeConverter}}" />
-            |
-            Update:
-            <Run Text="{Binding Stats.UpdateDone, Converter={StaticResource ByteSizeConverter}}" />
-            /
-            <Run Text="{Binding Stats.UpdateTotal, Converter={StaticResource ByteSizeConverter}}" />
+            <Run Text="{Binding Stats.Total, Converter={StaticResource ByteSizeConverter}}" />
         </TextBlock>
     </Grid>
 </UserControl>

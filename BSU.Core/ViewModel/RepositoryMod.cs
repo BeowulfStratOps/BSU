@@ -42,7 +42,7 @@ namespace BSU.Core.ViewModel
         {
             DownloadIdentifier = Mod.Identifier;
             if (DownloadIdentifier.StartsWith("@")) DownloadIdentifier = DownloadIdentifier[1..];
-            Mod.SetSelection(value.AsSelection);
+            Mod.SetSelection(value?.AsSelection);
         }
 
         internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)

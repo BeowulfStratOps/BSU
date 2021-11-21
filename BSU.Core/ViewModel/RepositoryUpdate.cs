@@ -18,7 +18,7 @@ namespace BSU.Core.ViewModel
         private readonly IProgress<FileSyncStats> _progress;
 
         private readonly Dictionary<IModUpdate, FileSyncStats> _lastProgress = new();
-        private readonly Dictionary<IModUpdate, (ulong download, ulong update)> _totalSizes = new ();
+        private readonly Dictionary<IModUpdate, ulong> _totalSizes = new ();
         private readonly object _progressLock = new();
         private readonly ILogger _logger;
 
@@ -97,30 +97,25 @@ namespace BSU.Core.ViewModel
                     return new FileSyncStats(FileSyncState.Stopping);
                 if (_lastProgress.Values.All(p => p.State == FileSyncState.None))
                     return new FileSyncStats(FileSyncState.None);
-                ulong sumDownloadTotal = 0;
-                ulong sumDownloadDone = 0;
-                ulong sumUpdateTotal = 0;
-                ulong sumUpdateDone = 0;
+                ulong sumTotal = 0;
+                ulong sumDone = 0;
                 foreach (var mod in _lastProgress.Keys)
                 {
-                    var (downloadTotal, updateTotal) = _totalSizes[mod];
-                    sumDownloadTotal += downloadTotal;
-                    sumUpdateTotal += updateTotal;
+                    var downloadTotal = _totalSizes[mod];
+                    sumTotal += downloadTotal;
 
-                    var lastProgress = _lastProgress[mod];
-                    if (lastProgress.State == FileSyncState.Updating)
+                    var (fileSyncState, _, done) = _lastProgress[mod];
+                    if (fileSyncState == FileSyncState.Updating)
                     {
-                        sumDownloadDone += lastProgress.DownloadDone;
-                        sumUpdateDone += lastProgress.UpdateDone;
+                        sumDone += done;
                     }
                     else
                     {
-                        sumDownloadDone += downloadTotal;
-                        sumUpdateDone += updateTotal;
+                        sumDone += downloadTotal;
                     }
                 }
 
-                return new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal, sumDownloadDone, sumUpdateDone);
+                return new FileSyncStats(FileSyncState.Updating, sumTotal, sumDone);
             }
         }
 
@@ -138,7 +133,7 @@ namespace BSU.Core.ViewModel
             foreach (var (update, modProgress) in updates)
             {
                 _lastProgress.Add(update, new FileSyncStats(FileSyncState.Waiting));
-                _totalSizes.Add(update, (0, 0));
+                _totalSizes.Add(update, 0);
                 modProgress.ProgressChanged += (_, e) => ModProgressOnProgressChanged(e, update);
             }
 
@@ -152,7 +147,7 @@ namespace BSU.Core.ViewModel
             {
                 _lastProgress[update] = progress;
                 if (progress.State == FileSyncState.Updating)
-                    _totalSizes[update] = (progress.DownloadTotal, progress.UpdateTotal);
+                    _totalSizes[update] = progress.Total;
             }
         }
     }

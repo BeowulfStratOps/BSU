@@ -31,6 +31,7 @@ namespace BSU.Core.Model
         public event Action<IModelRepositoryMod> StateChanged;
         public PersistedSelection GetPreviousSelection() => _internalState.Selection;
         public event Action<IModelRepositoryMod> SelectionChanged;
+        public event Action<IModelRepositoryMod> DownloadIdentifierChanged;
 
         private RepositoryModActionSelection Selection
         {
@@ -172,7 +173,9 @@ namespace BSU.Core.Model
             set
             {
                 if (!value.StartsWith("@")) throw new ArgumentException();
+                if (value == _downloadIdentifier) return;
                 _downloadIdentifier = value;
+                DownloadIdentifierChanged?.Invoke(this);
             }
         }
 

@@ -33,7 +33,7 @@ namespace BSU.Core.Sync
 
         public override FileSyncStats GetStats()
         {
-            return new FileSyncStats(FileSyncState.Updating, _fileSize, 0, _done, 0);
+            return new FileSyncStats(FileSyncState.Updating, _fileSize, _done);
         }
     }
 }

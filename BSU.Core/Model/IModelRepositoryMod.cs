@@ -24,5 +24,6 @@ namespace BSU.Core.Model
         event Action<IModelRepositoryMod> StateChanged;
         PersistedSelection GetPreviousSelection();
         event Action<IModelRepositoryMod> SelectionChanged;
+        event Action<IModelRepositoryMod> DownloadIdentifierChanged;
     }
 }

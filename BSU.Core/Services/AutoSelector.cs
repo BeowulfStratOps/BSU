@@ -26,8 +26,7 @@ namespace BSU.Core.Services
 
                 if (currentSelection != null && !deleted) continue;
                 var selection = GetSelection(mod);
-                if (selection != null)
-                    mod.SetSelection(selection);
+                mod.SetSelection(selection);
             }
         }
 

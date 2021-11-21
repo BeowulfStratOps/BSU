@@ -97,23 +97,19 @@ namespace BSU.Core.Sync
 
         private void ProgressCallback(IProgress<FileSyncStats> progress)
         {
-            ulong sumDownloadDone = 0;
-            ulong sumDownloadTotal = 0;
-            ulong sumUpdateDone = 0;
-            ulong sumUpdateTotal = 0;
+            ulong sumDone = 0;
+            ulong sumTotal = 0;
 
             foreach (var syncWorkUnit in _allActions)
             {
                 // not synchronized, but that's ok. we're just looking for a snapshot
                 var stats = syncWorkUnit.GetStats();
-                sumDownloadDone += stats.DownloadDone;
-                sumDownloadTotal += stats.DownloadTotal;
-                sumUpdateDone += stats.UpdateDone;
-                sumUpdateTotal += stats.UpdateTotal;
+                sumDone += stats.Done;
+                sumTotal += stats.Total;
             }
 
             _logger.Trace("Progress: Updating");
-            progress?.Report(new FileSyncStats(FileSyncState.Updating, sumDownloadTotal, sumUpdateTotal, sumDownloadDone, sumUpdateDone));
+            progress?.Report(new FileSyncStats(FileSyncState.Updating, sumTotal, sumDone));
         }
     }
 }

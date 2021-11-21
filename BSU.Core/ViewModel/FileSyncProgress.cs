@@ -90,7 +90,7 @@ namespace BSU.Core.ViewModel
                 {
                     Active = true;
                     IsIndeterminate = false;
-                    ProgressValue = (stats.DownloadDone + stats.UpdateDone) / (double)(stats.DownloadTotal + stats.UpdateTotal);
+                    ProgressValue = stats.Done / (double)stats.Total;
                     Stage = null;
                     Stats = stats;
                     break;

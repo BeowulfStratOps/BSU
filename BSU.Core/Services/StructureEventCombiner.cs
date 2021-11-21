@@ -75,6 +75,7 @@ namespace BSU.Core.Services
             _logger.Trace($"Added repository mod {mod.ParentRepository.Name}/{mod.Identifier}");
             mod.StateChanged += _ => OnAnyChange();
             mod.SelectionChanged += _ => OnAnyChange();
+            mod.DownloadIdentifierChanged += _ => OnAnyChange();
             OnAnyChange();
         }
     }
