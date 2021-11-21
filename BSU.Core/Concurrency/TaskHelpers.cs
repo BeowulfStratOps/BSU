@@ -2,11 +2,14 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 
 namespace BSU.Core.Concurrency
 {
     public static class TaskHelpers
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public static ConfiguredTaskAwaitable DropContext(this Task task) => task.ConfigureAwait(false);
         public static ConfiguredTaskAwaitable<T> DropContext<T>(this Task<T> task) => task.ConfigureAwait(false);
 
@@ -37,14 +40,22 @@ namespace BSU.Core.Concurrency
             }
         }
 
-        // TODO: feels like the continuation could be expressed as an async function
-        internal static void ContinueInCurrentContext<T>(this Task<T> task, Action<Func<T>> continuation)
+        internal static void ContinueInEventBus<T>(this Task<T> task, IEventBus eventBus, Action<Func<T>> continuation)
         {
-            // TODO: catch errors.
-            var ctx = SynchronizationContext.Current ?? throw new InvalidOperationException();
             task.ContinueWith((taskResult, _) =>
             {
-                ctx.Send(_ => continuation(() => taskResult.Result), null);
+                eventBus.ExecuteSynchronized(() =>
+                {
+                    try
+                    {
+                        continuation(() => taskResult.Result);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                        throw;
+                    }
+                });
             }, null);
         }
     }
