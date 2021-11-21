@@ -9,10 +9,10 @@ namespace BSU.Core.Services
         private readonly IModel _model;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        public AutoSelector(IModel model, StructureEventCombiner eventProvider)
+        public AutoSelector(IModel model)
         {
             _model = model;
-            eventProvider.AnyChange += OnAnyChange;
+            _model.AnyChange += OnAnyChange;
         }
 
         private void OnAnyChange()
@@ -58,7 +58,7 @@ namespace BSU.Core.Services
             if (storage != null)
             {
 
-                mod.DownloadIdentifier = Helper.GetAvailableDownloadIdentifier(storage, mod.Identifier);
+                mod.DownloadIdentifier = CoreCalculation.GetAvailableDownloadIdentifier(storage, mod.Identifier);
                 return new RepositoryModActionDownload(storage);
             }
 

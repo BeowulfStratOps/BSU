@@ -45,14 +45,13 @@ namespace BSU.Core.ViewModel
             Mod.SetSelection(value.AsSelection);
         }
 
-        internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService, Helper helper)
+        internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)
         {
             Actions = new ModActionTree(mod, model);
             Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
             Mod = mod;
             _model = model;
             _viewModelService = viewModelService;
-            _helper = helper;
             Name = mod.Identifier;
             ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded);
 
@@ -62,8 +61,8 @@ namespace BSU.Core.ViewModel
             DownloadIdentifier = downloadIdentifier;
 
             mod.StateChanged += _ => OnStateChanged();
-            _helper.AnyChange += Actions.Update;
-            Actions.Update();
+            _model.AnyChange += Update;
+            Update();
         }
 
         private void OnStateChanged()
@@ -100,7 +99,6 @@ namespace BSU.Core.ViewModel
         public DelegateCommand ToggleExpand { get; }
 
         private string _errorText;
-        private readonly Helper _helper;
 
         public string ErrorText
         {
@@ -115,10 +113,10 @@ namespace BSU.Core.ViewModel
 
         public bool NotIsExpanded => !IsExpanded;
 
-        public void Update()
+        private void Update()
         {
             DownloadIdentifier = Mod.DownloadIdentifier[1..];
-            ErrorText = _helper.GetErrorForSelection(Mod) ?? "";
+            ErrorText = CoreCalculation.GetErrorForSelection(Mod, _model.GetRepositoryMods()) ?? "";
             Actions.Update();
         }
 

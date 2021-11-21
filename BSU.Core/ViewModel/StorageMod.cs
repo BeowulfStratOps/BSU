@@ -13,7 +13,7 @@ namespace BSU.Core.ViewModel
         private string _usedBy = "Loading...";
         private readonly IModelStorageMod _modelStorageMod;
         private string _title;
-        private readonly Helper _helper;
+        private IModel _model;
 
         public string Title
         {
@@ -37,14 +37,14 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        internal StorageMod(IModelStorageMod mod, Helper helper)
+        internal StorageMod(IModelStorageMod mod, IModel model)
         {
             _modelStorageMod = mod;
-            _helper = helper;
+            _model = model;
             Title = mod.Identifier;
 
             mod.StateChanged += _ => OnStateChanged();
-            _helper.AnyChange += Update;
+            _model.AnyChange += Update;
         }
 
         private void OnStateChanged()
@@ -54,7 +54,7 @@ namespace BSU.Core.ViewModel
 
         private void Update()
         {
-            var usedBy = _helper.GetUsedBy(_modelStorageMod);
+            var usedBy = CoreCalculation.GetUsedBy(_modelStorageMod, _model.GetRepositoryMods());
             var names = usedBy.Select(m => $"{m.ParentRepository.Name}/{m.Identifier}").ToList();
             UsedBy = names.Any() ? string.Join(", ", names) : null;
         }

@@ -103,7 +103,7 @@ namespace BSU.Core.ViewModel
 
 
         internal SelectRepositoryStorage(IModelRepository repository, IModel model, IViewModelService viewModelService,
-            bool updateAfter, Helper helper)
+            bool updateAfter)
         {
             UpdateAfter = updateAfter;
             UpdateText = updateAfter ? "Sync" : "OK";
@@ -117,7 +117,7 @@ namespace BSU.Core.ViewModel
             else
                 _repository.StateChanged += _ => Load();
 
-            helper.AnyChange += Update;
+            model.AnyChange += Update;
 
             foreach (var storage in model.GetStorages())
             {
@@ -176,7 +176,7 @@ namespace BSU.Core.ViewModel
                      !UseSteam))
                 {
                     mod.SetSelection(new RepositoryModActionDownload(Storage.Storage));
-                    mod.DownloadIdentifier = Helper.GetAvailableDownloadIdentifier(Storage.Storage, mod.Identifier);
+                    mod.DownloadIdentifier = CoreCalculation.GetAvailableDownloadIdentifier(Storage.Storage, mod.Identifier);
                 }
             }
 

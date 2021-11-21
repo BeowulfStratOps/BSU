@@ -23,15 +23,17 @@ namespace BSU.Core.Model
         private readonly IErrorPresenter _errorPresenter;
         private readonly ILogger _logger;
         private LoadingState _state = LoadingState.Loading;
+        private readonly IEventBus _eventBus;
 
         public event Action<IModelStorage> StateChanged;
         public event Action<IModelStorageMod> AddedMod;
 
-        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IErrorPresenter errorPresenter)
+        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IErrorPresenter errorPresenter, IEventBus eventBus)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
             _errorPresenter = errorPresenter;
+            _eventBus = eventBus;
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
@@ -58,7 +60,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(LoadAsync).ContinueInCurrentContext(getResult =>
+            Task.Run(LoadAsync).ContinueInEventBus(_eventBus, getResult =>
             {
                 try
                 {
@@ -66,7 +68,7 @@ namespace BSU.Core.Model
                     foreach (var (identifier, implementation) in getResult())
                     {
                         var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
-                            this, Implementation.CanWrite());
+                            this, Implementation.CanWrite(), _eventBus);
                         _mods.Add(modelMod);
                     }
 
@@ -99,7 +101,7 @@ namespace BSU.Core.Model
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
             state.UpdateTarget = updateTarget;
-            var storageMod = new StorageMod(mod, identifier, state, this, true);
+            var storageMod = new StorageMod(mod, identifier, state, this, true, _eventBus);
             _mods.Add(storageMod);
             AddedMod?.Invoke(storageMod);
             return storageMod;

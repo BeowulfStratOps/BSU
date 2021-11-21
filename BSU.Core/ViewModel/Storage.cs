@@ -38,15 +38,13 @@ namespace BSU.Core.ViewModel
 
         private readonly IViewModelService _viewModelService;
         private string _error;
-        private readonly Helper _helper;
 
-        internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService, Helper helper)
+        internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService)
         {
             Delete = new DelegateCommand(DoDelete);
             ModelStorage = storage;
             _model = model;
             _viewModelService = viewModelService;
-            _helper = helper;
             Identifier = storage.Identifier;
             _storage = storage;
             Name = storage.Name;
@@ -64,15 +62,14 @@ namespace BSU.Core.ViewModel
 
             foreach (var mod in ModelStorage.GetMods())
             {
-                Mods.Add(new StorageMod(mod, _helper));
+                Mods.Add(new StorageMod(mod, _model));
             }
         }
 
         private void DoDelete()
         {
-            if (!_storage.IsAvailable() || !_storage.CanWrite) // Errored loading, probably because the folder doesn't exist anymore, or steam
+            if (!_storage.IsAvailable() || !_storage.CanWrite) // Errored loading, probably because the folder doesn't exist anymore. or steam
             {
-                OnDeleted?.Invoke(this);
                 _model.DeleteStorage(_storage, false);
                 return;
             }
@@ -94,10 +91,7 @@ Cancel - Do not remove this storage";
                 return;
             }
 
-            OnDeleted?.Invoke(this);
             _model.DeleteStorage(_storage, (bool) removeMods);
         }
-
-        public event Action<Storage> OnDeleted;
     }
 }

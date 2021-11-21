@@ -170,12 +170,11 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        internal Repository(IModelRepository modelRepository, IModel model, IViewModelService viewModelService, Helper helper)
+        internal Repository(IModelRepository modelRepository, IModel model, IViewModelService viewModelService)
         {
             ModelRepository = modelRepository;
             _model = model;
             _viewModelService = viewModelService;
-            _helper = helper;
             Identifier = modelRepository.Identifier;
             Delete = new DelegateCommand(DoDelete, false);
             Update = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoUpdate));
@@ -189,12 +188,12 @@ namespace BSU.Core.ViewModel
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
             modelRepository.StateChanged += _ => OnStateChanged();
             Name = modelRepository.Name;
-            _helper.AnyChange += UpdateState;
+            model.AnyChange += UpdateState;
         }
 
         private void UpdateState()
         {
-            CalculatedState = _helper.GetRepositoryState(ModelRepository);
+            CalculatedState = CoreCalculation.GetRepositoryState(ModelRepository, _model.GetRepositoryMods());
             UpdateButtonStates();
         }
 
@@ -209,13 +208,13 @@ namespace BSU.Core.ViewModel
             var mods = ModelRepository.GetMods();
             foreach (var mod in mods.OrderBy(m => m.Identifier))
             {
-                Mods.Add(new RepositoryMod(mod, _model, _viewModelService, _helper));
+                Mods.Add(new RepositoryMod(mod, _model, _viewModelService));
             }
         }
 
         private void DoChooseDownloadLocation()
         {
-            var vm = new SelectRepositoryStorage(ModelRepository, _model, _viewModelService, false, _helper);
+            var vm = new SelectRepositoryStorage(ModelRepository, _model, _viewModelService, false);
             _viewModelService.InteractionService.SelectRepositoryStorage(vm);
         }
 
@@ -265,12 +264,9 @@ Cancel - Do not remove this repository";
             }
 
             _model.DeleteRepository(ModelRepository, (bool)removeData);
-            OnDelete?.Invoke(this);
 
             if ((bool) objOnDetailsPage) _viewModelService.NavigateBack();
         }
-
-        public Action<Repository> OnDelete;
 
         public async Task DoUpdate()
         {
@@ -354,7 +350,6 @@ Cancel - Do not remove this repository";
 
         private bool _updateLoading;
         private bool _updateButtonVisible = true;
-        private readonly Helper _helper;
 
         public bool UpdateLoading
         {

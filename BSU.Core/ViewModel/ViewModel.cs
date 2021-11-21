@@ -29,13 +29,12 @@ namespace BSU.Core.ViewModel
         private readonly RepositoriesPage _repoPage;
         private readonly StoragePage _storagePage;
 
-        internal ViewModel(IModel model, StructureEventCombiner eventCombiner)
+        internal ViewModel(IModel model)
         {
             _model = model;
-            var helper = new Helper(model, eventCombiner);
             model.ConnectErrorPresenter(this);
-            _repoPage = new RepositoriesPage(model, this, helper);
-            _storagePage = new StoragePage(model, this, helper);
+            _repoPage = new RepositoriesPage(model, this);
+            _storagePage = new StoragePage(model, this);
             Content = _repoPage;
         }
 

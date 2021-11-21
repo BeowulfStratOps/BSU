@@ -31,6 +31,7 @@ namespace BSU.Core.Model
         private readonly ILogger _logger;
 
         private StorageModStateEnum _state = StorageModStateEnum.Loading; // TODO: should not be directly accessible
+        private readonly IEventBus _eventBus;
 
         private StorageModStateEnum State
         {
@@ -45,12 +46,13 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(IStorageMod implementation, string identifier,
-            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite)
+            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IEventBus eventBus)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             ParentStorage = parent;
             CanWrite = canWrite;
+            _eventBus = eventBus;
             Implementation = implementation;
             Identifier = identifier;
 
@@ -78,7 +80,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInCurrentContext(getResult =>
+            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_eventBus, getResult =>
             {
                 (_matchHash, _versionHash, _title) = getResult();
                 SetState(StorageModStateEnum.Created, StorageModStateEnum.Loading);

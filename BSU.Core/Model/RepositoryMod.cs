@@ -46,11 +46,12 @@ namespace BSU.Core.Model
         }
 
         public RepositoryMod(IRepositoryMod implementation, string identifier,
-            IPersistedRepositoryModState internalState, IModelRepository parentRepository)
+            IPersistedRepositoryModState internalState, IModelRepository parentRepository, IEventBus eventBus)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             ParentRepository = parentRepository;
+            _eventBus = eventBus;
             Implementation = implementation;
             Identifier = identifier;
             DownloadIdentifier = identifier;
@@ -84,7 +85,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInCurrentContext(getResult =>
+            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_eventBus, getResult =>
             {
                 (_matchHash, _versionHash, _modInfo) = getResult();
                 State = LoadingState.Loaded;
@@ -163,6 +164,7 @@ namespace BSU.Core.Model
 
         private string _downloadIdentifier;
         private LoadingState _state;
+        private readonly IEventBus _eventBus;
 
         public string DownloadIdentifier
         {

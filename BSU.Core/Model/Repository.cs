@@ -28,13 +28,15 @@ namespace BSU.Core.Model
         private readonly ILogger _logger;
         private readonly IErrorPresenter _errorPresenter;
         private ServerInfo _serverInfo;
+        private readonly IEventBus _eventBus;
 
         public Repository(IRepository implementation, string name, string location,
-            IRepositoryState internalState, IErrorPresenter errorPresenter)
+            IRepositoryState internalState, IErrorPresenter errorPresenter, IEventBus eventBus)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
             _errorPresenter = errorPresenter;
+            _eventBus = eventBus;
             Location = location;
             Implementation = implementation;
             Name = name;
@@ -63,7 +65,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(LoadAsync).ContinueInCurrentContext(getResult =>
+            Task.Run(LoadAsync).ContinueInEventBus(_eventBus, getResult =>
             {
                 try
                 {
@@ -72,7 +74,7 @@ namespace BSU.Core.Model
                     _mods = new List<IModelRepositoryMod>();
                     foreach (var (key, mod) in mods)
                     {
-                        var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), this);
+                        var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), this, _eventBus);
                         _mods.Add(modelMod);
                     }
 

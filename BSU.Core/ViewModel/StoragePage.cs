@@ -12,18 +12,16 @@ namespace BSU.Core.ViewModel
     {
         private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
-        private readonly Helper _helper;
         public ObservableCollection<Storage> Storages { get; } = new();
         public DelegateCommand AddStorage { get; }
 
         public DelegateCommand Back { get; }
 
-        internal StoragePage(IModel model, IViewModelService viewModelService, Helper helper)
+        internal StoragePage(IModel model, IViewModelService viewModelService)
         {
             Back = new DelegateCommand(viewModelService.NavigateBack);
             _model = model;
             _viewModelService = viewModelService;
-            _helper = helper;
             AddStorage = new DelegateCommand(() => DoAddStorage());
             model.AddedStorage += OnAddStorage;
             model.RemovedStorage += storage =>
@@ -35,7 +33,7 @@ namespace BSU.Core.ViewModel
 
         private void OnAddStorage(IModelStorage modelStorage)
         {
-            var storage = new Storage(modelStorage, _model, _viewModelService, _helper);
+            var storage = new Storage(modelStorage, _model, _viewModelService);
             Storages.Add(storage);
         }
 

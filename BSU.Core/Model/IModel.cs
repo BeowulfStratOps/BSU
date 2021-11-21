@@ -24,5 +24,6 @@ namespace BSU.Core.Model
         List<IModelRepositoryMod> GetRepositoryMods();
         event Action<IModelRepository> RemovedRepository;
         event Action<IModelStorage> RemovedStorage;
+        event Action AnyChange;
     }
 }

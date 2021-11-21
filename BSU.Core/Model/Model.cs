@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Persistence;
+using BSU.Core.Services;
 using BSU.Core.Storage;
 using BSU.CoreCommon;
 using NLog;
@@ -36,18 +38,24 @@ namespace BSU.Core.Model
 
         public event Action<IModelRepository> RemovedRepository;
         public event Action<IModelStorage> RemovedStorage;
+        public event Action AnyChange;
 
         private InternalState PersistentState { get; }
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
+        private readonly IEventBus _eventBus;
 
-        public Model(InternalState persistentState, Types types)
+        public Model(InternalState persistentState, Types types, IEventBus eventBus)
         {
             _types = types;
+            _eventBus = eventBus;
             PersistentState = persistentState;
             if (PersistentState.CheckIsFirstStart())
             {
                 DoFirstStartSetup();
             }
+
+            var eventCombiner = new StructureEventCombiner(this);
+            eventCombiner.AnyChange += () => AnyChange?.Invoke();
         }
 
         private void DoFirstStartSetup()
@@ -78,7 +86,7 @@ namespace BSU.Core.Model
         private Repository CreateRepository(IRepositoryEntry data, IRepositoryState state)
         {
             var implementation = _types.GetRepoImplementation(data.Type, data.Url);
-            var repository = new Repository(implementation, data.Name, data.Url, state, _errorPresenter);
+            var repository = new Repository(implementation, data.Name, data.Url, state, _errorPresenter, _eventBus);
             _repositories.Add(repository);
             AddedRepository?.Invoke(repository);
             return repository;
@@ -87,7 +95,7 @@ namespace BSU.Core.Model
         private Storage CreateStorage(IStorageEntry data, IStorageState state)
         {
             var implementation = _types.GetStorageImplementation(data.Type, data.Path);
-            var storage = new Storage(implementation, data.Name, data.Path, state, _errorPresenter);
+            var storage = new Storage(implementation, data.Name, data.Path, state, _errorPresenter, _eventBus);
             _storages.Add(storage);
             AddedStorage?.Invoke(storage);
             return storage;

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
@@ -37,12 +39,12 @@ namespace BSU.Core
             Types = new Types();
             var state = new InternalState(settings);
 
-            Model = new Model.Model(state, Types);
+            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current);
 
-            // TODO: proper service stuff?
-            var eventCombiner = new StructureEventCombiner(Model);
-            new AutoSelector(Model, eventCombiner);
-            ViewModel = new ViewModel.ViewModel(Model, eventCombiner);
+            Model = new Model.Model(state, Types, eventBus);
+
+            new AutoSelector(Model);
+            ViewModel = new ViewModel.ViewModel(Model);
         }
 
         public void Dispose()
