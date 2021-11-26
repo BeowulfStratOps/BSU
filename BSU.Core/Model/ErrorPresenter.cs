@@ -10,7 +10,7 @@ namespace BSU.Core.Model
 
         public void Connect(IErrorPresenter presenter)
         {
-            if (_connectedPresenter != null) throw new InvalidOperationException();
+            if (_connectedPresenter != null) throw new InvalidOperationException("Already connected!");
             _connectedPresenter = presenter;
             foreach (var cached in _cache)
             {

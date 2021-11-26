@@ -22,8 +22,6 @@ namespace BSU.GUI.Converters
                     return "Updating";
                 case ModActionEnum.Use:
                     return "Use";
-                case ModActionEnum.Unusable:
-                    throw new InvalidOperationException();
                 default:
                     throw new ArgumentOutOfRangeException();
             }

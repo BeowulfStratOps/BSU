@@ -20,7 +20,7 @@ namespace BSU.Core.Model
         public string Identifier { get; }
         public IModelStorage ParentStorage { get; }
         public bool IsDeleted { get; private set; }
-        public IStorageMod Implementation { get; }
+        private readonly IStorageMod _implementation;
 
         private MatchHash _matchHash;
         private VersionHash _versionHash;
@@ -53,7 +53,7 @@ namespace BSU.Core.Model
             ParentStorage = parent;
             CanWrite = canWrite;
             _eventBus = eventBus;
-            Implementation = implementation;
+            _implementation = implementation;
             Identifier = identifier;
 
             _updateTarget = _internalState.UpdateTarget;
@@ -71,9 +71,9 @@ namespace BSU.Core.Model
 
         private async Task<(MatchHash matchHash, VersionHash versionHash, string title)> LoadAsync(CancellationToken cancellationToken)
         {
-            var versionHash = await VersionHash.CreateAsync(Implementation, cancellationToken);
-            var matchHash = await MatchHash.CreateAsync(Implementation, cancellationToken);
-            var title = await Implementation.GetTitle(cancellationToken);
+            var versionHash = await VersionHash.CreateAsync(_implementation, cancellationToken);
+            var matchHash = await MatchHash.CreateAsync(_implementation, cancellationToken);
+            var title = await _implementation.GetTitle(cancellationToken);
 
             return (matchHash, versionHash, title);
         }
@@ -82,20 +82,29 @@ namespace BSU.Core.Model
         {
             Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_eventBus, getResult =>
             {
-                (_matchHash, _versionHash, _title) = getResult();
-                SetState(StorageModStateEnum.Created, StorageModStateEnum.Loading);
+                try
+                {
+                    (_matchHash, _versionHash, _title) = getResult();
+                    SetState(StorageModStateEnum.Created, StorageModStateEnum.Loading);
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e);
+                    // TOOD: should this be reported to user directly?
+                    SetState(StorageModStateEnum.Error, StorageModStateEnum.Loading);
+                }
             });
         }
 
         public VersionHash GetVersionHash()
         {
-            if (State == StorageModStateEnum.Loading) throw new InvalidOperationException();
+            if (State == StorageModStateEnum.Loading) throw new InvalidOperationException($"Not allowed in State {State}");
             return _versionHash;
         }
 
         public MatchHash GetMatchHash()
         {
-            if (State == StorageModStateEnum.Loading) throw new InvalidOperationException();
+            if (State == StorageModStateEnum.Loading) throw new InvalidOperationException($"Not allowed in State {State}");
             return _matchHash;
         }
 
@@ -130,17 +139,16 @@ namespace BSU.Core.Model
             UpdateTarget = new UpdateTarget(targetVersion.GetHashString());
             SetState(StorageModStateEnum.Updating, StorageModStateEnum.Created, StorageModStateEnum.CreatedWithUpdateTarget);
 
-            var update = new StorageModUpdateState(this, repositoryMod, progress);
+            var update = new StorageModUpdateState(this, _implementation, repositoryMod, progress);
 
-            var syncContext = SynchronizationContext.Current ?? throw new InvalidOperationException();
             update.OnEnded += () =>
             {
-                syncContext.Post(_ =>
+                _eventBus.ExecuteSynchronized(() =>
                 {
 
                     UpdateTarget = null;
                     SetState(StorageModStateEnum.Created, StorageModStateEnum.Updating);
-                }, null);
+                });
             };
 
             return update;

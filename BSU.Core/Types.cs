@@ -11,18 +11,21 @@ namespace BSU.Core
 {
     public class Types
     {
-        private readonly Dictionary<string, Func<string, IRepository>> _repoTypes =
-            new Dictionary<string, Func<string, IRepository>>
+        public static Types Default
+        {
+            get
             {
-                {"BSO", url => new BsoRepo(url)}
-            };
+                var types = new Types();
+                types.AddRepoType("BSO", url => new BsoRepo(url));
+                types.AddStorageType("STEAM", path => new SteamStorage(path));
+                types.AddStorageType("DIRECTORY", path => new DirectoryStorage(path));
+                return types;
+            }
+        }
 
-        private readonly Dictionary<string, Func<string, IStorage>> _storageTypes =
-            new Dictionary<string, Func<string, IStorage>>
-            {
-                {"STEAM", path => new SteamStorage(path)},
-                {"DIRECTORY", path => new DirectoryStorage(path)}
-            };
+        private readonly Dictionary<string, Func<string, IRepository>> _repoTypes = new();
+
+        private readonly Dictionary<string, Func<string, IStorage>> _storageTypes = new();
 
         public void AddRepoType(string name, Func<string, IRepository> create) =>
             _repoTypes.Add(name, create);

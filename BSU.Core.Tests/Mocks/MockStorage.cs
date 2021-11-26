@@ -10,7 +10,7 @@ namespace BSU.Core.Tests.Mocks
     internal class MockStorage : IStorage
     {
         private Action<MockStorage> _load;
-        public Dictionary<string, MockStorageMod> Mods = new();
+        public readonly Dictionary<string, MockStorageMod> Mods = new();
 
         public MockStorage(Action<MockStorage> load = null)
         {
@@ -29,7 +29,7 @@ namespace BSU.Core.Tests.Mocks
         {
             Load();
             if (identifier == null) throw new ArgumentNullException();
-            var newMod = new MockStorageMod {Identifier = identifier, Storage = this};
+            var newMod = new MockStorageMod();
             Mods.Add(identifier, newMod);
             return Task.FromResult<IStorageMod>(newMod);
         }

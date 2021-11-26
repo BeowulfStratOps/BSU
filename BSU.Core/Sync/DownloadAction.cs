@@ -16,7 +16,7 @@ namespace BSU.Core.Sync
         private readonly ulong _fileSize;
         private ulong _done;
 
-        public DownloadAction(IRepositoryMod repository, StorageMod storage, string path, ulong fileSize) : base(storage, path)
+        public DownloadAction(IRepositoryMod repository, IStorageMod storage, string path, ulong fileSize) : base(storage, path)
         {
             _repository = repository;
             _fileSize = fileSize;
@@ -25,7 +25,7 @@ namespace BSU.Core.Sync
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
             Logger.Trace("{0}, {1} Downloading {2}", _repository, _repository, Path);
-            await using var target = await Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.Write, cancellationToken);
+            await using var target = await Storage.OpenFile(Path.ToLowerInvariant(), FileAccess.Write, cancellationToken);
             var progress = new Progress<ulong>();
             progress.ProgressChanged += (_, count) => _done += count;
             await _repository.DownloadTo(Path, target, progress, cancellationToken);

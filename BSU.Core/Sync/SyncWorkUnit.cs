@@ -1,17 +1,18 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.Sync
 {
     internal abstract class SyncWorkUnit
     {
-        protected readonly StorageMod Storage;
+        protected readonly IStorageMod Storage;
         protected readonly string Path;
         protected readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        protected SyncWorkUnit(StorageMod storage, string path)
+        protected SyncWorkUnit(IStorageMod storage, string path)
         {
             Storage = storage;
             Path = path;

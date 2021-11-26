@@ -11,6 +11,7 @@ namespace BSU.Core.Model.Updating
     internal class StorageModUpdateState : IModUpdate
     {
         private readonly StorageMod _storageMod;
+        private readonly IStorageMod _implementation;
         private readonly IRepositoryMod _repositoryMod;
         private readonly IProgress<FileSyncStats> _progress;
         private readonly ILogger _logger;
@@ -20,10 +21,11 @@ namespace BSU.Core.Model.Updating
 
         private bool _prepared, _updated;
 
-        public StorageModUpdateState(StorageMod storageMod, IRepositoryMod repositoryMod, IProgress<FileSyncStats> progress)
+        public StorageModUpdateState(StorageMod storageMod, IStorageMod implementation, IRepositoryMod repositoryMod, IProgress<FileSyncStats> progress)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, _guid.ToString());
             _storageMod = storageMod;
+            _implementation = implementation;
             _repositoryMod = repositoryMod;
             _progress = progress;
         }
@@ -32,7 +34,7 @@ namespace BSU.Core.Model.Updating
 
         public async Task<UpdateResult> Prepare(CancellationToken cancellationToken)
         {
-            if (_prepared) throw new InvalidOperationException();
+            if (_prepared) throw new InvalidOperationException("Update is already prepared");
             _prepared = true;
 
             cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
@@ -40,7 +42,7 @@ namespace BSU.Core.Model.Updating
             try
             {
                 _repoSync = await Task.Run(() =>
-                    RepoSync.BuildAsync(_repositoryMod, _storageMod, cancellationToken, _guid), cancellationToken);
+                    RepoSync.BuildAsync(_repositoryMod, _storageMod, _implementation, cancellationToken, _guid), cancellationToken);
                 IsPrepared = true;
                 return UpdateResult.Success;
             }
@@ -60,10 +62,10 @@ namespace BSU.Core.Model.Updating
 
         public async Task<UpdateResult> Update(CancellationToken cancellationToken)
         {
-            if (_updated) throw new InvalidOperationException();
+            if (_updated) throw new InvalidOperationException("Update is already done");
             _updated = true;
 
-            if (_repoSync == null) throw new InvalidOperationException();
+            if (_repoSync == null) throw new InvalidOperationException("Update is not prepared yet");
 
             cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
 

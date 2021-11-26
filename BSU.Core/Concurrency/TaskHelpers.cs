@@ -53,7 +53,6 @@ namespace BSU.Core.Concurrency
                     catch (Exception e)
                     {
                         Logger.Error(e);
-                        throw;
                     }
                 });
             }, null);

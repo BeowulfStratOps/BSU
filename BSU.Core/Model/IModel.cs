@@ -12,7 +12,7 @@ namespace BSU.Core.Model
         void DeleteRepository(IModelRepository repository, bool removeMods);
         void DeleteStorage(IModelStorage storage, bool removeMods);
         IModelRepository AddRepository(string type, string url, string name);
-        IModelStorage AddStorage(string type, DirectoryInfo path, string name);
+        IModelStorage AddStorage(string type, string path, string name);
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();
         void ConnectErrorPresenter(IErrorPresenter presenter);

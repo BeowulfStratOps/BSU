@@ -12,6 +12,6 @@ namespace BSU.Core.Persistence
         void RemoveRepository(Guid repositoryIdentifier);
         (IRepositoryEntry entry, IRepositoryState state) AddRepo(string name, string url, string type);
         void RemoveStorage(Guid storageIdentifier);
-        (IStorageEntry entry, IStorageState state) AddStorage(string name, DirectoryInfo directory, string type);
+        (IStorageEntry entry, IStorageState state) AddStorage(string name, string path, string type);
     }
 }

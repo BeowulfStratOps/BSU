@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
+using BSU.Core.Model.Updating;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using Xunit;
@@ -100,7 +101,6 @@ namespace BSU.Core.Tests
         [Fact]
         private async Task Updated()
         {
-            var target = new UpdateTarget("123");
             var (implementation, storageMod, eventBus) = CreateStorageMod();
 
             var repo = CreateRepoMod();
@@ -119,70 +119,62 @@ namespace BSU.Core.Tests
             Assert.True(storageMod.GetVersionHash().IsMatch(await VersionHash.CreateAsync(repo, CancellationToken.None)));
         }
 
-        /*[Fact]
-        private void UpdateAborted()
+        [Fact]
+        private async Task UpdateAborted()
         {
-            var (implementation, storageMod) = CreateStorageMod();
+            var (implementation, storageMod, eventBus) = CreateStorageMod();
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
-                new VersionHash(new byte[] { }));
+            eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
+
+            var targetMatchHash = await MatchHash.CreateAsync(repo, CancellationToken.None);
+            var targetVersionHash = await VersionHash.CreateAsync(repo, CancellationToken.None);
+            var update = storageMod.PrepareUpdate(repo, targetMatchHash, targetVersionHash, null);
 
 
-            var created = update.Create().Result;
-            var prepared = created.Prepare().Result;
-            prepared.Abort();
+            var cts = new CancellationTokenSource();
+            await update.Prepare(cts.Token);
+            cts.Cancel();
 
-            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
-            Assert.Throws<InvalidOperationException>(() => storageMod.GetMatchHash());
-            Assert.Throws<InvalidOperationException>(() => storageMod.GetVersionHash());
+            eventBus.Work(100, () => storageMod.GetState() == StorageModStateEnum.CreatedWithUpdateTarget);
+
+            Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
+            Assert.True(targetMatchHash.IsMatch(storageMod.GetMatchHash()));
+            Assert.True(targetVersionHash.IsMatch(storageMod.GetVersionHash()));
         }
 
         [Fact]
         private void ErrorLoad()
         {
-            var (implementation, storageMod) = CreateStorageMod(load: false);
+            var (implementation, storageMod, eventBus) = CreateStorageMod();
 
-            implementation.ThrowErrorLoad = true;
-
-            storageMod.Load();
-            worker.DoWork();
+            implementation.ThrowErrorOpen = true;
+            eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
             Assert.Equal(StorageModStateEnum.Error, storageMod.GetState());
         }
 
         [Fact]
-        private void ErrorUpdateDo()
+        private async Task ErrorUpdate()
         {
-            // TODO: ???
-            var (implementation, storageMod, worker) = CreateStorageMod(loadVersion: true);
+            var (implementation, storageMod, eventBus) = CreateStorageMod();
 
             var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
-                new VersionHash(new byte[] { }));
-            var created = update.Create().Result;
-            var prepared = created.Prepare().Result;
+            eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
+
+            var targetMatchHash = await MatchHash.CreateAsync(repo, CancellationToken.None);
+            var targetVersionHash = await VersionHash.CreateAsync(repo, CancellationToken.None);
+            var update = storageMod.PrepareUpdate(repo, targetMatchHash, targetVersionHash, null);
+
+            await update.Prepare(CancellationToken.None);
             implementation.ThrowErrorOpen = true;
-            Assert.ThrowsAsync<TestException>(() => prepared.Update());
-            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
-            implementation.ThrowErrorOpen = false;
-            Assert.Throws<InvalidOperationException>(() => storageMod.GetMatchHash());
-            Assert.Throws<InvalidOperationException>(() => storageMod.GetVersionHash());
+            var updateTask = update.Update(CancellationToken.None);
+            eventBus.Work(100);
+            var result = await updateTask;
+
+            Assert.Equal(UpdateResult.Failed, result);
+            Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
+            Assert.True(targetMatchHash.IsMatch(storageMod.GetMatchHash()));
+            Assert.True(targetVersionHash.IsMatch(storageMod.GetVersionHash()));
         }
-
-        [Fact]
-        private void ErrorPrepareUpdate()
-        {
-            var (implementation, storageMod, worker) = CreateStorageMod(loadVersion: true);
-
-            var repo = CreateRepoMod();
-            var update = storageMod.PrepareUpdate(repo, new UpdateTarget("123", "LeMod"), new MatchHash(new string[] { }),
-                new VersionHash(new byte[] { }));
-            var created = update.Create().Result;
-            implementation.ThrowErrorOpen = true;
-            Assert.ThrowsAsync<TestException>(() => created.Prepare());
-            Assert.Equal(StorageModStateEnum.Loaded, storageMod.GetState());
-            Assert.Throws<InvalidOperationException>(() => storageMod.GetMatchHash());
-            Assert.Throws<InvalidOperationException>(() => storageMod.GetVersionHash());
-        }*/
     }
 }

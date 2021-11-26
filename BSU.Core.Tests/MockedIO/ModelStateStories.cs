@@ -1,57 +1,132 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Model;
+using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.MockedIO
 {
     // TODO: extend for ViewState
-    public class CoreStateStories : LoggedTest
+    public class ModelStateStories : LoggedTest
     {
-        public CoreStateStories(ITestOutputHelper outputHelper) : base(outputHelper)
+        public ModelStateStories(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
 
-        internal static (MockRepositoryMod, RepositoryMod) CreateRepoMod(string match, string version, MockModelStructure structure)
+        private static MockRepositoryMod CreateRepoMod(int match, int version)
         {
             var mockRepo = new MockRepositoryMod();
             for (int i = 0; i < 3; i++)
             {
-                mockRepo.SetFile($"/addons/{match}_{i}.pbo", version);
+                mockRepo.SetFile($"/addons/{match}_{i}.pbo", version.ToString());
             }
-            var eventBus = new TestEventBus();
-            var repoMod = new RepositoryMod(mockRepo, "@myrepo", new MockPersistedRepositoryModState(), null, eventBus);
-            Thread.Sleep(50);
-            eventBus.Work();
-            return (mockRepo, repoMod);
+            return mockRepo;
         }
 
-        internal static bool FilesEqual(IMockedFiles f1, IMockedFiles f2)
+        private static MockStorageMod CreateStorageMod(int match, int version)
         {
+            throw new NotImplementedException();
+        }
+
+        private static bool FilesEqual(IModelRepositoryMod repo, IModelStorageMod storage)
+        {
+            var f1 = GetImplementation(repo);
+            var f2 = GetImplementation(storage);
             var files1 = f1.GetFiles();
             var files2 = f2.GetFiles();
             var keys = files1.Keys.Union(files2.Keys);
             return keys.All(key => files1.ContainsKey(key) && files2.ContainsKey(key) && files1[key] == files2[key]);
         }
 
+        private static (TestEventBus eventBus, Model.Model model) GetModel(CollectionInfo[] repositories,
+            CollectionInfo[] storages)
+        {
+            var types = new Types();
+
+            types.AddRepoType("TEST", path =>
+            {
+                var repo = new MockRepository();
+                var collection = repositories.SingleOrDefault(c => c.Path == path);
+                if (collection == null) return repo;
+                foreach (var (name, match, version) in collection.Mods)
+                {
+                    repo.Mods.Add("@" + name, CreateRepoMod(match, version));
+                }
+                return repo;
+            });
+            types.AddStorageType("TEST", path =>
+            {
+                var storage = new MockStorage();
+                var collection = storages.SingleOrDefault(c => c.Path == path);
+                if (collection == null) return storage;
+                foreach (var (name, match, version) in collection.Mods)
+                {
+                    storage.Mods.Add("@" + name, CreateStorageMod(match, version));
+                }
+                return storage;
+            });
+
+            var settings = new MockSettings();
+
+            foreach (var (path, _, _) in repositories.Where(r => r.Active))
+            {
+                settings.Repositories.Add(new RepositoryEntry(path, "TEST", path, Guid.NewGuid()));
+            }
+            foreach (var (path, _, _) in storages.Where(r => r.Active))
+            {
+                settings.Storages.Add(new StorageEntry(path, "TEST", path, Guid.NewGuid()));
+            }
+
+            var eventBus = new TestEventBus();
+            var model = new Model.Model(new InternalState(settings), types, eventBus, false);
+
+            return (eventBus, model);
+        }
+
+        private record CollectionInfo(string Path, bool Active, params (string name, int match, int version)[] Mods);
+
+        private static IModelStorage AddStorage(IModel model, string name)
+        {
+            return model.AddStorage("TEST", name, name);
+        }
+
+        private static IModelRepository AddRepository(IModel model, string name)
+        {
+            return model.AddRepository("TEST", name, name);
+        }
+
+        private static IMockedFiles GetImplementation(object mod)
+        {
+            var field = mod.GetType().GetField("_implementation", BindingFlags.NonPublic | BindingFlags.Instance);
+            return (IMockedFiles)field!.GetValue(mod);
+        }
+
         [Fact]
         private async Task Download()
         {
-            var structure = new MockModelStructure();
-            var (repoFiles, repoMod) = CreateRepoMod("1", "1", structure);
+            var (eventBus, model) = GetModel(new[]
+            {
+                new CollectionInfo("repo", false, ("mod", 1, 1))
+            }, new []
+            {
+                new CollectionInfo("storage", false)
+            });
 
-            var mockStorage = new MockStorage();
-            var storageState = new MockStorageState();
-            var eventBus = new TestEventBus();
-            var storage = new Model.Storage(mockStorage, "mystorage", "outerspcace", storageState, null, eventBus);
-            eventBus.Work(50);
+            var storage = AddStorage(model, "storage");
+            var repo = AddRepository(model, "repo");
 
+            eventBus.Work(100);
+
+            var repoMod = repo.GetMods()[0];
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
 
             var update = await repoMod.StartUpdate(null, CancellationToken.None);
@@ -64,7 +139,7 @@ namespace BSU.Core.Tests
 
             Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storageMod));
 
-            Assert.True(FilesEqual(repoFiles, mockStorage.Mods.Values.First()));
+            Assert.True(FilesEqual(repoMod, storage.GetMods()[0]));
         }
 /*
         [Fact]

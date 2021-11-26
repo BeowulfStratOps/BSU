@@ -36,12 +36,11 @@ namespace BSU.Core
         internal Core(ISettings settings)
         {
             _logger.Info("Creating new core instance");
-            Types = new Types();
             var state = new InternalState(settings);
 
             var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current);
 
-            Model = new Model.Model(state, Types, eventBus, state.CheckIsFirstStart());
+            Model = new Model.Model(state, Types.Default, eventBus, state.CheckIsFirstStart());
             ViewModel = new ViewModel.ViewModel(Model);
         }
 

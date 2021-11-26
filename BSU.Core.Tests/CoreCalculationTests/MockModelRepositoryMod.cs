@@ -33,7 +33,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public string Identifier { get; }
         public IModelRepository ParentRepository { get; }
         public LoadingState State { get; } = LoadingState.Loaded;
-        public Dictionary<IModelStorageMod, List<IModelRepositoryMod>> Conflicts { get; set; } = new();
 
         public Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
         {
@@ -58,5 +57,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         public event Action<IModelRepositoryMod> SelectionChanged;
+        public event Action<IModelRepositoryMod> DownloadIdentifierChanged;
     }
 }

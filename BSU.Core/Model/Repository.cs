@@ -91,7 +91,7 @@ namespace BSU.Core.Model
 
         public List<IModelRepositoryMod> GetMods()
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in state {State}");
             return _mods;
         }
 

@@ -27,25 +27,25 @@ namespace BSU.Core.Sync
             _logger = logger;
         }
 
-        public static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage, CancellationToken cancellationToken, Guid guid)
+        public static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage, IStorageMod implementation, CancellationToken cancellationToken, Guid guid)
         {
             var logger = LogHelper.GetLoggerWithIdentifier(typeof(RepoSync), guid.ToString());
             logger.Debug("Building sync actions {0} to {1}", storage, repository);
 
             var allActions = new List<SyncWorkUnit>();
             var repositoryList = await repository.GetFileList(cancellationToken);
-            var storageList = await storage.Implementation.GetFileList(cancellationToken);
+            var storageList = await implementation.GetFileList(cancellationToken);
             var storageListCopy = new List<string>(storageList);
             foreach (var repoFile in repositoryList)
             {
                 if (storageList.Contains(repoFile))
                 {
                     var repoFileHash = await repository.GetFileHash(repoFile, cancellationToken);
-                    var storageFileHash = await storage.Implementation.GetFileHash(repoFile, cancellationToken);
+                    var storageFileHash = await implementation.GetFileHash(repoFile, cancellationToken);
                     if (!repoFileHash.Equals(storageFileHash))
                     {
                         var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
-                        allActions.Add(new UpdateAction(repository, storage, repoFile, fileSize));
+                        allActions.Add(new UpdateAction(repository, implementation, repoFile, fileSize));
                     }
 
                     storageListCopy.Remove(repoFile);
@@ -53,13 +53,13 @@ namespace BSU.Core.Sync
                 else
                 {
                     var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
-                    allActions.Add(new DownloadAction(repository, storage, repoFile, fileSize));
+                    allActions.Add(new DownloadAction(repository, implementation, repoFile, fileSize));
                 }
             }
 
             foreach (var storageModFile in storageListCopy)
             {
-                allActions.Add(new DeleteAction(storage, storageModFile));
+                allActions.Add(new DeleteAction(implementation, storageModFile));
             }
 
             logger.Debug("Download actions: {0}", allActions.OfType<DownloadAction>().Count());

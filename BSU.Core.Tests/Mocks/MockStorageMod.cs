@@ -13,19 +13,10 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorageMod : IStorageMod, IMockedFiles
     {
-        public string Identifier;
-        public MockStorage Storage;
         public bool Locked = false;
-        public bool ThrowErrorLoad = false;
         public bool ThrowErrorOpen = false;
-        private readonly Action<MockStorageMod> _load;
 
-        public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
-
-        public MockStorageMod(Action<MockStorageMod> load = null)
-        {
-            _load = load;
-        }
+        public Dictionary<string, byte[]> Files = new();
 
         public IReadOnlyDictionary<string, string> GetFiles()
         {
@@ -37,20 +28,6 @@ namespace BSU.Core.Tests.Mocks
             if (Locked) throw new IOException("File in use");
             Files[key] = Encoding.UTF8.GetBytes(data);
         }
-
-        public string GetFileContent(string key)
-        {
-            if (Locked) throw new IOException("File in use");
-            return Encoding.UTF8.GetString(Files[key]);
-        }
-
-        public void DeleteFile(string path)
-        {
-            if (Locked) throw new IOException("File in use");
-            Files.Remove(path);
-        }
-
-        public string GetDisplayName() => throw new NotImplementedException();
 
         public Task<Stream> OpenFile(string path, FileAccess access, CancellationToken cancellationToken)
         {
@@ -70,29 +47,7 @@ namespace BSU.Core.Tests.Mocks
             }
         }
 
-        /*public FileHash GetFileHash(string path)
-        {
-            if (Locked) throw new IOException("File in use");
-            return new SHA1AndPboHash(OpenFile(path, FileAccess.Read), Utils.GetExtension(path));
-        }*/
-
         public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult(Files.Keys.ToList());
-
-        public string GetIdentifier() => Identifier;
-
-        public IStorage GetStorage() => Storage;
-
-        public string GetFilePath(string path)
-        {
-            if (Locked) throw new IOException("File in use");
-            return "";
-        }
-
-        public void Load()
-        {
-            if (ThrowErrorLoad) throw new TestException();
-            _load?.Invoke(this);
-        }
 
         private sealed class MockStream : MemoryStream
         {
@@ -110,11 +65,6 @@ namespace BSU.Core.Tests.Mocks
                 _save(ToArray());
                 base.Dispose(disposing);
             }
-        }
-
-        public Task<string> GetDisplayName(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)

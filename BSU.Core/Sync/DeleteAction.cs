@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
+using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
 {
@@ -9,7 +10,7 @@ namespace BSU.Core.Sync
     /// </summary>
     internal class DeleteAction : SyncWorkUnit
     {
-        public DeleteAction(StorageMod storage, string path) : base(storage, path)
+        public DeleteAction(IStorageMod storage, string path) : base(storage, path)
         {
 
         }
@@ -17,7 +18,7 @@ namespace BSU.Core.Sync
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
             Logger.Trace("{0} Deleting {1}", Storage, Path);
-            await Storage.Implementation.DeleteFile(Path, cancellationToken);
+            await Storage.DeleteFile(Path, cancellationToken);
         }
 
         public override FileSyncStats GetStats()

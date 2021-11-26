@@ -53,10 +53,10 @@ namespace BSU.Core.Persistence
             return (repo, new RepositoryState(repo, _settings.Store));
         }
 
-        public (IStorageEntry entry, IStorageState state) AddStorage(string name, DirectoryInfo directory, string type)
+        public (IStorageEntry entry, IStorageState state) AddStorage(string name, string path, string type)
         {
             if (_settings.Storages.Any(s => s.Name == name)) throw new ArgumentException("Name in use");
-            var storage = new StorageEntry(name, type, directory.FullName, Guid.NewGuid());
+            var storage = new StorageEntry(name, type, path, Guid.NewGuid());
             _settings.Storages.Add(storage);
             _settings.Store();
             return (storage, new StorageState(storage, _settings.Store));

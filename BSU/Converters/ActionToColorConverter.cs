@@ -20,8 +20,6 @@ namespace BSU.GUI.Converters
                     return new SolidColorBrush(Colors.Blue);
                 case ModActionEnum.Use:
                     return new SolidColorBrush(Colors.Green);
-                case ModActionEnum.Unusable:
-                    throw new InvalidOperationException();
                 case ModActionEnum.AbortActiveAndUpdate:
                     return new SolidColorBrush(Colors.Red);
                 default:

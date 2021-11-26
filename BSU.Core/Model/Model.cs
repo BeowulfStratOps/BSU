@@ -40,11 +40,11 @@ namespace BSU.Core.Model
         public event Action<IModelStorage> RemovedStorage;
         public event Action AnyChange;
 
-        private InternalState PersistentState { get; }
+        private IInternalState PersistentState { get; }
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
         private readonly IEventBus _eventBus;
 
-        public Model(InternalState persistentState, Types types, IEventBus eventBus, bool isFirstStart)
+        public Model(IInternalState persistentState, Types types, IEventBus eventBus, bool isFirstStart)
         {
             _types = types;
             _eventBus = eventBus;
@@ -72,7 +72,7 @@ namespace BSU.Core.Model
                 return;
             }
             _logger.Info($"Found steam at {steamPath}. Adding steam storage");
-            PersistentState.AddStorage("Steam", new DirectoryInfo(steamPath), "STEAM");
+            PersistentState.AddStorage("Steam", steamPath, "STEAM");
         }
 
         public void Load()
@@ -112,10 +112,10 @@ namespace BSU.Core.Model
             return CreateRepository(entry, repoState);
         }
 
-        public IModelStorage AddStorage(string type, DirectoryInfo dir, string name)
+        public IModelStorage AddStorage(string type, string path, string name)
         {
             if (!_types.GetStorageTypes().Contains(type)) throw new ArgumentException();
-            var (entry, storageState) = PersistentState.AddStorage(name, dir, type);
+            var (entry, storageState) = PersistentState.AddStorage(name, path, type);
             return CreateStorage(entry, storageState);
         }
 

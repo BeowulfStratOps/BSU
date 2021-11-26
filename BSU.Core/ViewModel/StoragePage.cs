@@ -45,7 +45,7 @@ namespace BSU.Core.ViewModel
             var type = vm.GetStorageType();
             var name = vm.GetName();
             var path = vm.GetPath();
-            var storage = _model.AddStorage(type, new DirectoryInfo(path), name);
+            var storage = _model.AddStorage(type, path, name);
             return storage;
         }
     }

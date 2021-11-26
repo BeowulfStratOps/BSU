@@ -92,7 +92,7 @@ namespace BSU.Core.Model
 
         public List<IModelStorageMod> GetMods()
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             return new List<IModelStorageMod>(_mods);
         }
 
@@ -115,7 +115,7 @@ namespace BSU.Core.Model
 
         public bool HasMod(string downloadIdentifier)
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             return _mods.Any(m => string.Equals(m.Identifier, downloadIdentifier, StringComparison.InvariantCultureIgnoreCase));
         }
 

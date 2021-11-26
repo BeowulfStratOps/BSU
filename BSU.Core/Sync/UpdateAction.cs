@@ -17,7 +17,7 @@ namespace BSU.Core.Sync
        private readonly ulong _fileSize;
        private ulong _done;
 
-       public UpdateAction(IRepositoryMod repository, StorageMod storage, string path, ulong fileSize)
+       public UpdateAction(IRepositoryMod repository, IStorageMod storage, string path, ulong fileSize)
             : base(storage, path)
        {
            _repository = repository;
@@ -27,7 +27,7 @@ namespace BSU.Core.Sync
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
             Logger.Trace("{0}, {1} Updating {2}", Storage, _repository, Path);
-            await using var target = await Storage.Implementation.OpenFile(Path.ToLowerInvariant(), FileAccess.ReadWrite, cancellationToken);
+            await using var target = await Storage.OpenFile(Path.ToLowerInvariant(), FileAccess.ReadWrite, cancellationToken);
             var progress = new Progress<ulong>();
             progress.ProgressChanged += (_, count) => _done += count;
             await _repository.UpdateTo(Path, target, progress, cancellationToken);

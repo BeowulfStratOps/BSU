@@ -11,7 +11,7 @@ using BSU.CoreCommon;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace BSU.Core.Tests
+namespace BSU.Core.Tests.MockedIO
 {
     public class CompleteTest : LoggedTest
     {
@@ -32,13 +32,12 @@ namespace BSU.Core.Tests
 
         private MockStorageMod CreateStorageMod(string match, string version)
         {
-            return new MockStorageMod(mod =>
+            var mod = new MockStorageMod();
+            for (int i = 0; i < 3; i++)
             {
-                for (int i = 0; i < 3; i++)
-                {
-                    mod.SetFile($"/addons/file_{match}_{i}.pbo", $"data_{version}_{i}");
-                }
-            });
+                mod.SetFile($"/addons/file_{match}_{i}.pbo", $"data_{version}_{i}");
+            }
+            return mod;
         }
 
         private IRepository CreateRepo(string url)
@@ -105,7 +104,7 @@ namespace BSU.Core.Tests
         public Dictionary<string, IRepositoryMod> Mods { get; } = new();
         private Action<MockRepository> _load;
 
-        public MockRepository(Action<MockRepository> load)
+        public MockRepository(Action<MockRepository> load = null)
         {
             _load = load;
         }

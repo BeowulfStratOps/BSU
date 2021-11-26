@@ -26,7 +26,7 @@ namespace BSU.Core.ViewModel
 
         public async Task<StageStats> Prepare(CancellationToken cancellationToken)
         {
-            if (_prepared) throw new InvalidOperationException();
+            if (_prepared) throw new InvalidOperationException("Update is already prepared");
             _prepared = true;
 
             cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
@@ -59,7 +59,7 @@ namespace BSU.Core.ViewModel
 
         public async Task<StageStats> Update(CancellationToken cancellationToken)
         {
-            if (_updated) throw new InvalidOperationException();
+            if (_updated) throw new InvalidOperationException("Update is already done");
             _updated = true;
 
             cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));

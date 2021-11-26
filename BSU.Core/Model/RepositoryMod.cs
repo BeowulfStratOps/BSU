@@ -19,7 +19,7 @@ namespace BSU.Core.Model
     {
         private readonly IPersistedRepositoryModState _internalState;
         private readonly ILogger _logger;
-        private IRepositoryMod Implementation { get; } // TODO: make private
+        private readonly IRepositoryMod _implementation;
         public string Identifier { get; }
         public IModelRepository ParentRepository { get; }
 
@@ -53,7 +53,7 @@ namespace BSU.Core.Model
             _internalState = internalState;
             ParentRepository = parentRepository;
             _eventBus = eventBus;
-            Implementation = implementation;
+            _implementation = implementation;
             Identifier = identifier;
             DownloadIdentifier = identifier;
 
@@ -77,8 +77,8 @@ namespace BSU.Core.Model
 
         private async Task<(MatchHash matchHash, VersionHash versionHash, ModInfo modInfo)> LoadAsync(CancellationToken cancellationToken)
         {
-            var matchHash = await MatchHash.CreateAsync(Implementation, cancellationToken);
-            var versionHash = await VersionHash.CreateAsync(Implementation, cancellationToken);
+            var matchHash = await MatchHash.CreateAsync(_implementation, cancellationToken);
+            var versionHash = await VersionHash.CreateAsync(_implementation, cancellationToken);
             var modInfo = await GetModInfo(cancellationToken);
 
             return (matchHash, versionHash, modInfo);
@@ -96,30 +96,30 @@ namespace BSU.Core.Model
         private ModInfo _modInfo;
         private async Task<ModInfo> GetModInfo(CancellationToken cancellationToken)
         {
-            var (name, version) = await Implementation.GetDisplayInfo(cancellationToken);
+            var (name, version) = await _implementation.GetDisplayInfo(cancellationToken);
             var size = 0UL;
-            foreach (var file in await Implementation.GetFileList(cancellationToken))
+            foreach (var file in await _implementation.GetFileList(cancellationToken))
             {
-                size += await Implementation.GetFileSize(file, cancellationToken);
+                size += await _implementation.GetFileSize(file, cancellationToken);
             }
             return new ModInfo(name, version, size);
         }
 
         public ModInfo GetModInfo()
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Nor allowed in state {State}");
             return _modInfo;
         }
 
         public MatchHash GetMatchHash()
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             return _matchHash;
         }
 
         public VersionHash GetVersionHash()
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             return _versionHash;
         }
 
@@ -133,9 +133,9 @@ namespace BSU.Core.Model
 
         public async Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException();
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
 
-            if (Selection == null) throw new InvalidOperationException();
+            if (Selection == null) throw new InvalidOperationException("Can't update if the selection is null");
 
             // TODO: switch
 
@@ -147,7 +147,7 @@ namespace BSU.Core.Model
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
-                var update = actionStorageMod.StorageMod.PrepareUpdate(Implementation, _matchHash, _versionHash, progress);
+                var update = actionStorageMod.StorageMod.PrepareUpdate(_implementation, _matchHash, _versionHash, progress);
                 return update;
             }
 
@@ -156,11 +156,11 @@ namespace BSU.Core.Model
                 var updateTarget = new UpdateTarget(_versionHash.GetHashString());
                 var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
                 Selection = new RepositoryModActionStorageMod(mod);
-                var update = mod.PrepareUpdate(Implementation, _matchHash, _versionHash, progress);
+                var update = mod.PrepareUpdate(_implementation, _matchHash, _versionHash, progress);
                 return update;
             }
 
-            throw new InvalidOperationException();
+            throw new InvalidOperationException(); // Impossible
         }
 
         private string _downloadIdentifier;
