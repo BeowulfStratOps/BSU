@@ -13,41 +13,37 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorageMod : IStorageMod, IMockedFiles
     {
-        public bool Locked = false;
         public bool ThrowErrorOpen = false;
 
-        public Dictionary<string, byte[]> Files = new();
+        private readonly Dictionary<string, byte[]> _files = new();
 
         public IReadOnlyDictionary<string, string> GetFiles()
         {
-            return Files.ToDictionary(kv => kv.Key, kv => Encoding.UTF8.GetString(kv.Value));
+            return _files.ToDictionary(kv => kv.Key, kv => Encoding.UTF8.GetString(kv.Value));
         }
 
         public void SetFile(string key, string data)
         {
-            if (Locked) throw new IOException("File in use");
-            Files[key] = Encoding.UTF8.GetBytes(data);
+            _files[key] = Encoding.UTF8.GetBytes(data);
         }
 
         public Task<Stream> OpenFile(string path, FileAccess access, CancellationToken cancellationToken)
         {
-            if (Locked) throw new IOException("File in use");
-
             if (ThrowErrorOpen) throw new TestException();
 
             if (access.HasFlag(FileAccess.Write))
             {
-                var data = Files.TryGetValue(path, out var content) ? content : Array.Empty<byte>();
-                return Task.FromResult<Stream>(new MockStream(data, d => Files[path] = d));
+                var data = _files.TryGetValue(path, out var content) ? content : Array.Empty<byte>();
+                return Task.FromResult<Stream>(new MockStream(data, d => _files[path] = d));
             }
             else
             {
-                var result = Files.TryGetValue(path, out var content) ? new MemoryStream(content) : null;
+                var result = _files.TryGetValue(path, out var content) ? new MemoryStream(content) : null;
                 return Task.FromResult<Stream>(result);
             }
         }
 
-        public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult(Files.Keys.ToList());
+        public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult(_files.Keys.ToList());
 
         private sealed class MockStream : MemoryStream
         {

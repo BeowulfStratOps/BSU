@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
+using BSU.Core.Persistence;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
+using Moq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -25,10 +27,11 @@ namespace BSU.Core.Tests
                 mockStorage.SetFile($"/addons/asdf_{i}.pbo", "qwe");
             }
 
-            var state = new MockPersistedStorageModState {UpdateTarget = stateTarget};
+            var state = new Mock<IPersistedStorageModState>(MockBehavior.Strict);
+            state.SetupProperty(x => x.UpdateTarget, stateTarget);
 
             var eventBus = new TestEventBus();
-            var storageMod = new StorageMod(mockStorage, "mystorage", state, null, true, eventBus);
+            var storageMod = new StorageMod(mockStorage, "mystorage", state.Object, null, true, eventBus);
 
 
             return (mockStorage, storageMod, eventBus);

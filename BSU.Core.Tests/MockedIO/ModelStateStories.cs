@@ -34,7 +34,12 @@ namespace BSU.Core.Tests.MockedIO
 
         private static MockStorageMod CreateStorageMod(int match, int version)
         {
-            throw new NotImplementedException();
+            var mockStorage = new MockStorageMod();
+            for (int i = 0; i < 3; i++)
+            {
+                mockStorage.SetFile($"/addons/{match}_{i}.pbo", version.ToString());
+            }
+            return mockStorage;
         }
 
         private static bool FilesEqual(IModelRepositoryMod repo, IModelStorageMod storage)
@@ -47,7 +52,7 @@ namespace BSU.Core.Tests.MockedIO
             return keys.All(key => files1.ContainsKey(key) && files2.ContainsKey(key) && files1[key] == files2[key]);
         }
 
-        private static (TestEventBus eventBus, Model.Model model) GetModel(CollectionInfo[] repositories,
+        private static Model.Model GetModel(CollectionInfo[] repositories,
             CollectionInfo[] storages)
         {
             var types = new Types();
@@ -86,10 +91,10 @@ namespace BSU.Core.Tests.MockedIO
                 settings.Storages.Add(new StorageEntry(path, "TEST", path, Guid.NewGuid()));
             }
 
-            var eventBus = new TestEventBus();
+            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current);
             var model = new Model.Model(new InternalState(settings), types, eventBus, false);
 
-            return (eventBus, model);
+            return model;
         }
 
         private record CollectionInfo(string Path, bool Active, params (string name, int match, int version)[] Mods);
@@ -110,10 +115,42 @@ namespace BSU.Core.Tests.MockedIO
             return (IMockedFiles)field!.GetValue(mod);
         }
 
+        private static async Task WaitFor(Func<bool> condition, int timeoutMs)
+        {
+            var cts = new CancellationTokenSource(timeoutMs);
+
+            while (true)
+            {
+                if (condition()) return;
+                if (cts.IsCancellationRequested) throw new TimeoutException();
+                await Task.Yield();
+            }
+        }
+
+        [Fact]
+        private async Task Load()
+        {
+            var model = GetModel(new[]
+            {
+                new CollectionInfo("repo", true, ("mod", 1, 1))
+            }, new []
+            {
+                new CollectionInfo("storage", true, ("mod", 1, 1))
+            });
+
+            await Task.Delay(100);
+
+            var storage = model.GetStorages().Single();
+            var repo = model.GetRepositories().Single();
+
+            Assert.True(repo.GetMods()[0].GetCurrentSelection() is RepositoryModActionStorageMod storageMod &&
+                        storageMod.StorageMod == storage.GetMods()[0]);
+        }
+
         [Fact]
         private async Task Download()
         {
-            var (eventBus, model) = GetModel(new[]
+            var model = GetModel(new[]
             {
                 new CollectionInfo("repo", false, ("mod", 1, 1))
             }, new []
@@ -123,21 +160,15 @@ namespace BSU.Core.Tests.MockedIO
 
             var storage = AddStorage(model, "storage");
             var repo = AddRepository(model, "repo");
-
-            eventBus.Work(100);
+            await Task.Delay(100);
 
             var repoMod = repo.GetMods()[0];
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
-
             var update = await repoMod.StartUpdate(null, CancellationToken.None);
             await update.Update;
+            await Task.Delay(50);
 
-            var storageMod = storage.GetMods().Single();
-
-            eventBus.Work(50);
-
-            Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storageMod));
-
+            Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storage.GetMods().Single()));
             Assert.True(FilesEqual(repoMod, storage.GetMods()[0]));
         }
 /*

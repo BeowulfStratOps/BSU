@@ -60,6 +60,7 @@ namespace BSU.Core.Model
             new AutoSelector(this);
 
             eventCombiner.AnyChange += () => AnyChange?.Invoke();
+            Load();
         }
 
         private void DoFirstStartSetup()
@@ -75,7 +76,7 @@ namespace BSU.Core.Model
             PersistentState.AddStorage("Steam", steamPath, "STEAM");
         }
 
-        public void Load()
+        private void Load()
         {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {

@@ -21,7 +21,6 @@ namespace BSU.Core
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         internal readonly Model.Model Model;
-        public readonly Types Types;
         public readonly ViewModel.ViewModel ViewModel;
 
 
@@ -47,11 +46,6 @@ namespace BSU.Core
         public void Dispose()
         {
             // TODO: cancel operations
-        }
-
-        public async Task Load()
-        {
-            Model.Load();
         }
     }
 }

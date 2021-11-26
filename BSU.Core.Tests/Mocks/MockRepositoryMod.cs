@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
 using BSU.Hashes;
-using NLog;
 
 namespace BSU.Core.Tests.Mocks
 {
@@ -19,58 +18,27 @@ namespace BSU.Core.Tests.Mocks
 
     public class MockRepositoryMod : IRepositoryMod, IMockedFiles
     {
-        public Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>();
-        public string Identifier, DisplayName;
-        public bool ThrowErrorLoad;
-        private readonly Action<MockRepositoryMod> _load;
+        private readonly Dictionary<string, byte[]> _files = new();
 
         public void SetFile(string key, string data)
         {
-            Files[key] = Encoding.UTF8.GetBytes(data);
+            _files[key] = Encoding.UTF8.GetBytes(data);
         }
 
         public IReadOnlyDictionary<string, string> GetFiles()
         {
-            return Files.ToDictionary(kv => kv.Key, kv => Encoding.UTF8.GetString(kv.Value));
+            return _files.ToDictionary(kv => kv.Key, kv => Encoding.UTF8.GetString(kv.Value));
         }
 
-        public Task<byte[]> GetFile(string path, CancellationToken cancellationToken) => Task.FromResult(Files.GetValueOrDefault(path));
+        public Task<byte[]> GetFile(string path, CancellationToken cancellationToken) => Task.FromResult(_files.GetValueOrDefault(path));
 
-        public void Load()
+
+        public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult(_files.Keys.ToList());
+
+        public async Task DownloadTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
         {
-            if (ThrowErrorLoad) throw new TestException();
-            _load?.Invoke(this);
-        }
-
-        public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult(Files.Keys.ToList());
-
-        public string GetIdentifier() => Identifier;
-
-        /*public FileHash GetFileHash(string path)
-        {
-            return new SHA1AndPboHash(new MemoryStream(GetFile(path)), Utils.GetExtension(path));
-        }*/
-
-        public long GetFileSize(string path) => Files[path].Length;
-
-        public int SleepMs = 0;
-        public bool NoOp = false;
-
-        public MockRepositoryMod(Action<MockRepositoryMod> load = null)
-        {
-            _load = load;
-        }
-
-        public Task DownloadTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
-        {
-            for (int i = 0; i < SleepMs; i++)
-            {
-                token.ThrowIfCancellationRequested();
-                Thread.Sleep(1);
-            }
-
-            if (!NoOp) fileStream.Write(Files[path]);
-            return Task.CompletedTask;
+            await Task.Delay(5, token);
+            fileStream.Write(_files[path]);
         }
 
         public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
@@ -81,9 +49,9 @@ namespace BSU.Core.Tests.Mocks
             return hash;
         }
 
-        public Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)
+        public async Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)
         {
-            return Task.FromResult((DisplayName, "?"));
+            return (null, "?");
         }
 
         public async Task<ulong> GetFileSize(string path, CancellationToken cancellationToken)

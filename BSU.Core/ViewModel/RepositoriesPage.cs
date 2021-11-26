@@ -30,6 +30,10 @@ namespace BSU.Core.ViewModel
                 var vmRepo = Repositories.Single(r => r.ModelRepository == repository);
                 Repositories.Remove(vmRepo);
             };
+            foreach (var repository in model.GetRepositories())
+            {
+                AddedRepository(repository, model, viewModelService);
+            }
         }
 
         private void AddedRepository(IModelRepository modelRepository, IModel model, IViewModelService viewModelService)

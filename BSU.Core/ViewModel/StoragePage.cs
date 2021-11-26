@@ -29,6 +29,10 @@ namespace BSU.Core.ViewModel
                 var vmStorage = Storages.Single(r => r.ModelStorage == storage);
                 Storages.Remove(vmStorage);
             };
+            foreach (var storage in model.GetStorages())
+            {
+                OnAddStorage(storage);
+            }
         }
 
         private void OnAddStorage(IModelStorage modelStorage)
