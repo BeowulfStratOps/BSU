@@ -28,8 +28,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public event Action<IModelStorageMod> StateChanged;
 
-        public IModUpdate PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion,
-            IProgress<FileSyncStats> progress)
+        public Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress,
+            CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

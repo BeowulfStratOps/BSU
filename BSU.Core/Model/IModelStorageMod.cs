@@ -13,7 +13,8 @@ namespace BSU.Core.Model
     internal interface IModelStorageMod
     {
         event Action<IModelStorageMod> StateChanged;
-        IModUpdate PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress);
+        Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion,
+            IProgress<FileSyncStats> progress, CancellationToken cancellationToken);
         void Abort();
         PersistedSelection GetStorageModIdentifiers();
         bool CanWrite { get; }

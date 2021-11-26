@@ -16,7 +16,7 @@ namespace BSU.Core.Model
         string Identifier { get; }
         IModelRepository ParentRepository { get; }
         LoadingState State { get; }
-        Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken);
+        Task<ModUpdateInfo> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken);
         ModInfo GetModInfo();
         MatchHash GetMatchHash();
         VersionHash GetVersionHash();

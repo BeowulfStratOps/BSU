@@ -120,13 +120,13 @@ namespace BSU.Core.ViewModel
             Actions.Update();
         }
 
-        internal async Task<(IModUpdate update, Progress<FileSyncStats> progress)> StartUpdate(CancellationToken cancellationToken)
+        internal async Task<ModUpdate> StartUpdate(CancellationToken cancellationToken)
         {
             var progress = UpdateProgress.Progress;
-            var update = await Mod.StartUpdate(progress, cancellationToken);
-            if (update == null) return default;
-
-            return (update, progress);
+            var (update, modelStorageMod) = await Mod.StartUpdate(progress, cancellationToken);
+            return new ModUpdate(update, progress, modelStorageMod);
         }
     }
+
+    internal record ModUpdate(Task<UpdateResult> Update, Progress<FileSyncStats> Progress, IModelStorageMod Mod);
 }

@@ -18,8 +18,7 @@ namespace BSU.Core.Sync
     internal class RepoSync
     {
         private readonly Logger _logger;
-
-        private readonly List<SyncWorkUnit> _allActions; // TODO: can be read only
+        private readonly List<SyncWorkUnit> _allActions;
 
         private RepoSync(List<SyncWorkUnit> actions, Logger logger)
         {
@@ -27,9 +26,9 @@ namespace BSU.Core.Sync
             _logger = logger;
         }
 
-        public static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage, IStorageMod implementation, CancellationToken cancellationToken, Guid guid)
+        private static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage,
+            IStorageMod implementation, Logger logger, CancellationToken cancellationToken)
         {
-            var logger = LogHelper.GetLoggerWithIdentifier(typeof(RepoSync), guid.ToString());
             logger.Debug("Building sync actions {0} to {1}", storage, repository);
 
             var allActions = new List<SyncWorkUnit>();
@@ -69,28 +68,35 @@ namespace BSU.Core.Sync
             return new RepoSync(allActions, logger);
         }
 
-        public async Task<UpdateResult> UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
+        private async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
         {
             var tasks = _allActions.Select(a =>
                 ConcurrencyThrottle.Do(() => a.DoAsync(cancellationToken), cancellationToken));
             var whenAll = Task.WhenAll(tasks);
 
+            await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () => ProgressCallback(progress));
+        }
+
+        public static async Task<UpdateResult> UpdateAsync(IRepositoryMod repository, StorageMod storage, IStorageMod implementation, CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
+        {
+            var logger = LogHelper.GetLoggerWithIdentifier(typeof(RepoSync), Guid.NewGuid().ToString());
             try
             {
-                await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () => ProgressCallback(progress));
+                var repoSync = await BuildAsync(repository, storage, implementation, logger, cancellationToken);
+                await repoSync.UpdateAsync(cancellationToken, progress);
             }
             catch (IOException e) when ((e.HResult & 0xFFFF) == 32) // 32: sharing violation, aka open in arma
             {
-                _logger.Error(e);
+                logger.Error(e);
                 return UpdateResult.FailedSharingViolation;
             }
             catch (Exception e)
             {
-                _logger.Error(e);
+                logger.Error(e);
                 return UpdateResult.Failed;
             }
 
-            _logger.Trace("Progress: None");
+            logger.Trace("Progress: None");
             progress?.Report(new FileSyncStats(FileSyncState.None));
             return UpdateResult.Success;
         }
@@ -103,9 +109,9 @@ namespace BSU.Core.Sync
             foreach (var syncWorkUnit in _allActions)
             {
                 // not synchronized, but that's ok. we're just looking for a snapshot
-                var stats = syncWorkUnit.GetStats();
-                sumDone += stats.Done;
-                sumTotal += stats.Total;
+                var (_, total, done) = syncWorkUnit.GetStats();
+                sumDone += done;
+                sumTotal += total;
             }
 
             _logger.Trace("Progress: Updating");

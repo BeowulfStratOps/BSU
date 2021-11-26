@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -130,28 +129,40 @@ namespace BSU.Core.Model
 
         public event Action<IModelStorageMod> StateChanged;
 
-        public IModUpdate PrepareUpdate(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress)
+        public async Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch,
+            VersionHash targetVersion,
+            IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
         {
             _logger.Trace("Progress: Waiting");
             progress?.Report(new FileSyncStats(FileSyncState.Waiting));
             _matchHash = targetMatch;
             _versionHash = targetVersion;
             UpdateTarget = new UpdateTarget(targetVersion.GetHashString());
-            SetState(StorageModStateEnum.Updating, StorageModStateEnum.Created, StorageModStateEnum.CreatedWithUpdateTarget);
+            SetState(StorageModStateEnum.Updating, StorageModStateEnum.Created,
+                StorageModStateEnum.CreatedWithUpdateTarget);
 
-            var update = new StorageModUpdateState(this, _implementation, repositoryMod, progress);
-
-            update.OnEnded += () =>
+            void ReportProgress(FileSyncStats stats)
             {
-                _eventBus.ExecuteSynchronized(() =>
-                {
+                _logger.Trace($"Progress: {stats.State}");
+                progress?.Report(stats);
+            }
 
-                    UpdateTarget = null;
-                    SetState(StorageModStateEnum.Created, StorageModStateEnum.Updating);
-                });
-            };
+            cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
 
-            return update;
+            ReportProgress(new FileSyncStats(FileSyncState.Waiting));
+
+            var result =
+                await Task.Run(
+                    async () => await RepoSync.UpdateAsync(repositoryMod, this, _implementation, cancellationToken,
+                        progress), CancellationToken.None);
+
+            ReportProgress(new FileSyncStats(FileSyncState.None));
+            _eventBus.ExecuteSynchronized(() =>
+            {
+                UpdateTarget = null;
+                SetState(StorageModStateEnum.Created, StorageModStateEnum.Updating);
+            });
+            return result;
         }
 
         private void SetState(StorageModStateEnum newState, params StorageModStateEnum[] acceptableCurrent)

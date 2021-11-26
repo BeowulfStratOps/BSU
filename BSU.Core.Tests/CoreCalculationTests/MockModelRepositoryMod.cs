@@ -34,7 +34,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public IModelRepository ParentRepository { get; }
         public LoadingState State { get; } = LoadingState.Loaded;
 
-        public Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
+        public Task<ModUpdateInfo> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

@@ -131,7 +131,7 @@ namespace BSU.Core.Model
         public RepositoryModActionSelection GetCurrentSelection() => Selection;
 
 
-        public async Task<IModUpdate> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
+        public async Task<ModUpdateInfo> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
 
@@ -139,16 +139,17 @@ namespace BSU.Core.Model
 
             // TODO: switch
 
-            if (Selection is RepositoryModActionDoNothing) return null;
+            if (Selection is RepositoryModActionDoNothing) return default;
 
             if (Selection is RepositoryModActionStorageMod actionStorageMod)
             {
-                var action = CoreCalculation.GetModAction(this, actionStorageMod.StorageMod);
+                var storageMod = actionStorageMod.StorageMod;
+                var action = CoreCalculation.GetModAction(this, storageMod);
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
-                if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
+                if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return default;
 
-                var update = actionStorageMod.StorageMod.PrepareUpdate(_implementation, _matchHash, _versionHash, progress);
-                return update;
+                var updateTask = storageMod.Update(_implementation, _matchHash, _versionHash, progress, cancellationToken);
+                return new ModUpdateInfo(updateTask, storageMod);
             }
 
             if (Selection is RepositoryModActionDownload actionDownload)
@@ -156,8 +157,8 @@ namespace BSU.Core.Model
                 var updateTarget = new UpdateTarget(_versionHash.GetHashString());
                 var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
                 Selection = new RepositoryModActionStorageMod(mod);
-                var update = mod.PrepareUpdate(_implementation, _matchHash, _versionHash, progress);
-                return update;
+                var updateTask = mod.Update(_implementation, _matchHash, _versionHash, progress, cancellationToken);
+                return new ModUpdateInfo(updateTask, mod);
             }
 
             throw new InvalidOperationException(); // Impossible

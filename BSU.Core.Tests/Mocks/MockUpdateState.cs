@@ -7,7 +7,7 @@ using BSU.Core.ViewModel;
 
 namespace BSU.Core.Tests.Mocks
 {
-    internal class MockUpdateState : IModUpdate
+    internal class MockUpdateState
     {
         private readonly bool _errorPrepare;
         private readonly bool _errorUpdate;

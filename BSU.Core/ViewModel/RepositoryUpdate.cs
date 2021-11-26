@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Model;
@@ -12,61 +11,26 @@ using NLog;
 namespace BSU.Core.ViewModel
 {
 
-    internal class RepositoryUpdate : IRepositoryUpdate
+    internal class RepositoryUpdate
     {
-        private readonly List<(IModUpdate update, Progress<FileSyncStats> progress)> _updates;
+        private readonly List<ModUpdate> _updates;
         private readonly IProgress<FileSyncStats> _progress;
 
-        private readonly Dictionary<IModUpdate, FileSyncStats> _lastProgress = new();
-        private readonly Dictionary<IModUpdate, ulong> _totalSizes = new ();
+        private readonly Dictionary<IModelStorageMod, FileSyncStats> _lastProgress = new();
+        private readonly Dictionary<IModelStorageMod, ulong> _totalSizes = new ();
         private readonly object _progressLock = new();
         private readonly ILogger _logger;
 
-        private bool _prepared, _updated;
+        private bool _updated;
 
-        public async Task<StageStats> Prepare(CancellationToken cancellationToken)
-        {
-            if (_prepared) throw new InvalidOperationException("Update is already prepared");
-            _prepared = true;
-
-            cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
-
-            var tasks = _updates.Select(async s =>
-            {
-                var result = await s.update.Prepare(cancellationToken);
-                return (result, s);
-            }).ToList();
-
-            try
-            {
-                await Task.WhenAll(tasks);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch
-            {
-                // ignored
-                // we handle those separately
-            }
-
-            var failedMods = tasks.Where(t => t.Result.result == UpdateResult.Failed).Select(t => t.Result.s.update.GetStorageMod()).ToList();
-            var successCount = tasks.Count(t => t.Result.result == UpdateResult.Success);
-
-            return new StageStats(successCount, failedMods, new List<IModelStorageMod>());
-        }
-
-        public async Task<StageStats> Update(CancellationToken cancellationToken)
+        public async Task<StageStats> Update()
         {
             if (_updated) throw new InvalidOperationException("Update is already done");
             _updated = true;
 
-            cancellationToken.Register(() => ReportProgress(new FileSyncStats(FileSyncState.Stopping)));
-
-            var tasks = _updates.Where(u => u.update.IsPrepared).Select(async s =>
+            var tasks = _updates.Select(async s =>
             {
-                var result = await s.update.Update(cancellationToken);
+                var result = await s.Update;
                 return (result, s);
             }).ToList();
             var whenAll = Task.WhenAll(tasks);
@@ -80,8 +44,8 @@ namespace BSU.Core.ViewModel
                 ReportProgress(new FileSyncStats(FileSyncState.None));
             }
 
-            var failedMods = tasks.Where(t => t.Result.result == UpdateResult.Failed).Select(t => t.Result.s.update.GetStorageMod()).ToList();
-            var failedSvMods = tasks.Where(t => t.Result.result == UpdateResult.FailedSharingViolation).Select(t => t.Result.s.update.GetStorageMod()).ToList();
+            var failedMods = tasks.Where(t => t.Result.result == UpdateResult.Failed).Select(t => t.Result.s.Mod).ToList();
+            var failedSvMods = tasks.Where(t => t.Result.result == UpdateResult.FailedSharingViolation).Select(t => t.Result.s.Mod).ToList();
             var successCount = tasks.Count(t => t.Result.result == UpdateResult.Success);
 
             return new StageStats(successCount, failedMods, failedSvMods);
@@ -125,29 +89,29 @@ namespace BSU.Core.ViewModel
             _progress?.Report(stats);
         }
 
-        internal RepositoryUpdate(List<(IModUpdate update, Progress<FileSyncStats> progress)> updates, IProgress<FileSyncStats> progress)
+        internal RepositoryUpdate(List<ModUpdate> updates, IProgress<FileSyncStats> progress)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, Guid.NewGuid().ToString());
             _updates = updates;
             _progress = progress;
-            foreach (var (update, modProgress) in updates)
+            foreach (var (_, modProgress, mod) in updates)
             {
-                _lastProgress.Add(update, new FileSyncStats(FileSyncState.Waiting));
-                _totalSizes.Add(update, 0);
-                modProgress.ProgressChanged += (_, e) => ModProgressOnProgressChanged(e, update);
+                _lastProgress.Add(mod, new FileSyncStats(FileSyncState.Waiting));
+                _totalSizes.Add(mod, 0);
+                modProgress.ProgressChanged += (_, e) => ModProgressOnProgressChanged(e, mod);
             }
 
             _logger.Trace("Progress: Waiting");
             _progress?.Report(new FileSyncStats(FileSyncState.Waiting));
         }
 
-        private void ModProgressOnProgressChanged(FileSyncStats progress, IModUpdate update)
+        private void ModProgressOnProgressChanged(FileSyncStats progress, IModelStorageMod mod)
         {
             lock (_progressLock)
             {
-                _lastProgress[update] = progress;
+                _lastProgress[mod] = progress;
                 if (progress.State == FileSyncState.Updating)
-                    _totalSizes[update] = progress.Total;
+                    _totalSizes[mod] = progress.Total;
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
@@ -280,16 +281,13 @@ Cancel - Do not remove this repository";
             {
                 var updateTasks = Mods.Select(m => m.StartUpdate(CancellationToken.None)).ToList();
                 await Task.WhenAll(updateTasks);
-                var updates = updateTasks.Select(t => t.Result).Where(r => r.update != null).ToList();
+                var updates = updateTasks.Select(t => t.Result).Where(r => r != null).ToList();
 
                 var progress = UpdateProgress.Progress;
 
                 var update = new RepositoryUpdate(updates, progress);
 
-                await update.Prepare(_cts.Token);
-                var updateStats = await update.Update(_cts.Token);
-
-                if (_cts.IsCancellationRequested) return;
+                var updateStats = await update.Update();
 
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {

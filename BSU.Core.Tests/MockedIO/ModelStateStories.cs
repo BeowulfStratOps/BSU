@@ -130,8 +130,7 @@ namespace BSU.Core.Tests.MockedIO
             repoMod.SetSelection(new RepositoryModActionDownload(storage));
 
             var update = await repoMod.StartUpdate(null, CancellationToken.None);
-            await update.Prepare(CancellationToken.None);
-            await update.Update(CancellationToken.None);
+            await update.Update;
 
             var storageMod = storage.GetMods().Single();
 
