@@ -157,10 +157,19 @@ namespace BSU.Core.Model
                         progress), CancellationToken.None);
 
             ReportProgress(new FileSyncStats(FileSyncState.None));
+
             _eventBus.ExecuteSynchronized(() =>
             {
-                UpdateTarget = null;
-                SetState(StorageModStateEnum.Created, StorageModStateEnum.Updating);
+                if (result == UpdateResult.Success)
+                {
+                    UpdateTarget = null;
+                    SetState(StorageModStateEnum.Created, StorageModStateEnum.Updating);
+                }
+                else
+                {
+                    UpdateTarget = new UpdateTarget(targetVersion.GetHashString());
+                    SetState(StorageModStateEnum.CreatedWithUpdateTarget, StorageModStateEnum.Updating);
+                }
             });
             return result;
         }
