@@ -279,19 +279,16 @@ Cancel - Do not remove this repository";
 
             try
             {
+                var startTime = DateTime.Now;
                 var updateTasks = Mods.Select(m => m.StartUpdate(CancellationToken.None)).ToList();
                 await Task.WhenAll(updateTasks);
                 var updates = updateTasks.Select(t => t.Result).Where(r => r != null).ToList();
 
-                var progress = UpdateProgress.Progress;
-
-                var update = new RepositoryUpdate(updates, progress);
-
-                var updateStats = await update.Update();
+                var updateStats = await RepositoryUpdate.Update(updates,  UpdateProgress.Progress);
 
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {
-                    _viewModelService.InteractionService.MessagePopup("Update Complete", "Update Complete");
+                    _viewModelService.InteractionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete");
                     return;
                 }
 

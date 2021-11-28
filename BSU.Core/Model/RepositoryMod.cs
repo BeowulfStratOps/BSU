@@ -139,14 +139,14 @@ namespace BSU.Core.Model
 
             // TODO: switch
 
-            if (Selection is RepositoryModActionDoNothing) return default;
+            if (Selection is RepositoryModActionDoNothing) return null;
 
             if (Selection is RepositoryModActionStorageMod actionStorageMod)
             {
                 var storageMod = actionStorageMod.StorageMod;
                 var action = CoreCalculation.GetModAction(this, storageMod);
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
-                if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return default;
+                if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
                 var updateTask = storageMod.Update(_implementation, _matchHash, _versionHash, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, storageMod);

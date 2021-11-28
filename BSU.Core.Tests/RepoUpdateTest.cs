@@ -29,9 +29,9 @@ namespace BSU.Core.Tests
             Assert.Equal(expectedFails, fails);
         }
 
-        private static RepositoryUpdate GetRepoUpdate(params ModUpdate[] updates)
+        private static async Task<StageStats> Update(params ModUpdate[] updates)
         {
-            return new RepositoryUpdate(updates.ToList(), null);
+            return await RepositoryUpdate.Update(updates.ToList(), null);
         }
 
         private static ModUpdate CreateModUpdate(Task<UpdateResult> update)
@@ -44,9 +44,8 @@ namespace BSU.Core.Tests
         private async Task Success()
         {
             var updateState = CreateModUpdate(Task.FromResult(UpdateResult.Success));
-            var repoUpdate = GetRepoUpdate(updateState);
 
-            var done = await repoUpdate.Update();
+            var done = await Update(updateState);
 
             CheckCounts(done, 1, 0);
         }
@@ -55,9 +54,8 @@ namespace BSU.Core.Tests
         private async Task UpdateError()
         {
             var updateState = CreateModUpdate(Task.FromResult(UpdateResult.Failed));
-            var repoUpdate = GetRepoUpdate(updateState);
 
-            var done = await repoUpdate.Update();
+            var done = await Update(updateState);
 
             CheckCounts(done, 0, 1);
         }

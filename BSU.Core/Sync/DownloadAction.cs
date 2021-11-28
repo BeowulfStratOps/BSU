@@ -25,10 +25,9 @@ namespace BSU.Core.Sync
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
             Logger.Trace("{0}, {1} Downloading {2}", _repository, _repository, Path);
-            await using var target = await Storage.OpenFile(Path.ToLowerInvariant(), FileAccess.Write, cancellationToken);
             var progress = new Progress<ulong>();
             progress.ProgressChanged += (_, count) => _done += count;
-            await _repository.DownloadTo(Path, target, progress, cancellationToken);
+            await _repository.DownloadTo(Path, Storage, progress, cancellationToken);
         }
 
         public override FileSyncStats GetStats()

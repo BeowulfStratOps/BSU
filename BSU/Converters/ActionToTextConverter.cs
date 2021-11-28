@@ -22,6 +22,8 @@ namespace BSU.GUI.Converters
                     return "Updating";
                 case ModActionEnum.Use:
                     return "Use";
+                case ModActionEnum.Unusable:
+                    return "Unusable"; // TODO: should this appear in UI at all??
                 default:
                     throw new ArgumentOutOfRangeException();
             }

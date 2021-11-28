@@ -83,7 +83,7 @@ namespace BSU.Core.Model
                 }
                 catch (Exception e)
                 {
-                    _errorPresenter.AddError($"Failed to load storage {Name}.");
+                    _errorPresenter.AddError($"Failed to load storage '{Name}'.");
                     _logger.Error(e);
                     _state = LoadingState.Error;
                 }

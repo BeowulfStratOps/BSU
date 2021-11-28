@@ -27,10 +27,9 @@ namespace BSU.Core.Sync
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
             Logger.Trace("{0}, {1} Updating {2}", Storage, _repository, Path);
-            await using var target = await Storage.OpenFile(Path.ToLowerInvariant(), FileAccess.ReadWrite, cancellationToken);
             var progress = new Progress<ulong>();
             progress.ProgressChanged += (_, count) => _done += count;
-            await _repository.UpdateTo(Path, target, progress, cancellationToken);
+            await _repository.UpdateTo(Path, Storage, progress, cancellationToken);
         }
 
         public override FileSyncStats GetStats()

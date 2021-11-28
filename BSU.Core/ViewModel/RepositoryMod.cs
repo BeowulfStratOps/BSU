@@ -40,8 +40,9 @@ namespace BSU.Core.ViewModel
 
         private void SetSelectionFromView(ModAction value)
         {
-            DownloadIdentifier = Mod.Identifier;
-            if (DownloadIdentifier.StartsWith("@")) DownloadIdentifier = DownloadIdentifier[1..];
+            var identifier = Mod.Identifier;
+            if (identifier.StartsWith("@")) identifier = identifier[1..];
+            DownloadIdentifier = identifier;
             Mod.SetSelection(value?.AsSelection);
         }
 
@@ -123,8 +124,8 @@ namespace BSU.Core.ViewModel
         internal async Task<ModUpdate> StartUpdate(CancellationToken cancellationToken)
         {
             var progress = UpdateProgress.Progress;
-            var (update, modelStorageMod) = await Mod.StartUpdate(progress, cancellationToken);
-            return new ModUpdate(update, progress, modelStorageMod);
+            var updateInfo = await Mod.StartUpdate(progress, cancellationToken);
+            return updateInfo == null ? null : new ModUpdate(updateInfo.Update, progress, updateInfo.Mod);
         }
     }
 

@@ -21,13 +21,8 @@ namespace BSU.Core.ViewModel
         private readonly object _progressLock = new();
         private readonly ILogger _logger;
 
-        private bool _updated;
-
         public async Task<StageStats> Update()
         {
-            if (_updated) throw new InvalidOperationException("Update is already done");
-            _updated = true;
-
             var tasks = _updates.Select(async s =>
             {
                 var result = await s.Update;
@@ -89,7 +84,13 @@ namespace BSU.Core.ViewModel
             _progress?.Report(stats);
         }
 
-        internal RepositoryUpdate(List<ModUpdate> updates, IProgress<FileSyncStats> progress)
+        internal static async Task<StageStats> Update(List<ModUpdate> updates, IProgress<FileSyncStats> progress)
+        {
+            var update = new RepositoryUpdate(updates, progress);
+            return await update.Update();
+        }
+
+        private RepositoryUpdate(List<ModUpdate> updates, IProgress<FileSyncStats> progress)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, Guid.NewGuid().ToString());
             _updates = updates;
