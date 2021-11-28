@@ -18,6 +18,7 @@ namespace BSU.CoreCommon
         /// Returns metadata for a file. Null if file data not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken);
 
@@ -25,6 +26,7 @@ namespace BSU.CoreCommon
         /// Downloads a single file. Exception if file is not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<byte[]> GetFile(string path, CancellationToken cancellationToken);
 
@@ -39,6 +41,7 @@ namespace BSU.CoreCommon
         /// Looks up stored value, no IO overhead.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<ulong> GetFileSize(string path, CancellationToken cancellationToken);
 
@@ -47,15 +50,17 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
-        /// <param name="token">Can be used to cancel this operation.</param>
-        Task DownloadTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token);
+        /// <param name="cancellationToken">Can be used to cancel this operation.</param>
+        /// <param name="fileSystem"></param>
+        Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken);
 
         /// <summary>
         /// Updates an existing file. Exception if not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
-        /// <param name="token">Can be used to cancel this operation.</param>
-        Task UpdateTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token);
+        /// <param name="cancellationToken">Can be used to cancel this operation.</param>
+        /// <param name="fileSystem"></param>
+        Task UpdateTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken);
     }
 }

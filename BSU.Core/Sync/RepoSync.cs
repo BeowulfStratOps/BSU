@@ -45,6 +45,7 @@ namespace BSU.Core.Sync
                     {
                         var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
                         allActions.Add(new UpdateAction(repository, implementation, repoFile, fileSize));
+                        storageListCopy.Remove(repoFile + ".part");
                     }
 
                     storageListCopy.Remove(repoFile);

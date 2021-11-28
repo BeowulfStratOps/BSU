@@ -35,16 +35,17 @@ namespace BSU.Core.Tests.Mocks
 
         public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult(_files.Keys.ToList());
 
-        public async Task DownloadTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
+        public async Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
-            await Task.Delay(5, token);
-            fileStream.Write(_files[path]);
+            await Task.Delay(5, cancellationToken);
+            await using var fileStream = await fileSystem.OpenWrite(path, cancellationToken);
+            await fileStream.WriteAsync(_files[path], cancellationToken);
         }
 
         public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
             var data = await GetFile(path, cancellationToken);
-            using var stream = new MemoryStream(data);
+            await using var stream = new MemoryStream(data);
             var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None);
             return hash;
         }
@@ -59,9 +60,9 @@ namespace BSU.Core.Tests.Mocks
             return (ulong)(await GetFile(path, cancellationToken)).LongLength;
         }
 
-        public Task UpdateTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
+        public async Task UpdateTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
-            return DownloadTo(path, fileStream, progress, token);
+            await DownloadTo(path, fileSystem, progress, cancellationToken);
         }
     }
 }

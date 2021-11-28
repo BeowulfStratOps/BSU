@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Storage;
-using Microsoft.VisualBasic;
 using Xunit;
 
 namespace BSU.Core.Tests
@@ -35,8 +33,8 @@ namespace BSU.Core.Tests
         [Fact]
         private async Task GetMods()
         {
-            using var file = Create("@ace", "mod.cpp");
-            file.WriteLine("Ey yo");
+            await using var file = Create("@ace", "mod.cpp");
+            await file.WriteLineAsync("Ey yo");
             var storage = new DirectoryStorage(_tmpDir.FullName);
             var mods = await storage.GetMods(CancellationToken.None);
             // TODO: do some checking
@@ -45,12 +43,12 @@ namespace BSU.Core.Tests
         [Fact]
         private async Task CreateNestedFile()
         {
-            using var file = Create("@ace", "mod.cpp");
-            file.WriteLine("Ey yo");
+            await using var file = Create("@ace", "mod.cpp");
+            await file.WriteLineAsync("Ey yo");
             var storage = new DirectoryStorage(_tmpDir.FullName);
             var mods = await storage.GetMods(CancellationToken.None);
-            using var newFile = await (mods.Values.Single().OpenFile("/addons/addon2.pbo", FileAccess.Write, CancellationToken.None));
-            newFile.Write(new byte[] {1, 2, 3}, 0, 3);
+            await using var newFile = await (mods.Values.Single().OpenWrite("/addons/addon2.pbo", CancellationToken.None));
+            await newFile.WriteAsync(new byte[] { 1, 2, 3 });
             newFile.Close();
             // TODO: check file contents, file still in use
         }
@@ -58,10 +56,10 @@ namespace BSU.Core.Tests
         [Fact]
         private async Task DontCreateFileWhenReading()
         {
-            Create("@ace", "some_other_file").Dispose();
+            await Create("@ace", "some_other_file").DisposeAsync();
             var storage = new DirectoryStorage(_tmpDir.FullName);
             var mods = await storage.GetMods(CancellationToken.None);
-            mods.Values.Single().OpenFile("/mod.cpp", FileAccess.Read, CancellationToken.None);
+            await mods.Values.Single().OpenRead("/mod.cpp", CancellationToken.None);
             Assert.False(File.Exists(Path.Join(_tmpDir.FullName, "@ace", "mod.cpp")));
         }
     }

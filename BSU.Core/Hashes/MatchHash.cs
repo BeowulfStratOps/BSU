@@ -27,7 +27,7 @@ namespace BSU.Core.Hashes
         // TODO: use more specialized interface to get files
         public static async Task<MatchHash> CreateAsync(IStorageMod mod, CancellationToken cancellationToken)
         {
-            var modCpp = await mod.OpenFile("/mod.cpp", FileAccess.Read, cancellationToken);
+            var modCpp = await mod.OpenRead("/mod.cpp", cancellationToken);
 
             string name = null;
 

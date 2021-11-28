@@ -24,7 +24,7 @@ namespace BSU.Core.Hashes
             var hashes = new Dictionary<string, FileHash>();
             foreach (var file in await mod.GetFileList(cancellationToken))
             {
-                var stream = await mod.OpenFile(file, FileAccess.Read, cancellationToken);
+                var stream = await mod.OpenRead(file, cancellationToken);
                 var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(file), cancellationToken);
                 hashes.Add(file, hash);
             }

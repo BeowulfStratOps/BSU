@@ -18,7 +18,7 @@ namespace BSU.Core.Sync
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
             Logger.Trace("{0} Deleting {1}", Storage, Path);
-            await Storage.DeleteFile(Path, cancellationToken);
+            await Storage.Delete(Path, cancellationToken);
         }
 
         public override FileSyncStats GetStats()

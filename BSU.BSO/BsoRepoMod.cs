@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,8 @@ using BSU.CoreCommon;
 using BSU.Hashes;
 using Newtonsoft.Json;
 using NLog;
+using zsyncnet;
+using zsyncnet.Sync;
 
 namespace BSU.BSO
 {
@@ -26,6 +29,7 @@ namespace BSU.BSO
         private readonly string _url;
         private HashFile _hashFile;
         private readonly Task _loading;
+            private readonly HttpClient _client = new();
 
 
         public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
@@ -43,12 +47,11 @@ namespace BSU.BSO
         public async Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
         {
             await _loading;
-            using var client = new HttpClient();
             _logger.Debug("Downloading file from {0} / {1}", _url, path);
             byte[] data;
             try
             {
-                data = await client.GetByteArrayAsync(_url + GetRealPath(path), cancellationToken);
+                data = await _client.GetByteArrayAsync(_url + GetRealPath(path), cancellationToken);
             }
             catch (Exception e)
             {
@@ -132,37 +135,25 @@ namespace BSU.BSO
             return GetFileEntry(path).FileSize;
         }
 
-        /// <summary>
-        /// Downloads a file. Exception if not found.
-        /// </summary>
-        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
-        /// <param name="token">Can be used to cancel this operation.</param>
-        public async Task DownloadTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
+        public async Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
             await _loading;
-            // TODO: use .part file
-            // TODO: use FileStream
+
             var url = _url + GetRealPath(path);
 
             _logger.Debug("Downloading content {0} / {1}", _url, path);
 
-            var req = WebRequest.CreateHttp(url);
+            await using var fileStream = await fileSystem.OpenWrite(path, cancellationToken);
+
             try
             {
-                using var resp = await req.GetResponseAsync();
-                await using var stream = resp.GetResponseStream();
+                var response = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                response.EnsureSuccessStatusCode();
+                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
-                var buffer = new byte[10 * 1024 * 1024];
                 try
                 {
-                    while (!token.IsCancellationRequested)
-                    {
-                        var len = await stream.ReadAsync(buffer, 0, buffer.Length, token);
-                        if (len == 0) break;
-                        await fileStream.WriteAsync(buffer, 0, len, token);
-                        progress.Report((ulong)len);
-                    }
+                    await CopyToWithProgress(stream, fileStream, 10 * 1024 * 1024, progress, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -180,16 +171,54 @@ namespace BSU.BSO
             }
         }
 
-        /// <summary>
-        /// Updates an existing file. Exception if not found.
-        /// </summary>
-        /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
-        /// <param name="progress">Called occasionally with number of bytes downloaded since last call</param>
-        /// <param name="token">Can be used to cancel this operation.</param>
-        public async Task UpdateTo(string path, Stream fileStream, IProgress<ulong> progress, CancellationToken token)
+        private static async Task CopyToWithProgress(Stream source, Stream destination, int bufferSize, IProgress<ulong> progress, CancellationToken cancellationToken)
+        {
+            // borrowed from Stream.CopyTo
+            var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+            try
+            {
+                int read;
+                while ((read = await source.ReadAsync(buffer, cancellationToken)) != 0)
+                {
+                    await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                    progress?.Report((ulong)read);
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+
+        public async Task UpdateTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
             await _loading;
-            await DownloadTo(path, fileStream, progress, token);
+
+            _logger.Debug($"Updating file {_url} / {path}");
+
+            var url = _url + GetRealPath(path);
+            await using var cfData = await _client.GetStreamAsync(url + ".zsync", cancellationToken);
+            var controlFile = new ControlFile(cfData);
+
+            var downloader = new RangeDownloader(new Uri(url), _client);
+
+            var partPath = path + ".part";
+            var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken);
+            var seed = await fileSystem.OpenRead(path, cancellationToken);
+
+            try
+            {
+                Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, progress, cancellationToken);
+                await seed.DisposeAsync();
+                await fileStream.DisposeAsync();
+                await fileSystem.Move(partPath, path, cancellationToken);
+                _logger.Debug($"Finished updating file {_url} / {path}");
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, $"Error while syncing {path}");
+                throw;
+            }
         }
     }
 }
