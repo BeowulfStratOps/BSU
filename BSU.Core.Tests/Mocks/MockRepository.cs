@@ -10,15 +10,22 @@ namespace BSU.Core.Tests.Mocks
     {
         public Dictionary<string, IRepositoryMod> Mods { get; } = new();
         private Action<MockRepository> _load;
+        private readonly int _ioDelayMs;
 
-        public MockRepository(Action<MockRepository> load = null)
+        public MockRepository(Action<MockRepository> load = null, int ioDelayMs = 0)
         {
             _load = load;
+            _ioDelayMs = ioDelayMs;
         }
 
         public Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken)
         {
-            _load?.Invoke(this);
+            if (_load != null)
+            {
+                Thread.Sleep(_ioDelayMs);
+                _load?.Invoke(this);
+            }
+
             _load = null;
             return Task.FromResult(Mods);
         }

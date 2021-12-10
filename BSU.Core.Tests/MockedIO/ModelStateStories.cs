@@ -18,160 +18,66 @@ namespace BSU.Core.Tests.MockedIO
 {
     // TODO: extend for ViewState
     // TODO: looks like it's using the threadpool for testing, but we *need* to have one primary thread
-    public class ModelStateStories : LoggedTest
+    public class ModelStateStories : MockedIoTest
     {
         public ModelStateStories(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
 
-        private static MockRepositoryMod CreateRepoMod(int match, int version)
+        [Fact]
+        private void Load()
         {
-            var mockRepo = new MockRepositoryMod();
-            for (int i = 0; i < 3; i++)
+            MainThreadRunner.Run(async () =>
             {
-                mockRepo.SetFile($"/addons/{match}_{i}.pbo", version.ToString());
-            }
-            return mockRepo;
-        }
-
-        private static MockStorageMod CreateStorageMod(int match, int version)
-        {
-            var mockStorage = new MockStorageMod();
-            for (int i = 0; i < 3; i++)
-            {
-                mockStorage.SetFile($"/addons/{match}_{i}.pbo", version.ToString());
-            }
-            return mockStorage;
-        }
-
-        private static bool FilesEqual(IModelRepositoryMod repo, IModelStorageMod storage)
-        {
-            var f1 = GetImplementation(repo);
-            var f2 = GetImplementation(storage);
-            var files1 = f1.GetFiles();
-            var files2 = f2.GetFiles();
-            var keys = files1.Keys.Union(files2.Keys);
-            return keys.All(key => files1.ContainsKey(key) && files2.ContainsKey(key) && files1[key] == files2[key]);
-        }
-
-        private static Model.Model GetModel(CollectionInfo[] repositories,
-            CollectionInfo[] storages)
-        {
-            var types = new Types();
-
-            types.AddRepoType("TEST", path =>
-            {
-                var repo = new MockRepository();
-                var collection = repositories.SingleOrDefault(c => c.Path == path);
-                if (collection == null) return repo;
-                foreach (var (name, match, version) in collection.Mods)
+                var model = new ModelBuilder
                 {
-                    repo.Mods.Add("@" + name, CreateRepoMod(match, version));
-                }
-                return repo;
+                    new RepoInfo("repo", true)
+                    {
+                        { "mod", 1, 1 }
+                    },
+                    new StorageInfo("storage", true)
+                    {
+                        { "mod", 1, 1 }
+                    }
+                }.Build();
+
+                await Task.Delay(100);
+
+                var storage = model.GetStorages().Single();
+                var repo = model.GetRepositories().Single();
+
+                Assert.True(repo.GetMods()[0].GetCurrentSelection() is RepositoryModActionStorageMod storageMod &&
+                            storageMod.StorageMod == storage.GetMods()[0]);
             });
-            types.AddStorageType("TEST", path =>
-            {
-                var storage = new MockStorage();
-                var collection = storages.SingleOrDefault(c => c.Path == path);
-                if (collection == null) return storage;
-                foreach (var (name, match, version) in collection.Mods)
-                {
-                    storage.Mods.Add("@" + name, CreateStorageMod(match, version));
-                }
-                return storage;
-            });
-
-            var settings = new MockSettings();
-
-            foreach (var (path, _, _) in repositories.Where(r => r.Active))
-            {
-                settings.Repositories.Add(new RepositoryEntry(path, "TEST", path, Guid.NewGuid()));
-            }
-            foreach (var (path, _, _) in storages.Where(r => r.Active))
-            {
-                settings.Storages.Add(new StorageEntry(path, "TEST", path, Guid.NewGuid()));
-            }
-
-            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current);
-            var model = new Model.Model(new InternalState(settings), types, eventBus, false);
-
-            return model;
-        }
-
-        private record CollectionInfo(string Path, bool Active, params (string name, int match, int version)[] Mods);
-
-        private static IModelStorage AddStorage(IModel model, string name)
-        {
-            return model.AddStorage("TEST", name, name);
-        }
-
-        private static IModelRepository AddRepository(IModel model, string name)
-        {
-            return model.AddRepository("TEST", name, name);
-        }
-
-        private static IMockedFiles GetImplementation(object mod)
-        {
-            var field = mod.GetType().GetField("_implementation", BindingFlags.NonPublic | BindingFlags.Instance);
-            return (IMockedFiles)field!.GetValue(mod);
-        }
-
-        private static async Task WaitFor(Func<bool> condition, int timeoutMs)
-        {
-            var cts = new CancellationTokenSource(timeoutMs);
-
-            while (true)
-            {
-                if (condition()) return;
-                if (cts.IsCancellationRequested) throw new TimeoutException();
-                await Task.Yield();
-            }
         }
 
         [Fact]
-        private async Task Load()
+        private void Download()
         {
-            var model = GetModel(new[]
+            MainThreadRunner.Run(async () =>
             {
-                new CollectionInfo("repo", true, ("mod", 1, 1))
-            }, new []
-            {
-                new CollectionInfo("storage", true, ("mod", 1, 1))
+                var model = new ModelBuilder
+                {
+                    new RepoInfo("repo", false)
+                    {
+                        { "mod", 1, 1 }
+                    },
+                    new StorageInfo("storage", false)
+                }.Build();
+
+                var storage = AddStorage(model, "storage");
+                var repo = AddRepository(model, "repo");
+                await Task.Delay(100);
+
+                var repoMod = repo.GetMods()[0];
+                repoMod.SetSelection(new RepositoryModActionDownload(storage));
+                var update = await repoMod.StartUpdate(null, CancellationToken.None);
+                await update.Update;
+                await Task.Delay(50);
+
+                Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storage.GetMods().Single()));
+                Assert.True(FilesEqual(repoMod, storage.GetMods()[0]));
             });
-
-            await Task.Delay(100);
-
-            var storage = model.GetStorages().Single();
-            var repo = model.GetRepositories().Single();
-
-            Assert.True(repo.GetMods()[0].GetCurrentSelection() is RepositoryModActionStorageMod storageMod &&
-                        storageMod.StorageMod == storage.GetMods()[0]);
-        }
-
-        [Fact]
-        private async Task Download()
-        {
-            var model = GetModel(new[]
-            {
-                new CollectionInfo("repo", false, ("mod", 1, 1))
-            }, new []
-            {
-                new CollectionInfo("storage", false)
-            });
-
-            var storage = AddStorage(model, "storage");
-            var repo = AddRepository(model, "repo");
-            await Task.Delay(100);
-
-            var repoMod = repo.GetMods()[0];
-            repoMod.SetSelection(new RepositoryModActionDownload(storage));
-            var update = await repoMod.StartUpdate(null, CancellationToken.None);
-            await update.Update;
-            await Task.Delay(50);
-
-            Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storage.GetMods().Single()));
-            Assert.True(FilesEqual(repoMod, storage.GetMods()[0]));
         }
 /*
         [Fact]

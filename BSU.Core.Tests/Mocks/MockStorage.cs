@@ -10,11 +10,13 @@ namespace BSU.Core.Tests.Mocks
     internal class MockStorage : IStorage
     {
         private Action<MockStorage> _load;
+        private readonly int _ioDelayMs;
         public readonly Dictionary<string, MockStorageMod> Mods = new();
 
-        public MockStorage(Action<MockStorage> load = null)
+        public MockStorage(Action<MockStorage> load = null, int ioDelayMs = 0)
         {
             _load = load;
+            _ioDelayMs = ioDelayMs;
         }
 
         public bool CanWrite() => true;
@@ -28,6 +30,7 @@ namespace BSU.Core.Tests.Mocks
         public Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
         {
             Load();
+            Thread.Sleep(_ioDelayMs);
             if (identifier == null) throw new ArgumentNullException();
             var newMod = new MockStorageMod();
             Mods.Add(identifier, newMod);
@@ -43,7 +46,9 @@ namespace BSU.Core.Tests.Mocks
 
         private void Load()
         {
+            if (_load == null) return;
             _load?.Invoke(this);
+            Thread.Sleep(_ioDelayMs);
             _load = null;
         }
     }

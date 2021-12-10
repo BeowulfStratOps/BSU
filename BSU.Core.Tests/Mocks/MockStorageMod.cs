@@ -15,6 +15,12 @@ namespace BSU.Core.Tests.Mocks
         public bool ThrowErrorOpen = false;
 
         private readonly Dictionary<string, byte[]> _files = new();
+        private readonly int _ioDelayMs;
+
+        public MockStorageMod(int ioDelayMs = 0)
+        {
+            _ioDelayMs = ioDelayMs;
+        }
 
         public IReadOnlyDictionary<string, string> GetFiles()
         {
@@ -26,7 +32,11 @@ namespace BSU.Core.Tests.Mocks
             _files[key] = Encoding.UTF8.GetBytes(data);
         }
 
-        public Task<List<string>> GetFileList(CancellationToken cancellationToken) => Task.FromResult(_files.Keys.ToList());
+        public Task<List<string>> GetFileList(CancellationToken cancellationToken)
+        {
+            Thread.Sleep(_ioDelayMs);
+            return Task.FromResult(_files.Keys.ToList());
+        }
 
         private sealed class MockStream : MemoryStream
         {
@@ -48,6 +58,7 @@ namespace BSU.Core.Tests.Mocks
 
         public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
+            Thread.Sleep(_ioDelayMs / 10);
             await using var stream = await OpenRead(path, cancellationToken);
             var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None);
             return hash;
@@ -56,6 +67,7 @@ namespace BSU.Core.Tests.Mocks
         public async Task<string> GetTitle(CancellationToken cancellationToken) => "Test";
         public Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
         {
+            Thread.Sleep(_ioDelayMs);
             if (ThrowErrorOpen) throw new TestException();
             var data = _files.TryGetValue(path, out var content) ? content : Array.Empty<byte>();
             return Task.FromResult<Stream>(new MockStream(data, d => _files[path] = d));
@@ -63,6 +75,7 @@ namespace BSU.Core.Tests.Mocks
 
         public Task<Stream> OpenRead(string path, CancellationToken cancellationToken)
         {
+            Thread.Sleep(_ioDelayMs / 20);
             if (ThrowErrorOpen) throw new TestException();
             var result = _files.TryGetValue(path, out var content) ? new MemoryStream(content) : null;
             return Task.FromResult<Stream>(result);
@@ -70,6 +83,7 @@ namespace BSU.Core.Tests.Mocks
 
         public Task Move(string @from, string to, CancellationToken cancellationToken)
         {
+            Thread.Sleep(_ioDelayMs / 20);
             throw new NotImplementedException();
         }
 
@@ -80,6 +94,7 @@ namespace BSU.Core.Tests.Mocks
 
         public Task Delete(string path, CancellationToken cancellationToken)
         {
+            Thread.Sleep(_ioDelayMs / 20);
             throw new NotImplementedException();
         }
     }
