@@ -23,17 +23,17 @@ namespace BSU.Core.Model
         public string Identifier { get; }
         public IModelRepository ParentRepository { get; }
 
-        private MatchHash _matchHash;
-        private VersionHash _versionHash;
+        private MatchHash? _matchHash;
+        private VersionHash? _versionHash;
 
-        private RepositoryModActionSelection _selection;
+        private RepositoryModActionSelection? _selection;
 
-        public event Action<IModelRepositoryMod> StateChanged;
-        public PersistedSelection GetPreviousSelection() => _internalState.Selection;
-        public event Action<IModelRepositoryMod> SelectionChanged;
-        public event Action<IModelRepositoryMod> DownloadIdentifierChanged;
+        public event Action<IModelRepositoryMod>? StateChanged;
+        public PersistedSelection? GetPreviousSelection() => _internalState.Selection;
+        public event Action<IModelRepositoryMod>? SelectionChanged;
+        public event Action<IModelRepositoryMod>? DownloadIdentifierChanged;
 
-        private RepositoryModActionSelection Selection
+        private RepositoryModActionSelection? Selection
         {
             get => _selection;
             set
@@ -55,7 +55,7 @@ namespace BSU.Core.Model
             _eventBus = eventBus;
             _implementation = implementation;
             Identifier = identifier;
-            DownloadIdentifier = identifier;
+            _downloadIdentifier = identifier;
 
             if (_internalState.Selection?.Type == PersistedSelectionType.DoNothing)
                 _selection = new RepositoryModActionDoNothing();
@@ -93,7 +93,7 @@ namespace BSU.Core.Model
             });
         }
 
-        private ModInfo _modInfo;
+        private ModInfo? _modInfo;
         private async Task<ModInfo> GetModInfo(CancellationToken cancellationToken)
         {
             var (name, version) = await _implementation.GetDisplayInfo(cancellationToken);
@@ -108,30 +108,30 @@ namespace BSU.Core.Model
         public ModInfo GetModInfo()
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Nor allowed in state {State}");
-            return _modInfo;
+            return _modInfo!;
         }
 
         public MatchHash GetMatchHash()
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _matchHash;
+            return _matchHash!;
         }
 
         public VersionHash GetVersionHash()
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _versionHash;
+            return _versionHash!;
         }
 
-        public void SetSelection(RepositoryModActionSelection selection)
+        public void SetSelection(RepositoryModActionSelection? selection)
         {
             Selection = selection;
         }
 
-        public RepositoryModActionSelection GetCurrentSelection() => Selection;
+        public RepositoryModActionSelection? GetCurrentSelection() => Selection;
 
 
-        public async Task<ModUpdateInfo> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
+        public async Task<ModUpdateInfo?> StartUpdate(IProgress<FileSyncStats>? progress, CancellationToken cancellationToken)
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
 
@@ -148,16 +148,16 @@ namespace BSU.Core.Model
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
-                var updateTask = storageMod.Update(_implementation, _matchHash, _versionHash, progress, cancellationToken);
+                var updateTask = storageMod.Update(_implementation, _matchHash!, _versionHash!, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, storageMod);
             }
 
             if (Selection is RepositoryModActionDownload actionDownload)
             {
-                var updateTarget = new UpdateTarget(_versionHash.GetHashString());
+                var updateTarget = new UpdateTarget(_versionHash!.GetHashString());
                 var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
                 Selection = new RepositoryModActionStorageMod(mod);
-                var updateTask = mod.Update(_implementation, _matchHash, _versionHash, progress, cancellationToken);
+                var updateTask = mod.Update(_implementation, _matchHash!, _versionHash, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, mod);
             }
 

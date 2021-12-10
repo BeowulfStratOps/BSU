@@ -3,7 +3,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ namespace BSU.BSO
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _url;
-        private HashFile _hashFile;
+        private HashFile? _hashFile;
         private readonly Task _loading;
             private readonly HttpClient _client = new();
 
@@ -35,7 +34,7 @@ namespace BSU.BSO
         public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
         {
             await _loading;
-            var files = _hashFile.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
+            var files = _hashFile!.Hashes.Select(h => h.FileName.ToLowerInvariant()).ToList();
             return files;
         }
 
@@ -43,6 +42,7 @@ namespace BSU.BSO
         /// Downloads a single file. Exception if file is not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
         {
@@ -62,10 +62,10 @@ namespace BSU.BSO
             return data;
         }
 
-        private string GetRealPath(string path) => GetFileEntry(path)?.FileName;
+        private string? GetRealPath(string path) => GetFileEntry(path)?.FileName;
 
-        private HashType GetFileEntry(string path) =>
-            _hashFile.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
+        private HashType? GetFileEntry(string path) =>
+            _hashFile?.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
         public BsoRepoMod(string url)
         {
@@ -91,7 +91,7 @@ namespace BSU.BSO
         {
             await _loading;
 
-            string modCpp = null;
+            string? modCpp = null;
             var modCppEntry = GetFileEntry("/mod.cpp");
             if (modCppEntry != null)
             {
@@ -101,7 +101,7 @@ namespace BSU.BSO
             }
 
             // TODO: make case insensitive
-            var keys = _hashFile.Hashes.Where(h => h.FileName.EndsWith(".bikey"))
+            var keys = _hashFile!.Hashes.Where(h => h.FileName.EndsWith(".bikey"))
                 .Select(h => h.FileName.Split('/')[^1].Replace(".bikey", "")).ToList();
 
             keys = keys.Any() ? keys : null;
@@ -114,13 +114,14 @@ namespace BSU.BSO
         /// Looks up stored value, no IO overhead.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
             await _loading;
             var entry = GetFileEntry(path);
-            var hash = entry == null ? null : new SHA1AndPboHash(entry.Hash);
-            return hash;
+            if (entry == null) throw new InvalidOperationException();
+            return new SHA1AndPboHash(entry.Hash);
         }
 
         /// <summary>
@@ -128,11 +129,12 @@ namespace BSU.BSO
         /// Looks up stored value, no IO overhead.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public async Task<ulong> GetFileSize(string path, CancellationToken cancellationToken)
         {
             await _loading;
-            return GetFileEntry(path).FileSize;
+            return GetFileEntry(path)?.FileSize ?? throw new FileNotFoundException(path);
         }
 
         public async Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
@@ -205,6 +207,8 @@ namespace BSU.BSO
             var partPath = path + ".part";
             var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken);
             var seed = await fileSystem.OpenRead(path, cancellationToken);
+
+            if (seed == null) throw new InvalidOperationException();
 
             try
             {

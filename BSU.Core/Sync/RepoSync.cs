@@ -69,7 +69,7 @@ namespace BSU.Core.Sync
             return new RepoSync(allActions, logger);
         }
 
-        private async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
+        private async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats>? progress)
         {
             var tasks = _allActions.Select(a =>
                 ConcurrencyThrottle.Do(() => a.DoAsync(cancellationToken), cancellationToken));
@@ -78,7 +78,7 @@ namespace BSU.Core.Sync
             await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () => ProgressCallback(progress));
         }
 
-        public static async Task<UpdateResult> UpdateAsync(IRepositoryMod repository, StorageMod storage, IStorageMod implementation, CancellationToken cancellationToken, IProgress<FileSyncStats> progress)
+        public static async Task<UpdateResult> UpdateAsync(IRepositoryMod repository, StorageMod storage, IStorageMod implementation, CancellationToken cancellationToken, IProgress<FileSyncStats>? progress)
         {
             var logger = LogHelper.GetLoggerWithIdentifier(typeof(RepoSync), Guid.NewGuid().ToString());
             try
@@ -102,7 +102,7 @@ namespace BSU.Core.Sync
             return UpdateResult.Success;
         }
 
-        private void ProgressCallback(IProgress<FileSyncStats> progress)
+        private void ProgressCallback(IProgress<FileSyncStats>? progress)
         {
             ulong sumDone = 0;
             ulong sumTotal = 0;

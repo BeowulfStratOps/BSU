@@ -19,7 +19,7 @@ namespace BSU.Core.Storage
 
         private readonly string _path;
 
-        private Dictionary<string, IStorageMod> _mods;
+        private Dictionary<string, IStorageMod>? _mods;
 
         private readonly Task _loading;
 
@@ -41,7 +41,7 @@ namespace BSU.Core.Storage
         public async Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
         {
             await _loading;
-            return _mods;
+            return _mods!;
         }
 
         public async Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)

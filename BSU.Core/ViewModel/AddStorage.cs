@@ -24,7 +24,7 @@ namespace BSU.Core.ViewModel
 
         public bool SteamEnabled { get; }
 
-        private void HandleOk(object objWindow)
+        private void HandleOk(object? objWindow)
         {
             if (IsDirectory)
             {
@@ -33,7 +33,7 @@ namespace BSU.Core.ViewModel
                 if (!valName || !valPath) return;
             }
 
-            ((ICloseable) objWindow).Close(true);
+            ((ICloseable)objWindow!).Close(true);
         }
 
         public string Path
@@ -93,8 +93,8 @@ namespace BSU.Core.ViewModel
         }
 
         private string _pathError = "";
-        private string _path;
-        private string _name;
+        private string _path = "";
+        private string _name = "";
 
         public string PathError
         {
@@ -107,7 +107,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public string SteamPath { get; }
+        public string? SteamPath { get; }
 
         public DelegateCommand Ok { get; }
 
@@ -151,6 +151,6 @@ namespace BSU.Core.ViewModel
 
         public string GetStorageType() => IsDirectory ? "DIRECTORY" : "STEAM";
         public string GetName() => IsDirectory ? Name : "Steam";
-        public string GetPath() => IsDirectory ? Path : SteamPath;
+        public string GetPath() => IsDirectory ? Path : SteamPath!;
     }
 }

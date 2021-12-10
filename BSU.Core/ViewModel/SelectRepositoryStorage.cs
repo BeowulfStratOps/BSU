@@ -19,10 +19,10 @@ namespace BSU.Core.ViewModel
         private bool _showSteamOption;
         private bool _useSteam;
         private bool _downloadEnabled;
-        private List<ModStorageSelectionInfo> _mods;
-        private StorageSelection _storage;
+        private List<ModStorageSelectionInfo>? _mods;
+        private StorageSelection? _storage;
 
-        public StorageSelection Storage
+        public StorageSelection? Storage
         {
             get => _storage;
             set
@@ -90,7 +90,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public List<ModStorageSelectionInfo> Mods
+        public List<ModStorageSelectionInfo>? Mods
         {
             get => _mods;
             private set
@@ -234,18 +234,18 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        private void HandleOk(object objWindow)
+        private void HandleOk(object? objWindow)
         {
-            ((ICloseable) objWindow).Close(true);
+            ((ICloseable)objWindow!).Close(true);
         }
 
-        public record ModStorageSelectionInfo(string ModName, ModAction Action);
+        public record ModStorageSelectionInfo(string ModName, ModAction? Action);
 
         public class StorageSelection
         {
             internal readonly IModelStorage Storage;
-            public string Name => Storage?.Name;
-            public string Location => Storage?.GetLocation();
+            public string Name => Storage.Name;
+            public string Location => Storage.GetLocation();
 
             internal StorageSelection(IModelStorage storage)
             {

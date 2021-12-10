@@ -14,9 +14,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
 {
     internal class MockModelRepositoryMod : IModelRepositoryMod
     {
-        private readonly MatchHash _matchHash;
-        private readonly VersionHash _versionHash;
-        private RepositoryModActionSelection _selection;
+        private readonly MatchHash? _matchHash;
+        private readonly VersionHash? _versionHash;
+        private RepositoryModActionSelection? _selection;
 
         public MockModelRepositoryMod(int? match, int? version)
         {
@@ -24,17 +24,17 @@ namespace BSU.Core.Tests.CoreCalculationTests
             _versionHash = TestUtils.GetVersionHash(version).Result;
         }
 
-        public void SetSelection(RepositoryModActionSelection selection)
+        public void SetSelection(RepositoryModActionSelection? selection)
         {
             _selection = selection;
         }
 
-        public string DownloadIdentifier { get; set; }
-        public string Identifier { get; }
-        public IModelRepository ParentRepository { get; }
+        public string DownloadIdentifier { get; set; } = null!;
+        public string Identifier { get; } = null!;
+        public IModelRepository ParentRepository { get; } = null!;
         public LoadingState State { get; } = LoadingState.Loaded;
 
-        public Task<ModUpdateInfo> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
+        public Task<ModUpdateInfo?> StartUpdate(IProgress<FileSyncStats>? progress, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -44,19 +44,19 @@ namespace BSU.Core.Tests.CoreCalculationTests
             throw new NotImplementedException();
         }
 
-        public MatchHash GetMatchHash() => _matchHash;
+        public MatchHash GetMatchHash() => _matchHash ?? throw new InvalidOperationException();
 
-        public VersionHash GetVersionHash() => _versionHash;
+        public VersionHash GetVersionHash() => _versionHash ?? throw new InvalidOperationException();
 
-        public RepositoryModActionSelection GetCurrentSelection() => _selection;
+        public RepositoryModActionSelection? GetCurrentSelection() => _selection;
 
-        public event Action<IModelRepositoryMod> StateChanged;
+        public event Action<IModelRepositoryMod>? StateChanged;
         public PersistedSelection GetPreviousSelection()
         {
             throw new NotImplementedException();
         }
 
-        public event Action<IModelRepositoryMod> SelectionChanged;
-        public event Action<IModelRepositoryMod> DownloadIdentifierChanged;
+        public event Action<IModelRepositoryMod>? SelectionChanged;
+        public event Action<IModelRepositoryMod>? DownloadIdentifierChanged;
     }
 }

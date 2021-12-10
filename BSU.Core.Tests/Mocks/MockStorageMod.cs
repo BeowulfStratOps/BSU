@@ -73,12 +73,12 @@ namespace BSU.Core.Tests.Mocks
             return Task.FromResult<Stream>(new MockStream(data, d => _files[path] = d));
         }
 
-        public Task<Stream> OpenRead(string path, CancellationToken cancellationToken)
+        public Task<Stream?> OpenRead(string path, CancellationToken cancellationToken)
         {
             Thread.Sleep(_ioDelayMs / 20);
             if (ThrowErrorOpen) throw new TestException();
             var result = _files.TryGetValue(path, out var content) ? new MemoryStream(content) : null;
-            return Task.FromResult<Stream>(result);
+            return Task.FromResult<Stream?>(result);
         }
 
         public Task Move(string @from, string to, CancellationToken cancellationToken)

@@ -2,12 +2,9 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using BSU.Core.Concurrency;
-using BSU.Core.Model;
 using BSU.Core.Persistence;
-using BSU.Core.Services;
-using BSU.CoreCommon;
+using BSU.Core.ViewModel;
 using NLog;
 
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
@@ -20,9 +17,7 @@ namespace BSU.Core
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        internal readonly Model.Model Model;
-        public readonly ViewModel.ViewModel ViewModel;
-
+        private readonly Model.Model _model;
 
         /// <summary>
         /// Create a new core instance. Should be used in a using block.
@@ -37,10 +32,14 @@ namespace BSU.Core
             _logger.Info("Creating new core instance");
             var state = new InternalState(settings);
 
-            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current);
+            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current!);
 
-            Model = new Model.Model(state, Types.Default, eventBus, state.CheckIsFirstStart());
-            ViewModel = new ViewModel.ViewModel(Model);
+            _model = new Model.Model(state, Types.Default, eventBus, state.CheckIsFirstStart());
+        }
+
+        public ViewModel.ViewModel GetViewModel(IInteractionService interactionService)
+        {
+            return new ViewModel.ViewModel(_model, interactionService);
         }
 
         public void Dispose()

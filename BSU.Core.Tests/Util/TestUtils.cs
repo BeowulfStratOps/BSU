@@ -9,7 +9,7 @@ namespace BSU.Core.Tests.Util
 {
     internal static class TestUtils
     {
-        internal static async Task<MatchHash> GetMatchHash(int? match)
+        internal static async Task<MatchHash?> GetMatchHash(int? match)
         {
             if (match == null) return null;
             var mockRepo = new MockRepositoryMod();
@@ -20,7 +20,7 @@ namespace BSU.Core.Tests.Util
             return await MatchHash.CreateAsync(mockRepo, CancellationToken.None);
         }
 
-        internal static async Task<VersionHash> GetVersionHash(int? version)
+        internal static async Task<VersionHash?> GetVersionHash(int? version)
         {
             if (version == null) return null;
             var mockRepo = new MockRepositoryMod();

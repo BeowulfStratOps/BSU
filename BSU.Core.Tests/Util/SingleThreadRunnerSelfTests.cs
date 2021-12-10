@@ -54,7 +54,7 @@ public class SingleThreadRunnerSelfTests
             for (int i = 0; i < 10; i++)
             {
                 result.Enqueue(i);
-                Thread.Sleep(50);
+                Thread.Sleep(10);
                 await Task.Yield();
             }
         }

@@ -42,8 +42,8 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        private string _stage;
-        public string Stage
+        private string? _stage;
+        public string? Stage
         {
             get => _stage;
             private set
@@ -54,8 +54,8 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        private FileSyncStats _stats;
-        public FileSyncStats Stats
+        private FileSyncStats? _stats;
+        public FileSyncStats? Stats
         {
             get => _stats;
             private set
@@ -73,7 +73,7 @@ namespace BSU.Core.ViewModel
             Progress.ProgressChanged += ProgressOnProgressChanged;
         }
 
-        private void ProgressOnProgressChanged(object sender, FileSyncStats stats)
+        private void ProgressOnProgressChanged(object? sender, FileSyncStats stats)
         {
             switch (stats.State)
             {

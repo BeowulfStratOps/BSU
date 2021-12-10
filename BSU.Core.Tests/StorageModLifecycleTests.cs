@@ -19,7 +19,7 @@ namespace BSU.Core.Tests
         {
         }
 
-        internal static (MockStorageMod, StorageMod, TestEventBus) CreateStorageMod(UpdateTarget stateTarget = null)
+        internal static (MockStorageMod, StorageMod, TestEventBus) CreateStorageMod(UpdateTarget? stateTarget = null)
         {
             var mockStorage = new MockStorageMod();
             for (int i = 0; i < 3; i++)
@@ -31,7 +31,7 @@ namespace BSU.Core.Tests
             state.SetupProperty(x => x.UpdateTarget, stateTarget);
 
             var eventBus = new TestEventBus();
-            var storageMod = new StorageMod(mockStorage, "mystorage", state.Object, null, true, eventBus);
+            var storageMod = new StorageMod(mockStorage, "mystorage", state.Object, null!, true, eventBus);
 
 
             return (mockStorage, storageMod, eventBus);

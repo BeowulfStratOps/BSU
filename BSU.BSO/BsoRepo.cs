@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,8 +18,8 @@ namespace BSU.BSO
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _url;
-        private Dictionary<string, IRepositoryMod> _mods;
-        private ServerFile _serverFile;
+        private Dictionary<string, IRepositoryMod>? _mods;
+        private ServerFile? _serverFile;
         private readonly Task _loading;
 
         public BsoRepo(string url)
@@ -48,17 +46,17 @@ namespace BSU.BSO
         {
             // TODO: use cancellationToken
             await _loading;
-            return _mods;
+            return _mods!;
         }
 
         public async Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
         {
             // TODO: use cancellationToken
             await _loading;
-            return new ServerInfo(_serverFile.ServerName, _serverFile.ServerAddress);
+            return new ServerInfo(_serverFile!.ServerName, _serverFile.ServerAddress);
         }
 
-        public static async Task<ServerInfo> CheckUrl(string url, CancellationToken cancellationToken)
+        public static async Task<ServerInfo?> CheckUrl(string url, CancellationToken cancellationToken)
         {
             try
             {

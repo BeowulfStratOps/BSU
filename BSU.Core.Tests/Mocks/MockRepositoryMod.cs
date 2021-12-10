@@ -47,7 +47,7 @@ namespace BSU.Core.Tests.Mocks
         public Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
         {
             WaitOnce();
-            return Task.FromResult(_files.GetValueOrDefault(path));
+            return Task.FromResult(_files[path]);
         }
 
 
@@ -74,7 +74,7 @@ namespace BSU.Core.Tests.Mocks
 
         public async Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)
         {
-            return (null, "?");
+            return ("???", "?");
         }
 
         public async Task<ulong> GetFileSize(string path, CancellationToken cancellationToken)

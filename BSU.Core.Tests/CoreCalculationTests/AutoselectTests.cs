@@ -38,7 +38,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
             return storageMod;
         }
-        private IModelStorageMod AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelRepositoryMod> allRepoMods = null,
+        private IModelStorageMod? AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelRepositoryMod>? allRepoMods = null,
             params IModelStorageMod[] storageMods)
         {
             return CoreCalculation.AutoSelect(repoMod, storageMods.ToList(), allRepoMods?.ToList() ?? new List<IModelRepositoryMod>());

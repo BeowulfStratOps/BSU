@@ -26,7 +26,7 @@ namespace BSU.Core.Tests
         {
             var absPath = Path.Combine(_tmpDir.FullName, Path.Combine(path));
             var fi = new FileInfo(absPath);
-            fi.Directory.Create();
+            fi.Directory!.Create();
             return fi.CreateText();
         }
 

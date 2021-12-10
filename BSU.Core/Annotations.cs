@@ -39,7 +39,7 @@ namespace BSU.Core.Annotations
   /// </summary>
   /// <example><code>
   /// [CanBeNull] object Test() => null;
-  /// 
+  ///
   /// void UseTest() {
   ///   var p = Test();
   ///   var s = p.ToString(); // Warning: Possible 'System.NullReferenceException'
@@ -112,7 +112,7 @@ namespace BSU.Core.Annotations
   /// <example><code>
   /// [StringFormatMethod("message")]
   /// void ShowError(string message, params object[] args) { /* do something */ }
-  /// 
+  ///
   /// void Foo() {
   ///   ShowError("Failed: {0}"); // Warning: Non-existing argument in format string
   /// }
@@ -205,12 +205,12 @@ namespace BSU.Core.Annotations
   /// <example><code>
   /// public class Foo : INotifyPropertyChanged {
   ///   public event PropertyChangedEventHandler PropertyChanged;
-  /// 
+  ///
   ///   [NotifyPropertyChangedInvocator]
   ///   protected virtual void NotifyChanged(string propertyName) { ... }
   ///
   ///   string _name;
-  /// 
+  ///
   ///   public string Name {
   ///     get { return _name; }
   ///     set { _name = value; NotifyChanged("LastName"); /* Warning */ }
@@ -229,12 +229,12 @@ namespace BSU.Core.Annotations
   public sealed class NotifyPropertyChangedInvocatorAttribute : Attribute
   {
     public NotifyPropertyChangedInvocatorAttribute() { }
-    public NotifyPropertyChangedInvocatorAttribute([NotNull] string parameterName)
+    public NotifyPropertyChangedInvocatorAttribute(string parameterName)
     {
       ParameterName = parameterName;
     }
 
-    [CanBeNull] public string ParameterName { get; }
+    public string? ParameterName { get; }
   }
 
   /// <summary>
@@ -284,16 +284,16 @@ namespace BSU.Core.Annotations
   [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
   public sealed class ContractAnnotationAttribute : Attribute
   {
-    public ContractAnnotationAttribute([NotNull] string contract)
+    public ContractAnnotationAttribute(string contract)
       : this(contract, false) { }
 
-    public ContractAnnotationAttribute([NotNull] string contract, bool forceFullStates)
+    public ContractAnnotationAttribute(string contract, bool forceFullStates)
     {
       Contract = contract;
       ForceFullStates = forceFullStates;
     }
 
-    [NotNull] public string Contract { get; }
+    public string Contract { get; }
 
     public bool ForceFullStates { get; }
   }
@@ -329,7 +329,7 @@ namespace BSU.Core.Annotations
   /// <example><code>
   /// [CannotApplyEqualityOperator]
   /// class NoEquality { }
-  /// 
+  ///
   /// class UsesNoEquality {
   ///   void Test() {
   ///     var ca1 = new NoEquality();
@@ -350,7 +350,7 @@ namespace BSU.Core.Annotations
   /// <example><code>
   /// [BaseTypeRequired(typeof(IComponent)] // Specify requirement
   /// class ComponentAttribute : Attribute { }
-  /// 
+  ///
   /// [Component] // ComponentAttribute requires implementing IComponent interface
   /// class MyComponent : IComponent { }
   /// </code></example>
@@ -473,7 +473,7 @@ namespace BSU.Core.Annotations
       Comment = comment;
     }
 
-    [CanBeNull] public string Comment { get; }
+    public string? Comment { get; }
   }
 
   /// <summary>
@@ -490,7 +490,7 @@ namespace BSU.Core.Annotations
   /// </summary>
   /// <example><code>
   /// [Pure] int Multiply(int x, int y) => x * y;
-  /// 
+  ///
   /// void M() {
   ///   Multiply(123, 42); // Waring: Return value of pure method is not used
   /// }
@@ -519,7 +519,7 @@ namespace BSU.Core.Annotations
       Justification = justification;
     }
 
-    [CanBeNull] public string Justification { get; }
+    public string? Justification { get; }
   }
 
   /// <summary>
@@ -530,7 +530,7 @@ namespace BSU.Core.Annotations
   /// <example><code>
   /// class Foo {
   ///   [ProvidesContext] IBarService _barService = ...;
-  /// 
+  ///
   ///   void ProcessNode(INode node) {
   ///     DoSomething(node, node.GetGlobalServices().Bar);
   ///     //              ^ Warning: use value of '_barService' field
@@ -556,7 +556,7 @@ namespace BSU.Core.Annotations
       BasePath = basePath;
     }
 
-    [CanBeNull] public string BasePath { get; }
+    public string? BasePath { get; }
   }
 
   /// <summary>
@@ -620,7 +620,7 @@ namespace BSU.Core.Annotations
     /// Allows specifying a macro that will be executed for a <see cref="SourceTemplateAttribute">source template</see>
     /// parameter when the template is expanded.
     /// </summary>
-    [CanBeNull] public string Expression { get; set; }
+    public string? Expression { get; set; }
 
     /// <summary>
     /// Allows specifying which occurrence of the target parameter becomes editable when the template is deployed.
@@ -636,7 +636,7 @@ namespace BSU.Core.Annotations
     /// Identifies the target parameter of a <see cref="SourceTemplateAttribute">source template</see> if the
     /// <see cref="MacroAttribute"/> is applied on a template method.
     /// </summary>
-    [CanBeNull] public string Target { get; set; }
+    public string? Target { get; set; }
   }
 
   [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
@@ -721,7 +721,7 @@ namespace BSU.Core.Annotations
       AnonymousProperty = anonymousProperty;
     }
 
-    [CanBeNull] public string AnonymousProperty { get; }
+    public string? AnonymousProperty { get; }
   }
 
   /// <summary>
@@ -739,7 +739,7 @@ namespace BSU.Core.Annotations
       AnonymousProperty = anonymousProperty;
     }
 
-    [CanBeNull] public string AnonymousProperty { get; }
+    public string? AnonymousProperty { get; }
   }
 
   /// <summary>
@@ -758,7 +758,7 @@ namespace BSU.Core.Annotations
       AnonymousProperty = anonymousProperty;
     }
 
-    [CanBeNull] public string AnonymousProperty { get; }
+    public string? AnonymousProperty { get; }
   }
 
   /// <summary>
@@ -861,7 +861,7 @@ namespace BSU.Core.Annotations
       Name = name;
     }
 
-    [CanBeNull] public string Name { get; }
+    public string? Name { get; }
   }
 
   [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Field | AttributeTargets.Property)]
@@ -1003,7 +1003,7 @@ namespace BSU.Core.Annotations
   /// {
   ///   // custom check for null but no enumeration
   /// }
-  /// 
+  ///
   /// void Foo(IEnumerable&lt;string&gt; values)
   /// {
   ///   ThrowIfNull(values, nameof(values));
@@ -1132,18 +1132,18 @@ namespace BSU.Core.Annotations
   [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
   public sealed class RazorPageBaseTypeAttribute : Attribute
   {
-      public RazorPageBaseTypeAttribute([NotNull] string baseType)
+      public RazorPageBaseTypeAttribute(string baseType)
       {
         BaseType = baseType;
       }
-      public RazorPageBaseTypeAttribute([NotNull] string baseType, string pageName)
+      public RazorPageBaseTypeAttribute(string baseType, string pageName)
       {
           BaseType = baseType;
           PageName = pageName;
       }
 
-      [NotNull] public string BaseType { get; }
-      [CanBeNull] public string PageName { get; }
+      public string BaseType { get; }
+      public string? PageName { get; }
   }
 
   [AttributeUsage(AttributeTargets.Method)]

@@ -14,7 +14,7 @@ namespace BSU.Core.ViewModel
     internal class RepositoryUpdate
     {
         private readonly List<ModUpdate> _updates;
-        private readonly IProgress<FileSyncStats> _progress;
+        private readonly IProgress<FileSyncStats>? _progress;
 
         private readonly Dictionary<IModelStorageMod, FileSyncStats> _lastProgress = new();
         private readonly Dictionary<IModelStorageMod, ulong> _totalSizes = new ();
@@ -84,13 +84,13 @@ namespace BSU.Core.ViewModel
             _progress?.Report(stats);
         }
 
-        internal static async Task<StageStats> Update(List<ModUpdate> updates, IProgress<FileSyncStats> progress)
+        internal static async Task<StageStats> Update(List<ModUpdate> updates, IProgress<FileSyncStats>? progress)
         {
             var update = new RepositoryUpdate(updates, progress);
             return await update.Update();
         }
 
-        private RepositoryUpdate(List<ModUpdate> updates, IProgress<FileSyncStats> progress)
+        private RepositoryUpdate(List<ModUpdate> updates, IProgress<FileSyncStats>? progress)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, Guid.NewGuid().ToString());
             _updates = updates;

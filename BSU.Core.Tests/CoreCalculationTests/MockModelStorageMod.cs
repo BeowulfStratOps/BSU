@@ -14,8 +14,8 @@ namespace BSU.Core.Tests.CoreCalculationTests
 {
     internal class MockModelStorageMod : IModelStorageMod
     {
-        private readonly MatchHash _matchHash;
-        private readonly VersionHash _versionHash;
+        private readonly MatchHash? _matchHash;
+        private readonly VersionHash? _versionHash;
         private readonly StorageModStateEnum _state;
 
         public MockModelStorageMod(int? match, int? version, StorageModStateEnum state)
@@ -26,9 +26,9 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
 
-        public event Action<IModelStorageMod> StateChanged;
+        public event Action<IModelStorageMod>? StateChanged;
 
-        public Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats> progress,
+        public Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats>? progress,
             CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
@@ -45,12 +45,12 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         public bool CanWrite { get; set; } = true;
-        public string Identifier { get; }
-        public IModelStorage ParentStorage { get; }
+        public string Identifier { get; } = null!;
+        public IModelStorage ParentStorage { get; } = null!;
         public bool IsDeleted { get; }
-        public VersionHash GetVersionHash() => _versionHash;
+        public VersionHash GetVersionHash() => _versionHash ?? throw new InvalidOperationException();
 
-        public MatchHash GetMatchHash() => _matchHash;
+        public MatchHash GetMatchHash() => _matchHash ?? throw new InvalidOperationException();
 
 
         public StorageModStateEnum GetState() => _state;

@@ -11,7 +11,7 @@ namespace BSU.Core.Concurrency
 
         public SynchronizationContextEventBus(SynchronizationContext synchronizationContext)
         {
-            _synchronizationContext = synchronizationContext ?? throw new ArgumentNullException();
+            _synchronizationContext = synchronizationContext ?? throw new ArgumentNullException(nameof(synchronizationContext));
         }
 
         public void ExecuteSynchronized(Action action)

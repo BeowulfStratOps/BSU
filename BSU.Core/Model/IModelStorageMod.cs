@@ -14,7 +14,7 @@ namespace BSU.Core.Model
     {
         event Action<IModelStorageMod> StateChanged;
         Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion,
-            IProgress<FileSyncStats> progress, CancellationToken cancellationToken);
+            IProgress<FileSyncStats>? progress, CancellationToken cancellationToken);
         void Abort();
         PersistedSelection GetStorageModIdentifiers();
         bool CanWrite { get; }

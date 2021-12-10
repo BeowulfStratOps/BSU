@@ -24,7 +24,7 @@ namespace BSU.Core.Storage
             var dirName = Dir.Name;
             try
             {
-                if (!ulong.TryParse(dirName, out var fileId)) return null;
+                var fileId = ulong.Parse(dirName);
                 using var client = new HttpClient();
                 var content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {

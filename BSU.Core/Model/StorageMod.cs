@@ -21,11 +21,11 @@ namespace BSU.Core.Model
         public bool IsDeleted { get; private set; }
         private readonly IStorageMod _implementation;
 
-        private MatchHash _matchHash;
-        private VersionHash _versionHash;
-        private string _title;
+        private MatchHash? _matchHash;
+        private VersionHash? _versionHash;
+        private string? _title;
 
-        private UpdateTarget _updateTarget;
+        private UpdateTarget? _updateTarget;
 
         private readonly ILogger _logger;
 
@@ -98,18 +98,18 @@ namespace BSU.Core.Model
         public VersionHash GetVersionHash()
         {
             if (State == StorageModStateEnum.Loading) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _versionHash;
+            return _versionHash!;
         }
 
         public MatchHash GetMatchHash()
         {
             if (State == StorageModStateEnum.Loading) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _matchHash;
+            return _matchHash!;
         }
 
         public StorageModStateEnum GetState() => State;
 
-        public string GetTitle() => _title;
+        public string GetTitle() => _title ?? Identifier;
 
         public void Delete(bool removeData)
         {
@@ -117,7 +117,7 @@ namespace BSU.Core.Model
             IsDeleted = true;
         }
 
-        private UpdateTarget UpdateTarget
+        private UpdateTarget? UpdateTarget
         {
             get => _updateTarget;
             set
@@ -127,11 +127,11 @@ namespace BSU.Core.Model
             }
         }
 
-        public event Action<IModelStorageMod> StateChanged;
+        public event Action<IModelStorageMod>? StateChanged;
 
         public async Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch,
             VersionHash targetVersion,
-            IProgress<FileSyncStats> progress, CancellationToken cancellationToken)
+            IProgress<FileSyncStats>? progress, CancellationToken cancellationToken)
         {
             _logger.Trace("Progress: Waiting");
             progress?.Report(new FileSyncStats(FileSyncState.Waiting));

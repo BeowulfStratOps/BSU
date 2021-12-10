@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,7 +20,7 @@ namespace BSU.Core.Hashes
         private static readonly Regex AddonsPboRegex =
             new Regex("^/addons/.*\\.pbo$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private readonly string _name;
+        private readonly string? _name;
         private readonly HashSet<string> _pboNames;
 
         // TODO: use more specialized interface to get files
@@ -29,7 +28,7 @@ namespace BSU.Core.Hashes
         {
             var modCpp = await mod.OpenRead("/mod.cpp", cancellationToken);
 
-            string name = null;
+            string? name = null;
 
             if (modCpp != null)
             {
@@ -59,7 +58,7 @@ namespace BSU.Core.Hashes
         // TODO: use more specialized interface to get files
         public static async Task<MatchHash> CreateAsync(IRepositoryMod mod, CancellationToken cancellationToken)
         {
-            byte[] modCppData = null;
+            byte[]? modCppData = null;
             try
             {
                 modCppData = await mod.GetFile("/mod.cpp", cancellationToken);
@@ -69,7 +68,7 @@ namespace BSU.Core.Hashes
                 // ignored
             }
 
-            string name = null;
+            string? name = null;
             if (modCppData != null)
             {
                 name = Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
@@ -90,7 +89,6 @@ namespace BSU.Core.Hashes
 
         public bool IsMatch(MatchHash other)
         {
-            if (other == null) return false;
             // TODO: improve this by A LOT
             // TODO: include folder name
             // TODO: include key names
@@ -110,7 +108,7 @@ namespace BSU.Core.Hashes
         }
 
         // TODO: internal is for testing only. MatchHash should be abstracted.
-        internal MatchHash(IEnumerable<string> pboNames, string name)
+        internal MatchHash(IEnumerable<string> pboNames, string? name)
         {
             _pboNames = new HashSet<string>(pboNames);
             _name = name;

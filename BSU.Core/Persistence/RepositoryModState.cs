@@ -5,7 +5,7 @@ namespace BSU.Core.Persistence
 {
     internal interface IPersistedRepositoryModState
     {
-        PersistedSelection Selection { get; set; }
+        PersistedSelection? Selection { get; set; }
     }
 
     internal class PersistedRepositoryModState : IPersistedRepositoryModState
@@ -21,7 +21,7 @@ namespace BSU.Core.Persistence
             _identifier = identifier;
         }
 
-        public PersistedSelection Selection
+        public PersistedSelection? Selection
         {
             get => _usedMods.GetValueOrDefault(_identifier);
             set

@@ -25,7 +25,7 @@ namespace BSU.Core.ViewModel
 
         public string Path { get; }
 
-        public string Error
+        public string? Error
         {
             get => _error;
             set
@@ -37,7 +37,7 @@ namespace BSU.Core.ViewModel
         }
 
         private readonly IViewModelService _viewModelService;
-        private string _error;
+        private string? _error;
 
         internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService)
         {

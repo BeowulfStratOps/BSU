@@ -37,8 +37,7 @@ namespace BSU.GUI
                 var assemblyLocation = Assembly.GetExecutingAssembly().Location;
                 var settingsLocation = Path.Combine(Directory.GetParent(assemblyLocation).Parent.FullName, "settings.json");
                 _core = new Core.Core(new FileInfo(settingsLocation));
-                _viewModel = _core.ViewModel;
-                _viewModel.InteractionService = new InteractionService(this);
+                _viewModel = _core.GetViewModel(new InteractionService(this));
             }
             catch (Exception e)
             {

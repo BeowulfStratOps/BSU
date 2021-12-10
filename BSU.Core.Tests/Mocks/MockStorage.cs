@@ -9,11 +9,11 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorage : IStorage
     {
-        private Action<MockStorage> _load;
+        private Action<MockStorage>? _load;
         private readonly int _ioDelayMs;
         public readonly Dictionary<string, MockStorageMod> Mods = new();
 
-        public MockStorage(Action<MockStorage> load = null, int ioDelayMs = 0)
+        public MockStorage(Action<MockStorage>? load = null, int ioDelayMs = 0)
         {
             _load = load;
             _ioDelayMs = ioDelayMs;

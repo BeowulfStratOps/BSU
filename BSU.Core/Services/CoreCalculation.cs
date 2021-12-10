@@ -59,7 +59,7 @@ namespace BSU.Core.Services
             }
         }
 
-        internal static IModelStorageMod AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelStorageMod> storageMods, List<IModelRepositoryMod> allRepoMods)
+        internal static IModelStorageMod? AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelStorageMod> storageMods, List<IModelRepositoryMod> allRepoMods)
         {
             (IModelStorageMod mod, ModActionEnum action, bool hasConflcts) GetModInfo(IModelStorageMod mod)
             {
@@ -103,7 +103,7 @@ namespace BSU.Core.Services
             return repoMatch.IsMatch(selected.GetMatchHash());
         }
 
-        internal static CalculatedRepositoryStateEnum CalculateRepositoryState(List<(RepositoryModActionSelection selection, ModActionEnum? action, bool hasError)> mods)
+        internal static CalculatedRepositoryStateEnum CalculateRepositoryState(List<(RepositoryModActionSelection? selection, ModActionEnum? action, bool hasError)> mods)
         {
             /*
             NeedsSync, // auto selected previously used, other auto selection worked without any conflicts, no internal conflicts.
@@ -148,7 +148,7 @@ namespace BSU.Core.Services
             var mods = repo.GetMods();
             var allMods = allRepositoryMods.ToList();
 
-            (RepositoryModActionSelection selection, ModActionEnum? action, bool hasError) GetModSelection(IModelRepositoryMod mod)
+            (RepositoryModActionSelection? selection, ModActionEnum? action, bool hasError) GetModSelection(IModelRepositoryMod mod)
             {
                 var selection = mod.GetCurrentSelection();
                 var action = selection is not RepositoryModActionStorageMod actionStorageMod
@@ -163,7 +163,7 @@ namespace BSU.Core.Services
             return CalculateRepositoryState(infos);
         }
 
-        public static string GetErrorForSelection(IModelRepositoryMod mod, IEnumerable<IModelRepositoryMod> allRepositoryMods)
+        public static string? GetErrorForSelection(IModelRepositoryMod mod, IEnumerable<IModelRepositoryMod> allRepositoryMods)
         {
             var selection = mod.GetCurrentSelection();
 

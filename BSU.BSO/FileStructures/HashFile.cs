@@ -10,8 +10,8 @@ namespace BSU.BSO.FileStructures
     [JsonObject(MemberSerialization.OptIn)]
     public class HashFile
     {
-        [JsonProperty] public string FolderName { get; set; }
-        [JsonProperty] public List<HashType> Hashes { get; set; }
+        [JsonProperty] public string FolderName { get; set; } = null!;
+        [JsonProperty] public List<HashType> Hashes { get; set; } = null!;
 
         public HashFile()
         {

@@ -9,10 +9,10 @@ namespace BSU.Core.Tests.Mocks
     internal class MockRepository : IRepository
     {
         public Dictionary<string, IRepositoryMod> Mods { get; } = new();
-        private Action<MockRepository> _load;
+        private Action<MockRepository>? _load;
         private readonly int _ioDelayMs;
 
-        public MockRepository(Action<MockRepository> load = null, int ioDelayMs = 0)
+        public MockRepository(Action<MockRepository>? load = null, int ioDelayMs = 0)
         {
             _load = load;
             _ioDelayMs = ioDelayMs;
@@ -32,7 +32,7 @@ namespace BSU.Core.Tests.Mocks
 
         public Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
         {
-            return Task.FromResult<ServerInfo>(null);
+            return Task.FromResult(new ServerInfo("test", "test"));
         }
     }
 }

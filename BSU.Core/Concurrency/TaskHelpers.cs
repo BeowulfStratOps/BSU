@@ -2,14 +2,11 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using NLog;
 
 namespace BSU.Core.Concurrency
 {
     public static class TaskHelpers
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public static ConfiguredTaskAwaitable DropContext(this Task task) => task.ConfigureAwait(false);
         public static ConfiguredTaskAwaitable<T> DropContext<T>(this Task<T> task) => task.ConfigureAwait(false);
 

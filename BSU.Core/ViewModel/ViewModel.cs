@@ -29,13 +29,14 @@ namespace BSU.Core.ViewModel
         private readonly RepositoriesPage _repoPage;
         private readonly StoragePage _storagePage;
 
-        internal ViewModel(IModel model)
+        internal ViewModel(IModel model, IInteractionService interactionService)
         {
             _model = model;
             model.ConnectErrorPresenter(this);
             _repoPage = new RepositoriesPage(model, this);
             _storagePage = new StoragePage(model, this);
-            Content = _repoPage;
+            _content = _repoPage;
+            InteractionService = interactionService;
         }
 
         private readonly Stack<object> _navigationStack = new();
@@ -59,7 +60,7 @@ namespace BSU.Core.ViewModel
 
         public IInteractionService InteractionService { get; set; }
 
-        IModelStorage IViewModelService.AddStorage(bool allowSteam)
+        IModelStorage? IViewModelService.AddStorage(bool allowSteam)
         {
             return _storagePage.DoAddStorage(allowSteam);
         }

@@ -41,7 +41,7 @@ namespace BSU.Core.ViewModel
             Storages.Add(storage);
         }
 
-        internal IModelStorage DoAddStorage(bool allowSteam = true)
+        internal IModelStorage? DoAddStorage(bool allowSteam = true)
         {
             // TODO: could be in a separate class
             var vm = new AddStorage(_model, allowSteam);

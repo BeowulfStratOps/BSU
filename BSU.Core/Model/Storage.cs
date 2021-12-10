@@ -19,14 +19,14 @@ namespace BSU.Core.Model
         public bool IsDeleted { get; private set; }
         public Guid Identifier { get; }
         public string Location { get; }
-        private List<IModelStorageMod> _mods;
+        private List<IModelStorageMod>? _mods; // TODO: use a property to block access while state is invalid
         private readonly IErrorPresenter _errorPresenter;
         private readonly ILogger _logger;
         private LoadingState _state = LoadingState.Loading;
         private readonly IEventBus _eventBus;
 
-        public event Action<IModelStorage> StateChanged;
-        public event Action<IModelStorageMod> AddedMod;
+        public event Action<IModelStorage>? StateChanged;
+        public event Action<IModelStorageMod>? AddedMod;
 
         public Storage(IStorage implementation, string name, string location, IStorageState internalState, IErrorPresenter errorPresenter, IEventBus eventBus)
         {
@@ -93,16 +93,17 @@ namespace BSU.Core.Model
         public List<IModelStorageMod> GetMods()
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
-            return new List<IModelStorageMod>(_mods);
+            return new List<IModelStorageMod>(_mods!);
         }
 
         public async Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget)
         {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
             state.UpdateTarget = updateTarget;
             var storageMod = new StorageMod(mod, identifier, state, this, true, _eventBus);
-            _mods.Add(storageMod);
+            _mods!.Add(storageMod);
             AddedMod?.Invoke(storageMod);
             return storageMod;
         }
@@ -116,7 +117,7 @@ namespace BSU.Core.Model
         public bool HasMod(string downloadIdentifier)
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _mods.Any(m => string.Equals(m.Identifier, downloadIdentifier, StringComparison.InvariantCultureIgnoreCase));
+            return _mods!.Any(m => string.Equals(m.Identifier, downloadIdentifier, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public string GetLocation() => Location;
@@ -124,8 +125,9 @@ namespace BSU.Core.Model
 
         public void Delete(bool removeMods)
         {
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             IsDeleted = true;
-            foreach (var mod in _mods)
+            foreach (var mod in _mods!)
             {
                 mod.Delete(removeMods);
             }

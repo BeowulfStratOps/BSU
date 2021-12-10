@@ -78,7 +78,7 @@ namespace BSU.Core.Tests
 
         // TODO: test keys
 
-        private static void AddFiles(IMockedFiles mod, string[] names, string name)
+        private static void AddFiles(IMockedFiles mod, string[] names, string? name)
         {
             foreach (var fileName in names)
             {
@@ -88,21 +88,21 @@ namespace BSU.Core.Tests
             if (name != null) mod.SetFile("/mod.cpp", "name=\"" + name.Replace("\"", "\\\"") + "\";");
         }
 
-        private static async Task<MatchHash> CreateStorageMod(string[] names, string name)
+        private static async Task<MatchHash> CreateStorageMod(string[] names, string? name)
         {
             var storageMod = new MockStorageMod();
             AddFiles(storageMod, names, name);
             return await MatchHash.CreateAsync(storageMod, CancellationToken.None);
         }
 
-        private static async Task<MatchHash> CreateRepoMod(string[] names, string name)
+        private static async Task<MatchHash> CreateRepoMod(string[] names, string? name)
         {
             var repoMod = new MockRepositoryMod();
             AddFiles(repoMod, names, name);
             return await MatchHash.CreateAsync(repoMod, CancellationToken.None);
         }
 
-        private static async Task<bool> Check(string[] fileNames1, string modName1, string[] fileNames2, string modName2)
+        private static async Task<bool> Check(string[] fileNames1, string? modName1, string[] fileNames2, string? modName2)
         {
             var res1 = (await CreateStorageMod(fileNames1, modName1)).IsMatch(await CreateRepoMod(fileNames2, modName2));
             var res2 = (await CreateRepoMod(fileNames1, modName1)).IsMatch(await CreateStorageMod(fileNames2, modName2));

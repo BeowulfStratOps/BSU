@@ -72,7 +72,7 @@ namespace BSU.Core.Tests.MockedIO
                 var repoMod = repo.GetMods()[0];
                 repoMod.SetSelection(new RepositoryModActionDownload(storage));
                 var update = await repoMod.StartUpdate(null, CancellationToken.None);
-                await update.Update;
+                await update!.Update;
                 await Task.Delay(50);
 
                 Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storage.GetMods().Single()));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace BSU.Core.ViewModel
 
         private CalculatedRepositoryStateEnum _calculatedState = CalculatedRepositoryStateEnum.Loading;
 
-        private CancellationTokenSource _cts;
+        private CancellationTokenSource? _cts;
 
         public CalculatedRepositoryStateEnum CalculatedState
         {
@@ -209,7 +210,7 @@ namespace BSU.Core.ViewModel
             var mods = ModelRepository.GetMods();
             foreach (var mod in mods.OrderBy(m => m.Identifier))
             {
-                Mods.Add(new RepositoryMod(mod, _model, _viewModelService));
+                Mods.Add(new RepositoryMod(mod, _model));
             }
         }
 
@@ -243,10 +244,11 @@ namespace BSU.Core.ViewModel
 
         private void DoPause()
         {
+            if (_cts == null) throw new InvalidOperationException();
             _cts.Cancel();
         }
 
-        private void DoDelete(object objOnDetailsPage)
+        private void DoDelete(object? objOnDetailsPage)
         {
             // TODO: this doesn't look like it belongs here
             var text = $@"Removing repository {Name}. Do you want to remove mods used by this repository?
@@ -266,7 +268,7 @@ Cancel - Do not remove this repository";
 
             _model.DeleteRepository(ModelRepository, (bool)removeData);
 
-            if ((bool) objOnDetailsPage) _viewModelService.NavigateBack();
+            if ((bool) objOnDetailsPage!) _viewModelService.NavigateBack();
         }
 
         public async Task DoUpdate()
@@ -282,7 +284,7 @@ Cancel - Do not remove this repository";
                 var startTime = DateTime.Now;
                 var updateTasks = Mods.Select(m => m.StartUpdate(CancellationToken.None)).ToList();
                 await Task.WhenAll(updateTasks);
-                var updates = updateTasks.Select(t => t.Result).Where(r => r != null).ToList();
+                var updates = updateTasks.Where(r => r.Result != null).Select(t => t.Result!).ToList();
 
                 var updateStats = await RepositoryUpdate.Update(updates,  UpdateProgress.Progress);
 

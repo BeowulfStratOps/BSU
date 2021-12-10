@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,7 +24,7 @@ public static class MainThreadRunner
 
     private class CollectingSynchronizationContext : SynchronizationContext
     {
-        private readonly ConcurrentQueue<(SendOrPostCallback action, object state)> _actions = new();
+        private readonly ConcurrentQueue<(SendOrPostCallback action, object? state)> _actions = new();
 
         public override SynchronizationContext CreateCopy()
         {
@@ -45,7 +46,15 @@ public static class MainThreadRunner
             while (_actions.TryDequeue(out var v))
             {
                 var (action, state) = v;
+
+                var stopWatch = new Stopwatch();
+                stopWatch.Start();
+
                 action(state);
+
+                stopWatch.Stop();
+                if (stopWatch.ElapsedMilliseconds > 16) // we expect 60fps all the time.
+                    throw new Exception("Freeze detected!");
             }
         }
     }

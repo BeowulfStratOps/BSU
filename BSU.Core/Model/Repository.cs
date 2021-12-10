@@ -21,13 +21,13 @@ namespace BSU.Core.Model
         public string Location { get; }
 
         private LoadingState _state = LoadingState.Loading;
-        public event Action<IModelRepository> StateChanged;
+        public event Action<IModelRepository>? StateChanged;
 
-        private List<IModelRepositoryMod> _mods;
+        private List<IModelRepositoryMod>? _mods;
 
         private readonly ILogger _logger;
         private readonly IErrorPresenter _errorPresenter;
-        private ServerInfo _serverInfo;
+        private ServerInfo? _serverInfo;
         private readonly IEventBus _eventBus;
 
         public Repository(IRepository implementation, string name, string location,
@@ -92,12 +92,13 @@ namespace BSU.Core.Model
         public List<IModelRepositoryMod> GetMods()
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in state {State}");
-            return _mods;
+            return _mods!;
         }
 
         public ServerInfo GetServerInfo()
         {
-            return _serverInfo;
+            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in state {State}");
+            return _serverInfo!;
         }
     }
 

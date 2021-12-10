@@ -12,8 +12,8 @@ namespace BSU.Core.ViewModel
     public class AddRepository : ObservableBase
     {
         private readonly IModel _model;
-        private string _checkResult;
-        private string _checkError;
+        private string? _checkResult;
+        private string? _checkError;
         private string _url = "";
         private string _name = "";
         private string _nameValidation = "";
@@ -71,7 +71,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public string CheckResult
+        public string? CheckResult
         {
             get => _checkResult;
             private set
@@ -82,7 +82,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public string CheckError
+        public string? CheckError
         {
             get => _checkError;
             private set
@@ -107,7 +107,7 @@ namespace BSU.Core.ViewModel
             _model = model;
         }
 
-        private void HandleOkClick(object objWindow)
+        private void HandleOkClick(object? objWindow)
         {
             // TODO: at the moment, it's possible to click ok immediately after typing in a nonsensical url.
             var validationSucceeded = true;
@@ -118,7 +118,7 @@ namespace BSU.Core.ViewModel
             if (!ValidateName()) validationSucceeded = false;
 
             if (validationSucceeded)
-                ((ICloseable)objWindow).Close(true);
+                ((ICloseable)objWindow!).Close(true);
         }
 
         private CancellationTokenSource _handlerDelayCts = new();

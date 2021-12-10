@@ -11,18 +11,18 @@ namespace BSU.Core.Model
 {
     internal interface IModelRepositoryMod
     {
-        public void SetSelection(RepositoryModActionSelection selection);
+        public void SetSelection(RepositoryModActionSelection? selection);
         string DownloadIdentifier { get; set; }
         string Identifier { get; }
         IModelRepository ParentRepository { get; }
         LoadingState State { get; }
-        Task<ModUpdateInfo> StartUpdate(IProgress<FileSyncStats> progress, CancellationToken cancellationToken);
+        Task<ModUpdateInfo?> StartUpdate(IProgress<FileSyncStats>? progress, CancellationToken cancellationToken);
         ModInfo GetModInfo();
         MatchHash GetMatchHash();
         VersionHash GetVersionHash();
-        RepositoryModActionSelection GetCurrentSelection();
+        RepositoryModActionSelection? GetCurrentSelection();
         event Action<IModelRepositoryMod> StateChanged;
-        PersistedSelection GetPreviousSelection();
+        PersistedSelection? GetPreviousSelection();
         event Action<IModelRepositoryMod> SelectionChanged;
         event Action<IModelRepositoryMod> DownloadIdentifierChanged;
     }

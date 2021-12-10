@@ -16,7 +16,6 @@ namespace BSU.Core.ViewModel
     {
         internal readonly IModelRepositoryMod Mod;
         private readonly IModel _model;
-        private readonly IViewModelService _viewModelService;
 
         public string Name { get; }
         private ModInfo _info = new("Loading...", "Loading...", 0);
@@ -46,13 +45,12 @@ namespace BSU.Core.ViewModel
             Mod.SetSelection(value?.AsSelection);
         }
 
-        internal RepositoryMod(IModelRepositoryMod mod, IModel model, IViewModelService viewModelService)
+        internal RepositoryMod(IModelRepositoryMod mod, IModel model)
         {
             Actions = new ModActionTree(mod, model);
-            Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
+            Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection!);
             Mod = mod;
             _model = model;
-            _viewModelService = viewModelService;
             Name = mod.Identifier;
             ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded);
 
@@ -99,9 +97,9 @@ namespace BSU.Core.ViewModel
 
         public DelegateCommand ToggleExpand { get; }
 
-        private string _errorText;
+        private string? _errorText;
 
-        public string ErrorText
+        public string? ErrorText
         {
             get => _errorText;
             private set
@@ -121,7 +119,7 @@ namespace BSU.Core.ViewModel
             Actions.Update();
         }
 
-        internal async Task<ModUpdate> StartUpdate(CancellationToken cancellationToken)
+        internal async Task<ModUpdate?> StartUpdate(CancellationToken cancellationToken)
         {
             var progress = UpdateProgress.Progress;
             var updateInfo = await Mod.StartUpdate(progress, cancellationToken);

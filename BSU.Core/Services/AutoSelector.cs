@@ -30,7 +30,7 @@ namespace BSU.Core.Services
             }
         }
 
-        private RepositoryModActionSelection GetSelection(IModelRepositoryMod mod)
+        private RepositoryModActionSelection? GetSelection(IModelRepositoryMod mod)
         {
             _logger.Trace("Checking auto-selection for mod {0}", mod.Identifier);
 

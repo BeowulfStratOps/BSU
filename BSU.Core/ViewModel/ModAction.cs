@@ -10,7 +10,7 @@ namespace BSU.Core.ViewModel
 {
     public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
-        internal static ModAction Create(RepositoryModActionSelection selection, IModelRepositoryMod parent)
+        internal static ModAction? Create(RepositoryModActionSelection? selection, IModelRepositoryMod parent)
         {
             if (selection == null) return null;
 
@@ -25,9 +25,9 @@ namespace BSU.Core.ViewModel
         }
 
 
-        public abstract bool Equals(ModAction other);
+        public abstract bool Equals(ModAction? other);
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return ReferenceEquals(this, obj) || obj is ModAction other && Equals(other);
         }
@@ -41,7 +41,7 @@ namespace BSU.Core.ViewModel
     {
         internal SelectDoNothing(){}
 
-        public override bool Equals(ModAction other)
+        public override bool Equals(ModAction? other)
         {
             return other is SelectDoNothing;
         }
@@ -70,7 +70,7 @@ namespace BSU.Core.ViewModel
             Name = storageMod.GetTitle();
         }
 
-        public override bool Equals(ModAction other)
+        public override bool Equals(ModAction? other)
         {
             var ret = other is SelectMod selectMod && selectMod.StorageMod == StorageMod && selectMod.ActionType == ActionType;
             return ret;
@@ -94,7 +94,7 @@ namespace BSU.Core.ViewModel
             DownloadStorage = downloadStorage;
         }
 
-        public override bool Equals(ModAction other)
+        public override bool Equals(ModAction? other)
         {
             var ret = other is SelectStorage selectMod && selectMod.DownloadStorage == DownloadStorage;
             return ret;

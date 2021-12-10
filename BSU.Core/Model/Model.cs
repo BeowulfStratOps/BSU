@@ -22,8 +22,8 @@ namespace BSU.Core.Model
 
         private readonly ErrorPresenter _errorPresenter = new();
 
-        public event Action<IModelRepository> AddedRepository;
-        public event Action<IModelStorage> AddedStorage;
+        public event Action<IModelRepository>? AddedRepository;
+        public event Action<IModelStorage>? AddedStorage;
         public List<IModelStorageMod> GetStorageMods()
         {
             return _storages.Where(r => r.State == LoadingState.Loaded)
@@ -36,9 +36,9 @@ namespace BSU.Core.Model
                 .SelectMany(r => r.GetMods()).ToList();
         }
 
-        public event Action<IModelRepository> RemovedRepository;
-        public event Action<IModelStorage> RemovedStorage;
-        public event Action AnyChange;
+        public event Action<IModelRepository>? RemovedRepository;
+        public event Action<IModelStorage>? RemovedStorage;
+        public event Action? AnyChange;
 
         private IInternalState PersistentState { get; }
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
@@ -57,7 +57,7 @@ namespace BSU.Core.Model
             var eventCombiner = new StructureEventCombiner(this);
 
             // TODO: use proper service.. stuff?
-            new AutoSelector(this);
+            var _ = new AutoSelector(this);
 
             eventCombiner.AnyChange += () => AnyChange?.Invoke();
             Load();
@@ -128,7 +128,7 @@ namespace BSU.Core.Model
             _errorPresenter.Connect(presenter);
         }
 
-        public async Task<ServerInfo> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
+        public async Task<ServerInfo?> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
         {
             return await _types.CheckUrl(url, cancellationToken);
         }

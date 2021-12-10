@@ -61,10 +61,10 @@ public abstract class MockedIoTest : LoggedTest
     private static IMockedFiles GetImplementation(object mod)
     {
         var field = mod.GetType().GetField("_implementation", BindingFlags.NonPublic | BindingFlags.Instance);
-        return (IMockedFiles)field!.GetValue(mod);
+        return (IMockedFiles)field!.GetValue(mod)!;
     }
 
-    private static async Task WaitFor(Func<bool> condition, int timeoutMs)
+    protected static async Task WaitFor(int timeoutMs, int? interval, Func<bool> condition)
     {
         var cts = new CancellationTokenSource(timeoutMs);
 
@@ -72,7 +72,10 @@ public abstract class MockedIoTest : LoggedTest
         {
             if (condition()) return;
             if (cts.IsCancellationRequested) throw new TimeoutException();
-            await Task.Yield();
+            if (interval != null)
+                await Task.Delay((int)interval, CancellationToken.None);
+            else
+                await Task.Yield();
         }
     }
 
@@ -164,7 +167,7 @@ public abstract class MockedIoTest : LoggedTest
                 settings.Storages.Add(new StorageEntry(info.Path, "TEST", info.Path, Guid.NewGuid()));
             }
 
-            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current);
+            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current ?? throw new InvalidOperationException());
             var model = new Model.Model(new InternalState(settings), types, eventBus, false);
 
             return model;

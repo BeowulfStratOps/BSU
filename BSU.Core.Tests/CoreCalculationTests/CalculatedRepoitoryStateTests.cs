@@ -15,7 +15,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?, bool) Null()
+        private (RepositoryModActionSelection?, ModActionEnum?, bool) Null()
         {
             return (null, null, false);
         }
@@ -38,7 +38,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         private CalculatedRepositoryStateEnum CalculateState(
-            params (RepositoryModActionSelection, ModActionEnum?, bool)[] modData)
+            params (RepositoryModActionSelection?, ModActionEnum?, bool)[] modData)
         {
             return CoreCalculation.CalculateRepositoryState(modData.ToList());
         }

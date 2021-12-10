@@ -14,11 +14,11 @@ namespace BSU.Core.ViewModel.Util
         public ObservableCollection<IActionListEntry> Storages { get; } = new();
         private bool _isOpen;
 
-        private ModAction _selection;
+        private ModAction? _selection;
         private readonly IModel _model;
         private readonly IModelRepositoryMod _repoMod;
 
-        public ModAction Selection
+        public ModAction? Selection
         {
             get => _selection;
             private set
@@ -41,7 +41,7 @@ namespace BSU.Core.ViewModel.Util
             }
         }
 
-        public event Action SelectionChanged;
+        public event Action? SelectionChanged;
 
         public DelegateCommand Open { get; }
 

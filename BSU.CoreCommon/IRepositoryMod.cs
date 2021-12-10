@@ -15,7 +15,7 @@ namespace BSU.CoreCommon
         Task<List<string>> GetFileList(CancellationToken cancellationToken); // TODO: make AsyncEnumerable
 
         /// <summary>
-        /// Returns metadata for a file. Null if file data not found.
+        /// Returns metadata for a file. Exception if file data not found.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="cancellationToken"></param>

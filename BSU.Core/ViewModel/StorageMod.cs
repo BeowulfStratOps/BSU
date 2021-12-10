@@ -10,10 +10,10 @@ namespace BSU.Core.ViewModel
 {
     public class StorageMod : ObservableBase
     {
-        private string _usedBy = "Loading...";
+        private string? _usedBy = "Loading...";
         private readonly IModelStorageMod _modelStorageMod;
         private string _title;
-        private IModel _model;
+        private readonly IModel _model;
 
         public string Title
         {
@@ -26,7 +26,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public string UsedBy
+        public string? UsedBy
         {
             get => _usedBy;
             set
@@ -41,7 +41,7 @@ namespace BSU.Core.ViewModel
         {
             _modelStorageMod = mod;
             _model = model;
-            Title = mod.Identifier;
+            _title = mod.Identifier;
 
             mod.StateChanged += _ => OnStateChanged();
             _model.AnyChange += Update;

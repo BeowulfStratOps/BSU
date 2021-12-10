@@ -16,7 +16,7 @@ namespace BSU.Core.Storage
     public class SteamStorage : IStorage
     {
         private readonly DirectoryInfo _basePath;
-        private Dictionary<string, IStorageMod> _mods;
+        private Dictionary<string, IStorageMod>? _mods;
         private readonly Task _loading;
 
         public SteamStorage(string path)
@@ -44,7 +44,7 @@ namespace BSU.Core.Storage
         public async Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
         {
             await _loading;
-            return _mods;
+            return _mods!;
         }
 
         public string GetLocation() => _basePath.FullName;
@@ -61,9 +61,9 @@ namespace BSU.Core.Storage
 
         public bool CanWrite() => false;
 
-        public static string GetWorkshopPath()
+        public static string? GetWorkshopPath()
         {
-            var path = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
+            var path = (string?)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
             if (path == null)
             {
                 LogManager.GetCurrentClassLogger().Error("Couldn't find steam install path");

@@ -5,8 +5,8 @@ namespace BSU.Core.ViewModel.Util
 {
     public class DelegateCommand : ICommand
     {
-        private readonly Action _action;
-        private readonly Action<object> _objAction;
+        private readonly Action? _action;
+        private readonly Action<object?>? _objAction;
         private bool _canExecute;
 
         public DelegateCommand(Action action, bool canExecute = true)
@@ -15,7 +15,7 @@ namespace BSU.Core.ViewModel.Util
             _canExecute = canExecute;
         }
 
-        public DelegateCommand(Action<object> action, bool canExecute = true)
+        public DelegateCommand(Action<object?> action, bool canExecute = true)
         {
             _objAction = action;
             _canExecute = canExecute;
@@ -28,15 +28,15 @@ namespace BSU.Core.ViewModel.Util
             CanExecuteChanged?.Invoke(null, EventArgs.Empty);
         }
 
-        public bool CanExecute(object parameter) => _canExecute;
-        public void Execute(object parameter)
+        public bool CanExecute(object? parameter) => _canExecute;
+        public void Execute(object? parameter)
         {
             if (_objAction != null)
                 _objAction(parameter);
             else
-                _action();
+                _action!();
         }
 
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler? CanExecuteChanged;
     }
 }

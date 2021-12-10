@@ -16,7 +16,7 @@ namespace BSU.Core.Services
             model.RemovedStorage += _ => OnAnyChange();
         }
 
-        public event Action AnyChange;
+        public event Action? AnyChange;
 
         private void OnAnyChange()
         {

@@ -16,7 +16,7 @@ namespace BSU.CoreCommon
         /// <param name="modCpp">/mod.cpp content</param>
         /// <param name="keynames">Names of .bikey files</param>
         /// <returns></returns>
-        public static (string name, string version) GetDisplayInfo(string modCpp, List<string> keynames)
+        public static (string name, string version) GetDisplayInfo(string? modCpp, List<string>? keynames)
         {
             // TODO: do something way smarter here
 

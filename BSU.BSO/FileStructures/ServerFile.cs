@@ -10,23 +10,23 @@ namespace BSU.BSO.FileStructures
     [JsonObject(MemberSerialization.OptIn)]
     public class ServerFile
     {
-        [JsonProperty] public string ServerName { get; set; }
-        [JsonProperty] public string ServerAddress { get; set; }
+        [JsonProperty] public string ServerName { get; set; } = null!;
+        [JsonProperty] public string ServerAddress { get; set; } = null!;
         [JsonProperty] public int ServerPort { get; set; }
-        [JsonProperty] public string Password { get; set; }
+        [JsonProperty] public string Password { get; set; } = null!;
         [JsonProperty] public DateTime CreationDate { get; set; }
         [JsonProperty] public DateTime LastUpdateDate { get; set; }
-        [JsonProperty] public List<Uri> SyncUris { get; set; }
+        [JsonProperty] public List<Uri> SyncUris { get; set; } = null!;
         [JsonProperty] public Guid ServerGuid { get; set; }
-        [JsonProperty] public List<ModFolder> ModFolders { get; set; }
+        [JsonProperty] public List<ModFolder> ModFolders { get; set; } = null!;
 
-        public ServerFile(string serverName, string serverAddress, int servePort, string password,
+        public ServerFile(string serverName, string serverAddress, int serverPort, string password,
             List<ModFolder> modFolders, DateTime lastUpdate, DateTime creationDate, Guid serverGuid, List<Uri> syncUris)
         {
             ServerAddress = serverAddress;
             ServerName = serverName;
             Password = password;
-            ServerPort = ServerPort;
+            ServerPort = serverPort;
             ModFolders = modFolders;
             CreationDate = creationDate;
             ServerGuid = serverGuid;
@@ -41,7 +41,7 @@ namespace BSU.BSO.FileStructures
 
     public class ModFolder
     {
-        public string ModName { get; set; }
+        public string ModName { get; set; } = null!;
 
         public ModFolder(string modName)
         {

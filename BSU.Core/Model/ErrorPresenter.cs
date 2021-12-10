@@ -5,7 +5,7 @@ namespace BSU.Core.Model
 {
     public class ErrorPresenter : IErrorPresenter
     {
-        private IErrorPresenter _connectedPresenter;
+        private IErrorPresenter? _connectedPresenter;
         private readonly List<string> _cache = new();
 
         public void Connect(IErrorPresenter presenter)

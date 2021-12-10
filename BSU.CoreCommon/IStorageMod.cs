@@ -14,6 +14,7 @@ namespace BSU.CoreCommon
         /// Get hash of a local file. Null if it doesn't exist.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken);
 

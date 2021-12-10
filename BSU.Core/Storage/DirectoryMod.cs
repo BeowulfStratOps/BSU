@@ -43,7 +43,7 @@ namespace BSU.Core.Storage
         }
 
         /// <summary>
-        /// Get hash of a local file. Null if it doesn't exist.
+        /// Get hash of a local file. Exception if it doesn't exist.
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="cancellationToken"></param>
@@ -53,7 +53,7 @@ namespace BSU.Core.Storage
             Util.CheckPath(path);
             var extension = Utils.GetExtension(path).ToLowerInvariant();
             var file = await OpenRead(path, cancellationToken);
-            if (file == null) return null;
+            if (file == null) throw new FileNotFoundException(path);
             return await SHA1AndPboHash.BuildAsync(file, extension, cancellationToken);
         }
 
@@ -80,12 +80,12 @@ namespace BSU.Core.Storage
 
             // TODO: looks ugly
             // TODO: async?
-            Directory.CreateDirectory(new FileInfo(filePath).Directory.FullName);
+            Directory.CreateDirectory(new FileInfo(filePath).Directory!.FullName);
             // TODO: async?
             return File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
         }
 
-        public async Task<Stream> OpenRead(string path, CancellationToken cancellationToken)
+        public async Task<Stream?> OpenRead(string path, CancellationToken cancellationToken)
         {
             Logger.Trace($"Reading file {path}");
             try

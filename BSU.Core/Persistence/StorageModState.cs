@@ -7,7 +7,7 @@ namespace BSU.Core.Persistence
 {
     internal interface IPersistedStorageModState
     {
-        UpdateTarget UpdateTarget { get; set; }
+        UpdateTarget? UpdateTarget { get; set; }
     }
 
     internal class PersistedStorageModState : IPersistedStorageModState
@@ -25,7 +25,7 @@ namespace BSU.Core.Persistence
             _identifier = identifier;
         }
 
-        public UpdateTarget UpdateTarget
+        public UpdateTarget? UpdateTarget
         {
             get => _updating.GetValueOrDefault(_identifier);
             set
