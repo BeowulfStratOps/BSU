@@ -9,47 +9,35 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorage : IStorage
     {
-        private Action<MockStorage>? _load;
-        private readonly int _ioDelayMs;
+        private readonly Task _load;
         public readonly Dictionary<string, MockStorageMod> Mods = new();
 
-        public MockStorage(Action<MockStorage>? load = null, int ioDelayMs = 0)
+        public MockStorage(Task? load)
         {
-            _load = load;
-            _ioDelayMs = ioDelayMs;
+            _load = load ?? Task.CompletedTask;
         }
 
         public bool CanWrite() => true;
-        public Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
+        public async Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
         {
-            Load();
+            await _load;
             var mods = Mods.ToDictionary(kv => kv.Key, kv => (IStorageMod) kv.Value);
-            return Task.FromResult(mods);
+            return mods;
         }
 
-        public Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
+        public async Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
         {
-            Load();
-            Thread.Sleep(_ioDelayMs);
+            await _load;
             if (identifier == null) throw new ArgumentNullException();
-            var newMod = new MockStorageMod();
+            var newMod = new MockStorageMod(_load);
             Mods.Add(identifier, newMod);
-            return Task.FromResult<IStorageMod>(newMod);
+            return newMod;
         }
 
-        public Task RemoveMod(string identifier, CancellationToken cancellationToken)
+        public async Task RemoveMod(string identifier, CancellationToken cancellationToken)
         {
-            Load();
+            await _load;
             Mods.Remove(identifier);
-            return Task.CompletedTask;
-        }
-
-        private void Load()
-        {
-            if (_load == null) return;
-            _load?.Invoke(this);
-            Thread.Sleep(_ioDelayMs);
-            _load = null;
         }
     }
 }

@@ -12,14 +12,14 @@ namespace BSU.Core.Tests.Mocks
 {
     internal class MockStorageMod : IStorageMod, IMockedFiles
     {
+        private readonly Task _load;
         public bool ThrowErrorOpen = false;
 
         private readonly Dictionary<string, byte[]> _files = new();
-        private readonly int _ioDelayMs;
 
-        public MockStorageMod(int ioDelayMs = 0)
+        public MockStorageMod(Task? load = null)
         {
-            _ioDelayMs = ioDelayMs;
+            _load = load ?? Task.CompletedTask;
         }
 
         public IReadOnlyDictionary<string, string> GetFiles()
@@ -32,10 +32,10 @@ namespace BSU.Core.Tests.Mocks
             _files[key] = Encoding.UTF8.GetBytes(data);
         }
 
-        public Task<List<string>> GetFileList(CancellationToken cancellationToken)
+        public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
         {
-            Thread.Sleep(_ioDelayMs);
-            return Task.FromResult(_files.Keys.ToList());
+            await _load;
+            return _files.Keys.ToList();
         }
 
         private sealed class MockStream : MemoryStream
@@ -58,32 +58,31 @@ namespace BSU.Core.Tests.Mocks
 
         public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
-            Thread.Sleep(_ioDelayMs / 10);
+            await _load;
             await using var stream = await OpenRead(path, cancellationToken);
             var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None);
             return hash;
         }
 
         public async Task<string> GetTitle(CancellationToken cancellationToken) => "Test";
-        public Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
+        public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
         {
-            Thread.Sleep(_ioDelayMs);
+            await _load;
             if (ThrowErrorOpen) throw new TestException();
             var data = _files.TryGetValue(path, out var content) ? content : Array.Empty<byte>();
-            return Task.FromResult<Stream>(new MockStream(data, d => _files[path] = d));
+            return new MockStream(data, d => _files[path] = d);
         }
 
-        public Task<Stream?> OpenRead(string path, CancellationToken cancellationToken)
+        public async Task<Stream?> OpenRead(string path, CancellationToken cancellationToken)
         {
-            Thread.Sleep(_ioDelayMs / 20);
+            await _load;
             if (ThrowErrorOpen) throw new TestException();
             var result = _files.TryGetValue(path, out var content) ? new MemoryStream(content) : null;
-            return Task.FromResult<Stream?>(result);
+            return result;
         }
 
         public Task Move(string @from, string to, CancellationToken cancellationToken)
         {
-            Thread.Sleep(_ioDelayMs / 20);
             throw new NotImplementedException();
         }
 
@@ -94,7 +93,6 @@ namespace BSU.Core.Tests.Mocks
 
         public Task Delete(string path, CancellationToken cancellationToken)
         {
-            Thread.Sleep(_ioDelayMs / 20);
             throw new NotImplementedException();
         }
     }

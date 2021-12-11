@@ -1,23 +1,15 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Concurrency;
 using BSU.Core.Model;
-using BSU.Core.Persistence;
 using BSU.Core.Services;
-using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace BSU.Core.Tests.MockedIO
 {
     // TODO: extend for ViewState
-    // TODO: looks like it's using the threadpool for testing, but we *need* to have one primary thread
     public class ModelStateStories : MockedIoTest
     {
         public ModelStateStories(ITestOutputHelper outputHelper) : base(outputHelper)
@@ -43,11 +35,11 @@ namespace BSU.Core.Tests.MockedIO
 
                 await Task.Delay(100);
 
-                var storage = model.GetStorages().Single();
-                var repo = model.GetRepositories().Single();
+                var sm = model.GetStorageMod("mod");
+                var rm = model.GetRepoMod("mod");
 
-                Assert.True(repo.GetMods()[0].GetCurrentSelection() is ModSelectionStorageMod storageMod &&
-                            storageMod.StorageMod == storage.GetMods()[0]);
+                Assert.True(rm.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
+                            storageMod.StorageMod == sm);
             });
         }
 
@@ -69,14 +61,15 @@ namespace BSU.Core.Tests.MockedIO
                 var repo = AddRepository(model, "repo");
                 await Task.Delay(100);
 
-                var repoMod = repo.GetMods()[0];
+                var repoMod = repo.GetMods().Single();
                 repoMod.SetSelection(new ModSelectionDownload(storage));
                 var update = await repoMod.StartUpdate(null, CancellationToken.None);
                 await update!.Update;
                 await Task.Delay(50);
 
-                Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, storage.GetMods().Single()));
-                Assert.True(FilesEqual(repoMod, storage.GetMods()[0]));
+                var sm = storage.GetMods().Single();
+                Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, sm));
+                Assert.True(FilesEqual(repoMod, sm));
             });
         }
 /*

@@ -90,7 +90,7 @@ namespace BSU.Core.Tests
 
         private static async Task<MatchHash> CreateStorageMod(string[] names, string? name)
         {
-            var storageMod = new MockStorageMod();
+            var storageMod = new MockStorageMod(Task.CompletedTask);
             AddFiles(storageMod, names, name);
             return await MatchHash.CreateAsync(storageMod, CancellationToken.None);
         }

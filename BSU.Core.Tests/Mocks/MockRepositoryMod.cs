@@ -18,19 +18,12 @@ namespace BSU.Core.Tests.Mocks
 
     public class MockRepositoryMod : IRepositoryMod, IMockedFiles
     {
+        private readonly Task _load;
         private readonly Dictionary<string, byte[]> _files = new();
-        private int _ioDelayMs;
 
-        public MockRepositoryMod(int ioDelayMs = 0)
+        public MockRepositoryMod(Task? load = null)
         {
-            _ioDelayMs = ioDelayMs;
-        }
-
-        private void WaitOnce()
-        {
-            if (_ioDelayMs == 0) return;
-            Thread.Sleep(_ioDelayMs);
-            _ioDelayMs = 0;
+            _load = load ?? Task.CompletedTask;
         }
 
         public void SetFile(string key, string data)
@@ -40,21 +33,20 @@ namespace BSU.Core.Tests.Mocks
 
         public IReadOnlyDictionary<string, string> GetFiles()
         {
-            WaitOnce();
             return _files.ToDictionary(kv => kv.Key, kv => Encoding.UTF8.GetString(kv.Value));
         }
 
-        public Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
+        public async Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
         {
-            WaitOnce();
-            return Task.FromResult(_files[path]);
+            await _load;
+            return _files[path];
         }
 
 
-        public Task<List<string>> GetFileList(CancellationToken cancellationToken)
+        public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
         {
-            WaitOnce();
-            return Task.FromResult(_files.Keys.ToList());
+            await _load;
+            return _files.Keys.ToList();
         }
 
         public async Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)

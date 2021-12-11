@@ -19,6 +19,7 @@ namespace BSU.Core.Tests
         {
         }
 
+        // TODO: use the load task
         internal static (MockStorageMod, StorageMod, TestEventBus) CreateStorageMod(UpdateTarget? stateTarget = null)
         {
             var mockStorage = new MockStorageMod();

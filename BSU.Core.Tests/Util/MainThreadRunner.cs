@@ -53,8 +53,10 @@ public static class MainThreadRunner
                 action(state);
 
                 stopWatch.Stop();
+#if !DEBUG
                 if (stopWatch.ElapsedMilliseconds > 16) // we expect 60fps all the time.
                     throw new Exception("Freeze detected!");
+#endif
             }
         }
     }

@@ -35,29 +35,28 @@ public class ViewModelTests : MockedIoTest
 
         MainThreadRunner.Run(async () =>
         {
-            var model = new ModelBuilder(1000)
+            var load = new TaskCompletionSource();
+            var vm = new ModelBuilder
             {
-                new RepoInfo("repo", true)
+                new RepoInfo("repo", true, load.Task)
                 {
-                    { "mod1", 1, 1 }
+                    { "mod1", 1, 1, load.Task }
                 },
-                new StorageInfo("storage", true)
+                new StorageInfo("storage", true, load.Task)
                 {
-                    { "mod1", 1, 1 }
+                    { "mod1", 1, 1, load.Task }
                 }
-            }.Build();
-            var vm = new ViewModel.ViewModel(model, null!);
+            }.BuildVm();
             var repoPage = (RepositoriesPage)vm.Content;
 
-            await WaitFor(5000, 100, () =>
-            {
-                var state = repoPage.Repositories.Single().CalculatedState;
+            await Task.Delay(100);
 
-                if (state == CalculatedRepositoryStateEnum.Ready) return true;
+            Assert.Equal(CalculatedRepositoryStateEnum.Loading, repoPage.Repositories.Single().CalculatedState);
 
-                Assert.Equal(CalculatedRepositoryStateEnum.Loading, state);
-                return false;
-            });
+            load.SetResult();
+            await Task.Delay(100);
+
+            Assert.Equal(CalculatedRepositoryStateEnum.Ready, repoPage.Repositories.Single().CalculatedState);
         });
     }
 }

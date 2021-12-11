@@ -10,15 +10,16 @@ using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
+using BSU.Core.ViewModel;
 using Xunit.Abstractions;
 
 namespace BSU.Core.Tests.MockedIO;
 
 public abstract class MockedIoTest : LoggedTest
 {
-    private static MockRepositoryMod CreateRepoMod(int match, int version, int ioDelayMs = 0)
+    private static MockRepositoryMod CreateRepoMod(int match, int version, Task? load)
     {
-        var mockRepo = new MockRepositoryMod(ioDelayMs);
+        var mockRepo = new MockRepositoryMod(load);
         for (int i = 0; i < 3; i++)
         {
             mockRepo.SetFile($"/addons/{match}_{i}.pbo", version.ToString());
@@ -27,9 +28,9 @@ public abstract class MockedIoTest : LoggedTest
         return mockRepo;
     }
 
-    private static MockStorageMod CreateStorageMod(int match, int version, int ioDelayMs = 0)
+    private static MockStorageMod CreateStorageMod(int match, int version, Task? load)
     {
-        var mockStorage = new MockStorageMod(ioDelayMs);
+        var mockStorage = new MockStorageMod(load);
         for (int i = 0; i < 3; i++)
         {
             mockStorage.SetFile($"/addons/{match}_{i}.pbo", version.ToString());
@@ -81,12 +82,14 @@ public abstract class MockedIoTest : LoggedTest
 
     internal abstract class CollectionInfo : IEnumerable
     {
+        public readonly Task? Load;
         public readonly string Path;
         public readonly bool Active;
-        public readonly List<(string name, int match, int version)> Mods = new();
+        public readonly List<(string name, int match, int version, Task? load)> Mods = new();
 
-        protected CollectionInfo(string path, bool active)
+        protected CollectionInfo(string path, bool active, Task? load)
         {
+            Load = load;
             Path = path;
             Active = active;
         }
@@ -98,33 +101,32 @@ public abstract class MockedIoTest : LoggedTest
 
         public void Add(string name, int match, int version)
         {
-            Mods.Add((name, match, version));
+            Mods.Add((name, match, version, Task.CompletedTask));
+        }
+
+        public void Add(string name, int match, int version, Task load)
+        {
+            Mods.Add((name, match, version, load));
         }
     }
 
     internal class RepoInfo : CollectionInfo
     {
-        public RepoInfo(string path, bool active) : base(path, active)
+        public RepoInfo(string path, bool active = true, Task? load = null) : base(path, active, load)
         {
         }
     }
 
     internal class StorageInfo : CollectionInfo
     {
-        public StorageInfo(string path, bool active) : base(path, active)
+        public StorageInfo(string path, bool active = true, Task? load = null) : base(path, active, load)
         {
         }
     }
 
     internal class ModelBuilder : IEnumerable
     {
-        private readonly int _ioDelayMs;
         private readonly List<CollectionInfo> _infos = new();
-
-        public ModelBuilder(int ioDelayMs = 0)
-        {
-            _ioDelayMs = ioDelayMs;
-        }
 
         public Model.Model Build()
         {
@@ -132,24 +134,24 @@ public abstract class MockedIoTest : LoggedTest
 
             types.AddRepoType("TEST", path =>
             {
-                var repo = new MockRepository(ioDelayMs: _ioDelayMs);
                 var collection = _infos.OfType<RepoInfo>().SingleOrDefault(c => c.Path == path);
-                if (collection == null) return repo;
-                foreach (var (name, match, version) in collection.Mods)
+                if (collection == null) return new MockRepository(Task.CompletedTask);
+                var repo = new MockRepository(collection.Load);
+                foreach (var (name, match, version, load) in collection.Mods)
                 {
-                    repo.Mods.Add("@" + name, CreateRepoMod(match, version, _ioDelayMs));
+                    repo.Mods.Add("@" + name, CreateRepoMod(match, version, load));
                 }
 
                 return repo;
             });
             types.AddStorageType("TEST", path =>
             {
-                var storage = new MockStorage(ioDelayMs: _ioDelayMs);
                 var collection = _infos.OfType<StorageInfo>().SingleOrDefault(c => c.Path == path);
-                if (collection == null) return storage;
-                foreach (var (name, match, version) in collection.Mods)
+                if (collection == null) return new MockStorage(Task.CompletedTask);
+                var storage = new MockStorage(collection.Load);
+                foreach (var (name, match, version, load) in collection.Mods)
                 {
-                    storage.Mods.Add("@" + name, CreateStorageMod(match, version, _ioDelayMs));
+                    storage.Mods.Add("@" + name, CreateStorageMod(match, version, load));
                 }
 
                 return storage;
@@ -181,6 +183,12 @@ public abstract class MockedIoTest : LoggedTest
         public IEnumerator GetEnumerator()
         {
             throw new NotImplementedException();
+        }
+
+        public ViewModel.ViewModel BuildVm(IInteractionService? interactionService = null)
+        {
+            var model = Build();
+            return new ViewModel.ViewModel(model, interactionService!);
         }
     }
 
