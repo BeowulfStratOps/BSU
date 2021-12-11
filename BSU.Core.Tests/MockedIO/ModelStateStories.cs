@@ -46,7 +46,7 @@ namespace BSU.Core.Tests.MockedIO
                 var storage = model.GetStorages().Single();
                 var repo = model.GetRepositories().Single();
 
-                Assert.True(repo.GetMods()[0].GetCurrentSelection() is RepositoryModActionStorageMod storageMod &&
+                Assert.True(repo.GetMods()[0].GetCurrentSelection() is ModSelectionStorageMod storageMod &&
                             storageMod.StorageMod == storage.GetMods()[0]);
             });
         }
@@ -70,7 +70,7 @@ namespace BSU.Core.Tests.MockedIO
                 await Task.Delay(100);
 
                 var repoMod = repo.GetMods()[0];
-                repoMod.SetSelection(new RepositoryModActionDownload(storage));
+                repoMod.SetSelection(new ModSelectionDownload(storage));
                 var update = await repoMod.StartUpdate(null, CancellationToken.None);
                 await update!.Update;
                 await Task.Delay(50);

@@ -62,7 +62,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var storageMod = FromAction(ModActionEnum.Use);
 
             var conflict = new MockModelRepositoryMod(1, 3);
-            conflict.SetSelection(new RepositoryModActionStorageMod(storageMod));
+            conflict.SetSelection(new ModSelectionStorageMod(storageMod));
 
             var result = AutoSelect(repoMod, new[] { conflict }, storageMod);
 

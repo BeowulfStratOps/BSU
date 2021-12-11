@@ -26,14 +26,14 @@ namespace BSU.Core.Model
         private MatchHash? _matchHash;
         private VersionHash? _versionHash;
 
-        private RepositoryModActionSelection? _selection;
+        private ModSelection _selection = new ModSelectionNone();
 
         public event Action<IModelRepositoryMod>? StateChanged;
         public PersistedSelection? GetPreviousSelection() => _internalState.Selection;
         public event Action<IModelRepositoryMod>? SelectionChanged;
         public event Action<IModelRepositoryMod>? DownloadIdentifierChanged;
 
-        private RepositoryModActionSelection? Selection
+        private ModSelection Selection
         {
             get => _selection;
             set
@@ -58,7 +58,7 @@ namespace BSU.Core.Model
             _downloadIdentifier = identifier;
 
             if (_internalState.Selection?.Type == PersistedSelectionType.DoNothing)
-                _selection = new RepositoryModActionDoNothing();
+                _selection = new ModSelectionDisabled();
 
             Load();
         }
@@ -123,12 +123,12 @@ namespace BSU.Core.Model
             return _versionHash!;
         }
 
-        public void SetSelection(RepositoryModActionSelection? selection)
+        public void SetSelection(ModSelection selection)
         {
             Selection = selection;
         }
 
-        public RepositoryModActionSelection? GetCurrentSelection() => Selection;
+        public ModSelection GetCurrentSelection() => Selection;
 
 
         public async Task<ModUpdateInfo?> StartUpdate(IProgress<FileSyncStats>? progress, CancellationToken cancellationToken)
@@ -139,9 +139,9 @@ namespace BSU.Core.Model
 
             // TODO: switch
 
-            if (Selection is RepositoryModActionDoNothing) return null;
+            if (Selection is ModSelectionDisabled) return null;
 
-            if (Selection is RepositoryModActionStorageMod actionStorageMod)
+            if (Selection is ModSelectionStorageMod actionStorageMod)
             {
                 var storageMod = actionStorageMod.StorageMod;
                 var action = CoreCalculation.GetModAction(this, storageMod);
@@ -152,11 +152,11 @@ namespace BSU.Core.Model
                 return new ModUpdateInfo(updateTask, storageMod);
             }
 
-            if (Selection is RepositoryModActionDownload actionDownload)
+            if (Selection is ModSelectionDownload actionDownload)
             {
                 var updateTarget = new UpdateTarget(_versionHash!.GetHashString());
                 var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
-                Selection = new RepositoryModActionStorageMod(mod);
+                Selection = new ModSelectionStorageMod(mod);
                 var updateTask = mod.Update(_implementation, _matchHash!, _versionHash, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, mod);
             }

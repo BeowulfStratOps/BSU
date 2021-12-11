@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Services;
@@ -15,32 +17,60 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
         }
 
-        private (RepositoryModActionSelection?, ModActionEnum?, bool) Null()
+        private IModelRepositoryMod None()
         {
-            return (null, null, false);
+            var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
+            mock.Setup(m => m.GetCurrentSelection()).Returns(new ModSelectionNone());
+            return mock.Object;
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?, bool) DoNothing()
+        private IModelRepositoryMod Loading()
         {
-            return (new RepositoryModActionDoNothing(), null, false);
+            var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
+            mock.Setup(m => m.GetCurrentSelection()).Returns(new ModSelectionLoading());
+            return mock.Object;
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?, bool) Download()
+        private IModelRepositoryMod Disabled()
         {
-            var storage = new Mock<IModelStorage>(MockBehavior.Strict).Object;
-            return (new RepositoryModActionDownload(storage), null, false);
+            var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
+            mock.Setup(o => o.GetCurrentSelection()).Returns(new ModSelectionDisabled());
+            return mock.Object;
         }
 
-        private (RepositoryModActionSelection, ModActionEnum?, bool) StorageMod(ModActionEnum action)
+        private IModelRepositoryMod Download()
+        {
+            var storage = new Mock<IModelStorage>(MockBehavior.Strict);
+            storage.Setup(s => s.State).Returns(LoadingState.Loaded);
+            storage.Setup(s => s.HasMod("asdf")).Returns(false);
+            var selection = new ModSelectionDownload(storage.Object);
+            var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
+            mock.Setup(o => o.GetCurrentSelection()).Returns(selection);
+            mock.Setup(o => o.DownloadIdentifier).Returns("asdf");
+            return mock.Object;
+        }
+
+        private IModelRepositoryMod StorageMod(ModActionEnum action)
         {
             var storageMod = AutoselectTests.FromAction(action);
-            return (new RepositoryModActionStorageMod(storageMod), action, false);
+            var selection = new ModSelectionStorageMod(storageMod);
+            var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
+            mock.Setup(m => m.GetCurrentSelection()).Returns(selection);
+            mock.Setup(m => m.State).Returns(LoadingState.Loaded);
+            var matchHash = TestUtils.GetMatchHash(1).Result;
+            var versionHash = TestUtils.GetVersionHash(1).Result;
+            mock.Setup(m => m.GetMatchHash()).Returns(matchHash);
+            mock.Setup(m => m.GetVersionHash()).Returns(versionHash);
+            return mock.Object;
         }
 
-        private CalculatedRepositoryStateEnum CalculateState(
-            params (RepositoryModActionSelection?, ModActionEnum?, bool)[] modData)
+        // TODO: test with errors / loading / conflicts
+        private CalculatedRepositoryStateEnum CalculateState(params IModelRepositoryMod[] mods)
         {
-            return CoreCalculation.CalculateRepositoryState(modData.ToList());
+            var repo = new Mock<IModelRepository>(MockBehavior.Strict);
+            repo.Setup(r => r.State).Returns(LoadingState.Loaded);
+            repo.Setup(r => r.GetMods()).Returns(mods.ToList());
+            return CoreCalculation.GetRepositoryState(repo.Object, mods.ToList());
         }
 
         [Fact]
@@ -74,7 +104,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         private void Single_UserIntervention()
         {
             var result = CalculateState(
-                Null()
+                None()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result);
         }
@@ -141,7 +171,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             var result = CalculateState(
                 StorageMod(ModActionEnum.Use),
-                Null()
+                None()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result);
         }
@@ -181,7 +211,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             var result = CalculateState(
                 StorageMod(ModActionEnum.Update),
-                Null()
+                None()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result);
         }
@@ -209,80 +239,80 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void DoNothingAnd_Download()
+        private void DisabledAnd_Download()
         {
             var result = CalculateState(
                 Download(),
-                DoNothing()
+                Disabled()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result);
         }
 
         [Fact]
-        private void DoNothingAnd_Ready()
+        private void DisabledAnd_Ready()
         {
             var result = CalculateState(
                 StorageMod(ModActionEnum.Use),
-                DoNothing()
+                Disabled()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.ReadyPartial, result);
         }
 
         [Fact]
-        private void DoNothingAnd_Update()
+        private void DisabledAnd_Update()
         {
             var result = CalculateState(
                 StorageMod(ModActionEnum.Update),
-                DoNothing()
+                Disabled()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result);
         }
 
         [Fact]
-        private void DoNothingAnd_UserIntervention()
+        private void DisabledAnd_UserIntervention()
         {
             var result = CalculateState(
-                Null(),
-                DoNothing()
+                None(),
+                Disabled()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result);
         }
 
         [Fact]
-        private void DoNothingAnd_Await()
+        private void DisabledAnd_Await()
         {
             var result = CalculateState(
                 StorageMod(ModActionEnum.Await),
-                DoNothing()
+                Disabled()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.Syncing, result);
         }
 
         [Fact]
-        private void DoNothingAnd_ContinueUpdate()
+        private void DisabledAnd_ContinueUpdate()
         {
             var result = CalculateState(
                 StorageMod(ModActionEnum.ContinueUpdate),
-                DoNothing()
+                Disabled()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result);
         }
 
         [Fact]
-        private void DoNothingAnd_AbortAndUpdate()
+        private void DisabledAnd_AbortAndUpdate()
         {
             var result = CalculateState(
                 StorageMod(ModActionEnum.AbortAndUpdate),
-                DoNothing()
+                Disabled()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.NeedsSync, result);
         }
 
         [Fact]
-        private void Single_DoNothing()
+        private void Single_Disabled()
         {
             var result = CalculateState(
-                DoNothing()
+                Disabled()
             );
             Assert.Equal(CalculatedRepositoryStateEnum.ReadyPartial, result);
         }

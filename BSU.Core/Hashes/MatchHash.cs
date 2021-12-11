@@ -33,7 +33,7 @@ namespace BSU.Core.Hashes
             if (modCpp != null)
             {
                 using var reader = new StreamReader(modCpp);
-                var entries = Util.ParseModCpp(reader.ReadToEnd());
+                var entries = ModUtil.ParseModCpp(reader.ReadToEnd());
                 name = entries.GetValueOrDefault("name");
                 if (name != null)
                 {
@@ -71,7 +71,7 @@ namespace BSU.Core.Hashes
             string? name = null;
             if (modCppData != null)
             {
-                name = Util.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
+                name = ModUtil.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
                 if (name != null) name = CleanName(name);
             }
 

@@ -11,7 +11,7 @@ namespace BSU.Core.Model
 {
     internal interface IModelRepositoryMod
     {
-        public void SetSelection(RepositoryModActionSelection? selection);
+        public void SetSelection(ModSelection selection);
         string DownloadIdentifier { get; set; }
         string Identifier { get; }
         IModelRepository ParentRepository { get; }
@@ -20,7 +20,7 @@ namespace BSU.Core.Model
         ModInfo GetModInfo();
         MatchHash GetMatchHash();
         VersionHash GetVersionHash();
-        RepositoryModActionSelection? GetCurrentSelection();
+        ModSelection GetCurrentSelection();
         event Action<IModelRepositoryMod> StateChanged;
         PersistedSelection? GetPreviousSelection();
         event Action<IModelRepositoryMod> SelectionChanged;

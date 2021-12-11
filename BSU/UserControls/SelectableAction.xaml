@@ -12,7 +12,7 @@
     <Border x:Name="Border" MouseEnter="Border_OnMouseEnter" MouseLeave="Border_OnMouseLeave" MouseLeftButtonDown="Border_OnMouseLeftButtonDown">
         <Border.Resources>
             <converters:ActionToColorConverter x:Key="ActionToColor" />
-            <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
+            <DataTemplate DataType="{x:Type viewModel:SelectDisabled}">
                 <TextBlock>Disabled</TextBlock>
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:SelectMod}">

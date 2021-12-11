@@ -18,14 +18,16 @@ namespace BSU.Core.Persistence
             Mod = mod;
         }
 
-        public static PersistedSelection? FromSelection(RepositoryModActionSelection? selection)
+        public static PersistedSelection? FromSelection(ModSelection selection)
         {
+            // TODO: PersistedSelection shouldn't have to know about None/Loading details
             return selection switch
             {
-                null => null,
-                RepositoryModActionDoNothing => new PersistedSelection(PersistedSelectionType.DoNothing, null, null),
-                RepositoryModActionStorageMod storageModAction => storageModAction.StorageMod.GetStorageModIdentifiers(),
-                RepositoryModActionDownload downloadAction => downloadAction.DownloadStorage.AsStorageIdentifier(),
+                ModSelectionNone => null,
+                ModSelectionLoading => null,
+                ModSelectionDisabled => new PersistedSelection(PersistedSelectionType.DoNothing, null, null),
+                ModSelectionStorageMod storageModAction => storageModAction.StorageMod.GetStorageModIdentifiers(),
+                ModSelectionDownload downloadAction => downloadAction.DownloadStorage.AsStorageIdentifier(),
                 _ => throw new ArgumentException()
             };
         }

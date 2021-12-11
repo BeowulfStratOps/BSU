@@ -106,7 +106,7 @@ namespace BSU.BSO
 
             keys = keys.Any() ? keys : null;
 
-            return Util.GetDisplayInfo(modCpp, keys);
+            return ModUtil.GetDisplayInfo(modCpp, keys);
         }
 
         /// <summary>

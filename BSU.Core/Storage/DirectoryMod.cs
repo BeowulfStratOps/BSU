@@ -50,7 +50,7 @@ namespace BSU.Core.Storage
         /// <returns></returns>
         public async Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
         {
-            Util.CheckPath(path);
+            ModUtil.CheckPath(path);
             var extension = Utils.GetExtension(path).ToLowerInvariant();
             var file = await OpenRead(path, cancellationToken);
             if (file == null) throw new FileNotFoundException(path);
@@ -65,7 +65,7 @@ namespace BSU.Core.Storage
         private string GetFullFilePath(string path)
         {
             // TODO: check that the path is in the mod directory (avoid accidental directory traversal)
-            Util.CheckPath(path);
+            ModUtil.CheckPath(path);
             return Path.Combine(Dir.FullName, path.Substring(1));
         }
 

@@ -56,9 +56,9 @@
                     <DockPanel x:Name="ComboBoxSelected">
                         <userControls:SvgButton DockPanel.Dock="Right" Width="15" Height="15" Command="{Binding Actions.Open}" Svg="{StaticResource SvgComboOpen}" ToolTip="Show available Download Locations"/>
 
-                        <ContentControl Content="{Binding Actions.Selection, TargetNullValue='Nothing selected'}">
+                        <ContentControl Content="{Binding Actions.Selection}">
                             <ContentControl.Resources>
-                                <DataTemplate DataType="{x:Type viewModel:SelectDoNothing}">
+                                <DataTemplate DataType="{x:Type viewModel:SelectDisabled}">
                                     <TextBlock>Disabled</TextBlock>
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type viewModel:SelectMod}">
@@ -75,8 +75,11 @@
                                         <TextBox MinWidth="100" MaxWidth="200" Text="{Binding DataContext.DownloadIdentifier, ElementName=RepoMod, UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
                                 </DataTemplate>
-                                <DataTemplate DataType="{x:Type sys:String}">
-                                    <TextBlock Foreground="Red" FontStyle="Italic" Text="{Binding}" />
+                                <DataTemplate DataType="{x:Type viewModel:SelectNone}">
+                                    <TextBlock Foreground="Red" FontStyle="Italic" Text="Nothing Selected" />
+                                </DataTemplate>
+                                <DataTemplate DataType="{x:Type viewModel:SelectLoading}">
+                                    <TextBlock Text="Loading" />
                                 </DataTemplate>
                             </ContentControl.Resources>
                         </ContentControl>

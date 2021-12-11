@@ -14,11 +14,11 @@ namespace BSU.Core.ViewModel.Util
         public ObservableCollection<IActionListEntry> Storages { get; } = new();
         private bool _isOpen;
 
-        private ModAction? _selection;
+        private ModAction _selection = new SelectLoading();
         private readonly IModel _model;
         private readonly IModelRepositoryMod _repoMod;
 
-        public ModAction? Selection
+        public ModAction Selection
         {
             get => _selection;
             private set
@@ -58,7 +58,7 @@ namespace BSU.Core.ViewModel.Util
             var currentSelection = _repoMod.GetCurrentSelection();
             Selection = ModAction.Create(currentSelection, _repoMod);
             Storages.Clear();
-            Storages.Add(new SelectableModAction(new SelectDoNothing(), SetSelection,
+            Storages.Add(new SelectableModAction(new SelectDisabled(), SetSelection,
                 false));
 
             foreach (var storage in _model.GetStorages())
@@ -73,7 +73,7 @@ namespace BSU.Core.ViewModel.Util
                     if (actionType != ModActionEnum.Unusable)
                     {
                         var action = new SelectMod(mod, actionType);
-                        var isSelected = _repoMod.GetCurrentSelection() is RepositoryModActionStorageMod storageMod &&
+                        var isSelected = _repoMod.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
                                          storageMod.StorageMod == mod;
                         actions.Add(new SelectableModAction(action, SetSelection, isSelected));
                     }
@@ -81,7 +81,7 @@ namespace BSU.Core.ViewModel.Util
 
                 if (actions.Any() || storage.CanWrite)
                 {
-                    var isSelected = _repoMod.GetCurrentSelection() is RepositoryModActionDownload download &&
+                    var isSelected = _repoMod.GetCurrentSelection() is ModSelectionDownload download &&
                                      download.DownloadStorage == storage;
                     Storages.Add(new StorageModActionList(storage, SetSelection, actions, isSelected));
                 }

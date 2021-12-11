@@ -152,6 +152,7 @@ namespace BSU.Core.ViewModel
 
         private void AdjustSelection()
         {
+            // TODO: better interface functions
             if (IsLoading) return;
 
             var mods = _repository.GetMods();
@@ -159,9 +160,9 @@ namespace BSU.Core.ViewModel
             {
                 foreach (var mod in mods)
                 {
-                    if (mod.GetCurrentSelection() is RepositoryModActionDownload)
+                    if (mod.GetCurrentSelection() is ModSelectionDownload)
                     {
-                        mod.SetSelection(null);
+                        mod.SetSelection(new ModSelectionNone());
                     }
                 }
             }
@@ -171,11 +172,11 @@ namespace BSU.Core.ViewModel
             foreach (var mod in mods)
             {
                 var selection = mod.GetCurrentSelection();
-                if (selection is RepositoryModActionDownload ||
-                    (selection is RepositoryModActionStorageMod storageMod && !storageMod.StorageMod.CanWrite &&
+                if (selection is ModSelectionDownload ||
+                    (selection is ModSelectionStorageMod storageMod && !storageMod.StorageMod.CanWrite &&
                      !UseSteam))
                 {
-                    mod.SetSelection(new RepositoryModActionDownload(Storage.Storage));
+                    mod.SetSelection(new ModSelectionDownload(Storage.Storage));
                     mod.DownloadIdentifier = CoreCalculation.GetAvailableDownloadIdentifier(Storage.Storage, mod.Identifier);
                 }
             }

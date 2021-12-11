@@ -8,7 +8,7 @@ namespace BSU.CoreCommon
     /// <summary>
     /// Utility methods used by repo/storage types and core
     /// </summary>
-    public static class Util
+    public static class ModUtil
     {
         /// <summary>
         /// Attempt to create a display name

@@ -16,15 +16,15 @@ namespace BSU.Core.Tests.CoreCalculationTests
     {
         private readonly MatchHash? _matchHash;
         private readonly VersionHash? _versionHash;
-        private RepositoryModActionSelection? _selection;
+        private ModSelection _selection = new ModSelectionLoading();
 
-        public MockModelRepositoryMod(int? match, int? version)
+        public MockModelRepositoryMod(int match, int version)
         {
             _matchHash = TestUtils.GetMatchHash(match).Result;
             _versionHash = TestUtils.GetVersionHash(version).Result;
         }
 
-        public void SetSelection(RepositoryModActionSelection? selection)
+        public void SetSelection(ModSelection selection)
         {
             _selection = selection;
         }
@@ -48,7 +48,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         public VersionHash GetVersionHash() => _versionHash ?? throw new InvalidOperationException();
 
-        public RepositoryModActionSelection? GetCurrentSelection() => _selection;
+        public ModSelection GetCurrentSelection() => _selection;
 
         public event Action<IModelRepositoryMod>? StateChanged;
         public PersistedSelection GetPreviousSelection()

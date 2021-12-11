@@ -44,7 +44,7 @@ public class SingleThreadRunnerSelfTests
         });
     }
 
-    [Fact]
+    [Fact(Skip = "Not reliable. just for manual testing")]
     private void SynchronizationContextSelfTest2()
     {
         // just checking that it runs concurrent stuff reasonably (could use a better test/understanding)

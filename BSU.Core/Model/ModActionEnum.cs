@@ -8,6 +8,7 @@
         Use,
         AbortAndUpdate,
         Unusable, // should never reach the user
-        AbortActiveAndUpdate
+        AbortActiveAndUpdate,
+        Loading
     }
 }

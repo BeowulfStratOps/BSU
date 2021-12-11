@@ -10,18 +10,18 @@ namespace BSU.Core.ViewModel
 {
     public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
-        internal static ModAction? Create(RepositoryModActionSelection? selection, IModelRepositoryMod parent)
+        internal static ModAction Create(ModSelection selection, IModelRepositoryMod parent)
         {
-            if (selection == null) return null;
-
-            if (selection is RepositoryModActionDoNothing) return new SelectDoNothing();
-
-            if (selection is RepositoryModActionDownload download) return new SelectStorage(download.DownloadStorage);
-
-            if (selection is RepositoryModActionStorageMod actionStorageMod)
-                return new SelectMod(actionStorageMod.StorageMod, CoreCalculation.GetModAction(parent, actionStorageMod.StorageMod));
-
-            throw new ArgumentException();
+            return selection switch
+            {
+                ModSelectionNone => new SelectNone(),
+                ModSelectionLoading => new SelectLoading(),
+                ModSelectionDisabled => new SelectDisabled(),
+                ModSelectionDownload download => new SelectStorage(download.DownloadStorage),
+                ModSelectionStorageMod actionStorageMod => new SelectMod(actionStorageMod.StorageMod,
+                    CoreCalculation.GetModAction(parent, actionStorageMod.StorageMod)),
+                _ => throw new ArgumentException()
+            };
         }
 
 
@@ -32,26 +32,32 @@ namespace BSU.Core.ViewModel
             return ReferenceEquals(this, obj) || obj is ModAction other && Equals(other);
         }
 
-        public abstract override int GetHashCode();
+        public override int GetHashCode() => 0;
 
-        internal abstract RepositoryModActionSelection AsSelection { get; }
+        internal abstract ModSelection AsSelection { get; }
     }
 
-    public class SelectDoNothing : ModAction
+    // TODO: give the simple ones a static Instance to avoid creating new ones all the time?
+
+    public class SelectDisabled : ModAction
     {
-        internal SelectDoNothing(){}
+        public override bool Equals(ModAction? other) => other is SelectDisabled;
 
-        public override bool Equals(ModAction? other)
-        {
-            return other is SelectDoNothing;
-        }
+        internal override ModSelection AsSelection => new ModSelectionDisabled();
+    }
 
-        public override int GetHashCode()
-        {
-            return 0;
-        }
+    public class SelectNone : ModAction
+    {
+        public override bool Equals(ModAction? other) => other is SelectNone;
 
-        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionDoNothing();
+        internal override ModSelection AsSelection => new ModSelectionDisabled();
+    }
+
+    public class SelectLoading : ModAction
+    {
+        public override bool Equals(ModAction? other) => other is SelectLoading;
+
+        internal override ModSelection AsSelection => throw new InvalidOperationException();
     }
 
     public class SelectMod : ModAction
@@ -72,16 +78,10 @@ namespace BSU.Core.ViewModel
 
         public override bool Equals(ModAction? other)
         {
-            var ret = other is SelectMod selectMod && selectMod.StorageMod == StorageMod && selectMod.ActionType == ActionType;
-            return ret;
+            return other is SelectMod selectMod && selectMod.StorageMod == StorageMod && selectMod.ActionType == ActionType;
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(StorageMod);
-        }
-
-        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionStorageMod(StorageMod);
+        internal override ModSelection AsSelection => new ModSelectionStorageMod(StorageMod);
     }
 
     public class SelectStorage : ModAction
@@ -96,15 +96,9 @@ namespace BSU.Core.ViewModel
 
         public override bool Equals(ModAction? other)
         {
-            var ret = other is SelectStorage selectMod && selectMod.DownloadStorage == DownloadStorage;
-            return ret;
+            return other is SelectStorage selectMod && selectMod.DownloadStorage == DownloadStorage;
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(DownloadStorage);
-        }
-
-        internal override RepositoryModActionSelection AsSelection => new RepositoryModActionDownload(DownloadStorage);
+        internal override ModSelection AsSelection => new ModSelectionDownload(DownloadStorage);
     }
 }

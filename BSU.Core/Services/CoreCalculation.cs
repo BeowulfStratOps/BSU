@@ -15,31 +15,19 @@ namespace BSU.Core.Services
             IModelStorageMod storageMod)
         {
             if (repoMod.State == LoadingState.Loading || storageMod.GetState() == StorageModStateEnum.Loading)
-                return ModActionEnum.Unusable;
+                return ModActionEnum.Loading;
 
             if (repoMod.State == LoadingState.Error || storageMod.GetState() == StorageModStateEnum.Error)
                 return ModActionEnum.Unusable;
 
-            bool CheckMatch()
-            {
-                var repoHash = repoMod.GetMatchHash();
-                var storageHash = storageMod.GetMatchHash();
-                return repoHash.IsMatch(storageHash);
-            }
-
-            bool CheckVersion()
-            {
-                var repoHash = repoMod.GetVersionHash();
-                var storageHash = storageMod.GetVersionHash();
-                return repoHash.IsMatch(storageHash);
-            }
+            bool CheckMatch() => repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash());
+            bool CheckVersion() => repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash());
 
             switch (storageMod.GetState())
             {
                 case StorageModStateEnum.CreatedWithUpdateTarget:
                 {
                     if (CheckVersion()) return ModActionEnum.ContinueUpdate;
-                    if (CheckMatch()) return ModActionEnum.AbortAndUpdate;
                     return ModActionEnum.Unusable;
                 }
                 case StorageModStateEnum.Created:
@@ -61,14 +49,15 @@ namespace BSU.Core.Services
 
         internal static IModelStorageMod? AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelStorageMod> storageMods, List<IModelRepositoryMod> allRepoMods)
         {
-            (IModelStorageMod mod, ModActionEnum action, bool hasConflcts) GetModInfo(IModelStorageMod mod)
-            {
-                var action = GetModAction(repoMod, mod);
-                var conflicts = GetConflictsUsingMod(repoMod, mod, allRepoMods);
-                return (mod, action, conflicts.Any());
-            }
+            var byActionType = new Dictionary<ModActionEnum, List<IModelStorageMod>>();
 
-            var infos = storageMods.Select(GetModInfo).ToList();
+            foreach (var storageMod in storageMods)
+            {
+                if (GetConflictsUsingMod(repoMod, storageMod, allRepoMods).Any())
+                    continue;
+                var action = GetModAction(repoMod, storageMod);
+                byActionType.AddInBin(action, storageMod);
+            }
 
             // Order of precedence
             var precedence = new[]
@@ -76,34 +65,36 @@ namespace BSU.Core.Services
 
             foreach (var actionType in precedence)
             {
+                if (!byActionType.TryGetValue(actionType, out var candidates))
+                    continue;
+
                 // no steam
-                var foundInfo = infos.FirstOrDefault(info => info.action == actionType && !info.hasConflcts && info.mod.CanWrite);
-                if (foundInfo != default) return foundInfo.mod;
+                var foundMod = candidates.FirstOrDefault(mod => mod.CanWrite);
+                if (foundMod != null) return foundMod;
 
                 // steam
-                foundInfo = infos.FirstOrDefault(info => info.action == actionType && !info.hasConflcts && !info.mod.CanWrite);
-                if (foundInfo != default) return foundInfo.mod;
+                foundMod = candidates.FirstOrDefault(mod => !mod.CanWrite);
+                if (foundMod != null) return foundMod;
             }
 
             return null;
         }
 
-        internal static bool IsConflicting(IModelRepositoryMod origin, IModelRepositoryMod otherMod,
+        private static bool IsConflicting(IModelRepositoryMod origin, IModelRepositoryMod otherMod,
             IModelStorageMod selected)
         {
-            if (otherMod == origin) return false;
             if (origin.State == LoadingState.Loading || otherMod.State == LoadingState.Loading ||
                 selected.GetState() == StorageModStateEnum.Loading) return false;
-            var repoVersion = otherMod.GetVersionHash();
-            if (repoVersion.IsMatch(origin.GetVersionHash()))
+
+            if (otherMod.GetVersionHash().IsMatch(origin.GetVersionHash()))
                 return false; // can't possibly be a conflict
 
             // matches, but different target version -> conflict
-            var repoMatch = otherMod.GetMatchHash();
-            return repoMatch.IsMatch(selected.GetMatchHash());
+            return otherMod.GetMatchHash().IsMatch(selected.GetMatchHash());
         }
 
-        internal static CalculatedRepositoryStateEnum CalculateRepositoryState(List<(RepositoryModActionSelection? selection, ModActionEnum? action, bool hasError)> mods)
+        // TODO: create tests
+        public static CalculatedRepositoryStateEnum GetRepositoryState(IModelRepository repo, IEnumerable<IModelRepositoryMod> allRepositoryMods)
         {
             /*
             NeedsSync, // auto selected previously used, other auto selection worked without any conflicts, no internal conflicts.
@@ -113,54 +104,49 @@ namespace BSU.Core.Services
             Loading
             */
 
-            if (mods.Any(mod => mod.hasError))
-            {
-                return CalculatedRepositoryStateEnum.RequiresUserIntervention;
-            }
-
-            if (mods.All(mod =>
-                mod.selection is RepositoryModActionStorageMod && mod.action == ModActionEnum.Use))
-            {
-                return CalculatedRepositoryStateEnum.Ready;
-            }
-
-            if (mods.All(mod => mod.selection is RepositoryModActionDoNothing ||
-                mod.selection is RepositoryModActionStorageMod && mod.action == ModActionEnum.Use))
-            {
-                return CalculatedRepositoryStateEnum.ReadyPartial;
-            }
-
-            if (mods.Any(mod => mod.selection == null || mod.selection is RepositoryModActionStorageMod && mod.action == ModActionEnum.AbortActiveAndUpdate))
-                return CalculatedRepositoryStateEnum.RequiresUserIntervention;
-
-            if (mods.Any(mod => mod.action == ModActionEnum.Await))
-                return CalculatedRepositoryStateEnum.Syncing;
-
-            return CalculatedRepositoryStateEnum.NeedsSync;
-        }
-
-        // TODO: create tests
-        public static CalculatedRepositoryStateEnum GetRepositoryState(IModelRepository repo, IEnumerable<IModelRepositoryMod> allRepositoryMods)
-        {
             if (repo.State == LoadingState.Loading) return CalculatedRepositoryStateEnum.Loading;
             if (repo.State == LoadingState.Error) return CalculatedRepositoryStateEnum.Error;
 
             var mods = repo.GetMods();
             var allMods = allRepositoryMods.ToList();
 
-            (RepositoryModActionSelection? selection, ModActionEnum? action, bool hasError) GetModSelection(IModelRepositoryMod mod)
+            var infos = new List<(ModSelection? selection, ModActionEnum? action)>();
+
+            foreach (var mod in mods)
             {
                 var selection = mod.GetCurrentSelection();
-                var action = selection is not RepositoryModActionStorageMod actionStorageMod
+                var action = selection is not ModSelectionStorageMod actionStorageMod
                     ? null
                     : (ModActionEnum?)GetModAction(mod, actionStorageMod.StorageMod);
-                var hasError = GetErrorForSelection(mod, allMods) != null;
-                return (selection, action, hasError);
+
+                var error = GetErrorForSelection(mod, allMods);
+                if  (error != null)
+                    return CalculatedRepositoryStateEnum.RequiresUserIntervention;
+
+                if (action == ModActionEnum.Loading || selection is ModSelectionLoading)
+                    return CalculatedRepositoryStateEnum.Loading;
+
+                infos.Add((selection, action));
             }
 
-            var infos = mods.Select(GetModSelection).ToList();
+            if (infos.All(mod =>
+                    mod.selection is ModSelectionStorageMod && mod.action == ModActionEnum.Use))
+            {
+                return CalculatedRepositoryStateEnum.Ready;
+            }
 
-            return CalculateRepositoryState(infos);
+            if (infos.All(mod => mod.selection is ModSelectionDisabled || mod.action == ModActionEnum.Use))
+            {
+                return CalculatedRepositoryStateEnum.ReadyPartial;
+            }
+
+            if (infos.Any(mod => mod.selection is ModSelectionNone || mod.action == ModActionEnum.AbortActiveAndUpdate))
+                return CalculatedRepositoryStateEnum.RequiresUserIntervention;
+
+            if (infos.Any(mod => mod.action == ModActionEnum.Await))
+                return CalculatedRepositoryStateEnum.Syncing;
+
+            return CalculatedRepositoryStateEnum.NeedsSync;
         }
 
         public static string? GetErrorForSelection(IModelRepositoryMod mod, IEnumerable<IModelRepositoryMod> allRepositoryMods)
@@ -169,23 +155,21 @@ namespace BSU.Core.Services
 
             switch (selection)
             {
-                case null:
-                    return "Select an action";
-                case RepositoryModActionDoNothing:
+                case ModSelectionDisabled:
                     return null;
-                case RepositoryModActionDownload when string.IsNullOrWhiteSpace(mod.DownloadIdentifier):
+                case ModSelectionDownload when string.IsNullOrWhiteSpace(mod.DownloadIdentifier):
                     return "Name must be a valid folder name";
-                case RepositoryModActionDownload when mod.DownloadIdentifier.IndexOfAny(Path.GetInvalidPathChars()) >= 0 || mod.DownloadIdentifier.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0:
+                case ModSelectionDownload when mod.DownloadIdentifier.IndexOfAny(Path.GetInvalidPathChars()) >= 0 || mod.DownloadIdentifier.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0:
                     return "Invalid characters in name";
-                case RepositoryModActionDownload selectStorage:
+                case ModSelectionDownload selectStorage:
                 {
                     if (selectStorage.DownloadStorage.State == LoadingState.Loading) return null;
                     var folderExists = selectStorage.DownloadStorage.HasMod(mod.DownloadIdentifier);
                     return folderExists ? "Name in use" : null;
                 }
-                case RepositoryModActionStorageMod selectMod when GetModAction(mod, selectMod.StorageMod) == ModActionEnum.AbortActiveAndUpdate:
+                case ModSelectionStorageMod selectMod when GetModAction(mod, selectMod.StorageMod) == ModActionEnum.AbortActiveAndUpdate:
                     return "This mod is currently being updated";
-                case RepositoryModActionStorageMod selectMod:
+                case ModSelectionStorageMod selectMod:
                 {
                     var conflicts = GetConflictsUsingMod(mod, selectMod.StorageMod, allRepositoryMods);
                     if (!conflicts.Any())
@@ -199,14 +183,14 @@ namespace BSU.Core.Services
             }
         }
 
-        public static List<IModelRepositoryMod> GetConflictsUsingMod(IModelRepositoryMod repoMod, IModelStorageMod storageMod, IEnumerable<IModelRepositoryMod> allRepoMods)
+        private static List<IModelRepositoryMod> GetConflictsUsingMod(IModelRepositoryMod repoMod, IModelStorageMod storageMod, IEnumerable<IModelRepositoryMod> allRepoMods)
         {
             var result = new List<IModelRepositoryMod>();
 
             foreach (var mod in allRepoMods)
             {
                 if (mod == repoMod) continue;
-                if (mod.GetCurrentSelection() is not RepositoryModActionStorageMod otherMod || otherMod.StorageMod != storageMod) continue;
+                if (mod.GetCurrentSelection() is not ModSelectionStorageMod otherMod || otherMod.StorageMod != storageMod) continue;
                 if (IsConflicting(repoMod, mod, storageMod))
                     result.Add(mod);
             }
@@ -240,7 +224,7 @@ namespace BSU.Core.Services
             foreach (var repositoryMod in allRepositoryMods)
             {
                 var selection = repositoryMod.GetCurrentSelection();
-                if (selection is RepositoryModActionStorageMod mod && mod.StorageMod == storageMod)
+                if (selection is ModSelectionStorageMod mod && mod.StorageMod == storageMod)
                     result.Add(repositoryMod);
             }
 
