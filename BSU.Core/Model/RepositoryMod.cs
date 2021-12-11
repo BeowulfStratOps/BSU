@@ -155,7 +155,7 @@ namespace BSU.Core.Model
             if (Selection is ModSelectionDownload actionDownload)
             {
                 var updateTarget = new UpdateTarget(_versionHash!.GetHashString());
-                var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget);
+                var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget, _matchHash!);
                 Selection = new ModSelectionStorageMod(mod);
                 var updateTask = mod.Update(_implementation, _matchHash!, _versionHash, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, mod);

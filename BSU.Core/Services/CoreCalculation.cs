@@ -28,6 +28,7 @@ namespace BSU.Core.Services
                 case StorageModStateEnum.CreatedWithUpdateTarget:
                 {
                     if (CheckVersion()) return ModActionEnum.ContinueUpdate;
+                    if (CheckMatch()) return ModActionEnum.AbortAndUpdate;
                     return ModActionEnum.Unusable;
                 }
                 case StorageModStateEnum.Created:

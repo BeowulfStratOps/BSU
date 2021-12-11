@@ -45,7 +45,7 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(IStorageMod implementation, string identifier,
-            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IEventBus eventBus)
+            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IEventBus eventBus, MatchHash? createMatchHash = null)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
@@ -58,13 +58,21 @@ namespace BSU.Core.Model
             _updateTarget = _internalState.UpdateTarget;
             if (_updateTarget != null)
             {
-                _state = StorageModStateEnum.CreatedWithUpdateTarget;
-                _versionHash = VersionHash.FromDigest(_updateTarget.Hash);
                 _title = identifier;
+                _versionHash = VersionHash.FromDigest(_updateTarget.Hash);
+                if (createMatchHash != null)
+                {
+                    _state = StorageModStateEnum.CreatedWithUpdateTarget;
+                    _matchHash = createMatchHash;
+                }
+                else
+                {
+                    Load(true);
+                }
             }
             else
             {
-                Load();
+                Load(false);
             }
         }
 
@@ -77,14 +85,22 @@ namespace BSU.Core.Model
             return (matchHash, versionHash, title);
         }
 
-        private void Load()
+        private void Load(bool onlyMatchHash)
         {
             Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_eventBus, getResult =>
             {
                 try
                 {
-                    (_matchHash, _versionHash, _title) = getResult();
-                    SetState(StorageModStateEnum.Created, StorageModStateEnum.Loading);
+                    (_matchHash, var versionHash, _title) = getResult();
+                    if (onlyMatchHash)
+                    {
+                        SetState(StorageModStateEnum.CreatedWithUpdateTarget, StorageModStateEnum.Loading);
+                    }
+                    else
+                    {
+                        _versionHash = versionHash;
+                        SetState(StorageModStateEnum.Created, StorageModStateEnum.Loading);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -172,6 +188,11 @@ namespace BSU.Core.Model
                 }
             });
             return result;
+        }
+
+        private void CheckState(params StorageModStateEnum[] acceptableCurrent)
+        {
+            if (!acceptableCurrent.Contains(State)) throw new InvalidOperationException($"Not allowed in state {State}");
         }
 
         private void SetState(StorageModStateEnum newState, params StorageModStateEnum[] acceptableCurrent)

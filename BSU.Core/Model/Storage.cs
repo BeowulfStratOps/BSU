@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Hashes;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -96,13 +97,13 @@ namespace BSU.Core.Model
             return new List<IModelStorageMod>(_mods!);
         }
 
-        public async Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget)
+        public async Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget, MatchHash createMatchHash)
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
             state.UpdateTarget = updateTarget;
-            var storageMod = new StorageMod(mod, identifier, state, this, true, _eventBus);
+            var storageMod = new StorageMod(mod, identifier, state, this, true, _eventBus, createMatchHash);
             _mods!.Add(storageMod);
             AddedMod?.Invoke(storageMod);
             return storageMod;

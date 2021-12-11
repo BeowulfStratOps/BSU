@@ -39,7 +39,7 @@ namespace BSU.Core.Storage
             var files = Dir.EnumerateFiles("*", SearchOption.AllDirectories);
             var result = files.Select(fi => fi.FullName.Replace(Dir.FullName, "").Replace('\\', '/').ToLowerInvariant())
                 .ToList();
-            return Task.FromResult<List<string>>(result);
+            return Task.FromResult(result);
         }
 
         /// <summary>

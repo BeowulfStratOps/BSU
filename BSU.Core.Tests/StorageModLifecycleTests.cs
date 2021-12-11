@@ -60,9 +60,13 @@ namespace BSU.Core.Tests
         private void CreatedWithTarget()
         {
             var target = new UpdateTarget("1234");
-            var (implementation, storageMod, _) = CreateStorageMod(target);
+            var (implementation, storageMod, eventBus) = CreateStorageMod(target);
+
+            eventBus.Work(100, () => storageMod.GetState() == StorageModStateEnum.CreatedWithUpdateTarget);
+
             Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
             Assert.NotNull(storageMod.GetVersionHash());
+            Assert.NotNull(storageMod.GetMatchHash());
             var versionHash = storageMod.GetVersionHash();
             Assert.True(versionHash.IsMatch(VersionHash.FromDigest("1234")));
         }
@@ -71,8 +75,9 @@ namespace BSU.Core.Tests
         private void UpdateWithTarget()
         {
             var target = new UpdateTarget("1234");
-            var (implementation, storageMod, _) = CreateStorageMod(target);
+            var (implementation, storageMod, eventBus) = CreateStorageMod(target);
 
+            eventBus.Work(100, () => storageMod.GetState() == StorageModStateEnum.CreatedWithUpdateTarget);
 
             var repo = CreateRepoMod();
             var update = storageMod.Update(repo, MatchHash.CreateEmpty(),
