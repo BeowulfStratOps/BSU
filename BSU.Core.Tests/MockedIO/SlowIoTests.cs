@@ -26,37 +26,35 @@ public class ViewModelTests : MockedIoTest
     {
     }
 
-    [Fact]
-    private void SlowLoading()
+    [UIFact]
+    private async Task SlowLoading()
     {
         // repo state should be loading until all mods have a stable result
         // repo details shouldn't ever be sitting on unusable or null while loading.
         // will probably need a loading state to display on repo details per mod
 
-        MainThreadRunner.Run(async () =>
+        var load = new TaskCompletionSource();
+        var vm = new ModelBuilder
         {
-            var load = new TaskCompletionSource();
-            var vm = new ModelBuilder
+            new RepoInfo("repo", true, load.Task)
             {
-                new RepoInfo("repo", true, load.Task)
-                {
-                    { "mod1", 1, 1, load.Task }
-                },
-                new StorageInfo("storage", true, load.Task)
-                {
-                    { "mod1", 1, 1, load.Task }
-                }
-            }.BuildVm();
-            var repoPage = (RepositoriesPage)vm.Content;
+                { "mod1", 1, 1, load.Task }
+            },
+            new StorageInfo("storage", true, load.Task)
+            {
+                { "mod1", 1, 1, load.Task }
+            }
+        }.BuildVm();
+        var repoPage = (RepositoriesPage)vm.Content;
 
-            await Task.Delay(100);
+        await Task.Delay(100);
 
-            Assert.Equal(CalculatedRepositoryStateEnum.Loading, repoPage.Repositories.Single().CalculatedState);
+        Assert.Equal(CalculatedRepositoryStateEnum.Loading, repoPage.Repositories.Single().CalculatedState);
 
-            load.SetResult();
-            await Task.Delay(100);
+        load.SetResult();
+        await Task.Delay(100);
 
-            Assert.Equal(CalculatedRepositoryStateEnum.Ready, repoPage.Repositories.Single().CalculatedState);
-        });
+        Assert.Equal(CalculatedRepositoryStateEnum.Ready, repoPage.Repositories.Single().CalculatedState);
+
     }
 }

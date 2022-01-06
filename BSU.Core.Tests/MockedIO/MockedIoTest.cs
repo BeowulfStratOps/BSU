@@ -195,6 +195,7 @@ public abstract class MockedIoTest : LoggedTest
 
     protected MockedIoTest(ITestOutputHelper outputHelper) : base(outputHelper)
     {
+        Thread.CurrentThread.Name = "Main"; // looks better in logs
     }
 }
 

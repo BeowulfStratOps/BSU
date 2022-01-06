@@ -1,11 +1,14 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Services;
+using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace BSU.Core.Tests.MockedIO
 {
@@ -16,61 +19,55 @@ namespace BSU.Core.Tests.MockedIO
         {
         }
 
-        [Fact]
-        private void Load()
+        [UIFact]
+        private async Task Load()
         {
-            MainThreadRunner.Run(async () =>
+            var model = new ModelBuilder
             {
-                var model = new ModelBuilder
+                new RepoInfo("repo", true)
                 {
-                    new RepoInfo("repo", true)
-                    {
-                        { "mod", 1, 1 }
-                    },
-                    new StorageInfo("storage", true)
-                    {
-                        { "mod", 1, 1 }
-                    }
-                }.Build();
+                    { "mod", 1, 1 }
+                },
+                new StorageInfo("storage", true)
+                {
+                    { "mod", 1, 1 }
+                }
+            }.Build();
 
-                await Task.Delay(100);
+            await Task.Delay(100);
 
-                var sm = model.GetStorageMod("mod");
-                var rm = model.GetRepoMod("mod");
+            var sm = model.GetStorageMod("mod");
+            var rm = model.GetRepoMod("mod");
 
-                Assert.True(rm.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
-                            storageMod.StorageMod == sm);
-            });
+            Assert.True(rm.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
+                        storageMod.StorageMod == sm);
         }
 
-        [Fact]
-        private void Download()
+        [UIFact]
+        private async Task Download()
         {
-            MainThreadRunner.Run(async () =>
+            var model = new ModelBuilder
             {
-                var model = new ModelBuilder
+                new RepoInfo("repo", false)
                 {
-                    new RepoInfo("repo", false)
-                    {
-                        { "mod", 1, 1 }
-                    },
-                    new StorageInfo("storage", false)
-                }.Build();
+                    { "mod", 1, 1 }
+                },
+                new StorageInfo("storage", false)
+            }.Build();
 
-                var storage = AddStorage(model, "storage");
-                var repo = AddRepository(model, "repo");
-                await Task.Delay(100);
+            var storage = AddStorage(model, "storage");
+            var repo = AddRepository(model, "repo");
+            await Task.Delay(100);
 
-                var repoMod = repo.GetMods().Single();
-                repoMod.SetSelection(new ModSelectionDownload(storage));
-                var update = await repoMod.StartUpdate(null, CancellationToken.None);
-                await update!.Update;
-                await Task.Delay(50);
+            var repoMod = repo.GetMods().Single();
+            repoMod.SetSelection(new ModSelectionDownload(storage));
+            var update = await repoMod.StartUpdate(null, CancellationToken.None);
+            await update!.Update;
+            await Task.Delay(50);
 
-                var sm = storage.GetMods().Single();
-                Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, sm));
-                Assert.True(FilesEqual(repoMod, sm));
-            });
+            var sm = storage.GetMods().Single();
+            Assert.Equal(ModActionEnum.Use, CoreCalculation.GetModAction(repoMod, sm));
+            Assert.True(FilesEqual(repoMod, sm));
         }
 /*
         [Fact]
