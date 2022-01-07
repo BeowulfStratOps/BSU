@@ -65,7 +65,7 @@ public abstract class MockedIoTest : LoggedTest
         return (IMockedFiles)field!.GetValue(mod)!;
     }
 
-    protected static async Task WaitFor(int timeoutMs, int? interval, Func<bool> condition)
+    protected static async Task WaitFor(int timeoutMs, Func<bool> condition)
     {
         var cts = new CancellationTokenSource(timeoutMs);
 
@@ -73,10 +73,7 @@ public abstract class MockedIoTest : LoggedTest
         {
             if (condition()) return;
             if (cts.IsCancellationRequested) throw new TimeoutException();
-            if (interval != null)
-                await Task.Delay((int)interval, CancellationToken.None);
-            else
-                await Task.Yield();
+            await Task.Delay(1, CancellationToken.None);
         }
     }
 

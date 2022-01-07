@@ -71,6 +71,7 @@ namespace BSU.Core.Sync
 
         private async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats>? progress)
         {
+            // TODO: this creates all tasks right away. might be better for cancellation to create tasks only once needed.
             var tasks = _allActions.Select(a =>
                 ConcurrencyThrottle.Do(() => a.DoAsync(cancellationToken), cancellationToken));
             var whenAll = Task.WhenAll(tasks);

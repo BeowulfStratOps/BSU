@@ -29,7 +29,7 @@ namespace BSU.Core.Tests.Util
                     {
                         _startTime ??= logEvent.TimeStamp;
                         var delta = logEvent.TimeStamp - (DateTime)_startTime;
-                        return $"{delta.TotalSeconds:F3}";
+                        return FormattableString.Invariant($"{delta.TotalSeconds:F3}");
                     }));
                 Layout = NLog.Layouts.Layout.FromString("${time-from-start}|${level:uppercase=true}|${threadname}|${logger:shortName=true}|${message}");
             }

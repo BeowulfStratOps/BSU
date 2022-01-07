@@ -45,16 +45,17 @@ public class ViewModelTests : MockedIoTest
                 { "mod1", 1, 1, load.Task }
             }
         }.BuildVm();
+
         var repoPage = (RepositoriesPage)vm.Content;
+        var repo = repoPage.Repositories.Single();
 
-        await Task.Delay(100);
-
-        Assert.Equal(CalculatedRepositoryStateEnum.Loading, repoPage.Repositories.Single().CalculatedState);
+        Assert.Equal(CalculatedRepositoryStateEnum.Loading, repo.CalculatedState);
 
         load.SetResult();
-        await Task.Delay(100);
 
-        Assert.Equal(CalculatedRepositoryStateEnum.Ready, repoPage.Repositories.Single().CalculatedState);
+        await WaitFor(50, () => repo.CalculatedState == CalculatedRepositoryStateEnum.Ready);
+
+        Assert.Equal(CalculatedRepositoryStateEnum.Ready, repo.CalculatedState);
 
     }
 }
