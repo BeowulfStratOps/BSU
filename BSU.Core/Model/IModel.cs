@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Launch;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -11,7 +12,7 @@ namespace BSU.Core.Model
     {
         void DeleteRepository(IModelRepository repository, bool removeMods);
         void DeleteStorage(IModelStorage storage, bool removeMods);
-        IModelRepository AddRepository(string type, string url, string name);
+        IModelRepository AddRepository(string type, string url, string name, LaunchSettings settings);
         IModelStorage AddStorage(string type, string path, string name);
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();

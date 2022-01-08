@@ -19,9 +19,10 @@ namespace BSU.BSO.FileStructures
         [JsonProperty] public List<Uri> SyncUris { get; set; } = null!;
         [JsonProperty] public Guid ServerGuid { get; set; }
         [JsonProperty] public List<ModFolder> ModFolders { get; set; } = null!;
+        [JsonProperty] public List<string> DLCs { get; set; } = null!;
 
         public ServerFile(string serverName, string serverAddress, int serverPort, string password,
-            List<ModFolder> modFolders, DateTime lastUpdate, DateTime creationDate, Guid serverGuid, List<Uri> syncUris)
+            List<ModFolder> modFolders, DateTime lastUpdate, DateTime creationDate, Guid serverGuid, List<Uri> syncUris, List<string> dlcs)
         {
             ServerAddress = serverAddress;
             ServerName = serverName;
@@ -32,6 +33,7 @@ namespace BSU.BSO.FileStructures
             ServerGuid = serverGuid;
             SyncUris = syncUris;
             LastUpdateDate = lastUpdate;
+            DLCs = dlcs;
         }
 
         public ServerFile()

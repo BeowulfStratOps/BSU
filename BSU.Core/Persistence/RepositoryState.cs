@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BSU.Core.Launch;
 
 namespace BSU.Core.Persistence
 {
@@ -7,6 +8,8 @@ namespace BSU.Core.Persistence
     {
         IPersistedRepositoryModState GetMod(string identifier);
         Guid Identifier { get; }
+        LaunchSettings? GetSettings();
+        void SetSettings(LaunchSettings value);
     }
 
     internal class RepositoryState : IRepositoryState
@@ -17,7 +20,6 @@ namespace BSU.Core.Persistence
         public RepositoryState(RepositoryEntry entry, Action store)
         {
             _entry = entry;
-            _entry.UsedMods ??= new Dictionary<string, PersistedSelection>();
             _store = store;
         }
 
@@ -27,5 +29,12 @@ namespace BSU.Core.Persistence
         }
 
         public Guid Identifier => _entry.Guid;
+        public LaunchSettings GetSettings() => _entry.Settings;
+
+        public void SetSettings(LaunchSettings value)
+        {
+            _entry.Settings = value;
+            _store();
+        }
     }
 }

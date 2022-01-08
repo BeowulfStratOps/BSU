@@ -56,7 +56,7 @@ public abstract class MockedIoTest : LoggedTest
 
     internal static IModelRepository AddRepository(IModel model, string name)
     {
-        return model.AddRepository("TEST", name, name);
+        return model.AddRepository("TEST", name, name, null!);
     }
 
     private static IMockedFiles GetImplementation(object mod)
@@ -158,7 +158,7 @@ public abstract class MockedIoTest : LoggedTest
 
             foreach (var info in _infos.OfType<RepoInfo>().Where(r => r.Active))
             {
-                settings.Repositories.Add(new RepositoryEntry(info.Path, "TEST", info.Path, Guid.NewGuid()));
+                settings.Repositories.Add(new RepositoryEntry(info.Path, "TEST", info.Path, Guid.NewGuid(), null!));
             }
 
             foreach (var info in _infos.OfType<StorageInfo>().Where(r => r.Active))

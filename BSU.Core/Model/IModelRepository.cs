@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BSU.Core.Launch;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Model
@@ -10,6 +11,7 @@ namespace BSU.Core.Model
         Guid Identifier { get; }
         string Name { get; }
         LoadingState State { get; }
+        LaunchSettings Settings { get; set; }
         ServerInfo GetServerInfo();
         event Action<IModelRepository> StateChanged;
     }

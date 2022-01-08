@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Launch;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
@@ -47,7 +48,7 @@ namespace BSU.Core.ViewModel
             var vm = new AddRepository(_model);
             if (!_viewModelService.InteractionService.AddRepository(vm)) return;
 
-            var repo = _model.AddRepository("BSO", vm.Url.Trim(), vm.Name.Trim());
+            var repo = _model.AddRepository("BSO", vm.Url.Trim(), vm.Name.Trim(), LaunchSettings.BuildDefault());
 
             var vmRepo = _viewModelService.FindVmRepo(repo);
 

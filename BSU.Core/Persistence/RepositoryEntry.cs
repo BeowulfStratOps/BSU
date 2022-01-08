@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using BSU.Core.Launch;
 
 namespace BSU.Core.Persistence
 {
@@ -17,14 +19,15 @@ namespace BSU.Core.Persistence
         public string Name { get; }
         public string Type { get; }
         public string Url { get; }
-        
-        
-        
-        public Dictionary<string, PersistedSelection> UsedMods = new Dictionary<string, PersistedSelection>();
+        public LaunchSettings Settings { get; set; }
 
-        public RepositoryEntry(string name, string type, string url, Guid guid)
+
+        public Dictionary<string, PersistedSelection> UsedMods = new();
+
+        public RepositoryEntry(string name, string type, string url, Guid guid, LaunchSettings settings)
         {
             Guid = guid;
+            Settings = settings;
             Name = name;
             Type = type;
             Url = url;

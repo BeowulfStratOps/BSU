@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Launch;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.Storage;
@@ -106,10 +107,10 @@ namespace BSU.Core.Model
             return storage;
         }
 
-        public IModelRepository AddRepository(string type, string url, string name)
+        public IModelRepository AddRepository(string type, string url, string name, LaunchSettings settings)
         {
             if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
-            var (entry, repoState) = PersistentState.AddRepo(name, url, type);
+            var (entry, repoState) = PersistentState.AddRepo(name, url, type, settings);
             return CreateRepository(entry, repoState);
         }
 

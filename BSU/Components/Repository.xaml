@@ -24,6 +24,8 @@
                     <TextBlock Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}}"></TextBlock>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Settings}" Svg="{StaticResource SvgSettings}" ToolTip="Settings" />
+
                     <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Details}" Svg="{StaticResource SvgDetails}" ToolTip="Show Preset Details" />
 
                     <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Preset">

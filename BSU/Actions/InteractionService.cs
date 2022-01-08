@@ -48,5 +48,10 @@ namespace BSU.GUI.Actions
         {
             return (bool)new SelectRepositoryStorageDialog(viewModel).ShowDialog();
         }
+
+        public bool PresetSettings(PresetSettings vm)
+        {
+            return (bool)new PresetSettingsDialog(vm).ShowDialog();
+        }
     }
 }

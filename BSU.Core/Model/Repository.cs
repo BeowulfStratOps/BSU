@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Launch;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
@@ -54,6 +55,19 @@ namespace BSU.Core.Model
                 _state = value;
                 StateChanged?.Invoke(this);
             }
+        }
+
+        public LaunchSettings Settings
+        {
+            get
+            {
+                var settings = _internalState.GetSettings();
+                if (settings != null) return settings;
+                settings =LaunchSettings.BuildDefault();
+                _internalState.SetSettings(settings);
+                return settings;
+            }
+            set => _internalState.SetSettings(value);
         }
 
         private async Task<(Dictionary<string, IRepositoryMod> mods, ServerInfo serverInfo)> LoadAsync()

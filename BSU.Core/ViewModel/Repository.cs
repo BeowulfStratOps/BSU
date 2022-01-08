@@ -185,8 +185,7 @@ namespace BSU.Core.ViewModel
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
             Pause = new DelegateCommand(DoPause, false);
-            Settings = new DelegateCommand(() =>
-                _viewModelService.InteractionService.MessagePopup("Not supported yet.", "Settings"));
+            Settings = new DelegateCommand(ShowSettings);
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
             modelRepository.StateChanged += _ => OnStateChanged();
             Name = modelRepository.Name;
@@ -212,6 +211,14 @@ namespace BSU.Core.ViewModel
             {
                 Mods.Add(new RepositoryMod(mod, _model));
             }
+        }
+
+        private void ShowSettings()
+        {
+            var vm = new PresetSettings(ModelRepository.Settings);
+            var save = _viewModelService.InteractionService.PresetSettings(vm);
+            if (save)
+                ModelRepository.Settings = vm.ToLaunchSettings();
         }
 
         private void DoChooseDownloadLocation()

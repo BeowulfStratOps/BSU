@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BSU.Core.Launch;
 using BSU.Core.Model;
 using BSU.CoreCommon;
 using NLog;
@@ -44,10 +45,10 @@ namespace BSU.Core.Persistence
             _settings.Store();
         }
 
-        public (IRepositoryEntry entry, IRepositoryState state) AddRepo(string name, string url, string type)
+        public (IRepositoryEntry entry, IRepositoryState state) AddRepo(string name, string url, string type, LaunchSettings launchSettings)
         {
             if (_settings.Repositories.Any(r => r.Name == name)) throw new ArgumentException("Name in use");
-            var repo = new RepositoryEntry(name, type, url, Guid.NewGuid());
+            var repo = new RepositoryEntry(name, type, url, Guid.NewGuid(), launchSettings);
             _settings.Repositories.Add(repo);
             _settings.Store();
             return (repo, new RepositoryState(repo, _settings.Store));
