@@ -8,8 +8,8 @@ namespace BSU.Core.Persistence
     {
         IPersistedRepositoryModState GetMod(string identifier);
         Guid Identifier { get; }
-        LaunchSettings? GetSettings();
-        void SetSettings(LaunchSettings value);
+        PresetSettings? GetSettings();
+        void SetSettings(PresetSettings value);
     }
 
     internal class RepositoryState : IRepositoryState
@@ -29,9 +29,9 @@ namespace BSU.Core.Persistence
         }
 
         public Guid Identifier => _entry.Guid;
-        public LaunchSettings GetSettings() => _entry.Settings;
+        public PresetSettings GetSettings() => _entry.Settings;
 
-        public void SetSettings(LaunchSettings value)
+        public void SetSettings(PresetSettings value)
         {
             _entry.Settings = value;
             _store();

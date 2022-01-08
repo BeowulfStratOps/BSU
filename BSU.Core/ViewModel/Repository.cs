@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Launch;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
@@ -172,6 +174,24 @@ namespace BSU.Core.ViewModel
             }
         }
 
+
+        private GameLaunchHandle? _runningProcess;
+
+        private bool _isRunning;
+        public bool IsRunning
+        {
+            get => _isRunning;
+            set
+            {
+                if (_isRunning == value) return;
+                _isRunning = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotRunning));
+            }
+        }
+
+        public bool IsNotRunning => !_isRunning;
+
         internal Repository(IModelRepository modelRepository, IModel model, IViewModelService viewModelService)
         {
             ModelRepository = modelRepository;
@@ -184,6 +204,7 @@ namespace BSU.Core.ViewModel
             ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
+            StopPlaying = new DelegateCommand(DoStopPlaying);
             Pause = new DelegateCommand(DoPause, false);
             Settings = new DelegateCommand(ShowSettings);
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
@@ -205,7 +226,7 @@ namespace BSU.Core.ViewModel
                 ServerUrl = "";
             }
 
-            (_, ServerUrl) = ModelRepository.GetServerInfo();
+            ServerUrl = ModelRepository.GetServerInfo().Url;
             var mods = ModelRepository.GetMods();
             foreach (var mod in mods.OrderBy(m => m.Identifier))
             {
@@ -229,6 +250,8 @@ namespace BSU.Core.ViewModel
 
         private void DoPlay()
         {
+            if (_runningProcess != null) throw new InvalidOperationException();
+
             var warningMessage = CalculatedState switch
             {
                 CalculatedRepositoryStateEnum.NeedsSync => "Your mods are not up to date.",
@@ -245,8 +268,29 @@ namespace BSU.Core.ViewModel
                 if (!goAhead) return;
             }
 
-            // TODO: implement
-            _viewModelService.InteractionService.MessagePopup("Launching the game is not supported yet.", "Launch Game");
+            var launchResult = ModelRepository.Launch();
+
+
+            if (launchResult.Succeeded)
+            {
+                _runningProcess = launchResult;
+                _runningProcess.Exited += () =>
+                {
+                    _runningProcess = null;
+                    IsRunning = false;
+                };
+                IsRunning = true;
+            }
+            else
+            {
+                _viewModelService.InteractionService.MessagePopup(launchResult.FailedReason!, "Failed to launch");
+            }
+        }
+
+        private void DoStopPlaying()
+        {
+            if (_runningProcess == null) throw new InvalidOperationException();
+            GameLaunchHandle.Stop();
         }
 
         private void DoPause()
@@ -380,6 +424,8 @@ Cancel - Do not remove this repository";
         public DelegateCommand Settings { get; }
 
         public DelegateCommand ChooseDownloadLocation { get; }
+
+        public DelegateCommand StopPlaying { get; }
 
         #endregion
     }

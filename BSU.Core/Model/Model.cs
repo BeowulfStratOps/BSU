@@ -107,7 +107,7 @@ namespace BSU.Core.Model
             return storage;
         }
 
-        public IModelRepository AddRepository(string type, string url, string name, LaunchSettings settings)
+        public IModelRepository AddRepository(string type, string url, string name, PresetSettings settings)
         {
             if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
             var (entry, repoState) = PersistentState.AddRepo(name, url, type, settings);

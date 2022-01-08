@@ -9,6 +9,14 @@ namespace BSU.Core.Launch;
 
 public static class ArmaData
 {
+    public static IReadOnlyDictionary<ulong, string> CDlcMap = new Dictionary<ulong, string>
+    {
+        { 1681170U, "WS" },
+        { 1227700U, "VN" },
+        { 1294440U, "CLSA" },
+        { 1042220U, "GM" }
+    };
+
     public static List<string> GetProfiles()
     {
         return GetProfilesFrom("Arma 3").Concat(GetProfilesFrom("Arma 3 - Other Profiles")).ToList();
@@ -53,19 +61,11 @@ public static class ArmaData
     public static bool Is64BitSystem() => Environment.Is64BitOperatingSystem;
 
     // ReSharper disable once InconsistentNaming
-    public static List<(ulong id, string path)> GetInstalledCDLCs()
+    public static bool IsCDlcInstalled(ulong id)
     {
         var armaPath = GetGamePath();
-
-        if (armaPath == null) return new List<(ulong id, string path)>();
-
-        return new List<(ulong id, string path)>
-        {
-            (1681170U, "WS"),
-            (1227700U, "VN"),
-            (1294440U, "CLSA"),
-            (1042220U, "GM")
-        }.Where((dlc, _) => new DirectoryInfo(Path.Combine(armaPath, dlc.path)).Exists).ToList();
+        var cdlcPath = CDlcMap[id];
+        return new DirectoryInfo(Path.Combine(armaPath!, cdlcPath)).Exists;
     }
 
     public static IReadOnlyList<string> GetAllocators()

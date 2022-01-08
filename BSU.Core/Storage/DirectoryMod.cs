@@ -62,11 +62,13 @@ namespace BSU.Core.Storage
             return Task.FromResult(Dir.Name);
         }
 
+        public string Path => Dir.FullName;
+
         private string GetFullFilePath(string path)
         {
             // TODO: check that the path is in the mod directory (avoid accidental directory traversal)
             ModUtil.CheckPath(path);
-            return Path.Combine(Dir.FullName, path.Substring(1));
+            return System.IO.Path.Combine(Dir.FullName, path.Substring(1));
         }
 
         public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)

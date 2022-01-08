@@ -53,7 +53,13 @@ namespace BSU.BSO
         {
             // TODO: use cancellationToken
             await _loading;
-            return new ServerInfo(_serverFile!.ServerName, _serverFile.ServerAddress);
+            return GetServerInfo(_serverFile!);
+        }
+
+        private static ServerInfo GetServerInfo(ServerFile serverFile)
+        {
+            var cdlcs = serverFile.DLCs.Select(ulong.Parse).ToList();
+            return new ServerInfo(serverFile.ServerName, serverFile.ServerAddress, serverFile.ServerPort, cdlcs);
         }
 
         public static async Task<ServerInfo?> CheckUrl(string url, CancellationToken cancellationToken)
@@ -63,7 +69,7 @@ namespace BSU.BSO
                 using var client = new HttpClient();
                 var serverFileJson = await client.GetStringAsync(url, cancellationToken);
                 var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
-                return new ServerInfo(serverFile.ServerName, serverFile.ServerAddress);
+                return GetServerInfo(serverFile);
             }
             catch
             {

@@ -12,7 +12,7 @@ namespace BSU.BSO.FileStructures
     {
         [JsonProperty] public string ServerName { get; set; } = null!;
         [JsonProperty] public string ServerAddress { get; set; } = null!;
-        [JsonProperty] public int ServerPort { get; set; }
+        [JsonProperty] public ushort ServerPort { get; set; }
         [JsonProperty] public string Password { get; set; } = null!;
         [JsonProperty] public DateTime CreationDate { get; set; }
         [JsonProperty] public DateTime LastUpdateDate { get; set; }
@@ -21,7 +21,7 @@ namespace BSU.BSO.FileStructures
         [JsonProperty] public List<ModFolder> ModFolders { get; set; } = null!;
         [JsonProperty] public List<string> DLCs { get; set; } = null!;
 
-        public ServerFile(string serverName, string serverAddress, int serverPort, string password,
+        public ServerFile(string serverName, string serverAddress, ushort serverPort, string password,
             List<ModFolder> modFolders, DateTime lastUpdate, DateTime creationDate, Guid serverGuid, List<Uri> syncUris, List<string> dlcs)
         {
             ServerAddress = serverAddress;

@@ -19,12 +19,12 @@ namespace BSU.Core.Persistence
         public string Name { get; }
         public string Type { get; }
         public string Url { get; }
-        public LaunchSettings Settings { get; set; }
+        public PresetSettings Settings { get; set; }
 
 
         public Dictionary<string, PersistedSelection> UsedMods = new();
 
-        public RepositoryEntry(string name, string type, string url, Guid guid, LaunchSettings settings)
+        public RepositoryEntry(string name, string type, string url, Guid guid, PresetSettings settings)
         {
             Guid = guid;
             Settings = settings;

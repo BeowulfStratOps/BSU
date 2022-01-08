@@ -11,8 +11,9 @@ namespace BSU.Core.Model
         Guid Identifier { get; }
         string Name { get; }
         LoadingState State { get; }
-        LaunchSettings Settings { get; set; }
+        PresetSettings Settings { get; set; }
         ServerInfo GetServerInfo();
         event Action<IModelRepository> StateChanged;
+        GameLaunchHandle Launch();
     }
 }

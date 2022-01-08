@@ -26,5 +26,6 @@ namespace BSU.Core.Model
         StorageModStateEnum GetState();
         string GetTitle();
         void Delete(bool removeData);
+        string GetAbsolutePath();
     }
 }

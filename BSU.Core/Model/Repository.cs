@@ -23,6 +23,7 @@ namespace BSU.Core.Model
 
         private LoadingState _state = LoadingState.Loading;
         public event Action<IModelRepository>? StateChanged;
+        public GameLaunchHandle Launch() => GameLauncher.Launch(this, _eventBus);
 
         private List<IModelRepositoryMod>? _mods;
 
@@ -57,13 +58,13 @@ namespace BSU.Core.Model
             }
         }
 
-        public LaunchSettings Settings
+        public PresetSettings Settings
         {
             get
             {
                 var settings = _internalState.GetSettings();
                 if (settings != null) return settings;
-                settings =LaunchSettings.BuildDefault();
+                settings =PresetSettings.BuildDefault();
                 _internalState.SetSettings(settings);
                 return settings;
             }

@@ -19,5 +19,6 @@ namespace BSU.CoreCommon
         Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken);
 
         Task<string> GetTitle(CancellationToken cancellationToken);
+        string Path { get; }
     }
 }

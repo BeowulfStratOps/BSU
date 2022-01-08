@@ -2,7 +2,7 @@
 
 namespace BSU.Core.Launch;
 
-public record LaunchSettings(string Profile, string Allocator)
+public record PresetSettings(string Profile, string Allocator)
 {
     public string? Server { get; init; }
     public bool BattlEye { get; init; }
@@ -14,9 +14,9 @@ public record LaunchSettings(string Profile, string Allocator)
     public bool HugePages { get; init; }
     public string? ArmaPath { get; init; }
 
-    public static LaunchSettings BuildDefault()
+    public static PresetSettings BuildDefault()
     {
-        return new LaunchSettings(ArmaData.GetProfiles().First(), ArmaData.GetAllocators().First())
+        return new PresetSettings(ArmaData.GetProfiles().First(), ArmaData.GetAllocators().First())
         {
             BattlEye = true,
             WorldEmpty = true,

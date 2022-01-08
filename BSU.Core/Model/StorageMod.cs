@@ -133,6 +133,7 @@ namespace BSU.Core.Model
             IsDeleted = true;
         }
 
+        public string GetAbsolutePath() => _implementation.Path;
         private UpdateTarget? UpdateTarget
         {
             get => _updateTarget;

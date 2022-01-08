@@ -8,7 +8,7 @@ namespace BSU.Core.ViewModel;
 public class PresetSettings : ObservableBase
 {
 
-    internal PresetSettings(LaunchSettings initial)
+    internal PresetSettings(Launch.PresetSettings initial)
     {
         Profile = initial.Profile;
         Server = initial.Server;
@@ -37,9 +37,9 @@ public class PresetSettings : ObservableBase
 
     public IReadOnlyList<string> Allocators { get; } = ArmaData.GetAllocators();
 
-    public LaunchSettings ToLaunchSettings()
+    public Launch.PresetSettings ToLaunchSettings()
     {
-        return new LaunchSettings(Profile, Allocator)
+        return new Launch.PresetSettings(Profile, Allocator)
         {
             Server = Server,
             BattlEye = BattlEye,
