@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -15,16 +14,6 @@ namespace BSU.Core.ViewModel
     {
         private readonly IModel _model;
         private object _content;
-        public object Content
-        {
-            get => _content;
-            private set
-            {
-                if (_content == value) return;
-                _content = value;
-                OnPropertyChanged();
-            }
-        }
 
         private readonly RepositoriesPage _repoPage;
         private readonly StoragePage _storagePage;
@@ -36,26 +25,25 @@ namespace BSU.Core.ViewModel
             _repoPage = new RepositoriesPage(model, this);
             _storagePage = new StoragePage(model, this);
             _content = _repoPage;
+            Navigator = new Navigator(_repoPage);
             InteractionService = interactionService;
         }
 
-        private readonly Stack<object> _navigationStack = new();
+        public Navigator Navigator { get; }
 
         public void NavigateToStorages()
         {
-            _navigationStack.Push(Content);
-            Content = _storagePage;
+            Navigator.To(_storagePage);
         }
 
         public void NavigateToRepository(Repository repository)
         {
-            _navigationStack.Push(Content);
-            Content = repository;
+            Navigator.To(repository);
         }
 
         public void NavigateBack()
         {
-            Content = _navigationStack.Pop();
+            Navigator.Back();
         }
 
         public IInteractionService InteractionService { get; set; }

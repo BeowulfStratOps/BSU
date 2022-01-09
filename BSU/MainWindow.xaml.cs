@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 using BSU.Core.ViewModel;
 using BSU.GUI.Actions;
@@ -83,6 +84,19 @@ namespace BSU.GUI
             catch (Exception e)
             {
                 _logger.Error(e);
+            }
+        }
+
+        private void OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            switch (e.ChangedButton)
+            {
+                case MouseButton.XButton1:
+                    ((ViewModel)DataContext).Navigator.Back();
+                    break;
+                case MouseButton.XButton2:
+                    ((ViewModel)DataContext).Navigator.Forward();
+                    break;
             }
         }
     }

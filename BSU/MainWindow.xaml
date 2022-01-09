@@ -9,7 +9,8 @@
         mc:Ignorable="d"
         Title="Beowulf Sync Utility" Height="450" Width="800" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
         Closing="MainWindow_OnClosing" WindowState="Normal"
-        Loaded="MainWindow_OnLoaded">
+        Loaded="MainWindow_OnLoaded"
+        MouseDown="OnMouseDown">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo></TaskbarItemInfo>
     </Window.TaskbarItemInfo>
@@ -32,7 +33,7 @@
             </MenuItem>
         </Menu>
         <Grid>
-            <ContentControl Content="{Binding Content}"></ContentControl>
+            <ContentControl Content="{Binding Navigator.Content}"></ContentControl>
             <ItemsControl VerticalAlignment="Bottom" ItemsSource="{Binding Errors}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
