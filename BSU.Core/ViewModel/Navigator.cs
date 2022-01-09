@@ -18,27 +18,36 @@ public class Navigator : ObservableBase
         }
     }
 
-    private readonly Stack<object> _navigationStack = new();
+    private readonly List<object> _pages;
+    private int _index;
 
     public Navigator(object initial)
     {
         _content = initial;
+        _pages = new List<object> { initial };
     }
 
     public void Back()
     {
-        if (_navigationStack.Any())
-            Content = _navigationStack.Pop();
+        if (_index == 0) return;
+        _index--;
+        Content = _pages[_index];
     }
 
     public void Forward()
     {
-
+        if (_index == _pages.Count - 1) return;
+        _index++;
+        Content = _pages[_index];
     }
 
-    public void To(object repository)
+    public void To(object page)
     {
-        _navigationStack.Push(Content);
-        Content = repository;
+        // remove pages after the current one
+        if (_pages.Count > _index + 1)
+            _pages.RemoveRange(_index + 1, _pages.Count - _index - 1);
+        _pages.Add(page);
+        _index++;
+        Content = page;
     }
 }
