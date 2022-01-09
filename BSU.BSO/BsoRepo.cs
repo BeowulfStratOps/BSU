@@ -58,7 +58,7 @@ namespace BSU.BSO
 
         private static ServerInfo GetServerInfo(ServerFile serverFile)
         {
-            var cdlcs = serverFile.DLCs.Select(ulong.Parse).ToList();
+            var cdlcs = serverFile.DLCs?.Select(ulong.Parse).ToList() ?? new List<ulong>();
             return new ServerInfo(serverFile.ServerName, serverFile.ServerAddress, serverFile.ServerPort, cdlcs);
         }
 
