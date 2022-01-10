@@ -65,6 +65,8 @@ namespace BSU.Core.Tests.Mocks
         }
 
         public async Task<string> GetTitle(CancellationToken cancellationToken) => "Test";
+        public string Path => throw new NotImplementedException();
+
         public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
         {
             await _load;

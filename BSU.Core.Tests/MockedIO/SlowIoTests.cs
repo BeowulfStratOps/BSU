@@ -46,7 +46,7 @@ public class ViewModelTests : MockedIoTest
             }
         }.BuildVm();
 
-        var repoPage = (RepositoriesPage)vm.Content;
+        var repoPage = (RepositoriesPage)vm.Navigator.Content;
         var repo = repoPage.Repositories.Single();
 
         Assert.Equal(CalculatedRepositoryStateEnum.Loading, repo.CalculatedState);

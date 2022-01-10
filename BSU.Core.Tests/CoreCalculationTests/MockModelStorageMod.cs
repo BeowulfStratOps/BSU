@@ -63,5 +63,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             throw new NotImplementedException();
         }
+
+        public string GetAbsolutePath()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

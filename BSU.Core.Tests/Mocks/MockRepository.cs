@@ -26,7 +26,7 @@ namespace BSU.Core.Tests.Mocks
         public async Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
         {
             await _load;
-            return new ServerInfo("test", "test");
+            return new ServerInfo("test", "test", 0, new List<ulong>());
         }
     }
 }
