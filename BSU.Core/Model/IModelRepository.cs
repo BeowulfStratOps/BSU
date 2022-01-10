@@ -14,6 +14,6 @@ namespace BSU.Core.Model
         PresetSettings Settings { get; set; }
         ServerInfo GetServerInfo();
         event Action<IModelRepository> StateChanged;
-        GameLaunchHandle Launch();
+        GameLaunchResult Launch();
     }
 }

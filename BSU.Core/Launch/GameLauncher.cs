@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Model;
 using NLog;
@@ -13,32 +14,33 @@ internal static class GameLauncher
 {
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
-    public static GameLaunchHandle Launch(IModelRepository preset, IEventBus eventBus)
+    public static GameLaunchResult Launch(IModelRepository preset, IEventBus eventBus)
     {
         var modPaths = CollectModPaths(preset, out var missingDlcs);
 
         if (missingDlcs.Any())
-            return new GameLaunchHandle("Missing CDLCs: " + string.Join(", ", missingDlcs));
+            return new GameLaunchResult("Missing CDLCs: " + string.Join(", ", missingDlcs));
 
         var settings = preset.Settings;
 
         var parameters = BuildParameters(settings) + " \"-mod=" + string.Join(";", modPaths) + " \"";
 
-        var exe = settings.X64 ? "arma3_x64.exe" : "arma3.exe";
+        var gameExe = settings.X64 ? "arma3_x64.exe" : "arma3.exe";
+        var exe = gameExe;
 
         if (settings.BattlEye)
         {
-            parameters = $"2 1 0 -exe {exe} {parameters}";
+            parameters = $"2 1 0 -exe {gameExe} {parameters}";
             exe = "arma3battleye.exe";
         }
 
         if (settings.ArmaPath == null)
-            return new GameLaunchHandle("Failed to find Arma install path.");
+            return new GameLaunchResult("Failed to find Arma install path.");
 
         var absExePath = Path.Combine(settings.ArmaPath, exe);
 
         if (!File.Exists(absExePath))
-            return new GameLaunchHandle("Failed to find Arma executable.");
+            return new GameLaunchResult("Failed to find Arma executable.");
 
         Logger.Info($"Launching with exe {absExePath} and parameters '{parameters}'");
 
@@ -47,18 +49,43 @@ internal static class GameLauncher
             WorkingDirectory = settings.ArmaPath
         };
 
-        Process process;
         try
         {
-            process = Process.Start(procInfo) ?? throw new NullReferenceException("Process is null");
+            if (settings.BattlEye)
+            {
+                var gameProcessFinder = BuildProcessFinder(gameExe);
+                var beProcess = Process.Start(procInfo);
+                if (beProcess != null) return new GameLaunchResult(new BattlEyeGameLaunchHandle(gameProcessFinder, eventBus));
+
+            }
+            else
+            {
+                var process = Process.Start(procInfo);
+                if (process != null) return new GameLaunchResult(new DirectGameLaunchHandle(process, eventBus));
+            }
+
+            Logger.Error("Failed to launch: process is null");
+            return new GameLaunchResult("Failed to start Arma.");
         }
         catch (Exception e)
         {
             Logger.Error(e);
-            return new GameLaunchHandle("Failed to start Arma.");
+            return new GameLaunchResult("Failed to start Arma.");
+        }
+    }
+
+    private static Func<Process?> BuildProcessFinder(string exe)
+    {
+        exe = Path.GetFileNameWithoutExtension(exe);
+        var processesBefore = Process.GetProcessesByName(exe).Select(p => p.Id).ToHashSet();
+
+        Process? Check()
+        {
+            var current = Process.GetProcessesByName(exe);
+            return current.FirstOrDefault(process => !processesBefore.Contains(process.Id));
         }
 
-        return new GameLaunchHandle(process, eventBus);
+        return Check;
     }
 
     private static List<string> CollectModPaths(IModelRepository modelRepository, out List<string> missingDlcs)
@@ -110,36 +137,109 @@ internal static class GameLauncher
     }
 }
 
-public class GameLaunchHandle
+public class GameLaunchResult
 {
-    private readonly Process? _process;
-    public readonly string? FailedReason;
+    private readonly string? _failReason;
+    private readonly GameLaunchHandle? _handle;
 
-    internal GameLaunchHandle(Process process, IEventBus eventBus)
-{
-        _process = process;
-        process.EnableRaisingEvents = true;
-        process.Exited += (_, _) => eventBus.ExecuteSynchronized(() => { Exited?.Invoke(); });
-    }
+    public bool Succeeded => _handle != null;
 
-    internal GameLaunchHandle(string failedReason)
+    public string GetFailedReason()
     {
-        FailedReason = failedReason;
+        if (_failReason == null) throw new InvalidOperationException();
+        return _failReason;
     }
 
-    public bool Succeeded => _process != null;
+    public GameLaunchHandle GetHandle()
+    {
+        if (_handle == null) throw new InvalidOperationException();
+        return _handle;
+    }
+
+    internal GameLaunchResult(string failedReason)
+    {
+        _failReason = failedReason;
+    }
+
+    internal GameLaunchResult(GameLaunchHandle handle)
+    {
+        _handle = handle;
+    }
+}
+
+public abstract class GameLaunchHandle
+{
+    private readonly IEventBus _eventBus;
+
+    protected GameLaunchHandle(IEventBus eventBus)
+    {
+        _eventBus = eventBus;
+    }
 
     internal event Action? Exited;
 
-    internal static void Stop()
+    protected void OnExited()
     {
-        var armaProcesses = Process.GetProcesses().Where(p => p.ProcessName.ToLowerInvariant().Contains("arma")).ToList();
+        _eventBus.ExecuteSynchronized(() => { Exited?.Invoke(); });
+    }
 
-        foreach (var process in armaProcesses)
+    internal abstract Task Stop();
+}
+
+public class DirectGameLaunchHandle : GameLaunchHandle
+{
+    private readonly Process _process;
+
+    public DirectGameLaunchHandle(Process process, IEventBus eventBus) : base(eventBus)
+    {
+        _process = process;
+        process.EnableRaisingEvents = true;
+        process.Exited += (_, _) => OnExited();
+    }
+
+    internal override Task Stop()
+    {
+        if (!_process.CloseMainWindow())
+            _process.Kill(true);
+        return Task.CompletedTask;
+    }
+}
+
+
+internal class BattlEyeGameLaunchHandle : GameLaunchHandle
+{
+    private readonly Task<Process?> _findTask;
+
+    internal BattlEyeGameLaunchHandle(Func<Process?> processFinder, IEventBus eventBus) : base(eventBus)
+    {
+        _findTask = Task.Run(async () =>
         {
-            if (process == null) throw new InvalidOperationException();
-            if (!process.CloseMainWindow())
-                process.Kill(true);
-        }
+            for (int i = 0; i < 100; i++)
+            {
+                var process = processFinder();
+                if (process == null)
+                {
+                    await Task.Delay(100);
+                    continue;
+                }
+
+                process.EnableRaisingEvents = true;
+                process.Exited += (_, _) => OnExited();
+                return process;
+            }
+
+            LogManager.GetCurrentClassLogger().Error("Failed to find process after 10seconds of trying");
+            OnExited();
+            return null;
+        });
+    }
+
+    internal override async Task Stop()
+    {
+        if (_findTask.IsFaulted) return;
+        var process = await _findTask;
+        if (process == null) return;
+        if (!process.CloseMainWindow())
+            process.Kill();
     }
 }

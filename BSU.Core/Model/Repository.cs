@@ -23,7 +23,7 @@ namespace BSU.Core.Model
 
         private LoadingState _state = LoadingState.Loading;
         public event Action<IModelRepository>? StateChanged;
-        public GameLaunchHandle Launch() => GameLauncher.Launch(this, _eventBus);
+        public GameLaunchResult Launch() => GameLauncher.Launch(this, _eventBus);
 
         private List<IModelRepositoryMod>? _mods;
 

@@ -175,7 +175,7 @@ namespace BSU.Core.ViewModel
         }
 
 
-        private GameLaunchHandle? _runningProcess;
+        private GameLaunchHandle? _runningProcessHandle;
 
         private bool _isRunning;
         public bool IsRunning
@@ -204,7 +204,7 @@ namespace BSU.Core.ViewModel
             ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
-            StopPlaying = new DelegateCommand(DoStopPlaying);
+            StopPlaying = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoStopPlaying));
             Pause = new DelegateCommand(DoPause, false);
             Settings = new DelegateCommand(ShowSettings);
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
@@ -250,7 +250,7 @@ namespace BSU.Core.ViewModel
 
         private void DoPlay()
         {
-            if (_runningProcess != null) throw new InvalidOperationException();
+            if (_runningProcessHandle != null) throw new InvalidOperationException();
 
             var warningMessage = CalculatedState switch
             {
@@ -273,24 +273,24 @@ namespace BSU.Core.ViewModel
 
             if (launchResult.Succeeded)
             {
-                _runningProcess = launchResult;
-                _runningProcess.Exited += () =>
+                _runningProcessHandle = launchResult.GetHandle();
+                _runningProcessHandle.Exited += () =>
                 {
-                    _runningProcess = null;
+                    _runningProcessHandle = null;
                     IsRunning = false;
                 };
                 IsRunning = true;
             }
             else
             {
-                _viewModelService.InteractionService.MessagePopup(launchResult.FailedReason!, "Failed to launch");
+                _viewModelService.InteractionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch");
             }
         }
 
-        private void DoStopPlaying()
+        private async Task DoStopPlaying()
         {
-            if (_runningProcess == null) throw new InvalidOperationException();
-            GameLaunchHandle.Stop();
+            if (_runningProcessHandle == null) throw new InvalidOperationException();
+            await _runningProcessHandle.Stop();
         }
 
         private void DoPause()
