@@ -25,7 +25,6 @@ namespace BSU.GUI
     public partial class MainWindow : Window
     {
         private readonly Core.Core _core;
-        private readonly ViewModel _viewModel;
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
         public MainWindow()
@@ -38,14 +37,13 @@ namespace BSU.GUI
                 var assemblyLocation = Assembly.GetExecutingAssembly().Location;
                 var settingsLocation = Path.Combine(Directory.GetParent(assemblyLocation).Parent.FullName, "settings.json");
                 _core = new Core.Core(new FileInfo(settingsLocation));
-                _viewModel = _core.GetViewModel(new InteractionService(this));
+                DataContext = _core.GetViewModel(new InteractionService(this));
             }
             catch (Exception e)
             {
                 _logger.Error(e);
                 throw;
             }
-            DataContext = _viewModel;
             InitializeComponent();
         }
 

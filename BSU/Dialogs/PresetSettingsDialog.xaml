@@ -5,14 +5,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:BSU.GUI.Dialogs"
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
+        xmlns:converters="clr-namespace:BSU.GUI.Converters"
         mc:Ignorable="d"
         Title="Preset Settings" Width="600"
         SizeToContent="Height" ResizeMode="NoResize" d:DataContext="{d:DesignInstance viewModel:PresetSettings}">
     <DockPanel Margin="15 0 15 15">
+        <DockPanel.Resources>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
+        </DockPanel.Resources>
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button IsDefault="True" Margin="15, 0" MinWidth="50" Click="ButtonBase_OnClick">Ok</Button>
-            <Button IsCancel="True" MinWidth="50">Cancel</Button>
+            <Button IsCancel="True" MinWidth="50" Visibility="{Binding CanCancelDialog, Converter={StaticResource BooleanToVisibilityConverter}}">Cancel</Button>
         </StackPanel>
 
         <StackPanel Grid.IsSharedSizeScope="True" Margin="0 15">

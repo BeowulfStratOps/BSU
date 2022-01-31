@@ -52,6 +52,13 @@ namespace BSU.Core.ViewModel
 
             var vmRepo = _viewModelService.FindVmRepo(repo);
 
+            var settingsVm = new PresetSettings(repo.Settings, false);
+            var settingsOk = _viewModelService.InteractionService.PresetSettings(settingsVm);
+
+            if (!settingsOk) return;
+
+            repo.Settings = settingsVm.ToLaunchSettings();
+
             var selectStorageVm = new SelectRepositoryStorage(repo, _model, _viewModelService, true);
             if (!_viewModelService.InteractionService.SelectRepositoryStorage(selectStorageVm)) return;
 

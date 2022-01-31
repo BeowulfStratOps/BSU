@@ -7,9 +7,11 @@ namespace BSU.Core.ViewModel;
 
 public class PresetSettings : ObservableBase
 {
+    public bool CanCancelDialog { get; }
 
-    internal PresetSettings(Launch.PresetSettings initial)
+    internal PresetSettings(Launch.PresetSettings initial, bool canCancelDialog)
     {
+        CanCancelDialog = canCancelDialog;
         Profile = initial.Profile;
         Server = initial.Server;
         BattlEye = initial.BattlEye;

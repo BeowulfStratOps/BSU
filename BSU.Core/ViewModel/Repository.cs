@@ -236,7 +236,7 @@ namespace BSU.Core.ViewModel
 
         private void ShowSettings()
         {
-            var vm = new PresetSettings(ModelRepository.Settings);
+            var vm = new PresetSettings(ModelRepository.Settings, true);
             var save = _viewModelService.InteractionService.PresetSettings(vm);
             if (save)
                 ModelRepository.Settings = vm.ToLaunchSettings();
