@@ -4,12 +4,12 @@ using NLog;
 
 namespace BSU.Core.Concurrency
 {
-    public class SynchronizationContextEventBus : IEventBus
+    public class SynchronizationContextDispatcher : IDispatcher
     {
         private readonly SynchronizationContext _synchronizationContext;
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-        public SynchronizationContextEventBus(SynchronizationContext synchronizationContext)
+        public SynchronizationContextDispatcher(SynchronizationContext synchronizationContext)
         {
             _synchronizationContext = synchronizationContext ?? throw new ArgumentNullException(nameof(synchronizationContext));
         }
@@ -31,7 +31,7 @@ namespace BSU.Core.Concurrency
         }
     }
 
-    public interface IEventBus
+    public interface IDispatcher
     {
         void ExecuteSynchronized(Action action);
     }

@@ -53,7 +53,7 @@ namespace BSU.Core.Model
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             ParentRepository = parentRepository;
-            _eventBus = services.Get<IEventBus>();
+            _dispatcher = services.Get<IDispatcher>();
             _implementation = implementation;
             Identifier = identifier;
             _downloadIdentifier = identifier;
@@ -87,7 +87,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_eventBus, getResult =>
+            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_dispatcher, getResult =>
             {
                 (_matchHash, _versionHash, _modInfo) = getResult();
                 State = LoadingState.Loaded;
@@ -167,7 +167,7 @@ namespace BSU.Core.Model
 
         private string _downloadIdentifier;
         private LoadingState _state;
-        private readonly IEventBus _eventBus;
+        private readonly IDispatcher _dispatcher;
 
         public string DownloadIdentifier
         {

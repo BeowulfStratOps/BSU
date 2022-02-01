@@ -22,7 +22,7 @@ namespace BSU.Core.Tests
         }
 
         // TODO: use the load task
-        internal static (MockStorageMod, StorageMod, TestEventBus) CreateStorageMod(UpdateTarget? stateTarget = null)
+        internal static (MockStorageMod, StorageMod, TestDispatcher) CreateStorageMod(UpdateTarget? stateTarget = null)
         {
             var mockStorage = new MockStorageMod();
             for (int i = 0; i < 3; i++)
@@ -33,9 +33,9 @@ namespace BSU.Core.Tests
             var state = new Mock<IPersistedStorageModState>(MockBehavior.Strict);
             state.SetupProperty(x => x.UpdateTarget, stateTarget);
 
-            var eventBus = new TestEventBus();
+            var eventBus = new TestDispatcher();
             var serviceProvider = new ServiceProvider();
-            serviceProvider.Add<IEventBus>(eventBus);
+            serviceProvider.Add<IDispatcher>(eventBus);
             var storageMod = new StorageMod(mockStorage, "mystorage", state.Object, null!, true, serviceProvider);
 
 

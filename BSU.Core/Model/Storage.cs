@@ -26,7 +26,7 @@ namespace BSU.Core.Model
         private readonly IErrorPresenter _errorPresenter;
         private readonly ILogger _logger;
         private LoadingState _state = LoadingState.Loading;
-        private readonly IEventBus _eventBus;
+        private readonly IDispatcher _dispatcher;
 
         public event Action<IModelStorage>? StateChanged;
         public event Action<IModelStorageMod>? AddedMod;
@@ -37,7 +37,7 @@ namespace BSU.Core.Model
             _internalState = internalState;
             _services = services;
             _errorPresenter = services.Get<IErrorPresenter>();
-            _eventBus = services.Get<IEventBus>();
+            _dispatcher = services.Get<IDispatcher>();
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
@@ -64,7 +64,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(LoadAsync).ContinueInEventBus(_eventBus, getResult =>
+            Task.Run(LoadAsync).ContinueInEventBus(_dispatcher, getResult =>
             {
                 try
                 {

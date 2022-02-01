@@ -41,11 +41,11 @@ namespace BSU.Core.Concurrency
         /// Continue in an event bus, which is also responsible for catching errors.
         /// TODO: only reason we can't just use the current SynchronizationContext is error handling. if we can reliably log/etc. errors with that, it would be better than passing the bus around
         /// </summary>
-        internal static void ContinueInEventBus<T>(this Task<T> task, IEventBus eventBus, Action<Func<T>> continuation)
+        internal static void ContinueInEventBus<T>(this Task<T> task, IDispatcher dispatcher, Action<Func<T>> continuation)
         {
             task.ContinueWith((taskResult, _) =>
             {
-                eventBus.ExecuteSynchronized(() =>
+                dispatcher.ExecuteSynchronized(() =>
                 {
                     continuation(() => taskResult.Result);
                 });

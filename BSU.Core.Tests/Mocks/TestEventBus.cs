@@ -5,7 +5,7 @@ using BSU.Core.Concurrency;
 
 namespace BSU.Core.Tests.Mocks
 {
-    internal class TestEventBus : IEventBus
+    internal class TestDispatcher : IDispatcher
     {
         private readonly Queue<Action> _todo = new();
 

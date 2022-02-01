@@ -43,7 +43,7 @@ namespace BSU.Core.Model
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
         private readonly IServiceProvider _services;
 
-        public Model(IInternalState persistentState, Types types, IEventBus eventBus, bool isFirstStart)
+        public Model(IInternalState persistentState, Types types, IDispatcher dispatcher, bool isFirstStart)
         {
             PersistentState = persistentState;
             if (isFirstStart)
@@ -54,7 +54,7 @@ namespace BSU.Core.Model
             var services = new ServiceProvider();
             _services = services;
             services.Add(types);
-            services.Add(eventBus);
+            services.Add(dispatcher);
             services.Add<IErrorPresenter>(_errorPresenter);
 
             // TODO: they aren't really services in that sense... figure out if there's a better way

@@ -166,7 +166,7 @@ public abstract class MockedIoTest : LoggedTest
                 settings.Storages.Add(new StorageEntry(info.Path, "TEST", info.Path, Guid.NewGuid()));
             }
 
-            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current ?? throw new InvalidOperationException());
+            var eventBus = new SynchronizationContextDispatcher(SynchronizationContext.Current ?? throw new InvalidOperationException());
             var model = new Model.Model(new InternalState(settings), types, eventBus, false);
 
             return model;

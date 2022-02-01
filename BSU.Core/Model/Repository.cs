@@ -25,14 +25,14 @@ namespace BSU.Core.Model
 
         private LoadingState _state = LoadingState.Loading;
         public event Action<IModelRepository>? StateChanged;
-        public GameLaunchResult Launch() => GameLauncher.Launch(this, _eventBus);
+        public GameLaunchResult Launch() => GameLauncher.Launch(this, _dispatcher);
 
         private List<IModelRepositoryMod>? _mods;
 
         private readonly ILogger _logger;
         private readonly IErrorPresenter _errorPresenter;
         private ServerInfo? _serverInfo;
-        private readonly IEventBus _eventBus;
+        private readonly IDispatcher _dispatcher;
 
         public Repository(IRepository implementation, string name, string location,
             IRepositoryState internalState, IServiceProvider services)
@@ -41,7 +41,7 @@ namespace BSU.Core.Model
             _internalState = internalState;
             _services = services;
             _errorPresenter = services.Get<IErrorPresenter>();
-            _eventBus = services.Get<IEventBus>();
+            _dispatcher = services.Get<IDispatcher>();
             Location = location;
             Implementation = implementation;
             Name = name;
@@ -83,7 +83,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(LoadAsync).ContinueInEventBus(_eventBus, getResult =>
+            Task.Run(LoadAsync).ContinueInEventBus(_dispatcher, getResult =>
             {
                 try
                 {

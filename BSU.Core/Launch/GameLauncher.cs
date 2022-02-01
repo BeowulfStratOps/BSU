@@ -14,7 +14,7 @@ internal static class GameLauncher
 {
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
-    public static GameLaunchResult Launch(IModelRepository preset, IEventBus eventBus)
+    public static GameLaunchResult Launch(IModelRepository preset, IDispatcher dispatcher)
     {
         var modPaths = CollectModPaths(preset, out var missingDlcs);
 
@@ -55,13 +55,13 @@ internal static class GameLauncher
             {
                 var gameProcessFinder = BuildProcessFinder(gameExe);
                 var beProcess = Process.Start(procInfo);
-                if (beProcess != null) return new GameLaunchResult(new BattlEyeGameLaunchHandle(gameProcessFinder, eventBus));
+                if (beProcess != null) return new GameLaunchResult(new BattlEyeGameLaunchHandle(gameProcessFinder, dispatcher));
 
             }
             else
             {
                 var process = Process.Start(procInfo);
-                if (process != null) return new GameLaunchResult(new DirectGameLaunchHandle(process, eventBus));
+                if (process != null) return new GameLaunchResult(new DirectGameLaunchHandle(process, dispatcher));
             }
 
             Logger.Error("Failed to launch: process is null");
@@ -169,18 +169,18 @@ public class GameLaunchResult
 
 public abstract class GameLaunchHandle
 {
-    private readonly IEventBus _eventBus;
+    private readonly IDispatcher _dispatcher;
 
-    protected GameLaunchHandle(IEventBus eventBus)
+    protected GameLaunchHandle(IDispatcher dispatcher)
     {
-        _eventBus = eventBus;
+        _dispatcher = dispatcher;
     }
 
     internal event Action? Exited;
 
     protected void OnExited()
     {
-        _eventBus.ExecuteSynchronized(() => { Exited?.Invoke(); });
+        _dispatcher.ExecuteSynchronized(() => { Exited?.Invoke(); });
     }
 
     internal abstract Task Stop();
@@ -190,7 +190,7 @@ public class DirectGameLaunchHandle : GameLaunchHandle
 {
     private readonly Process _process;
 
-    public DirectGameLaunchHandle(Process process, IEventBus eventBus) : base(eventBus)
+    public DirectGameLaunchHandle(Process process, IDispatcher dispatcher) : base(dispatcher)
     {
         _process = process;
         process.EnableRaisingEvents = true;
@@ -210,7 +210,7 @@ internal class BattlEyeGameLaunchHandle : GameLaunchHandle
 {
     private readonly Task<Process?> _findTask;
 
-    internal BattlEyeGameLaunchHandle(Func<Process?> processFinder, IEventBus eventBus) : base(eventBus)
+    internal BattlEyeGameLaunchHandle(Func<Process?> processFinder, IDispatcher dispatcher) : base(dispatcher)
     {
         _findTask = Task.Run(async () =>
         {

@@ -32,7 +32,7 @@ namespace BSU.Core
             _logger.Info("Creating new core instance");
             var state = new InternalState(settings);
 
-            var eventBus = new SynchronizationContextEventBus(SynchronizationContext.Current!);
+            var eventBus = new SynchronizationContextDispatcher(SynchronizationContext.Current!);
 
             _model = new Model.Model(state, Types.Default, eventBus, state.CheckIsFirstStart());
         }

@@ -31,7 +31,7 @@ namespace BSU.Core.Model
         private readonly ILogger _logger;
 
         private StorageModStateEnum _state = StorageModStateEnum.Loading; // TODO: should not be directly accessible
-        private readonly IEventBus _eventBus;
+        private readonly IDispatcher _dispatcher;
 
         private StorageModStateEnum State
         {
@@ -52,7 +52,7 @@ namespace BSU.Core.Model
             _internalState = internalState;
             ParentStorage = parent;
             CanWrite = canWrite;
-            _eventBus = services.Get<IEventBus>();
+            _dispatcher = services.Get<IDispatcher>();
             _implementation = implementation;
             Identifier = identifier;
 
@@ -88,7 +88,7 @@ namespace BSU.Core.Model
 
         private void Load(bool onlyMatchHash)
         {
-            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_eventBus, getResult =>
+            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_dispatcher, getResult =>
             {
                 try
                 {
@@ -176,7 +176,7 @@ namespace BSU.Core.Model
 
             ReportProgress(new FileSyncStats(FileSyncState.None));
 
-            _eventBus.ExecuteSynchronized(() =>
+            _dispatcher.ExecuteSynchronized(() =>
             {
                 if (result == UpdateResult.Success)
                 {
