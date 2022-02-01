@@ -13,6 +13,7 @@ public record PresetSettings(string Profile, string Allocator)
     public bool ShowScriptErrors { get; init; }
     public bool HugePages { get; init; }
     public string? ArmaPath { get; init; }
+    public bool UseBsuLauncher { get; init; }
 
     public static PresetSettings BuildDefault()
     {
@@ -22,7 +23,8 @@ public record PresetSettings(string Profile, string Allocator)
             WorldEmpty = true,
             HugePages = true,
             X64 = ArmaData.Is64BitSystem(),
-            ArmaPath = ArmaData.GetGamePath()
+            ArmaPath = ArmaData.GetGamePath(),
+            UseBsuLauncher = true
         };
     }
 }

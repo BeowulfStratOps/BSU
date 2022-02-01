@@ -57,8 +57,9 @@ namespace BSU.Core.Model
 
             var eventCombiner = new StructureEventCombiner(this);
 
-            // TODO: use proper service.. stuff?
+            // TODO: use proper service.. stuff? .. !
             var _ = new AutoSelector(this);
+            var __ = new PresetGenerator(this);
 
             eventCombiner.AnyChange += () => AnyChange?.Invoke();
             Load();

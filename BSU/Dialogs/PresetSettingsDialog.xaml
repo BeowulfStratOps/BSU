@@ -19,7 +19,17 @@
             <Button IsCancel="True" MinWidth="50" Visibility="{Binding CanCancelDialog, Converter={StaticResource BooleanToVisibilityConverter}}">Cancel</Button>
         </StackPanel>
 
-        <StackPanel Grid.IsSharedSizeScope="True" Margin="0 15">
+
+        <StackPanel Margin="0 10 0 5" DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center">
+            <RadioButton Margin="5" Padding="5" Style="{StaticResource {x:Type ToggleButton}}" IsChecked="{Binding UseBsuLauncher}">
+                Launch directly
+            </RadioButton>
+            <RadioButton Margin="5" Padding="5" Style="{StaticResource {x:Type ToggleButton}}" IsChecked="{Binding UseArmaLauncher}">
+                Arma Launcher
+            </RadioButton>
+        </StackPanel>
+
+        <StackPanel Grid.IsSharedSizeScope="True" Margin="0 0 0 15" Visibility="{Binding UseBsuLauncher, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel.Resources>
                 <Style TargetType="{x:Type Grid}">
                     <Setter Property="Margin" Value="0 5" />

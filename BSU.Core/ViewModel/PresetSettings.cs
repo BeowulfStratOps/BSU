@@ -9,6 +9,25 @@ public class PresetSettings : ObservableBase
 {
     public bool CanCancelDialog { get; }
 
+    private bool _useBsuLauncher;
+    public bool UseBsuLauncher
+    {
+        get => _useBsuLauncher;
+        set
+        {
+            if (_useBsuLauncher == value) return;
+            _useBsuLauncher = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(UseArmaLauncher));
+        }
+    }
+
+    public bool UseArmaLauncher
+    {
+        get => !_useBsuLauncher;
+        set => UseBsuLauncher = !value;
+    }
+
     internal PresetSettings(Launch.PresetSettings initial, bool canCancelDialog)
     {
         CanCancelDialog = canCancelDialog;
@@ -22,6 +41,7 @@ public class PresetSettings : ObservableBase
         HugePages = initial.HugePages;
         Allocator = initial.Allocator;
         ArmaPath = initial.ArmaPath;
+        UseBsuLauncher = initial.UseBsuLauncher;
     }
 
     public string Profile { get; set; }
@@ -50,7 +70,8 @@ public class PresetSettings : ObservableBase
             X64 = X64,
             ShowScriptErrors = ShowScriptErrors,
             HugePages = HugePages,
-            ArmaPath = ArmaPath
+            ArmaPath = ArmaPath,
+            UseBsuLauncher = UseBsuLauncher
         };
     }
 }
