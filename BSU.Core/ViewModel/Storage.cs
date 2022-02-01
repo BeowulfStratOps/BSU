@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BSU.Core.Annotations;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
@@ -36,20 +37,23 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        private readonly IViewModelService _viewModelService;
         private string? _error;
+        private readonly IInteractionService _interactionService;
+        private readonly IServiceProvider _services;
 
-        internal Storage(IModelStorage storage, IModel model, IViewModelService viewModelService)
+        internal Storage(IModelStorage storage, IServiceProvider serviceProvider)
         {
             Delete = new DelegateCommand(DoDelete);
             ModelStorage = storage;
+            var model = serviceProvider.Get<IModel>();
             _model = model;
-            _viewModelService = viewModelService;
             Identifier = storage.Identifier;
             _storage = storage;
             Name = storage.Name;
             Path = storage.GetLocation();
             storage.StateChanged += _ => OnStateChanged();
+            _interactionService = serviceProvider.Get<IInteractionService>();
+            _services = serviceProvider;
         }
 
         private void OnStateChanged()
@@ -62,7 +66,7 @@ namespace BSU.Core.ViewModel
 
             foreach (var mod in ModelStorage.GetMods())
             {
-                Mods.Add(new StorageMod(mod, _model));
+                Mods.Add(new StorageMod(mod, _services));
             }
         }
 
@@ -81,13 +85,13 @@ Yes - Delete mods in on this storage
 No - Keep mods
 Cancel - Do not remove this storage";
 
-            var removeMods =  _viewModelService.InteractionService.YesNoCancelPopup(text, "Remove Storage");
+            var removeMods =  _interactionService.YesNoCancelPopup(text, "Remove Storage");
             if (removeMods == null) return;
 
 
             if (removeMods == true)
             {
-                _viewModelService.InteractionService.MessagePopup("Removing mods is not supported yet.", "Not supported");
+                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported");
                 return;
             }
 

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Events;
+using BSU.Core.Ioc;
 using BSU.Core.Launch;
 using BSU.Core.Model;
 using BSU.Core.Services;
@@ -194,17 +196,18 @@ namespace BSU.Core.ViewModel
 
         public bool IsNotRunning => !_isRunning;
 
-        internal Repository(IModelRepository modelRepository, IModel model, IViewModelService viewModelService)
+        internal Repository(IModelRepository modelRepository, IServiceProvider serviceProvider)
         {
             ModelRepository = modelRepository;
-            _model = model;
-            _viewModelService = viewModelService;
+            _model = serviceProvider.Get<IModel>();
+            _viewModelService = serviceProvider.Get<IViewModelService>();
+            _interactionService = serviceProvider.Get<IInteractionService>();
             Identifier = modelRepository.Identifier;
             Delete = new DelegateCommand(DoDelete, false);
             Update = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoUpdate));
-            Back = new DelegateCommand(viewModelService.NavigateBack);
-            ShowStorage = new DelegateCommand(viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
-            Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
+            Back = new DelegateCommand(_viewModelService.NavigateBack);
+            ShowStorage = new DelegateCommand(_viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
+            Details = new DelegateCommand(() => _viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
             StopPlaying = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoStopPlaying));
             Pause = new DelegateCommand(DoPause, false);
@@ -212,10 +215,12 @@ namespace BSU.Core.ViewModel
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
             modelRepository.StateChanged += _ => OnStateChanged();
             Name = modelRepository.Name;
-            model.AnyChange += UpdateState;
+            var eventManager = serviceProvider.Get<IEventManager>();
+            eventManager.Subscribe<AnythingChangedEvent>(UpdateState);
+            _services = serviceProvider;
         }
 
-        private void UpdateState()
+        private void UpdateState(AnythingChangedEvent evt)
         {
             CalculatedState = CoreCalculation.GetRepositoryState(ModelRepository, _model.GetRepositoryMods());
             UpdateButtonStates();
@@ -232,22 +237,22 @@ namespace BSU.Core.ViewModel
             var mods = ModelRepository.GetMods();
             foreach (var mod in mods.OrderBy(m => m.Identifier))
             {
-                Mods.Add(new RepositoryMod(mod, _model));
+                Mods.Add(new RepositoryMod(mod, _services));
             }
         }
 
         private void ShowSettings()
         {
             var vm = new PresetSettings(ModelRepository.Settings, true);
-            var save = _viewModelService.InteractionService.PresetSettings(vm);
+            var save = _interactionService.PresetSettings(vm);
             if (save)
                 ModelRepository.Settings = vm.ToLaunchSettings();
         }
 
         private void DoChooseDownloadLocation()
         {
-            var vm = new SelectRepositoryStorage(ModelRepository, _model, _viewModelService, false);
-            _viewModelService.InteractionService.SelectRepositoryStorage(vm);
+            var vm = new SelectRepositoryStorage(ModelRepository, _services, false);
+            _interactionService.SelectRepositoryStorage(vm);
         }
 
         private void DoPlay()
@@ -266,7 +271,7 @@ namespace BSU.Core.ViewModel
             if (warningMessage != null)
             {
                 warningMessage += " Are your sure you want to launch the game?";
-                var goAhead = _viewModelService.InteractionService.YesNoPopup(warningMessage, "Launch Game");
+                var goAhead = _interactionService.YesNoPopup(warningMessage, "Launch Game");
                 if (!goAhead) return;
             }
 
@@ -285,7 +290,7 @@ namespace BSU.Core.ViewModel
             }
             else
             {
-                _viewModelService.InteractionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch");
+                _interactionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch");
             }
         }
 
@@ -310,12 +315,12 @@ Yes - Delete mods if they are not in use by any other repository
 No - Keep local mods
 Cancel - Do not remove this repository";
 
-            var removeData = _viewModelService.InteractionService.YesNoCancelPopup(text, "Remove Repository");
+            var removeData = _interactionService.YesNoCancelPopup(text, "Remove Repository");
             if (removeData == null) return;
 
             if (removeData == true)
             {
-                _viewModelService.InteractionService.MessagePopup("Removing mods is not supported yet.", "Not supported");
+                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported");
                 return;
             }
 
@@ -343,7 +348,7 @@ Cancel - Do not remove this repository";
 
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {
-                    _viewModelService.InteractionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete");
+                    _interactionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete");
                     return;
                 }
 
@@ -358,7 +363,7 @@ Cancel - Do not remove this repository";
                     updatedText += "\nFailed due to unknown reason (see logs): " + string.Join(", ",
                         updateStats.Failed.Select(s => $"{s.ParentStorage.Name}/{s.Identifier}"));
                 }
-                _viewModelService.InteractionService.MessagePopup(updatedText, "Update finished");
+                _interactionService.MessagePopup(updatedText, "Update finished");
             }
             catch (OperationCanceledException)
             {
@@ -400,6 +405,8 @@ Cancel - Do not remove this repository";
 
         private bool _updateLoading;
         private bool _updateButtonVisible = true;
+        private readonly IInteractionService _interactionService;
+        private readonly IServiceProvider _services;
 
         public bool UpdateLoading
         {

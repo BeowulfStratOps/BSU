@@ -1,32 +1,26 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Input;
+using BSU.Core.Events;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
-using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class ViewModel : ObservableBase, IViewModelService, IErrorPresenter
+    public class ViewModel : ObservableBase, IViewModelService
     {
-        private readonly IModel _model;
-        private object _content;
-
         private readonly RepositoriesPage _repoPage;
         private readonly StoragePage _storagePage;
 
-        internal ViewModel(IModel model, IInteractionService interactionService)
+        internal ViewModel(ServiceProvider services)
         {
-            _model = model;
-            model.ConnectErrorPresenter(this);
-            _repoPage = new RepositoriesPage(model, this);
-            _storagePage = new StoragePage(model, this);
-            _content = _repoPage;
+            services.Get<IEventManager>().Subscribe<ErrorEvent>(AddError);
+            services.Add<IViewModelService>(this);
+            _repoPage = new RepositoriesPage(services);
+            _storagePage = new StoragePage(services);
             Navigator = new Navigator(_repoPage);
-            InteractionService = interactionService;
         }
 
         public Navigator Navigator { get; }
@@ -46,8 +40,6 @@ namespace BSU.Core.ViewModel
             Navigator.Back();
         }
 
-        public IInteractionService InteractionService { get; set; }
-
         IModelStorage? IViewModelService.AddStorage(bool allowSteam)
         {
             return _storagePage.DoAddStorage(allowSteam);
@@ -60,9 +52,9 @@ namespace BSU.Core.ViewModel
 
         public ObservableCollection<DismissError> Errors { get; } = new();
 
-        public void AddError(string error)
+        private void AddError(ErrorEvent error)
         {
-            Errors.Add(new DismissError(error, de => Errors.Remove(de)));
+            Errors.Add(new DismissError(error.Message, de => Errors.Remove(de)));
         }
     }
 

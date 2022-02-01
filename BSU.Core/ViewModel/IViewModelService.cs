@@ -8,7 +8,6 @@ namespace BSU.Core.ViewModel
         void NavigateToStorages();
         void NavigateToRepository(Repository repository);
         void NavigateBack();
-        IInteractionService InteractionService { get; }
         IModelStorage? AddStorage(bool allowSteam);
         Repository FindVmRepo(IModelRepository repo);
     }

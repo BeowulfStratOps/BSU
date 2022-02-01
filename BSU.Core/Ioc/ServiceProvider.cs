@@ -15,8 +15,7 @@ public static class ServiceProviderExtension
 {
     public static T Get<T>(this IServiceProvider serviceProvider)
     {
-        var result =serviceProvider.GetService(typeof(T));
-        if (result == null) throw new KeyNotFoundException($"Couldn't find service for {typeof(T)}");
-        return (T)result;
+        var result = serviceProvider.GetService(typeof(T));
+        return (T)result!;
     }
 }

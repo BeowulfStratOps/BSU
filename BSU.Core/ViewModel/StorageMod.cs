@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Events;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.Storage;
@@ -37,14 +40,14 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        internal StorageMod(IModelStorageMod mod, IModel model)
+        internal StorageMod(IModelStorageMod mod, IServiceProvider serviceProvider)
         {
             _modelStorageMod = mod;
-            _model = model;
+            _model = serviceProvider.Get<IModel>();
             _title = mod.Identifier;
 
             mod.StateChanged += _ => OnStateChanged();
-            _model.AnyChange += Update;
+            serviceProvider.Get<IEventManager>().Subscribe<AnythingChangedEvent>(_ => Update());
         }
 
         private void OnStateChanged()

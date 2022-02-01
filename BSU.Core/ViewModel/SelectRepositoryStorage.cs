@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using BSU.Core.Events;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
@@ -102,22 +104,22 @@ namespace BSU.Core.ViewModel
         }
 
 
-        internal SelectRepositoryStorage(IModelRepository repository, IModel model, IViewModelService viewModelService,
-            bool updateAfter)
+        internal SelectRepositoryStorage(IModelRepository repository, IServiceProvider serviceProvider, bool updateAfter)
         {
             UpdateAfter = updateAfter;
             UpdateText = updateAfter ? "Sync" : "OK";
             Ok = new DelegateCommand(HandleOk, !updateAfter);
             AddStorage = new DelegateCommand(HandleAdd, false);
             _repository = repository;
-            _viewModelService = viewModelService;
+            var model = serviceProvider.Get<IModel>();
+            _viewModelService = serviceProvider.Get<IViewModelService>();
 
             if (_repository.State == LoadingState.Loaded)
                 Load();
             else
                 _repository.StateChanged += _ => Load();
 
-            model.AnyChange += Update;
+            serviceProvider.Get<IEventManager>().Subscribe<AnythingChangedEvent>(_ => Update());
 
             foreach (var storage in model.GetStorages())
             {

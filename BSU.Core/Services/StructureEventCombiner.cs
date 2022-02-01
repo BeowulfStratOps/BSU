@@ -1,4 +1,7 @@
 ﻿using System;
+using BSU.Core.Concurrency;
+using BSU.Core.Events;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using NLog;
 
@@ -7,21 +10,21 @@ namespace BSU.Core.Services
     internal class StructureEventCombiner
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly IEventManager _eventManager;
 
-        public StructureEventCombiner(IModel model)
+        public StructureEventCombiner(IServiceProvider serviceProvider)
         {
+            var model = serviceProvider.Get<IModel>();
+            _eventManager = serviceProvider.Get<IEventManager>();
             model.AddedRepository += AddedRepository;
             model.AddedStorage += AddedStorage;
             model.RemovedRepository += _ => OnAnyChange();
             model.RemovedStorage += _ => OnAnyChange();
         }
 
-        public event Action? AnyChange;
-
         private void OnAnyChange()
         {
-            _logger.Trace("OnAnyChange");
-            AnyChange?.Invoke();
+            _eventManager.Publish(new AnythingChangedEvent());
         }
 
         private void AddedStorage(IModelStorage storage)

@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.Core.Tests.Mocks;
@@ -125,7 +126,7 @@ public abstract class MockedIoTest : LoggedTest
     {
         private readonly List<CollectionInfo> _infos = new();
 
-        public Model.Model Build()
+        public Model.Model Build(ServiceProvider? serviceProvider = null)
         {
             var types = new Types();
 
@@ -166,9 +167,12 @@ public abstract class MockedIoTest : LoggedTest
                 settings.Storages.Add(new StorageEntry(info.Path, "TEST", info.Path, Guid.NewGuid()));
             }
 
-            var eventBus = new SynchronizationContextDispatcher(SynchronizationContext.Current ?? throw new InvalidOperationException());
-            var model = new Model.Model(new InternalState(settings), types, eventBus, false);
-
+            var services = serviceProvider ?? new ServiceProvider();
+            var dispatcher = new SynchronizationContextDispatcher(SynchronizationContext.Current ?? throw new InvalidOperationException());
+            services.Add<IDispatcher>(dispatcher);
+            services.Add(types);
+            var model = new Model.Model(new InternalState(settings), services, false);
+            model.Load();
             return model;
         }
 
@@ -184,8 +188,11 @@ public abstract class MockedIoTest : LoggedTest
 
         public ViewModel.ViewModel BuildVm(IInteractionService? interactionService = null)
         {
-            var model = Build();
-            return new ViewModel.ViewModel(model, interactionService!);
+            var serviceProvider = new ServiceProvider();
+            if (interactionService != null)
+                serviceProvider.Add(interactionService);
+            Build();
+            return new ViewModel.ViewModel(serviceProvider);
         }
     }
 

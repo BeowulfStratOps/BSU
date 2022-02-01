@@ -1,20 +1,21 @@
-﻿using BSU.Core.Model;
+﻿using System;
+using BSU.Core.Events;
+using BSU.Core.Ioc;
+using BSU.Core.Model;
 using NLog;
 
 namespace BSU.Core.Services;
 
 internal class PresetGenerator
 {
-    private readonly IModel _model;
     private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-    public PresetGenerator(IModel model)
+    public PresetGenerator(IServiceProvider serviceProvider)
     {
-        _model = model;
-        _model.AnyChange += OnAnyChange;
+        serviceProvider.Get<IEventManager>().Subscribe<AnythingChangedEvent>(OnAnyChange);
     }
 
-    private void OnAnyChange()
+    private void OnAnyChange(AnythingChangedEvent evt)
     {
         // TODO: only check presets that have the setting enabled
         // TODO: generate preset only when the state changes to a ready or partial ready state i guess?

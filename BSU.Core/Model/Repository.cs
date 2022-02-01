@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Launch;
 using BSU.Core.Model.Updating;
@@ -30,9 +31,9 @@ namespace BSU.Core.Model
         private List<IModelRepositoryMod>? _mods;
 
         private readonly ILogger _logger;
-        private readonly IErrorPresenter _errorPresenter;
         private ServerInfo? _serverInfo;
         private readonly IDispatcher _dispatcher;
+        private readonly IEventManager _eventManager;
 
         public Repository(IRepository implementation, string name, string location,
             IRepositoryState internalState, IServiceProvider services)
@@ -40,8 +41,8 @@ namespace BSU.Core.Model
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
             _services = services;
-            _errorPresenter = services.Get<IErrorPresenter>();
             _dispatcher = services.Get<IDispatcher>();
+            _eventManager = services.Get<IEventManager>();
             Location = location;
             Implementation = implementation;
             Name = name;
@@ -100,7 +101,7 @@ namespace BSU.Core.Model
                 }
                 catch (Exception e)
                 {
-                    _errorPresenter.AddError($"Failed to load repository {Name}.");
+                    _eventManager.Publish(new ErrorEvent($"Failed to load repository {Name}."));
                     _logger.Error(e);
                     State = LoadingState.Error;
                 }

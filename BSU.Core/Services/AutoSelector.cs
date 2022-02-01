@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using BSU.Core.Events;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using NLog;
 
@@ -9,13 +12,14 @@ namespace BSU.Core.Services
         private readonly IModel _model;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        public AutoSelector(IModel model)
+        public AutoSelector(IServiceProvider serviceProvider)
         {
-            _model = model;
-            _model.AnyChange += OnAnyChange;
+            _model = serviceProvider.Get<IModel>();
+            var eventManager = serviceProvider.Get<IEventManager>();
+            eventManager.Subscribe<AnythingChangedEvent>(OnAnyChange);
         }
 
-        private void OnAnyChange()
+        private void OnAnyChange(AnythingChangedEvent evt)
         {
             foreach (var mod in _model.GetRepositories().Where(r => r.State == LoadingState.Loaded)
                 .SelectMany(r => r.GetMods()))

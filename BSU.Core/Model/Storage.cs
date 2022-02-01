@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Events;
 using BSU.Core.Hashes;
 using BSU.Core.Ioc;
 using BSU.Core.Persistence;
@@ -23,10 +24,10 @@ namespace BSU.Core.Model
         public Guid Identifier { get; }
         public string Location { get; }
         private List<IModelStorageMod>? _mods; // TODO: use a property to block access while state is invalid
-        private readonly IErrorPresenter _errorPresenter;
         private readonly ILogger _logger;
         private LoadingState _state = LoadingState.Loading;
         private readonly IDispatcher _dispatcher;
+        private readonly IEventManager _eventManager;
 
         public event Action<IModelStorage>? StateChanged;
         public event Action<IModelStorageMod>? AddedMod;
@@ -36,8 +37,8 @@ namespace BSU.Core.Model
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
             _services = services;
-            _errorPresenter = services.Get<IErrorPresenter>();
             _dispatcher = services.Get<IDispatcher>();
+            _eventManager = services.Get<IEventManager>();
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
@@ -80,14 +81,14 @@ namespace BSU.Core.Model
                 }
                 catch (DirectoryNotFoundException e)
                 {
-                    _errorPresenter.AddError(
-                        $"Failed to load storage {Name}, directory '{Location}' could not be found.");
+                    _eventManager.Publish(new ErrorEvent(
+                        $"Failed to load storage {Name}, directory '{Location}' could not be found."));
                     _logger.Error(e);
                     _state = LoadingState.Error;
                 }
                 catch (Exception e)
                 {
-                    _errorPresenter.AddError($"Failed to load storage '{Name}'.");
+                    _eventManager.Publish(new ErrorEvent($"Failed to load storage '{Name}'."));
                     _logger.Error(e);
                     _state = LoadingState.Error;
                 }

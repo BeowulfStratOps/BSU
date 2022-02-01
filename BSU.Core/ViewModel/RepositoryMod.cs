@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Events;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Services;
@@ -45,8 +47,9 @@ namespace BSU.Core.ViewModel
             Mod.SetSelection(value.AsSelection);
         }
 
-        internal RepositoryMod(IModelRepositoryMod mod, IModel model)
+        internal RepositoryMod(IModelRepositoryMod mod, IServiceProvider services)
         {
+            var model = services.Get<IModel>();
             Actions = new ModActionTree(mod, model);
             Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection!);
             Mod = mod;
@@ -60,7 +63,7 @@ namespace BSU.Core.ViewModel
             DownloadIdentifier = downloadIdentifier;
 
             mod.StateChanged += _ => OnStateChanged();
-            _model.AnyChange += Update;
+            services.Get<IEventManager>().Subscribe<AnythingChangedEvent>(_ => Update());
             Update();
         }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Concurrency;
 using BSU.Core.Ioc;
 using BSU.Core.Launch;
 using BSU.Core.Persistence;
@@ -18,8 +17,6 @@ namespace BSU.Core.Model
     {
         private readonly List<IModelRepository> _repositories = new();
         private readonly List<IModelStorage> _storages = new();
-
-        private readonly ErrorPresenter _errorPresenter = new();
 
         public event Action<IModelRepository>? AddedRepository;
         public event Action<IModelStorage>? AddedStorage;
@@ -37,13 +34,12 @@ namespace BSU.Core.Model
 
         public event Action<IModelRepository>? RemovedRepository;
         public event Action<IModelStorage>? RemovedStorage;
-        public event Action? AnyChange;
 
         private IInternalState PersistentState { get; }
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
         private readonly IServiceProvider _services;
 
-        public Model(IInternalState persistentState, Types types, IDispatcher dispatcher, bool isFirstStart)
+        public Model(IInternalState persistentState, ServiceProvider services, bool isFirstStart)
         {
             PersistentState = persistentState;
             if (isFirstStart)
@@ -51,21 +47,13 @@ namespace BSU.Core.Model
                 DoFirstStartSetup();
             }
 
-            var services = new ServiceProvider();
             _services = services;
-            services.Add(types);
-            services.Add(dispatcher);
-            services.Add<IErrorPresenter>(_errorPresenter);
+            services.Add<IModel>(this);
 
-            // TODO: they aren't really services in that sense... figure out if there's a better way
-            services.Add(new AutoSelector(this));
-            services.Add(new PresetGenerator(this));
-
-
-            var eventCombiner = new StructureEventCombiner(this);
-
-            eventCombiner.AnyChange += () => AnyChange?.Invoke();
-            Load();
+            // TODO: should they be registered somewhere?
+            new AutoSelector(_services);
+            new PresetGenerator(_services);
+            new StructureEventCombiner(_services);
         }
 
         private void DoFirstStartSetup()
@@ -81,7 +69,7 @@ namespace BSU.Core.Model
             PersistentState.AddStorage("Steam", steamPath, "STEAM");
         }
 
-        private void Load()
+        public void Load()
         {
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
@@ -132,10 +120,6 @@ namespace BSU.Core.Model
         public IEnumerable<IModelStorage> GetStorages() => _storages;
 
         public IEnumerable<IModelRepository> GetRepositories() => _repositories;
-        public void ConnectErrorPresenter(IErrorPresenter presenter)
-        {
-            _errorPresenter.Connect(presenter);
-        }
 
         public async Task<ServerInfo?> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
         {
