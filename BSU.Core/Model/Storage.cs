@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Hashes;
+using BSU.Core.Ioc;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
 using NLog;
@@ -15,6 +16,7 @@ namespace BSU.Core.Model
     internal class Storage : IModelStorage
     {
         private readonly IStorageState _internalState;
+        private readonly IServiceProvider _services;
         public IStorage Implementation { get; }
         public string Name { get; }
         public bool IsDeleted { get; private set; }
@@ -29,12 +31,13 @@ namespace BSU.Core.Model
         public event Action<IModelStorage>? StateChanged;
         public event Action<IModelStorageMod>? AddedMod;
 
-        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IErrorPresenter errorPresenter, IEventBus eventBus)
+        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IServiceProvider services)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
-            _errorPresenter = errorPresenter;
-            _eventBus = eventBus;
+            _services = services;
+            _errorPresenter = services.Get<IErrorPresenter>();
+            _eventBus = services.Get<IEventBus>();
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
@@ -69,7 +72,7 @@ namespace BSU.Core.Model
                     foreach (var (identifier, implementation) in getResult())
                     {
                         var modelMod = new StorageMod(implementation, identifier, _internalState.GetMod(identifier),
-                            this, Implementation.CanWrite(), _eventBus);
+                            this, Implementation.CanWrite(), _services);
                         _mods.Add(modelMod);
                     }
 
@@ -103,7 +106,7 @@ namespace BSU.Core.Model
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
             state.UpdateTarget = updateTarget;
-            var storageMod = new StorageMod(mod, identifier, state, this, true, _eventBus, createMatchHash);
+            var storageMod = new StorageMod(mod, identifier, state, this, true, _services, createMatchHash);
             _mods!.Add(storageMod);
             AddedMod?.Invoke(storageMod);
             return storageMod;

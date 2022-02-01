@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Ioc;
 using BSU.Core.Launch;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
@@ -16,8 +16,6 @@ namespace BSU.Core.Model
 {
     internal class Model : IModel
     {
-        private readonly Types _types;
-
         private readonly List<IModelRepository> _repositories = new();
         private readonly List<IModelStorage> _storages = new();
 
@@ -43,23 +41,28 @@ namespace BSU.Core.Model
 
         private IInternalState PersistentState { get; }
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-        private readonly IEventBus _eventBus;
+        private readonly IServiceProvider _services;
 
         public Model(IInternalState persistentState, Types types, IEventBus eventBus, bool isFirstStart)
         {
-            _types = types;
-            _eventBus = eventBus;
             PersistentState = persistentState;
             if (isFirstStart)
             {
                 DoFirstStartSetup();
             }
 
-            var eventCombiner = new StructureEventCombiner(this);
+            var services = new ServiceProvider();
+            _services = services;
+            services.Add(types);
+            services.Add(eventBus);
+            services.Add<IErrorPresenter>(_errorPresenter);
 
-            // TODO: use proper service.. stuff? .. !
-            var _ = new AutoSelector(this);
-            var __ = new PresetGenerator(this);
+            // TODO: they aren't really services in that sense... figure out if there's a better way
+            services.Add(new AutoSelector(this));
+            services.Add(new PresetGenerator(this));
+
+
+            var eventCombiner = new StructureEventCombiner(this);
 
             eventCombiner.AnyChange += () => AnyChange?.Invoke();
             Load();
@@ -92,8 +95,9 @@ namespace BSU.Core.Model
 
         private Repository CreateRepository(IRepositoryEntry data, IRepositoryState state)
         {
-            var implementation = _types.GetRepoImplementation(data.Type, data.Url);
-            var repository = new Repository(implementation, data.Name, data.Url, state, _errorPresenter, _eventBus);
+            var types = _services.Get<Types>();
+            var implementation = types.GetRepoImplementation(data.Type, data.Url);
+            var repository = new Repository(implementation, data.Name, data.Url, state, _services);
             _repositories.Add(repository);
             AddedRepository?.Invoke(repository);
             return repository;
@@ -101,8 +105,9 @@ namespace BSU.Core.Model
 
         private Storage CreateStorage(IStorageEntry data, IStorageState state)
         {
-            var implementation = _types.GetStorageImplementation(data.Type, data.Path);
-            var storage = new Storage(implementation, data.Name, data.Path, state, _errorPresenter, _eventBus);
+            var types = _services.Get<Types>();
+            var implementation = types.GetStorageImplementation(data.Type, data.Path);
+            var storage = new Storage(implementation, data.Name, data.Path, state, _services);
             _storages.Add(storage);
             AddedStorage?.Invoke(storage);
             return storage;
@@ -110,14 +115,16 @@ namespace BSU.Core.Model
 
         public IModelRepository AddRepository(string type, string url, string name, PresetSettings settings)
         {
-            if (!_types.GetRepoTypes().Contains(type)) throw new ArgumentException();
+            var types = _services.Get<Types>();
+            if (!types.GetRepoTypes().Contains(type)) throw new ArgumentException();
             var (entry, repoState) = PersistentState.AddRepo(name, url, type, settings);
             return CreateRepository(entry, repoState);
         }
 
         public IModelStorage AddStorage(string type, string path, string name)
         {
-            if (!_types.GetStorageTypes().Contains(type)) throw new ArgumentException();
+            var types = _services.Get<Types>();
+            if (!types.GetStorageTypes().Contains(type)) throw new ArgumentException();
             var (entry, storageState) = PersistentState.AddStorage(name, path, type);
             return CreateStorage(entry, storageState);
         }
@@ -132,7 +139,8 @@ namespace BSU.Core.Model
 
         public async Task<ServerInfo?> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
         {
-            return await _types.CheckUrl(url, cancellationToken);
+            var types = _services.Get<Types>();
+            return await types.CheckUrl(url, cancellationToken);
         }
 
         public void DeleteRepository(IModelRepository repository, bool removeMods)

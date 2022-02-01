@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Hashes;
+using BSU.Core.Ioc;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
@@ -47,12 +48,12 @@ namespace BSU.Core.Model
         }
 
         public RepositoryMod(IRepositoryMod implementation, string identifier,
-            IPersistedRepositoryModState internalState, IModelRepository parentRepository, IEventBus eventBus)
+            IPersistedRepositoryModState internalState, IModelRepository parentRepository, IServiceProvider services)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             ParentRepository = parentRepository;
-            _eventBus = eventBus;
+            _eventBus = services.Get<IEventBus>();
             _implementation = implementation;
             Identifier = identifier;
             _downloadIdentifier = identifier;

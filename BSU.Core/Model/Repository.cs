@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Ioc;
 using BSU.Core.Launch;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
@@ -16,6 +17,7 @@ namespace BSU.Core.Model
     internal class Repository : IModelRepository
     {
         private readonly IRepositoryState _internalState;
+        private readonly IServiceProvider _services;
         public IRepository Implementation { get; }
         public string Name { get; }
         public Guid Identifier { get; }
@@ -33,12 +35,13 @@ namespace BSU.Core.Model
         private readonly IEventBus _eventBus;
 
         public Repository(IRepository implementation, string name, string location,
-            IRepositoryState internalState, IErrorPresenter errorPresenter, IEventBus eventBus)
+            IRepositoryState internalState, IServiceProvider services)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
-            _errorPresenter = errorPresenter;
-            _eventBus = eventBus;
+            _services = services;
+            _errorPresenter = services.Get<IErrorPresenter>();
+            _eventBus = services.Get<IEventBus>();
             Location = location;
             Implementation = implementation;
             Name = name;
@@ -89,7 +92,7 @@ namespace BSU.Core.Model
                     _mods = new List<IModelRepositoryMod>();
                     foreach (var (key, mod) in mods)
                     {
-                        var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), this, _eventBus);
+                        var modelMod = new RepositoryMod(mod, key, _internalState.GetMod(key), this, _services);
                         _mods.Add(modelMod);
                     }
 

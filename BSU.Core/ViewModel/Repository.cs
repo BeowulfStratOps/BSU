@@ -41,7 +41,7 @@ namespace BSU.Core.ViewModel
         private void UpdateButtonStates()
         {
             // TODO: hide play button when using arma launcher
-            
+
             switch (CalculatedState)
             {
                 case CalculatedRepositoryStateEnum.NeedsSync:

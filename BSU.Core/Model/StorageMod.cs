@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Hashes;
+using BSU.Core.Ioc;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
@@ -45,13 +46,13 @@ namespace BSU.Core.Model
         }
 
         public StorageMod(IStorageMod implementation, string identifier,
-            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IEventBus eventBus, MatchHash? createMatchHash = null)
+            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IServiceProvider services, MatchHash? createMatchHash = null)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             ParentStorage = parent;
             CanWrite = canWrite;
-            _eventBus = eventBus;
+            _eventBus = services.Get<IEventBus>();
             _implementation = implementation;
             Identifier = identifier;
 

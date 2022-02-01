@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.Core.Hashes;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
@@ -32,7 +34,9 @@ namespace BSU.Core.Tests
             state.SetupProperty(x => x.UpdateTarget, stateTarget);
 
             var eventBus = new TestEventBus();
-            var storageMod = new StorageMod(mockStorage, "mystorage", state.Object, null!, true, eventBus);
+            var serviceProvider = new ServiceProvider();
+            serviceProvider.Add<IEventBus>(eventBus);
+            var storageMod = new StorageMod(mockStorage, "mystorage", state.Object, null!, true, serviceProvider);
 
 
             return (mockStorage, storageMod, eventBus);
