@@ -40,14 +40,16 @@ public class EventManager : IEventManager
     {
         if (!_handlers.TryGetValue(typeof(T), out var list))
         {
-            _logger.Info($"Publishing event {evt}. No handlers.");
+            _logger.Info($"No handlers for {evt}.");
             return;
         }
 
-        _logger.Info($"Publishing event {evt}. Executing {list.Count} handler(s).");
+        var guid = Guid.NewGuid();
+        _logger.Debug($"Executing {list.Count} handler for  event {evt}-{guid}.");
         foreach (var handler in list.Cast<Action<T>>())
         {
             handler(@evt);
         }
+        _logger.Debug($"Done handling event {evt}-{guid}");
     }
 }

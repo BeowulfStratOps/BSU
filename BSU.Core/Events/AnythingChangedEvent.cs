@@ -1,6 +1,5 @@
 ﻿namespace BSU.Core.Events;
 
-public class AnythingChangedEvent
-{
+public record AnythingChangedEvent;
 
-}
+// TODO: have a good think about how to split this up... 
