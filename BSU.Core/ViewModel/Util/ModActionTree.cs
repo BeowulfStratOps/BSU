@@ -26,7 +26,6 @@ namespace BSU.Core.ViewModel.Util
                 if (Equals(value, _selection)) return;
                 _selection = value;
                 OnPropertyChanged();
-                SelectionChanged?.Invoke();
             }
         }
 
@@ -90,8 +89,10 @@ namespace BSU.Core.ViewModel.Util
 
         private void SetSelection(ModAction action)
         {
-            Selection = action;
             IsOpen = false;
+            if (Equals(_selection, action)) return;
+            Selection = action;
+            SelectionChanged?.Invoke();
         }
     }
 

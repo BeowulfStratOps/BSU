@@ -66,9 +66,9 @@ public class ViewModelTests : MockedIoTest
         var services = new ServiceProvider();
         var vm = new ModelBuilder
         {
-            new RepoInfo("repo", true)
+            new RepoInfo("repo")
             {
-                {"mod1", 1, 1}
+                { "mod1", 1, 1 }
             }
         }.BuildVm(serviceProvider: services);
 
@@ -79,5 +79,51 @@ public class ViewModelTests : MockedIoTest
         await WaitFor(100, () => !selectVm.IsLoading);
 
         Assert.True(selectVm.ShowDownload);
+    }
+
+    [UIFact]
+    private async Task AddStorageInSelectRepositoryStorageDialog()
+    {
+        // TODO: group tests for that dialog
+
+        var dialogService = new Mock<IDialogService>(MockBehavior.Strict);
+
+        var loadTcs = new TaskCompletionSource();
+
+        dialogService.Setup(ds => ds.AddStorage(It.IsAny<bool>()))
+            .Returns(new AddStorageDialogResult("TEST", "storage", "storage"));
+
+        var services = new ServiceProvider();
+        services.Add(dialogService.Object);
+
+        var vm = new ModelBuilder
+        {
+            new RepoInfo("repo")
+            {
+                { "mod1", 1, 1 }
+            },
+            new StorageInfo("storage", false, loadTcs.Task)
+            {
+                { "mod1", 1, 1 }
+            }
+        }.BuildVm(serviceProvider: services);
+
+        var repoPage = (RepositoriesPage)vm.Navigator.Content;
+        var repo = repoPage.Repositories.Single();
+
+        var selectVm = new SelectRepositoryStorage(repo.ModelRepository, services, false);
+        await WaitFor(100, () => !selectVm.IsLoading);
+
+        selectVm.AddStorage.Execute(null);
+
+        await Task.Delay(100);
+
+        loadTcs.SetResult();
+
+        await Task.Delay(100);
+
+        Assert.Single(selectVm.Storages);
+        var repoMod = selectVm.Mods!.Single();
+        Assert.IsType<SelectMod>(repoMod.Action);
     }
 }
