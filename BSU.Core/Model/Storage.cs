@@ -84,13 +84,13 @@ namespace BSU.Core.Model
                     _eventManager.Publish(new ErrorEvent(
                         $"Failed to load storage {Name}, directory '{Location}' could not be found."));
                     _logger.Error(e);
-                    _state = LoadingState.Error;
+                    State = LoadingState.Error;
                 }
                 catch (Exception e)
                 {
                     _eventManager.Publish(new ErrorEvent($"Failed to load storage '{Name}'."));
                     _logger.Error(e);
-                    _state = LoadingState.Error;
+                    State = LoadingState.Error;
                 }
             });
         }

@@ -126,4 +126,37 @@ public class ViewModelTests : MockedIoTest
         var repoMod = selectVm.Mods!.Single();
         Assert.IsType<SelectMod>(repoMod.Action);
     }
+
+    [UIFact]
+    private async Task ShowStorageError()
+    {
+        var dialogService = new Mock<IDialogService>(MockBehavior.Strict);
+        var loadTcs = new TaskCompletionSource();
+
+        dialogService.Setup(ds => ds.AddStorage(It.IsAny<bool>()))
+            .Returns(new AddStorageDialogResult("TEST", "storage", "storage"));
+
+        var services = new ServiceProvider();
+        services.Add(dialogService.Object);
+
+        var vm = new ModelBuilder
+        {
+            new StorageInfo("storage", false, loadTcs.Task)
+            {
+                { "mod1", 1, 1 }
+            }
+        }.BuildVm(serviceProvider: services);
+
+        await Task.Delay(100);
+
+        vm.StoragePage.AddStorage.Execute(null);
+
+        await Task.Delay(100);
+
+        loadTcs.SetException(new TestException());
+
+        await Task.Delay(100);
+
+        Assert.NotNull(vm.StoragePage.Storages.Single().Error);
+    }
 }
