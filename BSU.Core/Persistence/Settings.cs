@@ -36,7 +36,7 @@ namespace BSU.Core.Persistence
         {
             lock (_path)
             {
-                _logger.Debug("Saving settings");
+                _logger.Trace("Saving settings");
                 var json = JsonConvert.SerializeObject(_data);
                 File.WriteAllText(_path.FullName, json);
             }

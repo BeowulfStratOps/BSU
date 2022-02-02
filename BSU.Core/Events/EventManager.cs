@@ -45,11 +45,11 @@ public class EventManager : IEventManager
         }
 
         var guid = Guid.NewGuid();
-        _logger.Debug($"Executing {list.Count} handler(s) for  event {evt}-{guid}.");
+        _logger.Trace($"Executing {list.Count} handler(s) for  event {evt}-{guid}.");
         foreach (var handler in list.Cast<Action<T>>())
         {
             handler(@evt);
         }
-        _logger.Debug($"Done handling event {evt}-{guid}");
+        _logger.Trace($"Done handling event {evt}-{guid}");
     }
 }

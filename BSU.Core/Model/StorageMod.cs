@@ -40,7 +40,7 @@ namespace BSU.Core.Model
             {
                 var old = _state;
                 _state = value;
-                _logger.Debug($"State changed from {old} to {value}");
+                _logger.Debug($"Changing state from {old} to {value}");
                 StateChanged?.Invoke(this);
             }
         }

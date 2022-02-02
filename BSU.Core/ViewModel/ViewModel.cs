@@ -11,23 +11,23 @@ namespace BSU.Core.ViewModel
 {
     public class ViewModel : ObservableBase, IViewModelService
     {
-        private readonly RepositoriesPage _repoPage;
-        private readonly StoragePage _storagePage;
+        internal readonly RepositoriesPage RepoPage;
+        internal readonly StoragePage StoragePage;
 
         internal ViewModel(ServiceProvider services)
         {
             services.Get<IEventManager>().Subscribe<ErrorEvent>(AddError);
             services.Add<IViewModelService>(this);
-            _repoPage = new RepositoriesPage(services);
-            _storagePage = new StoragePage(services);
-            Navigator = new Navigator(_repoPage);
+            RepoPage = new RepositoriesPage(services);
+            StoragePage = new StoragePage(services);
+            Navigator = new Navigator(RepoPage);
         }
 
         public Navigator Navigator { get; }
 
         public void NavigateToStorages()
         {
-            Navigator.To(_storagePage);
+            Navigator.To(StoragePage);
         }
 
         public void NavigateToRepository(Repository repository)
@@ -42,12 +42,12 @@ namespace BSU.Core.ViewModel
 
         IModelStorage? IViewModelService.AddStorage(bool allowSteam)
         {
-            return _storagePage.DoAddStorage(allowSteam);
+            return StoragePage.DoAddStorage(allowSteam);
         }
 
         Repository IViewModelService.FindVmRepo(IModelRepository repo)
         {
-            return _repoPage.Repositories.Single(r => r.ModelRepository == repo);
+            return RepoPage.Repositories.Single(r => r.ModelRepository == repo);
         }
 
         public ObservableCollection<DismissError> Errors { get; } = new();

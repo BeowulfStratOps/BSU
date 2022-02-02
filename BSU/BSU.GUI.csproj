@@ -25,7 +25,7 @@
   <ItemGroup>
     <None Remove="nlog.config" />
     <Content Include="nlog.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
