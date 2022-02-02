@@ -114,12 +114,15 @@ namespace BSU.Core.ViewModel
             var model = serviceProvider.Get<IModel>();
             _viewModelService = serviceProvider.Get<IViewModelService>();
 
-            if (_repository.State == LoadingState.Loaded)
-                Load();
-            else
-                _repository.StateChanged += _ => Load();
+            TryLoad();
+            _repository.StateChanged += _ => TryLoad();
+            var eventManager = serviceProvider.Get<IEventManager>();
 
-            serviceProvider.Get<IEventManager>().Subscribe<AnythingChangedEvent>(_ => Update());
+            eventManager.Subscribe<AnythingChangedEvent>(_ =>
+            {
+                TryLoad();
+                Update();
+            });
 
             foreach (var storage in model.GetStorages())
             {
@@ -186,11 +189,18 @@ namespace BSU.Core.ViewModel
             Ok.SetCanExecute(true);
         }
 
-        private void Load()
+        private void TryLoad()
         {
             if (_repository.State == LoadingState.Error) throw new InvalidOperationException(); // TODO: handle properly
 
+            if (_repository.State == LoadingState.Loading) return;
+
             var mods = _repository.GetMods();
+
+            if (mods.Any(m => m.GetCurrentSelection() is ModSelectionLoading)) return;
+
+            // TODO: Unsubscribe TryLoad from events.
+
             var selections = mods.Select(m =>
             {
                 var selection = m.GetCurrentSelection();
@@ -202,7 +212,7 @@ namespace BSU.Core.ViewModel
                 s.action is SelectMod storageMod &&
                 !storageMod.StorageMod.ParentStorage.CanWrite);
 
-            _hasNonSteamDownloads = DownloadEnabled = selections.Any(s => s.action is SelectStorage or null);
+            _hasNonSteamDownloads = DownloadEnabled = selections.Any(s => s.action is SelectStorage or SelectNone);
             ShowDownload = DownloadEnabled || ShowSteamOption;
             AddStorage.SetCanExecute(DownloadEnabled);
 

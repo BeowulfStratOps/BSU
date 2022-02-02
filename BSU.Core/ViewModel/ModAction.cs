@@ -50,7 +50,7 @@ namespace BSU.Core.ViewModel
     {
         public override bool Equals(ModAction? other) => other is SelectNone;
 
-        internal override ModSelection AsSelection => new ModSelectionDisabled();
+        internal override ModSelection AsSelection => new ModSelectionNone();
     }
 
     public class SelectLoading : ModAction

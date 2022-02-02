@@ -104,7 +104,7 @@ namespace BSU.Core.Model
         public IModelRepository AddRepository(string type, string url, string name, PresetSettings settings)
         {
             var types = _services.Get<Types>();
-            if (!types.GetRepoTypes().Contains(type)) throw new ArgumentException();
+            if (!types.GetRepoTypes().Contains(type)) throw new ArgumentException($"Unknown type {type}", nameof(type));
             var (entry, repoState) = PersistentState.AddRepo(name, url, type, settings);
             return CreateRepository(entry, repoState);
         }
@@ -112,7 +112,7 @@ namespace BSU.Core.Model
         public IModelStorage AddStorage(string type, string path, string name)
         {
             var types = _services.Get<Types>();
-            if (!types.GetStorageTypes().Contains(type)) throw new ArgumentException();
+            if (!types.GetStorageTypes().Contains(type)) throw new ArgumentException($"Unknown type {type}", nameof(type));
             var (entry, storageState) = PersistentState.AddStorage(name, path, type);
             return CreateStorage(entry, storageState);
         }

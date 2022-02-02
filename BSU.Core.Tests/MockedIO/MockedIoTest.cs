@@ -136,9 +136,9 @@ public abstract class MockedIoTest : LoggedTest
                 var collection = _infos.OfType<RepoInfo>().SingleOrDefault(c => c.Path == path);
                 if (collection == null) return new MockRepository(Task.CompletedTask);
                 var repo = new MockRepository(collection.Load);
-                foreach (var (name, match, version, load) in collection.Mods)
+                foreach (var (name, match, version, loadTask) in collection.Mods)
                 {
-                    repo.Mods.Add("@" + name, CreateRepoMod(match, version, load));
+                    repo.Mods.Add("@" + name, CreateRepoMod(match, version, loadTask));
                 }
 
                 return repo;
@@ -148,9 +148,9 @@ public abstract class MockedIoTest : LoggedTest
                 var collection = _infos.OfType<StorageInfo>().SingleOrDefault(c => c.Path == path);
                 if (collection == null) return new MockStorage(Task.CompletedTask);
                 var storage = new MockStorage(collection.Load);
-                foreach (var (name, match, version, load) in collection.Mods)
+                foreach (var (name, match, version, loadTask) in collection.Mods)
                 {
-                    storage.Mods.Add("@" + name, CreateStorageMod(match, version, load));
+                    storage.Mods.Add("@" + name, CreateStorageMod(match, version, loadTask));
                 }
 
                 return storage;
@@ -189,12 +189,12 @@ public abstract class MockedIoTest : LoggedTest
             throw new NotImplementedException();
         }
 
-        public ViewModel.ViewModel BuildVm(IInteractionService? interactionService = null)
+        public ViewModel.ViewModel BuildVm(IInteractionService? interactionService = null, ServiceProvider? serviceProvider = null)
         {
-            var serviceProvider = new ServiceProvider();
-            serviceProvider.Add<IInteractionService>(interactionService!);
-            var model = Build(serviceProvider, false);
-            var vm = new ViewModel.ViewModel(serviceProvider);
+            var services = serviceProvider ?? new ServiceProvider();
+            services.Add(interactionService!);
+            var model = Build(services, false);
+            var vm = new ViewModel.ViewModel(services);
             model.Load();
             return vm;
         }

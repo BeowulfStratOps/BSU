@@ -47,6 +47,7 @@ namespace BSU.Core.ViewModel
 
         private void DoAddRepository()
         {
+            // TODO: use some ioc stuff instead of creating the viewModel explicitly
             var vm = new AddRepository(_model);
             if (!_interactionService.AddRepository(vm)) return;
 
