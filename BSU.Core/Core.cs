@@ -42,6 +42,7 @@ namespace BSU.Core
             services.Add(Types.Default);
             services.Add<IDispatcher>(eventBus);
             services.Add(interactionService);
+            services.Add<IDialogService>(new DialogService(services));
             services.Add<IEventManager>(new EventManager());
 
             // TODO: both model and view model add them selves to the services. that seems wrong.

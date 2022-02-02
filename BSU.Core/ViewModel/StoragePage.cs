@@ -49,13 +49,9 @@ namespace BSU.Core.ViewModel
         internal IModelStorage? DoAddStorage(bool allowSteam = true)
         {
             // TODO: could be in a separate class
-            var vm = new AddStorage(_model, allowSteam);
-            if (!_interactionService.AddStorage(vm)) return null;
-            var type = vm.GetStorageType();
-            var name = vm.GetName();
-            var path = vm.GetPath();
-            var storage = _model.AddStorage(type, path, name);
-            return storage;
+            var dialogResult = _services.Get<IDialogService>().AddStorage(allowSteam);
+            if (dialogResult == null) return null;
+            return _model.AddStorage(dialogResult.Type, dialogResult.Path, dialogResult.Name);
         }
     }
 }

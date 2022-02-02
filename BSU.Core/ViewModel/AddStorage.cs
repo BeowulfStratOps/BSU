@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Storage;
 using BSU.Core.ViewModel.Util;
@@ -13,9 +14,9 @@ namespace BSU.Core.ViewModel
         private bool _isDirectory = true;
         private bool _isSteam;
 
-        internal AddStorage(IModel model, bool allowSteam)
+        internal AddStorage(IServiceProvider services, bool allowSteam)
         {
-            _model = model;
+            _model = services.Get<IModel>();
             Ok = new DelegateCommand(HandleOk);
             if (!allowSteam || _model.GetStorages().Any(s => s.Name.ToLowerInvariant() == "steam")) return;
             SteamPath = SteamStorage.GetWorkshopPath();
