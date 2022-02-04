@@ -25,7 +25,7 @@ namespace BSU.Core.Sync
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
             Logger.Trace("{0}, {1} Downloading {2}", _repository, _repository, Path);
-            var progress = new Progress<ulong>();
+            var progress = new SynchronousProgress<ulong>();
             progress.ProgressChanged += (_, count) => _done += count;
             await _repository.DownloadTo(Path, Storage, progress, cancellationToken);
         }
