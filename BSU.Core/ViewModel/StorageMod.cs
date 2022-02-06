@@ -47,7 +47,7 @@ namespace BSU.Core.ViewModel
             _title = mod.Identifier;
 
             mod.StateChanged += _ => OnStateChanged();
-            serviceProvider.Get<IEventManager>().Subscribe<AnythingChangedEvent>(_ => Update());
+            serviceProvider.Get<IEventManager>().Subscribe<ModSelectionChangedEvent>(Update);
         }
 
         private void OnStateChanged()
@@ -55,8 +55,13 @@ namespace BSU.Core.ViewModel
             Title = _modelStorageMod.GetTitle();
         }
 
-        private void Update()
+        private void Update(ModSelectionChangedEvent modSelectionChangedEvent)
         {
+            var affectsThisMod = modSelectionChangedEvent.OldSelection is ModSelectionStorageMod sm1 &&
+                                 sm1.StorageMod == _modelStorageMod ||
+                                 modSelectionChangedEvent.NewSelection is ModSelectionStorageMod sm2 &&
+                                 sm2.StorageMod == _modelStorageMod;
+            if (!affectsThisMod) return;
             var usedBy = CoreCalculation.GetUsedBy(_modelStorageMod, _model.GetRepositoryMods());
             var names = usedBy.Select(m => $"{m.ParentRepository.Name}/{m.Identifier}").ToList();
             UsedBy = names.Any() ? string.Join(", ", names) : null;

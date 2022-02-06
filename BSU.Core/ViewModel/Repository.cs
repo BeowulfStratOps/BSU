@@ -162,7 +162,6 @@ namespace BSU.Core.ViewModel
         public DelegateCommand Back { get; }
 
         public DelegateCommand ShowStorage { get; }
-        public Guid Identifier { get; }
 
 
         private string _serverUrl = "Loading...";
@@ -202,7 +201,6 @@ namespace BSU.Core.ViewModel
             _model = serviceProvider.Get<IModel>();
             _viewModelService = serviceProvider.Get<IViewModelService>();
             _interactionService = serviceProvider.Get<IInteractionService>();
-            Identifier = modelRepository.Identifier;
             Delete = new DelegateCommand(DoDelete, false);
             Update = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoUpdate));
             Back = new DelegateCommand(_viewModelService.NavigateBack);
@@ -216,13 +214,15 @@ namespace BSU.Core.ViewModel
             modelRepository.StateChanged += _ => OnStateChanged();
             Name = modelRepository.Name;
             var eventManager = serviceProvider.Get<IEventManager>();
-            eventManager.Subscribe<AnythingChangedEvent>(UpdateState);
+            eventManager.Subscribe<CalculatedStateChangedEvent>(UpdateState);
+            _stateService = serviceProvider.Get<IRepositoryStateService>();
             _services = serviceProvider;
         }
 
-        private void UpdateState(AnythingChangedEvent evt)
+        private void UpdateState(CalculatedStateChangedEvent evt)
         {
-            CalculatedState = CoreCalculation.GetRepositoryState(ModelRepository, _model.GetRepositoryMods());
+            if (evt.Repository != ModelRepository) return;
+            CalculatedState = _stateService.GetStateFor(ModelRepository);
             UpdateButtonStates();
         }
 
@@ -407,6 +407,7 @@ Cancel - Do not remove this repository";
         private bool _updateButtonVisible = true;
         private readonly IInteractionService _interactionService;
         private readonly IServiceProvider _services;
+        private readonly IRepositoryStateService _stateService;
 
         public bool UpdateLoading
         {

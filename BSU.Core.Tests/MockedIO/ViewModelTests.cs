@@ -55,7 +55,8 @@ public class ViewModelTests : MockedIoTest
 
         load.SetResult();
 
-        await WaitFor(50, () => repo.CalculatedState == CalculatedRepositoryStateEnum.Ready);
+        await WaitFor(500, () => repo.CalculatedState == CalculatedRepositoryStateEnum.Ready,
+            () => $"State is {repo.CalculatedState}");
 
         Assert.Equal(CalculatedRepositoryStateEnum.Ready, repo.CalculatedState);
     }

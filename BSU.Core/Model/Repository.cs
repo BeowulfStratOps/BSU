@@ -70,6 +70,7 @@ namespace BSU.Core.Model
                 if (settings != null) return settings;
                 settings =PresetSettings.BuildDefault();
                 _internalState.SetSettings(settings);
+                _eventManager.Publish(new SettingsChangedEvent(this));
                 return settings;
             }
             set => _internalState.SetSettings(value);

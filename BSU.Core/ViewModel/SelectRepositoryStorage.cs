@@ -10,7 +10,7 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class SelectRepositoryStorage : ObservableBase
+    public sealed class SelectRepositoryStorage : ObservableBase, IDisposable
     {
         public bool UpdateAfter { get; }
         public string UpdateText { get; }
@@ -116,19 +116,27 @@ namespace BSU.Core.ViewModel
 
             TryLoad();
             _repository.StateChanged += _ => TryLoad();
-            var eventManager = serviceProvider.Get<IEventManager>();
+            _eventManager = serviceProvider.Get<IEventManager>();
 
-            eventManager.Subscribe<AnythingChangedEvent>(_ =>
-            {
-                TryLoad();
-                Update();
-            });
+            _eventManager.Subscribe<AnythingChangedEvent>(HandleAnythingChanged);
 
             foreach (var storage in model.GetStorages())
             {
                 AddStorageToList(storage);
             }
             model.AddedStorage += AddStorageToList;
+        }
+
+
+        public void Dispose()
+        {
+            _eventManager.Unsubscribe<AnythingChangedEvent>(HandleAnythingChanged);
+        }
+
+        private void HandleAnythingChanged(AnythingChangedEvent evt)
+        {
+            TryLoad();
+            Update();
         }
 
         private void AddStorageToList(IModelStorage storage)
@@ -236,6 +244,8 @@ namespace BSU.Core.ViewModel
         }
 
         private bool _showDownload;
+        private readonly IEventManager _eventManager;
+
         public bool ShowDownload
         {
             get => _showDownload;

@@ -10,6 +10,7 @@ using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
+using BSU.Core.Services;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using BSU.Core.ViewModel;
@@ -67,14 +68,14 @@ public abstract class MockedIoTest : LoggedTest
         return (IMockedFiles)field!.GetValue(mod)!;
     }
 
-    protected static async Task WaitFor(int timeoutMs, Func<bool> condition)
+    protected static async Task WaitFor(int timeoutMs, Func<bool> condition, Func<string>? timeoutMessage = null)
     {
         var cts = new CancellationTokenSource(timeoutMs);
 
         while (true)
         {
             if (condition()) return;
-            if (cts.IsCancellationRequested) throw new TimeoutException();
+            if (cts.IsCancellationRequested) throw new TimeoutException(timeoutMessage?.Invoke());
             await Task.Delay(1, CancellationToken.None);
         }
     }
@@ -173,6 +174,7 @@ public abstract class MockedIoTest : LoggedTest
             services.Add<IDispatcher>(dispatcher);
             services.Add(types);
             services.Add<IEventManager>(new EventManager());
+            services.Add<IRepositoryStateService>(new RepositoryStateService(services));
             var model = new Model.Model(new InternalState(settings), services, false);
             if (load)
                 model.Load();

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
+using BSU.Core.Events;
 using BSU.Core.Hashes;
 using BSU.Core.Ioc;
 using BSU.Core.Model.Updating;
@@ -41,9 +42,11 @@ namespace BSU.Core.Model
             {
                 if (Equals(value, _selection)) return;
                 _logger.Debug($"Changing selection from {_selection} to {value}");
+                var old = _selection;
                 _selection = value;
                 _internalState.Selection = PersistedSelection.FromSelection(value);
                 SelectionChanged?.Invoke(this);
+                _eventManager.Publish(new ModSelectionChangedEvent(this, old, value));
             }
         }
 
@@ -54,6 +57,7 @@ namespace BSU.Core.Model
             _internalState = internalState;
             ParentRepository = parentRepository;
             _dispatcher = services.Get<IDispatcher>();
+            _eventManager = services.Get<IEventManager>();
             _implementation = implementation;
             Identifier = identifier;
             _downloadIdentifier = identifier;
@@ -168,6 +172,7 @@ namespace BSU.Core.Model
         private string _downloadIdentifier;
         private LoadingState _state;
         private readonly IDispatcher _dispatcher;
+        private readonly IEventManager _eventManager;
 
         public string DownloadIdentifier
         {
