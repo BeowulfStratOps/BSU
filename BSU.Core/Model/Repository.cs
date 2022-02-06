@@ -69,7 +69,7 @@ namespace BSU.Core.Model
                 var settings = _internalState.GetSettings();
                 if (settings != null) return settings;
                 Settings = PresetSettings.BuildDefault();
-                return settings!;
+                return Settings;
             }
             set
             {
