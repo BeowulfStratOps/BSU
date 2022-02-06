@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
+using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
@@ -13,11 +15,15 @@ namespace BSU.Core.ViewModel
     {
         internal readonly RepositoriesPage RepoPage;
         internal readonly StoragePage StoragePage;
+        private readonly IDispatcher _dispatcher;
 
         internal ViewModel(ServiceProvider services)
         {
-            services.Get<IEventManager>().Subscribe<ErrorEvent>(AddError);
+            var eventManager = services.Get<IEventManager>();
+            eventManager.Subscribe<ErrorEvent>(AddError);
+            eventManager.Subscribe<NotificationEvent>(AddNotification);
             services.Add<IViewModelService>(this);
+            _dispatcher = services.Get<IDispatcher>();
             RepoPage = new RepositoriesPage(services);
             StoragePage = new StoragePage(services);
             Navigator = new Navigator(RepoPage);
@@ -50,15 +56,40 @@ namespace BSU.Core.ViewModel
             return RepoPage.Repositories.Single(r => r.ModelRepository == repo);
         }
 
-        public ObservableCollection<DismissError> Errors { get; } = new();
+        public ObservableCollection<Notification> Notifications { get; } = new();
 
         private void AddError(ErrorEvent error)
         {
-            Errors.Add(new DismissError(error.Message, de => Errors.Remove(de)));
+            Notifications.Add(new DismissError(error.Message, RemoveNotification));
+        }
+
+        private void AddNotification(NotificationEvent evt)
+        {
+            Notifications.Add(new TimedNotification(evt.Message, RemoveNotification, _dispatcher));
+        }
+
+        private void RemoveNotification(Notification notification) => Notifications.Remove(notification);
+    }
+
+    public abstract class Notification
+    {
+    }
+
+    public class TimedNotification : Notification
+    {
+        public string Text { get; }
+
+        public TimedNotification(string text, Action<TimedNotification> remove, IDispatcher dispatcher)
+        {
+            Text = text;
+            Task.Delay(5000).ContinueWith(_ =>
+            {
+                dispatcher.ExecuteSynchronized(() => remove(this));
+            });
         }
     }
 
-    public class DismissError
+    public class DismissError : Notification
     {
         public string Text { get; }
         public ICommand Dismiss { get; }

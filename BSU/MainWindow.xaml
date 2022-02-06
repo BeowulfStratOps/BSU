@@ -24,6 +24,21 @@
         <DataTemplate DataType="{x:Type viewModel:Repository}">
             <gui:RepositoryPage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModel:DismissError}">
+            <Border Margin="5" Padding="5" Background="#DDFF0000" CornerRadius="3">
+                <DockPanel LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Text}" />
+                    <userControls:SvgButton Width="20" Height="20" DockPanel.Dock="Right" Command="{Binding Dismiss}" Svg="{StaticResource SvgClose}" ToolTip="Dismiss"/>
+                </DockPanel>
+            </Border>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModel:TimedNotification}">
+            <Border Margin="5" Padding="5" Background="Green" CornerRadius="3">
+                <DockPanel LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Text}" />
+                </DockPanel>
+            </Border>
+        </DataTemplate>
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -34,18 +49,7 @@
         </Menu>
         <Grid>
             <ContentControl Content="{Binding Navigator.Content}"></ContentControl>
-            <ItemsControl VerticalAlignment="Bottom" ItemsSource="{Binding Errors}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Margin="5" Padding="5" Background="#DDFF0000" CornerRadius="3">
-                            <DockPanel LastChildFill="False">
-                                <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Text}" />
-                                <userControls:SvgButton Width="20" Height="20" DockPanel.Dock="Right" Command="{Binding Dismiss}" Svg="{StaticResource SvgClose}" ToolTip="Dismiss"/>
-                            </DockPanel>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <ItemsControl VerticalAlignment="Bottom" ItemsSource="{Binding Notifications}" />
         </Grid>
     </DockPanel>
 </Window>

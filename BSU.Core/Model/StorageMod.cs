@@ -88,7 +88,7 @@ namespace BSU.Core.Model
 
         private void Load(bool onlyMatchHash)
         {
-            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInEventBus(_dispatcher, getResult =>
+            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInDispatcher(_dispatcher, getResult =>
             {
                 try
                 {

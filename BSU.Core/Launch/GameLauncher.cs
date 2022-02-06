@@ -16,6 +16,8 @@ internal static class GameLauncher
 
     public static GameLaunchResult Launch(IModelRepository preset, IDispatcher dispatcher)
     {
+        if (!preset.Settings.UseBsuLauncher) throw new InvalidOperationException();
+
         var modPaths = CollectModPaths(preset, out var missingDlcs);
 
         if (missingDlcs.Any())

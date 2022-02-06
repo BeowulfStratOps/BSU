@@ -163,6 +163,20 @@ namespace BSU.Core.ViewModel
 
         public DelegateCommand ShowStorage { get; }
 
+        private bool _usesBsuLauncher;
+
+        private bool UsesBsuLauncher
+        {
+            get => _usesBsuLauncher;
+            set
+            {
+                if (_usesBsuLauncher == value) return;
+                _usesBsuLauncher = value;
+                OnPropertyChanged(nameof(ShowPlayButton));
+            }
+        }
+
+        public bool ShowPlayButton => UsesBsuLauncher && !IsRunning;
 
         private string _serverUrl = "Loading...";
 
@@ -189,11 +203,9 @@ namespace BSU.Core.ViewModel
                 if (_isRunning == value) return;
                 _isRunning = value;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotRunning));
+                OnPropertyChanged(nameof(ShowPlayButton));
             }
         }
-
-        public bool IsNotRunning => !_isRunning;
 
         internal Repository(IModelRepository modelRepository, IServiceProvider serviceProvider)
         {
@@ -217,6 +229,12 @@ namespace BSU.Core.ViewModel
             eventManager.Subscribe<CalculatedStateChangedEvent>(UpdateState);
             _stateService = serviceProvider.Get<IRepositoryStateService>();
             _services = serviceProvider;
+            UsesBsuLauncher = modelRepository.Settings.UseBsuLauncher;
+            eventManager.Subscribe<SettingsChangedEvent>(evt =>
+            {
+                if (evt.Repository == modelRepository)
+                    UsesBsuLauncher = modelRepository.Settings.UseBsuLauncher;
+            });
         }
 
         private void UpdateState(CalculatedStateChangedEvent evt)

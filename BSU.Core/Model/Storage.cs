@@ -65,7 +65,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(LoadAsync).ContinueInEventBus(_dispatcher, getResult =>
+            Task.Run(LoadAsync).ContinueInDispatcher(_dispatcher, getResult =>
             {
                 try
                 {

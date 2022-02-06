@@ -68,12 +68,14 @@ namespace BSU.Core.Model
             {
                 var settings = _internalState.GetSettings();
                 if (settings != null) return settings;
-                settings =PresetSettings.BuildDefault();
-                _internalState.SetSettings(settings);
-                _eventManager.Publish(new SettingsChangedEvent(this));
-                return settings;
+                Settings = PresetSettings.BuildDefault();
+                return settings!;
             }
-            set => _internalState.SetSettings(value);
+            set
+            {
+                _internalState.SetSettings(value);
+                _eventManager.Publish(new SettingsChangedEvent(this));
+            }
         }
 
         private async Task<(Dictionary<string, IRepositoryMod> mods, ServerInfo serverInfo)> LoadAsync()
@@ -85,7 +87,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(LoadAsync).ContinueInEventBus(_dispatcher, getResult =>
+            Task.Run(LoadAsync).ContinueInDispatcher(_dispatcher, getResult =>
             {
                 try
                 {
