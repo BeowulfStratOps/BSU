@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using BSU.Core.Launch.BiFileTypes;
@@ -20,19 +21,30 @@ public static class ArmaLauncher
 
     private static string PresetDirectory => Path.Combine(LauncherDirectory, "Presets");
 
+    private static readonly SemaphoreSlim FileSystemLock = new(1);
+
     public static async Task<bool> UpdatePreset(string presetName, List<string> modFolders, List<string> dlcIds)
     {
-        var local = await ReadLocal();
-        var preset = await ReadPreset(presetName);
+        await FileSystemLock.WaitAsync();
 
-        if (CheckLocalIsUpToData(local, modFolders) && preset != null && CheckPresetIsUpToDate(preset, modFolders, dlcIds))
-            return false;
+        try
+        {
+            var local = await ReadLocal();
+            var preset = await ReadPreset(presetName);
 
-        UpdateLocal(modFolders, local);
-        await WriteLocal(local);
-        await WritePreset(presetName, modFolders, dlcIds);
+            if (CheckLocalIsUpToData(local, modFolders) && preset != null && CheckPresetIsUpToDate(preset, modFolders, dlcIds))
+                return false;
 
-        return true;
+            UpdateLocal(modFolders, local);
+            await WriteLocal(local);
+            await WritePreset(presetName, modFolders, dlcIds);
+
+            return true;
+        }
+        finally
+        {
+            FileSystemLock.Release();
+        }
     }
 
     private static bool CheckPresetIsUpToDate(Preset2 preset, List<string> modFolders, List<string> dlcIds)
