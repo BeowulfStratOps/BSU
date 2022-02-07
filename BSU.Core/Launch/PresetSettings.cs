@@ -5,7 +5,6 @@ namespace BSU.Core.Launch;
 public record PresetSettings(string Allocator)
 {
     public string? Profile { get; init; }
-    public string? Server { get; init; }
     public bool BattlEye { get; init; }
     public bool WorldEmpty { get; init; }
     public bool CloseAfterLaunch { get; init; }

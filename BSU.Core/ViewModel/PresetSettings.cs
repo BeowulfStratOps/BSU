@@ -32,7 +32,6 @@ public class PresetSettings : ObservableBase
     {
         CanCancelDialog = canCancelDialog;
         Profile = initial.Profile;
-        Server = initial.Server;
         BattlEye = initial.BattlEye;
         WorldEmpty = initial.WorldEmpty;
         CloseAfterLaunch = initial.CloseAfterLaunch;
@@ -45,7 +44,6 @@ public class PresetSettings : ObservableBase
     }
 
     public string? Profile { get; set; }
-    public string? Server { get; set; }
     public bool BattlEye { get; set; }
     public bool WorldEmpty { get; set; }
     public bool CloseAfterLaunch { get; set; }
@@ -64,7 +62,6 @@ public class PresetSettings : ObservableBase
         return new Launch.PresetSettings(Allocator)
         {
             Profile = Profile,
-            Server = Server,
             BattlEye = BattlEye,
             WorldEmpty = WorldEmpty,
             CloseAfterLaunch = CloseAfterLaunch,
