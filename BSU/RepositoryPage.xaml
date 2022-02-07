@@ -10,12 +10,13 @@
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Repository}">
+             d:DesignHeight="300" d:DesignWidth="700" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <DockPanel>
         <DockPanel.Resources>
             <converters:ColorIndicationConverter x:Key="ColorConverter" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
             <converters:CalculatedStateToTextConverter x:Key="CalculatedStateToText" />
+            <converters:CalculatedStateToColorBrushConverter x:Key="CalculatedStateToColorBrushConverter"></converters:CalculatedStateToColorBrushConverter>
         </DockPanel.Resources>
 
         <Grid DockPanel.Dock="Top">
@@ -28,11 +29,10 @@
 
         <DockPanel Margin="5" Dock="Top">
             <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                <TextBlock>Info:</TextBlock>
-                <TextBlock Text="{Binding ServerUrl}"></TextBlock>
-                <TextBlock Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}}"></TextBlock>
+                <TextBlock>Server:</TextBlock>
+                <TextBlock Text="{Binding ServerUrl, FallbackValue=srv1.beowulfso.com}"></TextBlock>
             </StackPanel>
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                 <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Settings}" Svg="{StaticResource SvgSettings}" ToolTip="Settings" />
 
                 <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding ChooseDownloadLocation}" Svg="{StaticResource SvgStorage}" ToolTip="Choose Download Location" />
@@ -52,6 +52,8 @@
                 <userControls:SvgButton Width="40" Height="40" Visibility="{Binding ShowPlayButton, Converter={StaticResource CollapseConverter}}" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Arma with this Preset"/>
                 <userControls:SvgButton Width="40" Height="40" Visibility="{Binding IsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding StopPlaying}" Svg="{StaticResource SvgStop}" SvgBrush="Red" ToolTip="Close the game"/>
             </StackPanel>
+
+            <TextBlock FontSize="16" FontWeight="DemiBold" HorizontalAlignment="Center" Foreground="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToColorBrushConverter}}" Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>
         </DockPanel>
         <userControls:FileSyncProgressBar Margin="5, 3" DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
         <Rectangle DockPanel.Dock="Top" HorizontalAlignment="Stretch" Fill="Black" Height="1"/>

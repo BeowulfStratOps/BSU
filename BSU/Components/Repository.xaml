@@ -11,10 +11,10 @@
              d:DesignHeight="100" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
         <Border.Resources>
-            <converters:BoolToVisibilityConverter x:Key="VisibleIfTrueConverter" />
             <converters:ColorIndicationConverter x:Key="ColorConverter" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
             <converters:CalculatedStateToTextConverter x:Key="CalculatedStateToText" />
+            <converters:CalculatedStateToColorBrushConverter x:Key="CalculatedStateToColorBrushConverter"></converters:CalculatedStateToColorBrushConverter>
         </Border.Resources>
         <DockPanel>
             <DockPanel Dock="Top">
@@ -50,8 +50,7 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock Text="{Binding ServerUrl, FallbackValue=Server Url}"></TextBlock>
-                    <TextBlock Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>
+                    <TextBlock FontSize="14" Foreground="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToColorBrushConverter}}" Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>
                 </StackPanel>
             </DockPanel>
             <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
