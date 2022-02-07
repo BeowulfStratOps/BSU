@@ -2,8 +2,9 @@
 
 namespace BSU.Core.Launch;
 
-public record PresetSettings(string Profile, string Allocator)
+public record PresetSettings(string Allocator)
 {
+    public string? Profile { get; init; }
     public string? Server { get; init; }
     public bool BattlEye { get; init; }
     public bool WorldEmpty { get; init; }
@@ -17,8 +18,9 @@ public record PresetSettings(string Profile, string Allocator)
 
     public static PresetSettings BuildDefault()
     {
-        return new PresetSettings(ArmaData.GetProfiles().First(), ArmaData.GetAllocators().First())
+        return new PresetSettings(ArmaData.GetAllocators().First())
         {
+            Profile = ArmaData.GetProfiles().FirstOrDefault(),
             BattlEye = true,
             WorldEmpty = true,
             HugePages = true,

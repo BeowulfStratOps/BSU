@@ -44,7 +44,7 @@ public class PresetSettings : ObservableBase
         UseBsuLauncher = initial.UseBsuLauncher;
     }
 
-    public string Profile { get; set; }
+    public string? Profile { get; set; }
     public string? Server { get; set; }
     public bool BattlEye { get; set; }
     public bool WorldEmpty { get; set; }
@@ -61,8 +61,9 @@ public class PresetSettings : ObservableBase
 
     public Launch.PresetSettings ToLaunchSettings()
     {
-        return new Launch.PresetSettings(Profile, Allocator)
+        return new Launch.PresetSettings(Allocator)
         {
+            Profile = Profile,
             Server = Server,
             BattlEye = BattlEye,
             WorldEmpty = WorldEmpty,
