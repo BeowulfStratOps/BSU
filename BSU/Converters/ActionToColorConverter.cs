@@ -13,6 +13,8 @@ namespace BSU.GUI.Converters
             var value = (ModActionEnum)objValue;
             switch (value)
             {
+                case ModActionEnum.Loading:
+                    return new SolidColorBrush(Colors.DimGray);
                 case ModActionEnum.Update:
                 case ModActionEnum.ContinueUpdate:
                 case ModActionEnum.AbortAndUpdate:
@@ -21,6 +23,8 @@ namespace BSU.GUI.Converters
                 case ModActionEnum.Use:
                     return new SolidColorBrush(Colors.Green);
                 case ModActionEnum.AbortActiveAndUpdate:
+                    return new SolidColorBrush(Colors.Red);
+                case ModActionEnum.Unusable:
                     return new SolidColorBrush(Colors.Red);
                 default:
                     throw new ArgumentOutOfRangeException();

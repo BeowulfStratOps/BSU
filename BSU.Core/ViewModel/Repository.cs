@@ -147,6 +147,15 @@ namespace BSU.Core.ViewModel
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            if (ModelRepository.State == LoadingState.Loaded)
+            {
+                var selections = ModelRepository.GetMods().Select(mod => mod.GetCurrentSelection()).ToList();
+
+                DisableAll.SetCanExecute(selections.Any(s => s is not ModSelectionDisabled));
+                EnableAll.SetCanExecute(selections.Any(s => s is ModSelectionDisabled));
+                ChooseDownloadLocation.SetCanExecute(selections.Any(s => s is ModSelectionDownload));
+            }
         }
 
         public ObservableCollection<RepositoryMod> Mods { get; } = new();
@@ -222,7 +231,7 @@ namespace BSU.Core.ViewModel
             StopPlaying = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoStopPlaying));
             Pause = new DelegateCommand(DoPause, false);
             Settings = new DelegateCommand(ShowSettings);
-            ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation);
+            ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation, false);
             modelRepository.StateChanged += _ => OnStateChanged();
             Name = modelRepository.Name;
             var eventManager = serviceProvider.Get<IEventManager>();
@@ -235,6 +244,24 @@ namespace BSU.Core.ViewModel
                 if (evt.Repository == modelRepository)
                     UsesBsuLauncher = modelRepository.Settings.UseBsuLauncher;
             });
+            EnableAll = new DelegateCommand(DoEnableAll, false);
+            DisableAll = new DelegateCommand(DoDisableAll, false);
+        }
+
+        private void DoEnableAll()
+        {
+            foreach (var mod in ModelRepository.GetMods())
+            {
+                mod.SetSelection(new ModSelectionNone()); // should trigger auto selection. TODO: make it explicit.
+            }
+        }
+
+        private void DoDisableAll()
+        {
+            foreach (var mod in ModelRepository.GetMods())
+            {
+                mod.SetSelection(new ModSelectionDisabled());
+            }
         }
 
         private void UpdateState(CalculatedStateChangedEvent evt)
@@ -454,6 +481,9 @@ Cancel - Do not remove this repository";
         public DelegateCommand ChooseDownloadLocation { get; }
 
         public DelegateCommand StopPlaying { get; }
+
+        public DelegateCommand DisableAll { get; }
+        public DelegateCommand EnableAll { get; }
 
         #endregion
     }

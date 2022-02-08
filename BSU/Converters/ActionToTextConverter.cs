@@ -24,6 +24,8 @@ namespace BSU.GUI.Converters
                     return "Use";
                 case ModActionEnum.Loading:
                     return "Loading";
+                case ModActionEnum.Unusable:
+                    return "Unusable";
                 default:
                     throw new ArgumentOutOfRangeException();
             }

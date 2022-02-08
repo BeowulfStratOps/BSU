@@ -43,6 +43,7 @@ internal class PresetGeneratorService
         if (repository.Settings.UseBsuLauncher) return;
         var state = _stateService.GetStateFor(repository);
         if (state != CalculatedRepositoryStateEnum.Ready && state != CalculatedRepositoryStateEnum.ReadyPartial) return;
+        if (repository.GetMods().All(mod => mod.GetCurrentSelection() is ModSelectionDisabled)) return; // don't create an empty preset
 
         var presetName = SanitizePresetName(repository.Name);
 
