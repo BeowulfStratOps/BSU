@@ -51,6 +51,7 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(true);
                     UpdateButtonVisible = true;
+                    PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Primary;
 
                     Pause.SetCanExecute(false);
@@ -64,6 +65,7 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
+                    PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -77,6 +79,7 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
+                    PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -90,9 +93,10 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = false;
+                    PauseButtonVisible = true;
                     UpdateButtonColor = ColorIndication.Normal;
 
-                    Pause.SetCanExecute(true);
+                    Pause.SetCanExecute(_cts != null && !_cts.IsCancellationRequested);
                     Delete.SetCanExecute(false);
 
                     Play.SetCanExecute(false);
@@ -103,6 +107,7 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
+                    PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -116,6 +121,7 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
+                    PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -129,6 +135,7 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
+                    PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -342,6 +349,7 @@ namespace BSU.Core.ViewModel
         {
             if (_cts == null) throw new InvalidOperationException();
             _cts.Cancel();
+            UpdateButtonStates();
         }
 
         private void DoDelete(object? objOnDetailsPage)
@@ -378,11 +386,13 @@ Cancel - Do not remove this repository";
             try
             {
                 var startTime = DateTime.Now;
-                var updateTasks = Mods.Select(m => m.StartUpdate(CancellationToken.None)).ToList();
+                var updateTasks = Mods.Select(m => m.StartUpdate(_cts.Token)).ToList();
                 await Task.WhenAll(updateTasks);
                 var updates = updateTasks.Where(r => r.Result != null).Select(t => t.Result!).ToList();
 
                 var updateStats = await RepositoryUpdate.Update(updates,  UpdateProgress.Progress);
+
+                if (_cts.IsCancellationRequested) return;
 
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {
@@ -465,6 +475,18 @@ Cancel - Do not remove this repository";
 
         public DelegateCommand DisableAll { get; }
         public DelegateCommand EnableAll { get; }
+
+        private bool _pauseButtonVisible;
+        public bool PauseButtonVisible
+        {
+            get => _pauseButtonVisible;
+            set
+            {
+                if (_pauseButtonVisible == value) return;
+                _pauseButtonVisible = value;
+                OnPropertyChanged();
+            }
+        }
 
         #endregion
     }

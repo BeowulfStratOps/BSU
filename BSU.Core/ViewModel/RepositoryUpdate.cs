@@ -21,7 +21,7 @@ namespace BSU.Core.ViewModel
         private readonly object _progressLock = new();
         private readonly ILogger _logger;
 
-        public async Task<StageStats> Update()
+        private async Task<StageStats> Update()
         {
             var tasks = _updates.Select(async s =>
             {

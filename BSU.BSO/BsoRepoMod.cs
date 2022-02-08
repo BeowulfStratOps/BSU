@@ -208,10 +208,10 @@ namespace BSU.BSO
             var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken);
             var seed = await fileSystem.OpenRead(path, cancellationToken);
 
-            if (seed == null) throw new InvalidOperationException();
-
             try
             {
+
+                if (seed == null) throw new InvalidOperationException();
                 Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, progress, cancellationToken);
                 await seed.DisposeAsync();
                 await fileStream.DisposeAsync();
@@ -220,6 +220,9 @@ namespace BSU.BSO
             }
             catch (Exception e)
             {
+                if (seed != null)
+                    await seed.DisposeAsync();
+                await fileStream.DisposeAsync();
                 _logger.Error(e, $"Error while syncing {path}");
                 throw;
             }
