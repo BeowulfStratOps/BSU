@@ -51,7 +51,6 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(true);
                     UpdateButtonVisible = true;
-                    UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Primary;
 
                     Pause.SetCanExecute(false);
@@ -65,7 +64,6 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
-                    UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -79,7 +77,6 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
-                    UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -93,7 +90,6 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = false;
-                    UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(true);
@@ -106,8 +102,7 @@ namespace BSU.Core.ViewModel
                     Details.SetCanExecute(true);
 
                     Update.SetCanExecute(false);
-                    UpdateButtonVisible = false;
-                    UpdateLoading = true;
+                    UpdateButtonVisible = true;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -121,7 +116,6 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
-                    UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -135,7 +129,6 @@ namespace BSU.Core.ViewModel
 
                     Update.SetCanExecute(false);
                     UpdateButtonVisible = true;
-                    UpdateLoading = false;
                     UpdateButtonColor = ColorIndication.Normal;
 
                     Pause.SetCanExecute(false);
@@ -448,22 +441,10 @@ Cancel - Do not remove this repository";
             }
         }
 
-        private bool _updateLoading;
         private bool _updateButtonVisible = true;
         private readonly IInteractionService _interactionService;
         private readonly IServiceProvider _services;
         private readonly IRepositoryStateService _stateService;
-
-        public bool UpdateLoading
-        {
-            get => _updateLoading;
-            set
-            {
-                if (_updateLoading == value) return;
-                _updateLoading = value;
-                OnPropertyChanged();
-            }
-        }
 
         public bool UpdateButtonVisible
         {

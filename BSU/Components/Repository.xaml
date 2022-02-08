@@ -32,7 +32,6 @@
                     <Grid>
                         <userControls:SvgButton Width="40" Height="40" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" Visibility="{Binding UpdateButtonVisible, Converter={StaticResource CollapseConverter}}" SvgBrush="{Binding UpdateButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start the Update/Download"/>
                         <userControls:SvgButton Width="40" Height="40" Command="{Binding Pause}" Svg="{StaticResource SvgPause}" HideIfDisabled="True" ToolTip="Stop the Update. No progress is lost." />
-                        <userControls:Spinner Width="40" Height="40" Visibility="{Binding UpdateLoading, Converter={StaticResource CollapseConverter}}" />
                     </Grid>
 
                     <userControls:SvgButton Width="40" Height="40" Visibility="{Binding ShowPlayButton, Converter={StaticResource CollapseConverter}}" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Arma with this Preset"/>
