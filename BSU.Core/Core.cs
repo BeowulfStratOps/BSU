@@ -5,6 +5,7 @@ using System.Threading;
 using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
+using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.ViewModel;
@@ -47,8 +48,8 @@ namespace BSU.Core
             services.Add<IEventManager>(new EventManager());
             services.Add<IRepositoryStateService>(new RepositoryStateService(services));
 
-            // TODO: both model and view model add them selves to the services. that seems wrong.
             _model = new Model.Model(state, services, state.CheckIsFirstStart());
+            services.Add<IModel>(_model);
 
             // TODO: should we use different service providers to avoid accidental abuse?
             _viewModel = new ViewModel.ViewModel(services);

@@ -31,6 +31,7 @@ namespace BSU.Core.ViewModel.Util
         public bool CanExecute(object? parameter) => _canExecute;
         public void Execute(object? parameter)
         {
+            if (!_canExecute) throw new InvalidOperationException();
             if (_objAction != null)
                 _objAction(parameter);
             else

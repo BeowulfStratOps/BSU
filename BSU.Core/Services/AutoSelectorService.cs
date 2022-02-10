@@ -9,12 +9,12 @@ namespace BSU.Core.Services
 {
     internal class AutoSelectorService
     {
-        private readonly IModel _model;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly IModel _model;
 
-        public AutoSelectorService(IServiceProvider serviceProvider)
+        public AutoSelectorService(IServiceProvider serviceProvider, IModel model)
         {
-            _model = serviceProvider.Get<IModel>();
+            _model = model;
             var eventManager = serviceProvider.Get<IEventManager>();
             eventManager.Subscribe<AnythingChangedEvent>(OnAnyChange);
         }

@@ -276,6 +276,7 @@ namespace BSU.Core.ViewModel
             if (ModelRepository.State == LoadingState.Error)
             {
                 ServerUrl = "";
+                return;
             }
 
             ServerUrl = ModelRepository.GetServerInfo().Url;

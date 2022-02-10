@@ -48,12 +48,11 @@ namespace BSU.Core.Model
             }
 
             _services = services;
-            services.Add<IModel>(this);
 
             // TODO: should they be registered somewhere?
-            new AutoSelectorService(_services);
+            new AutoSelectorService(_services, this);
             new PresetGeneratorService(_services);
-            new StructureEventCombiner(_services);
+            new StructureEventCombiner(_services, this);
         }
 
         private void DoFirstStartSetup()

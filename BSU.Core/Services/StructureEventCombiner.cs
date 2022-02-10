@@ -12,9 +12,8 @@ namespace BSU.Core.Services
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly IEventManager _eventManager;
 
-        public StructureEventCombiner(IServiceProvider serviceProvider)
+        public StructureEventCombiner(IServiceProvider serviceProvider, IModel model)
         {
-            var model = serviceProvider.Get<IModel>();
             _eventManager = serviceProvider.Get<IEventManager>();
             model.AddedRepository += AddedRepository;
             model.AddedStorage += AddedStorage;

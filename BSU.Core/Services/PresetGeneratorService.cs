@@ -21,7 +21,6 @@ internal class PresetGeneratorService
     public PresetGeneratorService(IServiceProvider serviceProvider)
     {
         var eventManager = serviceProvider.Get<IEventManager>();
-        serviceProvider.Get<IModel>();
         _stateService = serviceProvider.Get<IRepositoryStateService>();
         _eventManager = serviceProvider.Get<IEventManager>();
         _dispatcher = serviceProvider.Get<IDispatcher>();
