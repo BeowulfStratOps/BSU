@@ -22,6 +22,14 @@ namespace BSU.Core.Tests.Mocks
             }
         }
 
+        public void WaitForWork()
+        {
+            while (_todo.Count == 0)
+            {
+                Thread.Sleep(1);
+            }
+        }
+
         public void Work(int timeOutMs, Func<bool>? done = null)
         {
             for (var i = 0; i < timeOutMs; i++)

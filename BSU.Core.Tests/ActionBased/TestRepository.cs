@@ -16,15 +16,17 @@ internal class TestRepository : IRepository
         _load.SetResult();
     }
 
+    public TestRepositoryMod GetMod(string modName) => (TestRepositoryMod)_mods[modName];
+
     public async Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken)
     {
         await _load.Task;
-        throw new System.NotImplementedException();
+        return _mods;
     }
 
     public async Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken)
     {
         await _load.Task;
-        throw new System.NotImplementedException();
+        return new ServerInfo("", "", 0, new List<ulong>());
     }
 }

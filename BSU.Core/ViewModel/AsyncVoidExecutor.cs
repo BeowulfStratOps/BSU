@@ -4,11 +4,11 @@ using NLog;
 
 namespace BSU.Core.ViewModel
 {
-    public static class AsyncVoidExecutor
+    public class AsyncVoidExecutor : IAsyncVoidExecutor
     {
         private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
-        public static async void Execute(Func<Task> action)
+        public async void Execute(Func<Task> action)
         {
             // TODO: capture current stacktrace here, so that we have that info when an exception occurs
             try
@@ -21,5 +21,10 @@ namespace BSU.Core.ViewModel
                 throw;
             }
         }
+    }
+
+    public interface IAsyncVoidExecutor
+    {
+        void Execute(Func<Task> action);
     }
 }

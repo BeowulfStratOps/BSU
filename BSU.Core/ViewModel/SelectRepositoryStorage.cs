@@ -21,7 +21,7 @@ namespace BSU.Core.ViewModel
         private bool _showSteamOption;
         private bool _useSteam;
         private bool _downloadEnabled;
-        private List<ModStorageSelectionInfo>? _mods;
+        private List<ModStorageSelectionInfo> _mods = new();
         private StorageSelection? _storage;
 
         public StorageSelection? Storage
@@ -92,7 +92,7 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        public List<ModStorageSelectionInfo>? Mods
+        public List<ModStorageSelectionInfo> Mods
         {
             get => _mods;
             private set

@@ -25,6 +25,7 @@ namespace BSU.Core.Hashes
             foreach (var file in await mod.GetFileList(cancellationToken))
             {
                 var stream = await mod.OpenRead(file, cancellationToken);
+                if (stream == null) throw new InvalidOperationException();
                 var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(file), cancellationToken);
                 hashes.Add(file, hash);
             }

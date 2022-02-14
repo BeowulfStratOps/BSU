@@ -48,7 +48,7 @@ namespace BSU.Core.ViewModel
         private void DoAddRepository()
         {
             // TODO: use some ioc stuff instead of creating the viewModel explicitly
-            var vm = new AddRepository(_model);
+            var vm = new AddRepository(_model, _services);
             if (!_interactionService.AddRepository(vm)) return;
 
             var repo = _model.AddRepository("BSO", vm.Url.Trim(), vm.Name.Trim(), Launch.PresetSettings.BuildDefault());
@@ -65,7 +65,7 @@ namespace BSU.Core.ViewModel
             var selectStorageVm = new SelectRepositoryStorage(repo, _services, true);
             if (!_interactionService.SelectRepositoryStorage(selectStorageVm)) return;
 
-            AsyncVoidExecutor.Execute(async () =>
+            _services.Get<IAsyncVoidExecutor>().Execute(async () =>
             {
                 var state = CoreCalculation.GetRepositoryState(repo, _model.GetRepositoryMods());
                 if (state == CalculatedRepositoryStateEnum.NeedsSync)

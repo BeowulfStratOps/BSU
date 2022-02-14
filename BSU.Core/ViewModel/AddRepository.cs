@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
 
@@ -101,10 +102,11 @@ namespace BSU.Core.ViewModel
             new KnownUrl("Beowulf 'NAAAAAM", "http://u.beowulfso.com/synctest/server-vn.json"),
         };
 
-        internal AddRepository(IModel model)
+        internal AddRepository(IModel model, IServiceProvider services)
         {
             Ok = new DelegateCommand(HandleOkClick);
             _model = model;
+            _services = services;
         }
 
         private void HandleOkClick(object? objWindow)
@@ -122,6 +124,7 @@ namespace BSU.Core.ViewModel
         }
 
         private CancellationTokenSource _handlerDelayCts = new();
+        private readonly IServiceProvider _services;
 
         private async void HandleUrlChanged()
         {
@@ -142,7 +145,7 @@ namespace BSU.Core.ViewModel
             {
                 return;
             }
-            AsyncVoidExecutor.Execute(() => CheckUrl(_handlerDelayCts.Token));
+            _services.Get<IAsyncVoidExecutor>().Execute(() => CheckUrl(_handlerDelayCts.Token));
         }
 
         private async Task CheckUrl(CancellationToken cancellationToken)

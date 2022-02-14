@@ -175,7 +175,9 @@ public abstract class MockedIoTest : LoggedTest
             services.Add(types);
             services.Add<IEventManager>(new EventManager());
             services.Add<IRepositoryStateService>(new RepositoryStateService(services));
+            services.Add<IAsyncVoidExecutor>(new AsyncVoidExecutor());
             var model = new Model.Model(new InternalState(settings), services, false);
+            services.Add<IModel>(model);
             if (load)
                 model.Load();
             return model;

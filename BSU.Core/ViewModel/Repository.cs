@@ -222,13 +222,14 @@ namespace BSU.Core.ViewModel
             _model = serviceProvider.Get<IModel>();
             _viewModelService = serviceProvider.Get<IViewModelService>();
             _interactionService = serviceProvider.Get<IInteractionService>();
+            var asyncVoidExecutor = serviceProvider.Get<IAsyncVoidExecutor>();
             Delete = new DelegateCommand(DoDelete, false);
-            Update = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoUpdate));
+            Update = new DelegateCommand(() => asyncVoidExecutor.Execute(DoUpdate));
             Back = new DelegateCommand(_viewModelService.NavigateBack);
             ShowStorage = new DelegateCommand(_viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => _viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
-            StopPlaying = new DelegateCommand(() => AsyncVoidExecutor.Execute(DoStopPlaying));
+            StopPlaying = new DelegateCommand(() => asyncVoidExecutor.Execute(DoStopPlaying));
             Pause = new DelegateCommand(DoPause, false);
             Settings = new DelegateCommand(ShowSettings);
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation, false);

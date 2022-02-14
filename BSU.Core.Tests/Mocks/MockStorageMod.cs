@@ -60,7 +60,7 @@ namespace BSU.Core.Tests.Mocks
         {
             await _load;
             await using var stream = await OpenRead(path, cancellationToken);
-            var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None);
+            var hash = await SHA1AndPboHash.BuildAsync(stream!, Utils.GetExtension(path), CancellationToken.None);
             return hash;
         }
 

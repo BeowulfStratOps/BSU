@@ -51,7 +51,6 @@ namespace BSU.Core.Model
 
             // TODO: should they be registered somewhere?
             new AutoSelectorService(_services, this);
-            new PresetGeneratorService(_services);
             new StructureEventCombiner(_services, this);
         }
 

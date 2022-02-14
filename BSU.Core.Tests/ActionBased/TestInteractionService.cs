@@ -21,15 +21,9 @@ internal class TestInteractionService : IInteractionService
     }
 
     public bool AddRepository(AddRepository viewModel) => (bool)Handle(viewModel, new TestClosable())!;
-    public bool AddStorage(AddStorage viewModel)
-    {
-        throw new NotImplementedException();
-    }
+    public bool AddStorage(AddStorage viewModel) => (bool)Handle(viewModel, new TestClosable())!;
 
-    public void MessagePopup(string message, string title)
-    {
-        throw new NotImplementedException();
-    }
+    public void MessagePopup(string message, string title) => Handle(new MessagePopupDto(message, title));
 
     public bool? YesNoCancelPopup(string message, string title)
     {
@@ -41,7 +35,7 @@ internal class TestInteractionService : IInteractionService
         throw new NotImplementedException();
     }
 
-    public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel) => (bool)Handle(viewModel)!;
+    public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel) => (bool)Handle(viewModel, new TestClosable())!;
 
     public bool PresetSettings(PresetSettings vm) => (bool)Handle(vm)!;
 }

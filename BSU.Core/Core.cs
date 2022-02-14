@@ -41,12 +41,16 @@ namespace BSU.Core
             var eventBus = new SynchronizationContextDispatcher(SynchronizationContext.Current!);
 
             var services = new ServiceProvider();
+            services.Add<IAsyncVoidExecutor>(new AsyncVoidExecutor());
             services.Add(Types.Default);
             services.Add<IDispatcher>(eventBus);
             services.Add(interactionService);
             services.Add<IDialogService>(new DialogService(services));
             services.Add<IEventManager>(new EventManager());
             services.Add<IRepositoryStateService>(new RepositoryStateService(services));
+
+            // TODO: should this be registered somewhere?
+            new PresetGeneratorService(services);
 
             _model = new Model.Model(state, services, state.CheckIsFirstStart());
             services.Add<IModel>(_model);

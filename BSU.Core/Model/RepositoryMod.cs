@@ -93,6 +93,7 @@ namespace BSU.Core.Model
         {
             Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInDispatcher(_dispatcher, getResult =>
             {
+                // TODO: handle errors!
                 (_matchHash, _versionHash, _modInfo) = getResult();
                 State = LoadingState.Loaded;
             });
