@@ -35,6 +35,8 @@ internal class Model : IDisposable
     private readonly List<ErrorEvent> _errorEvents = new();
     private readonly TestModelInterface _testModelInterface;
 
+    private ModelActionContext _currentContext = null!;
+
     public Model()
     {
         _testModelInterface = new TestModelInterface(DoInModelThreadWithWait);
@@ -76,7 +78,7 @@ internal class Model : IDisposable
         services.Add<IDispatcher>(_dispatcher);
         services.Add<IEventManager>(eventManager);
         services.Add<IRepositoryStateService>(new RepositoryStateService(services));
-        services.Add<IDialogService>(new DialogService(services)); // TODO: we use this directly in stead of messing with the interaction service
+        services.Add<IDialogService>(new DialogService(services));
         var types = new Types();
 
         types.AddRepoType("BSO", CreateRepository);
@@ -108,8 +110,11 @@ internal class Model : IDisposable
 
     private object? HandleInteraction(ModelActionContext context)
     {
-        _modelThreadSuspended.Set();
-        return WorkLoop(context);
+        var oldContext = _currentContext;
+        _currentContext = context;
+        var result = WorkLoop(context);
+        _currentContext = oldContext;
+        return result;
     }
 
     private void ModelThread()
@@ -118,8 +123,8 @@ internal class Model : IDisposable
         {
             var model = BuildModel();
             _dispatcher.Work();
-            _modelThreadSuspended.Set();
             var context = new ModelActionContext(model, new TestClosable());
+            _currentContext = context;
             WorkLoop(context);
         }
         catch (Exception e)
@@ -133,13 +138,18 @@ internal class Model : IDisposable
     {
         while (true)
         {
-            _modelThreadContinue.WaitOne();
             if (_shutDown) return null;
+            _modelThreadSuspended.Set();
+            _modelThreadContinue.WaitOne();
+            if (_shutDown)
+            {
+                _modelThreadSuspended.Set();
+                return null;
+            }
             _modelThreadAction!(context);
             _dispatcher.Work();
             if (context.Dialog.TryGetResult(out var dialogResult))
                 return dialogResult;
-            _modelThreadSuspended.Set();
         }
     }
 
@@ -150,6 +160,11 @@ internal class Model : IDisposable
 
     public void Do<T>(Action<T, IDialogContext> action)
     {
+        if (!_currentContext.Active.GetType().IsAssignableTo(typeof(T)))
+        {
+            throw new InvalidOperationException(
+                $"Active type is {_currentContext.Active.GetType()}, expected {typeof(T)}");
+        }
         DoInModelThread(context =>
         {
             var (activeObject, dialogContext) = context;
