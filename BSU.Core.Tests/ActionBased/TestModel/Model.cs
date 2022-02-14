@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
@@ -11,13 +9,12 @@ using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.ViewModel;
-using BSU.Core.ViewModel.Util;
 using BSU.CoreCommon;
-using NLog;
+using Xunit;
 
-namespace BSU.Core.Tests.ActionBased;
+namespace BSU.Core.Tests.ActionBased.TestModel;
 
-internal class TestModel : IDisposable
+internal class Model : IDisposable
 {
     // idea: have a user thread and a model thread.
     // That way the test can be written linearly and suspend the model instead of having to deal with callbacks en masse
@@ -36,14 +33,25 @@ internal class TestModel : IDisposable
     private readonly Dictionary<string, TestStorage> _storages = new();
 
     private readonly List<ErrorEvent> _errorEvents = new();
+    private readonly TestModelInterface _testModelInterface;
 
-    public TestModel()
+    public Model()
     {
+        _testModelInterface = new TestModelInterface(DoInModelThreadWithWait);
         _modelThread = new Thread(ModelThread);
         _modelThread.Start();
         _modelThreadSuspended.WaitOne();
         if (_modelThreadException != null)
             throw _modelThreadException;
+    }
+
+    private void DoInModelThreadWithWait(Action action, bool wait)
+    {
+        DoInModelThread(_ =>
+        {
+            action();
+            if (wait) _dispatcher.WaitForWork();
+        });
     }
 
     private void CheckException()
@@ -77,7 +85,7 @@ internal class TestModel : IDisposable
         services.Add(types);
 
         var persistentState = new InternalState(new MockSettings());
-        var model = new Model.Model(persistentState, services, false);
+        var model = new BSU.Core.Model.Model(persistentState, services, false);
         services.Add<IModel>(model);
 
         var vm = new ViewModel.ViewModel(services);
@@ -86,14 +94,14 @@ internal class TestModel : IDisposable
 
     private IStorage CreateStorage(string url)
     {
-        var storage = new TestStorage();
+        var storage = new TestStorage(_testModelInterface);
         _storages.Add(url, storage);
         return storage;
     }
 
     private IRepository CreateRepository(string url)
     {
-        var repo = new TestRepository();
+        var repo = new TestRepository(_testModelInterface);
         _repositories.Add(url, repo);
         return repo;
     }
@@ -150,13 +158,10 @@ internal class TestModel : IDisposable
         });
     }
 
-    public void Close(bool result)
-    {
-        DoInModelThread(context => context.Dialog.SetResult(result));
-    }
-
     private void DoInModelThread(Action<ModelActionContext> action)
     {
+        if (Thread.CurrentThread == _modelThread)
+            throw new InvalidOperationException("Can only be called from the test/user thread");
         if (_modelThreadException != null) throw new InvalidOperationException("Model is in a faulted state!");
         _modelThreadAction = action;
         _modelThreadContinue.Set();
@@ -164,55 +169,18 @@ internal class TestModel : IDisposable
         CheckException();
     }
 
-    public void LoadRepository(string url, IEnumerable<string> mods)
-    {
-        if (Thread.CurrentThread != _modelThread) throw new InvalidOperationException();
-        var modsDict = new Dictionary<string, IRepositoryMod>();
-        foreach (var modName in mods)
-        {
-            var mod = new TestRepositoryMod();
-            modsDict.Add(modName, mod);
-        }
-        _repositories[url].Load(modsDict);
-        _dispatcher.WaitForWork();
-        _dispatcher.Work();
-    }
-
-    public void LoadRepositoryMod(string repoUrl, string modName, Dictionary<string,byte[]> files)
-    {
-        if (Thread.CurrentThread != _modelThread) throw new InvalidOperationException();
-        var mod = _repositories[repoUrl].GetMod(modName);
-        mod.Load(files);
-        _dispatcher.WaitForWork();
-        _dispatcher.Work();
-    }
-
     public void Dispose()
     {
         _shutDown = true;
         _modelThreadContinue.Set();
         _modelThread.Join();
+        CheckErrorEvents();
     }
 
-    public void LoadStorage(string path, IEnumerable<string> mods)
+    public void CheckErrorEvents()
     {
-        if (Thread.CurrentThread != _modelThread) throw new InvalidOperationException();
-        var modsDict = new Dictionary<string, IStorageMod>();
-        foreach (var modName in mods)
-        {
-            var mod = new TestStorageMod();
-            modsDict.Add(modName, mod);
-        }
-        _storages[path].Load(modsDict);
-        _dispatcher.WaitForWork();
-        _dispatcher.Work();
-    }
-
-    public List<ErrorEvent> GetErrorEvents()
-    {
-        var result = new List<ErrorEvent>(_errorEvents);
+        Assert.Empty(_errorEvents);
         _errorEvents.Clear();
-        return result;
     }
 
     public void WaitFor(int timeoutMs, Func<bool> condition, Func<string>? timeoutMessage = null)
@@ -227,96 +195,16 @@ internal class TestModel : IDisposable
         throw new TimeoutException(timeoutMessage?.Invoke());
     }
 
-    public void LoadStorageMod(string path, string modName, Dictionary<string, byte[]> files, bool waitForStateChange = true)
-    {
-        if (Thread.CurrentThread != _modelThread) throw new InvalidOperationException();
-        var mod = _storages[path].GetMod(modName);
-        mod.Load(files);
-        if (!waitForStateChange) return;
-        _dispatcher.WaitForWork();
-        _dispatcher.Work();
-    }
+    public TestRepository GetRepository(string url) => _repositories[url];
 
-    public void FinishUpdate(string repoUrl, string modName)
-    {
-        if (Thread.CurrentThread != _modelThread) throw new InvalidOperationException();
-        _repositories[repoUrl].GetMod(modName).FinishUpdate();
-    }
-
-    public Dictionary<string, byte[]> GetRepoFiles(string url, string modName)
-    {
-        return _repositories[url].GetMod(modName).Files;
-    }
-
-    public Dictionary<string, byte[]> GetStorageFiles(string url, string modName)
-    {
-        return _storages[url].GetMod(modName).Files;
-    }
-}
-
-internal class TestAsyncVoidExecutor : IAsyncVoidExecutor
-{
-    private readonly IEventManager _eventManager;
-    private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
-
-    public TestAsyncVoidExecutor(IEventManager eventManager)
-    {
-        _eventManager = eventManager;
-    }
-
-    public async void Execute(Func<Task> action)
-    {
-        try
-        {
-            await action();
-        }
-        catch (Exception e)
-        {
-            Logger.Error(e);
-            _eventManager.Publish(new ErrorEvent(e.Message));
-            throw;
-        }
-    }
+    public TestStorage GetStorage(string path) => _storages[path];
 }
 
 internal record ModelActionContext(object Active, IDialogContext Dialog);
-
-internal interface IDialogContext
-{
-    void SetResult(object? result);
-    bool TryGetResult(out object? result);
-}
-
-internal class DialogContext : IDialogContext
-{
-    private object? _result;
-    private bool _isSet;
-
-    public void SetResult(object? result)
-    {
-        _result = result;
-        _isSet = true;
-    }
-
-    public bool TryGetResult(out object? result)
-    {
-        result = _result;
-        return _isSet;
-    }
-}
 
 internal class ModelFailedException : Exception
 {
     public ModelFailedException(Exception modelThreadException) : base("Model failed", modelThreadException)
     {
-
-    }
-}
-
-internal class TestClosable : DialogContext, ICloseable
-{
-    public void Close(bool result)
-    {
-        SetResult(result);
     }
 }

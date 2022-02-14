@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Xunit;
 
-namespace BSU.Core.Tests.ActionBased;
+namespace BSU.Core.Tests.ActionBased.TestModel;
 
-internal static class Helper
+internal static class FileHelper
 {
     public static Dictionary<string, byte[]> CreateFiles(int match, int version)
     {
@@ -17,5 +19,14 @@ internal static class Helper
         }
 
         return result;
+    }
+
+    public static void AssertFileEquality(Dictionary<string,byte[]> files1, Dictionary<string,byte[]> files2)
+    {
+        Assert.Equal(files1.Keys.ToHashSet(), files2.Keys.ToHashSet());
+        foreach (var path in files1.Keys)
+        {
+            Assert.Equal(files1[path], files2[path]);
+        }
     }
 }

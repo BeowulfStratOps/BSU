@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BSU.Core.Annotations;
+using BSU.Core.Tests.ActionBased.TestModel;
 using BSU.Core.Tests.Util;
 using BSU.Core.ViewModel;
-using BSU.Core.ViewModel.Util;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -19,7 +18,7 @@ public class UserStories : LoggedTest
     [Fact]
     private void TestDownload()
     {
-        using var model = new TestModel();
+        using var model = new TestModel.Model();
 
         model.Do<ViewModel.ViewModel>(vm => vm.RepoPage.AddRepository.Execute());
 
@@ -30,14 +29,19 @@ public class UserStories : LoggedTest
             ar.Ok.Execute(closeable);
         });
 
-        model.Do<PresetSettings>(ps => ps.UseArmaLauncher = true);
-        model.Close(true);
+        model.Do<PresetSettings>((ps, closeable) =>
+        {
+            ps.UseArmaLauncher = true;
+            closeable.SetResult(true);
+        });
+
+        var repo = model.GetRepository("test");
+        repo.Load(new[] { "@mod1" });
+        var repositoryMod = repo.GetMod("@mod1");
+        repositoryMod.Load(FileHelper.CreateFiles(1, 1));
 
         model.Do<SelectRepositoryStorage>(select =>
         {
-            model.LoadRepository("test", new[] { "@mod1" });
-            model.LoadRepositoryMod("test", "@mod1", Helper.CreateFiles(1, 1));
-
             Assert.False(select.IsLoading);
             select.AddStorage.Execute();
 
@@ -51,10 +55,11 @@ public class UserStories : LoggedTest
             addStorage.Ok.Execute(closeable);
         });
 
+        var storage = model.GetStorage("test");
+        storage.Load(Array.Empty<string>());
+
         model.Do<SelectRepositoryStorage>((select, closeable) =>
         {
-            model.LoadStorage("test", Array.Empty<string>());
-
             var (modName, modAction) = select.Mods[0];
             Assert.Equal("@mod1", modName);
             Assert.IsType<SelectStorage>(modAction);
@@ -69,14 +74,16 @@ public class UserStories : LoggedTest
             Assert.Equal("Preparing", repo.UpdateProgress.Stage);
         });
 
+        var storageMod = storage.GetMod("@mod1");
+        storageMod.Load(new Dictionary<string, byte[]>(), false);
+
         model.Do<ViewModel.ViewModel>(vm =>
         {
-            model.LoadStorageMod("test", "@mod1", new Dictionary<string, byte[]>(), false);
             var repo = vm.RepoPage.Repositories[0];
             model.WaitFor(500, () => repo.UpdateProgress.Active && repo.UpdateProgress.Stage == null);
         });
 
-        model.Do<ViewModel.ViewModel>(_ => model.FinishUpdate("test", "@mod1"));
+        repositoryMod.FinishUpdate();
 
         model.Do<ViewModel.ViewModel>(vm =>
         {
@@ -86,17 +93,6 @@ public class UserStories : LoggedTest
 
         model.Do<TestInteractionService.MessagePopupDto>((msg, closeable) => closeable.SetResult(null));
 
-        CheckFileEquality(model.GetRepoFiles("test", "@mod1"), model.GetStorageFiles("test", "@mod1"));
-
-        Assert.Empty(model.GetErrorEvents());
-    }
-
-    private static void CheckFileEquality(Dictionary<string,byte[]> files1, Dictionary<string,byte[]> files2)
-    {
-        Assert.Equal(files1.Keys.ToHashSet(), files2.Keys.ToHashSet());
-        foreach (var path in files1.Keys)
-        {
-            Assert.Equal(files1[path], files2[path]);
-        }
+        FileHelper.AssertFileEquality(repositoryMod.Files, storageMod.Files);
     }
 }

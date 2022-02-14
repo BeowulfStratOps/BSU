@@ -3,19 +3,34 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
 
-namespace BSU.Core.Tests.ActionBased;
+namespace BSU.Core.Tests.ActionBased.TestModel;
 
 internal class TestStorage : IStorage
 {
+    private readonly TestModelInterface _testModelInterface;
     private readonly TaskCompletionSource _loadTcs = new();
     private Dictionary<string, IStorageMod> _mods = null!;
 
     public TestStorageMod GetMod(string modName) => (TestStorageMod)_mods[modName];
 
-    public void Load(Dictionary<string, IStorageMod> mods)
+    public TestStorage(TestModelInterface testModelInterface)
     {
-        _mods = mods;
-        _loadTcs.SetResult();
+        _testModelInterface = testModelInterface;
+    }
+
+    public void Load(IEnumerable<string> mods)
+    {
+        var modsDict = new Dictionary<string, IStorageMod>();
+        foreach (var modName in mods)
+        {
+            var mod = new TestStorageMod(_testModelInterface);
+            modsDict.Add(modName, mod);
+        }
+        _testModelInterface.DoInModelThread(() =>
+        {
+            _mods = modsDict;
+            _loadTcs.SetResult();
+        }, true);
     }
 
     public bool CanWrite() => true;
@@ -29,7 +44,7 @@ internal class TestStorage : IStorage
     public async Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
     {
         await _loadTcs.Task;
-        var mod = new TestStorageMod();
+        var mod = new TestStorageMod(_testModelInterface);
         _mods.Add(identifier, mod);
         return mod;
     }

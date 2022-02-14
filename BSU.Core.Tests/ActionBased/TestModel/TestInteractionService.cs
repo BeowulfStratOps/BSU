@@ -1,7 +1,7 @@
 ﻿using System;
 using BSU.Core.ViewModel;
 
-namespace BSU.Core.Tests.ActionBased;
+namespace BSU.Core.Tests.ActionBased.TestModel;
 
 internal class TestInteractionService : IInteractionService
 {

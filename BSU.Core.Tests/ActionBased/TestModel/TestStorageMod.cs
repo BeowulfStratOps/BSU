@@ -7,24 +7,37 @@ using System.Threading.Tasks;
 using BSU.CoreCommon;
 using BSU.Hashes;
 
-namespace BSU.Core.Tests.ActionBased;
+namespace BSU.Core.Tests.ActionBased.TestModel;
 
 internal class TestStorageMod : IStorageMod
 {
+    private readonly TestModelInterface _testModelInterface;
     private readonly TaskCompletionSource _loadTcs = new();
+    private readonly object _fileLock = new();
     public Dictionary<string, byte[]> Files = new();
 
-    public void Load(Dictionary<string, byte[]> files)
+    public TestStorageMod(TestModelInterface testModelInterface)
     {
-        Files = files;
-        _loadTcs.SetResult();
+        _testModelInterface = testModelInterface;
+    }
+
+    public void Load(Dictionary<string, byte[]> files, bool waitForStateChanges)
+    {
+        _testModelInterface.DoInModelThread(() =>
+        {
+            Files = files;
+            _loadTcs.SetResult();
+        }, waitForStateChanges);
     }
 
     public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
     {
         await _loadTcs.Task;
-        if (!Files.ContainsKey(path))
-            Files[path] = Array.Empty<byte>();
+        lock (_fileLock)
+        {
+            if (!Files.ContainsKey(path))
+                Files[path] = Array.Empty<byte>();
+        }
         return new WriteAfterDisposeMemoryStream(data => Files[path] = data);
     }
 

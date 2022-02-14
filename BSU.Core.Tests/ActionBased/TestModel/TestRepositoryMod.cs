@@ -4,27 +4,35 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.CoreCommon;
 using BSU.Hashes;
 
-namespace BSU.Core.Tests.ActionBased;
+namespace BSU.Core.Tests.ActionBased.TestModel;
 
 internal class TestRepositoryMod : IRepositoryMod
 {
+    private readonly TestModelInterface _testModelInterface;
     private readonly TaskCompletionSource _loadTcs = new();
     public Dictionary<string, byte[]> Files = null!;
     private readonly TaskCompletionSource _updateTcs = new();
 
+    public TestRepositoryMod(TestModelInterface testModelInterface)
+    {
+        _testModelInterface = testModelInterface;
+    }
+
     public void Load(Dictionary<string, byte[]> files)
     {
-        Files = files;
-        _loadTcs.SetResult();
+        _testModelInterface.DoInModelThread(() =>
+        {
+            Files = files;
+            _loadTcs.SetResult();
+        }, true);
     }
 
     public void FinishUpdate()
     {
-        _updateTcs.SetResult();
+        _testModelInterface.DoInModelThread(() => _updateTcs.SetResult(), false);
     }
 
     public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
