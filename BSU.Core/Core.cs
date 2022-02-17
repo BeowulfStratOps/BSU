@@ -29,21 +29,19 @@ namespace BSU.Core
         /// </summary>
         /// <param name="settingsPath">Location to store local settings, including repo/storage data.</param>
         /// <param name="interactionService"></param>
-        public Core(FileInfo settingsPath, IInteractionService interactionService) : this(Settings.Load(settingsPath), interactionService)
+        public Core(FileInfo settingsPath, IInteractionService interactionService, IDispatcher dispatcher) : this(Settings.Load(settingsPath), interactionService, dispatcher)
         {
         }
 
-        internal Core(ISettings settings, IInteractionService interactionService)
+        internal Core(ISettings settings, IInteractionService interactionService, IDispatcher dispatcher)
         {
             _logger.Info("Creating new core instance");
             var state = new InternalState(settings);
 
-            var eventBus = new SynchronizationContextDispatcher(SynchronizationContext.Current!);
-
             var services = new ServiceProvider();
             services.Add<IAsyncVoidExecutor>(new AsyncVoidExecutor());
             services.Add(Types.Default);
-            services.Add<IDispatcher>(eventBus);
+            services.Add(dispatcher);
             services.Add(interactionService);
             services.Add<IDialogService>(new DialogService(services));
             services.Add<IEventManager>(new EventManager());

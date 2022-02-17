@@ -210,4 +210,3 @@ public abstract class MockedIoTest : LoggedTest
         Thread.CurrentThread.Name = "Main"; // looks better in logs
     }
 }
-
