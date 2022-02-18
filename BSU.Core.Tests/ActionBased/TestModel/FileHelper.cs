@@ -15,7 +15,7 @@ internal static class FileHelper
         {
             var data = new byte[20 * 2048];
             Array.Fill(data, (byte)(version % 256));
-            result.Add($"addons/m{match}_p{i}.pbo", data);
+            result.Add($"addons/m{match}_p{i}.bin", data); // TODO: would like to use pbo files as well, but they need the hash in them
         }
 
         return result;

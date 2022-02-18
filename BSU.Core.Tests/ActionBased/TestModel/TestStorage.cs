@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Tests.Mocks;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Tests.ActionBased.TestModel;
@@ -30,6 +32,14 @@ internal class TestStorage : IStorage
         {
             _mods = modsDict;
             _loadTcs.SetResult();
+        }, true);
+    }
+
+    public void Load(Exception exception)
+    {
+        _testModelInterface.DoInModelThread(() =>
+        {
+            _loadTcs.SetException(exception);
         }, true);
     }
 

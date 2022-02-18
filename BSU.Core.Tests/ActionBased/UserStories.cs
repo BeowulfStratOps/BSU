@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BSU.Core.Annotations;
+using BSU.Core.Model;
 using BSU.Core.Tests.ActionBased.TestModel;
+using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using BSU.Core.ViewModel;
 using Xunit;
@@ -11,7 +12,7 @@ namespace BSU.Core.Tests.ActionBased;
 
 public class UserStories : LoggedTest
 {
-    public UserStories([NotNull] ITestOutputHelper outputHelper) : base(outputHelper)
+    public UserStories(ITestOutputHelper outputHelper) : base(outputHelper)
     {
     }
 
@@ -20,19 +21,25 @@ public class UserStories : LoggedTest
     {
         using var model = new TestModel.Model();
 
-        model.Do<ViewModel.ViewModel>(vm => vm.RepoPage.AddRepository.Execute());
+        var vm = model.WaitForDialog<ViewModel.ViewModel>();
 
-        model.Do<AddRepository>((ar, closeable) =>
+        model.Do(() => vm.ViewModel.RepoPage.AddRepository.Execute());
+
+        var addRepoDialog = model.WaitForDialog<AddRepository>();
+
+        model.Do(() =>
         {
-            ar.Name = "Test";
-            ar.Url = "test";
-            ar.Ok.Execute(closeable);
+            addRepoDialog.ViewModel.Name = "Test";
+            addRepoDialog.ViewModel.Url = "test";
+            addRepoDialog.ViewModel.Ok.Execute(addRepoDialog.Closable);
         });
 
-        model.Do<PresetSettings>((ps, closeable) =>
+        var presetSettings = model.WaitForDialog<PresetSettings>();
+
+        model.Do(() =>
         {
-            ps.UseArmaLauncher = true;
-            closeable.SetResult(true);
+            presetSettings.ViewModel.UseArmaLauncher = true;
+            presetSettings.Closable.SetResult(true);
         });
 
         var repo = model.GetRepository("test");
@@ -40,59 +47,129 @@ public class UserStories : LoggedTest
         var repositoryMod = repo.GetMod("@mod1");
         repositoryMod.Load(FileHelper.CreateFiles(1, 1));
 
-        model.Do<SelectRepositoryStorage>(select =>
-        {
-            Assert.False(select.IsLoading);
-            select.AddStorage.Execute();
+        var selectRepositoryStorage = model.WaitForDialog<SelectRepositoryStorage>();
 
-            Assert.False(select.Ok.CanExecute(null));
+        model.Do(() =>
+        {
+            Assert.False(selectRepositoryStorage.ViewModel.IsLoading);
+            Assert.False(selectRepositoryStorage.ViewModel.Ok.CanExecute(null));
+            selectRepositoryStorage.ViewModel.AddStorage.Execute();
         });
 
-        model.Do<AddStorage>((addStorage, closeable) =>
+        var addStorage = model.WaitForDialog<AddStorage>();
+
+        model.Do(() =>
         {
-            addStorage.Name = "asdf";
-            addStorage.Path = "test";
-            addStorage.Ok.Execute(closeable);
+            addStorage.ViewModel.Name = "asdf";
+            addStorage.ViewModel.Path = "test";
+            addStorage.ViewModel.Ok.Execute(addStorage.Closable);
         });
 
         var storage = model.GetStorage("test");
         storage.Load(Array.Empty<string>());
 
-        model.Do<SelectRepositoryStorage>((select, closeable) =>
+        model.Do(() =>
         {
-            var (modName, modAction) = select.Mods[0];
+            var (modName, modAction) = selectRepositoryStorage.ViewModel.Mods[0];
             Assert.Equal("@mod1", modName);
             Assert.IsType<SelectStorage>(modAction);
 
-            select.Ok.Execute(closeable);
+            selectRepositoryStorage.ViewModel.Ok.Execute(selectRepositoryStorage.Closable);
         });
 
-        model.Do<ViewModel.ViewModel>(vm =>
-        {
-            var repo = vm.RepoPage.Repositories[0];
-            Assert.True(repo.UpdateProgress.Active);
-            Assert.Equal("Preparing", repo.UpdateProgress.Stage);
-        });
+        var repoVm = vm.ViewModel.RepoPage.Repositories[0];
+        Assert.True(repoVm.UpdateProgress.Active);
+        Assert.Equal("Preparing", repoVm.UpdateProgress.Stage);
 
         var storageMod = storage.GetMod("@mod1");
-        storageMod.Load(new Dictionary<string, byte[]>(), false);
-
-        model.Do<ViewModel.ViewModel>(vm =>
-        {
-            var repo = vm.RepoPage.Repositories[0];
-            model.WaitFor(500, () => repo.UpdateProgress.Active && repo.UpdateProgress.Stage == null);
-        });
+        storageMod.Load(new Dictionary<string, byte[]>(), true);
 
         repositoryMod.FinishUpdate();
 
-        model.Do<ViewModel.ViewModel>(vm =>
-        {
-            var repo = vm.RepoPage.Repositories[0];
-            model.WaitFor(50, () => !repo.UpdateProgress.Active);
-        });
+        var popup = model.WaitForDialog<TestInteractionService.MessagePopupDto>(500);
+        model.Do(() => popup.Closable.SetResult(null));
 
-        model.Do<TestInteractionService.MessagePopupDto>((msg, closeable) => closeable.SetResult(null));
+        Assert.False(repoVm.UpdateProgress.Active);
 
         FileHelper.AssertFileEquality(repositoryMod.Files, storageMod.Files);
+    }
+
+    [Fact]
+    private void TestLoad()
+    {
+        using var model = new TestModel.Model(new[] { "repo" }, new[] { "storage" });
+
+        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+
+        var repo = model.GetRepository("repo");
+        var storage = model.GetStorage("storage");
+
+        repo.Load(new[] { "@mod" });
+        storage.Load(new[] { "@mod" });
+
+        var repoMod = repo.GetMod("@mod");
+        var storageMod = storage.GetMod("@mod");
+
+        repoMod.Load(FileHelper.CreateFiles(1, 1));
+        storageMod.Load(FileHelper.CreateFiles(1, 1), false);
+
+        var repoVm = vm.ViewModel.RepoPage.Repositories[0];
+        var selection = repoVm.Mods[0].Actions.Selection;
+        Assert.IsType<SelectMod>(selection);
+        Assert.Equal("storage", ((SelectMod)selection).StorageName);
+        Assert.Equal(ModActionEnum.Use, ((SelectMod)selection).ActionType);
+    }
+
+    [Fact]
+    private void TestSlowLoading()
+    {
+        using var model = new TestModel.Model(new[] { "repo" }, new[] { "storage" });
+
+        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+
+        var repo = model.GetRepository("repo");
+        var storage = model.GetStorage("storage");
+
+        var repoVm = vm.ViewModel.RepoPage.Repositories[0];
+        Assert.Equal(CalculatedRepositoryStateEnum.Loading, repoVm.CalculatedState);
+
+        repo.Load(new[] { "@mod" });
+        storage.Load(new[] { "@mod" });
+
+        var repoMod = repo.GetMod("@mod");
+        var storageMod = storage.GetMod("@mod");
+
+        repoMod.Load(FileHelper.CreateFiles(1, 1));
+        storageMod.Load(FileHelper.CreateFiles(1, 1), false);
+
+        Assert.Equal(CalculatedRepositoryStateEnum.Ready, repoVm.CalculatedState);
+    }
+
+    [Fact]
+    private void TestShowStorageError()
+    {
+        using var model = new TestModel.Model();
+
+        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+
+        model.Do(() => vm.ViewModel.StoragePage.AddStorage.Execute());
+
+        var addStorage = model.WaitForDialog<AddStorage>();
+
+        model.Do(() =>
+        {
+            addStorage.ViewModel.Name = "asdf";
+            addStorage.ViewModel.Path = "test";
+            addStorage.ViewModel.Ok.Execute(addStorage.Closable);
+        });
+
+        var storage = model.GetStorage("test");
+        storage.Load(new TestException());
+
+        Assert.NotNull(vm.ViewModel.StoragePage.Storages[0].Error);
+
+        Assert.Single(model.ErrorEvents);
+        Assert.Contains("Failed to load storage", model.ErrorEvents[0].Message);
+        model.ErrorEvents.Clear();
     }
 }

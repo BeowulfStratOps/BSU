@@ -21,13 +21,13 @@ internal class TestStorageMod : IStorageMod
         _testModelInterface = testModelInterface;
     }
 
-    public void Load(Dictionary<string, byte[]> files, bool waitForStateChanges)
+    public void Load(Dictionary<string, byte[]> files, bool createdForDownload)
     {
         _testModelInterface.DoInModelThread(() =>
         {
             Files = files;
             _loadTcs.SetResult();
-        }, waitForStateChanges);
+        }, !createdForDownload);
     }
 
     public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
@@ -41,9 +41,10 @@ internal class TestStorageMod : IStorageMod
         return new WriteAfterDisposeMemoryStream(data => Files[path] = data);
     }
 
-    public Task<Stream?> OpenRead(string path, CancellationToken cancellationToken)
+    public async Task<Stream?> OpenRead(string path, CancellationToken cancellationToken)
     {
-        throw new System.NotImplementedException();
+        await _loadTcs.Task;
+        return Files.TryGetValue(path, out var data) ? new MemoryStream(data) : null;
     }
 
     public Task Move(string @from, string to, CancellationToken cancellationToken)
@@ -72,9 +73,10 @@ internal class TestStorageMod : IStorageMod
         throw new System.NotImplementedException();
     }
 
-    public Task<string> GetTitle(CancellationToken cancellationToken)
+    public async Task<string> GetTitle(CancellationToken cancellationToken)
     {
-        throw new System.NotImplementedException();
+        await _loadTcs.Task;
+        return "";
     }
 
     public string Path { get; } = null!;

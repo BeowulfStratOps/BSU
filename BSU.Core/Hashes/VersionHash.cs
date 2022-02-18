@@ -58,7 +58,7 @@ namespace BSU.Core.Hashes
         /// <returns></returns>
         public bool IsMatch(VersionHash other)
         {
-            return other != null && _hash.SequenceEqual(other._hash);
+            return _hash.SequenceEqual(other._hash);
         }
 
         /// <summary>
