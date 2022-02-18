@@ -52,9 +52,7 @@ internal class Model : IDisposable
         _testModelInterface = new TestModelInterface(DoInModelThreadWithWait);
         _modelThread = new Thread(ModelThread);
         _modelThread.Start(buildParams);
-        _logger.Trace("Wait 1");
         _modelThreadSuspended.WaitOne();
-        _logger.Trace("Continue 1");
         if (_modelThreadException != null)
             throw _modelThreadException;
     }
@@ -153,7 +151,6 @@ internal class Model : IDisposable
         catch (Exception e)
         {
             _modelThreadException = e;
-            _logger.Trace("Set 1");
             _modelThreadSuspended.Set();
         }
     }
@@ -163,9 +160,7 @@ internal class Model : IDisposable
         while (true)
         {
             if (_shutDown) return null;
-            _logger.Trace("Set 2");
             _modelThreadSuspended.Set();
-            _logger.Trace("Wait 2");
             while (!_shutDown)
             {
                 if (_modelThreadContinue.WaitOne(100))
@@ -173,11 +168,9 @@ internal class Model : IDisposable
                 if (_shutDown)
                     _logger.Warn("Failed to shutdown properly");
             }
-            _logger.Trace("Continue 2");
             if (_shutDown)
             {
                 _modelThreadSuspended.Set();
-                _logger.Trace("Set 3");
                 return null;
             }
             _modelThreadAction!();
@@ -193,11 +186,8 @@ internal class Model : IDisposable
             throw new InvalidOperationException("Can only be called from the test/user thread");
         if (_modelThreadException != null) throw new InvalidOperationException("Model is in a faulted state!");
         _modelThreadAction = action;
-        _logger.Trace("Set 4");
         _modelThreadContinue.Set();
-        _logger.Trace("Wait 3");
         _modelThreadSuspended.WaitOne();
-        _logger.Trace("Continue 3");
         CheckException();
     }
 
@@ -205,7 +195,6 @@ internal class Model : IDisposable
     {
         _shutDown = true;
         _modelThreadContinue.Set();
-        _logger.Trace("Set 5");
         _modelThread.Join();
         CheckErrorEvents();
     }

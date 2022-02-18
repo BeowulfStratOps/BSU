@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using NLog;
 
 namespace BSU.Core.ViewModel.Util
 {
@@ -8,17 +10,21 @@ namespace BSU.Core.ViewModel.Util
         private readonly Action? _action;
         private readonly Action<object?>? _objAction;
         private bool _canExecute;
+        private readonly string? _actionCode;
+        private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-        public DelegateCommand(Action action, bool canExecute = true)
+        public DelegateCommand(Action action, bool canExecute = true, [CallerArgumentExpression("action")] string? actionCode = null)
         {
             _action = action;
             _canExecute = canExecute;
+            _actionCode = actionCode;
         }
 
-        public DelegateCommand(Action<object?> action, bool canExecute = true)
+        public DelegateCommand(Action<object?> action, bool canExecute = true, [CallerArgumentExpression("action")] string? actionCode = null)
         {
             _objAction = action;
             _canExecute = canExecute;
+            _actionCode = actionCode;
         }
 
         internal void SetCanExecute(bool value)
@@ -32,6 +38,7 @@ namespace BSU.Core.ViewModel.Util
         public void Execute(object? parameter)
         {
             if (!_canExecute) throw new InvalidOperationException();
+            _logger.Trace($"Executing command: {_actionCode}");
             if (_objAction != null)
                 _objAction(parameter);
             else
