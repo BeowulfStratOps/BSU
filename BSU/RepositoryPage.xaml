@@ -55,9 +55,9 @@
         <userControls:FileSyncProgressBar Margin="5, 3" DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
 
         <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Right" Orientation="Horizontal">
-            <components:CommandLink Margin="5 0" Command="{Binding ChooseDownloadLocation}" Text="Change Download Location" />
-            <components:CommandLink Margin="5 0" Command="{Binding DisableAll}" Text="Disable All" />
-            <components:CommandLink Margin="5 0" Command="{Binding EnableAll}" Text="Enable All" />
+            <userControls:CommandLink Margin="5 0" Command="{Binding ChooseDownloadLocation}" Text="Change Download Location" />
+            <userControls:CommandLink Margin="5 0" Command="{Binding DisableAll}" Text="Disable All" />
+            <userControls:CommandLink Margin="5 0" Command="{Binding EnableAll}" Text="Enable All" />
         </StackPanel>
 
         <Rectangle DockPanel.Dock="Top" HorizontalAlignment="Stretch" Fill="Black" Height="1"/>

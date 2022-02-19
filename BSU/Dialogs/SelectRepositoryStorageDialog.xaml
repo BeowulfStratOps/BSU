@@ -13,6 +13,7 @@
         x:Name="Window">
     <DockPanel Margin="15">
         <DockPanel.Resources>
+            <converters:ActionToColorConverter x:Key="ActionToColor" />
             <converters:CollapseConverter x:Key="BoolToVisibility" />
         </DockPanel.Resources>
 
@@ -65,6 +66,7 @@
                                             <ContentPresenter.Resources>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectMod}">
                                                     <TextBlock>
+                                                        <Ellipse Width="15" Height="15" Fill="{Binding ActionType, Converter={StaticResource ActionToColor}}" />
                                                         <Run Text="{Binding ActionType, Mode=OneWay}" />
                                                         <Run Text="{Binding StorageName, Mode=OneWay}" />
                                                         /

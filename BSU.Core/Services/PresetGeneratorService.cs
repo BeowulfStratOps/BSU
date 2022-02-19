@@ -63,7 +63,7 @@ internal class PresetGeneratorService
             catch (Exception e)
             {
                 _logger.Error(e);
-                _eventManager.Publish(new ErrorEvent("Preset Creation failed"));
+                _eventManager.Publish(new ErrorEvent($"Failed to create preset '{repository.Name}'"));
             }
         });
     }

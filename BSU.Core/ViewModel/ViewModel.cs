@@ -60,6 +60,8 @@ namespace BSU.Core.ViewModel
 
         private void AddError(ErrorEvent error)
         {
+            if (Notifications.Any(n => n is DismissError de && de.Text == error.Message))
+                return; // Prevent error spam
             Notifications.Add(new DismissError(error.Message, RemoveNotification));
         }
 

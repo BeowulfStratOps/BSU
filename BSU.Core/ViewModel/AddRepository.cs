@@ -100,6 +100,7 @@ namespace BSU.Core.ViewModel
         {
             new KnownUrl("Beowulf", "http://u.beowulfso.com/synctest/server.json"),
             new KnownUrl("Beowulf 'NAAAAAM", "http://u.beowulfso.com/synctest/server-vn.json"),
+            new KnownUrl("Beowulf - WS Compat", "http://u.beowulfso.com/synctest/server-compat.json")
         };
 
         internal AddRepository(IModel model, IServiceProvider services)

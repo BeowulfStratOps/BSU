@@ -28,6 +28,7 @@
             <converters:ActionToTextConverter x:Key="ActionToText" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
             <converters:ByteSizeConverter x:Key="ByteSize" />
+            <converters:ActionToColorConverter x:Key="ActionToColor" />
         </Border.Resources>
         <StackPanel Orientation="Vertical">
             <Grid HorizontalAlignment="Stretch">
@@ -63,6 +64,7 @@
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type viewModel:SelectMod}">
                                     <TextBlock>
+                                        <Ellipse Width="15" Height="15" Fill="{Binding ActionType, Converter={StaticResource ActionToColor}}" />
                                         <Run Text="{Binding ActionType, Mode=OneWay, Converter={StaticResource ActionToText}}" />
                                         <Run Text="{Binding StorageName, Mode=OneWay}" />
                                         /

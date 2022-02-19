@@ -117,8 +117,8 @@ public static class ArmaLauncher
             {
                 DateCreated = DateTime.Now,
                 AutodetectionDirectories = new List<string>(),
-                KnownLocalMods = new List<string>(),
-                UserDirectories = new List<string>()
+                KnownLocalMods = new List<string?>(),
+                UserDirectories = new List<string?>()
             };
         }
 
@@ -131,12 +131,12 @@ public static class ArmaLauncher
     {
         foreach (var modFolder in modFolders)
         {
-            if (!local.KnownLocalMods.Exists(x => x.ToLower() == modFolder))
+            if (!local.KnownLocalMods.Exists(x => x != null && x.ToLower() == modFolder))
             {
                 local.KnownLocalMods.Add(modFolder);
             }
 
-            if (!local.UserDirectories.Exists(x => x.ToLower() == modFolder))
+            if (!local.UserDirectories.Exists(x => x != null && x.ToLower() == modFolder))
             {
                 local.UserDirectories.Add(modFolder);
             }

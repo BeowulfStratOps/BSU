@@ -1,12 +1,12 @@
-﻿<UserControl x:Class="BSU.GUI.Components.CommandLink"
+﻿<UserControl x:Class="BSU.GUI.UserControls.CommandLink"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:BSU.GUI.Components"
+             xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              Name="Uc"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance local:CommandLink}">
+             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance userControls:CommandLink}">
     <Grid DataContext="{Binding ElementName=Uc}">
         <TextBlock Foreground="{Binding Foreground}" TextDecorations="Underline" Text="{Binding Text, FallbackValue=Text}" MouseDown="OnClick"></TextBlock>
     </Grid>

@@ -13,8 +13,8 @@ public class Local
     public DateTime DateCreated { get; set; }
 
     [JsonProperty("knownLocalMods")]
-    public List<string> KnownLocalMods { get; set; } = null!;
+    public List<string?> KnownLocalMods { get; set; } = null!;
 
     [JsonProperty("userDirectories")]
-    public List<string> UserDirectories { get; set; } = null!;
+    public List<string?> UserDirectories { get; set; } = null!;
 }
