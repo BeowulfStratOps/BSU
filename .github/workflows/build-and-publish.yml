@@ -19,8 +19,8 @@ jobs:
       run: dotnet restore --packages packages
     - name: Build
       run: dotnet build --configuration Release --no-restore BSU
-    - name: Test
-      run: dotnet test
+    #- name: Test
+      #run: dotnet test
     - name: Publish
       run: dotnet publish -c Release -o publish BSU
     - name: Package
