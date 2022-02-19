@@ -13,7 +13,6 @@ namespace BSU.Core.ViewModel
     public sealed class SelectRepositoryStorage : ObservableBase, IDisposable
     {
         public bool UpdateAfter { get; }
-        public string UpdateText { get; }
         private readonly IModelRepository _repository;
         private readonly IViewModelService _viewModelService;
         private bool _isLoading = true;
@@ -107,7 +106,6 @@ namespace BSU.Core.ViewModel
         internal SelectRepositoryStorage(IModelRepository repository, IServiceProvider serviceProvider, bool updateAfter)
         {
             UpdateAfter = updateAfter;
-            UpdateText = updateAfter ? "Sync" : "OK";
             Ok = new DelegateCommand(HandleOk, !updateAfter);
             AddStorage = new DelegateCommand(HandleAdd, false);
             _repository = repository;

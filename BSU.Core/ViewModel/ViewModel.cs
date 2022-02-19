@@ -84,7 +84,7 @@ namespace BSU.Core.ViewModel
         public TimedNotification(string text, Action<TimedNotification> remove, IDispatcher dispatcher)
         {
             Text = text;
-            Task.Delay(5000).ContinueWith(_ =>
+            Task.Delay(3000).ContinueWith(_ =>
             {
                 dispatcher.ExecuteSynchronized(() => remove(this));
             });

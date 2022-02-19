@@ -18,7 +18,7 @@
         </DockPanel.Resources>
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button IsDefault="True" Margin="15, 0" MinWidth="50" Command="{Binding Ok}" CommandParameter="{Binding ElementName=Window}"><TextBlock Text="{Binding UpdateText}" /></Button>
+            <Button IsDefault="True" Margin="15, 0" MinWidth="50" Command="{Binding Ok}" CommandParameter="{Binding ElementName=Window}">Ok</Button>
             <Button IsCancel="True" MinWidth="50" Visibility="{Binding UpdateAfter, Converter={StaticResource BoolToVisibility}}">Cancel</Button>
         </StackPanel>
 

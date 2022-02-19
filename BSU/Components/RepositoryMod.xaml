@@ -57,7 +57,7 @@
                     <DockPanel x:Name="ComboBoxSelected">
                         <userControls:SvgButton DockPanel.Dock="Right" Width="15" Height="15" Command="{Binding Actions.Open}" Svg="{StaticResource SvgComboOpen}" ToolTip="Show available Download Locations"/>
 
-                        <ContentControl Content="{Binding Actions.Selection}">
+                        <ContentControl Content="{Binding Actions.Selection}" MouseLeftButtonDown="SelectedMouseDown" MouseLeftButtonUp="SelectedMouseUp" Cursor="Hand">
                             <ContentControl.Resources>
                                 <DataTemplate DataType="{x:Type viewModel:SelectDisabled}">
                                     <TextBlock>Disabled</TextBlock>
