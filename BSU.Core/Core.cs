@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
@@ -13,6 +14,7 @@ using NLog;
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
 [assembly: InternalsVisibleTo("RealTest")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+[assembly: SupportedOSPlatform("windows")]
 
 namespace BSU.Core
 {

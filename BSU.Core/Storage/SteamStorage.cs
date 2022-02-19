@@ -64,9 +64,7 @@ namespace BSU.Core.Storage
 
         public static string? GetWorkshopPath()
         {
-#pragma warning disable CA1416
             var path = (string?)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
-#pragma warning restore CA1416
             if (path == null)
             {
                 LogManager.GetCurrentClassLogger().Error("Couldn't find steam install path");

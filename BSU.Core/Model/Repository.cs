@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
@@ -13,7 +12,6 @@ using NLog;
 
 namespace BSU.Core.Model
 {
-    [SuppressMessage("Interoperability", "CA1416:Plattformkompatibilität überprüfen")]
     internal class Repository : IModelRepository
     {
         private readonly IRepositoryState _internalState;

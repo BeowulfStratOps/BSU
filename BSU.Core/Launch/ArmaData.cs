@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Microsoft.Win32;
@@ -8,7 +7,6 @@ using NLog;
 
 namespace BSU.Core.Launch;
 
-[SuppressMessage("Interoperability", "CA1416:Plattformkompatibilität überprüfen")]
 public static class ArmaData
 {
     public static IReadOnlyDictionary<ulong, string> CDlcMap = new Dictionary<ulong, string>
