@@ -24,9 +24,7 @@ jobs:
     - name: Publish
       run: dotnet publish -c Release -o publish BSU
     - name: Package
-      run: nuget pack -OutputFileNamesWithoutVersion -Version $GITHUB_VERSION
-      env:
-        GITHUB_VERSION: ${{ github.refname }}
+      run: nuget pack -OutputFileNamesWithoutVersion -Version $GITHUB_REF_NAME
     # TODO: download former releases
     - name: Releasify
       run: powershell.exe -ExecutionPolicy Bypass -Command "packages\squirrel.windows\1.9.0\tools\Squirrel.exe -r releases --releasify  BSU.nupkg ... | Write-Output"
