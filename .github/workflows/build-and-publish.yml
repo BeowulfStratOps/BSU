@@ -25,7 +25,7 @@ jobs:
       run: dotnet publish -c Release -o publish BSU
     - name: Package
       run: nuget pack -OutputFileNamesWithoutVersion -Version $env:GITHUB_REF_NAME
-    # TODO: download former releases
+    # TODO: download former releases?
     - name: Releasify
       run: powershell.exe -ExecutionPolicy Bypass -Command "packages\squirrel.windows\1.9.0\tools\Squirrel.exe -r releases --releasify  BSU.nupkg ... | Write-Output"
     - name: Upload Artifacts
@@ -49,4 +49,13 @@ jobs:
       with:
         name: releases
         path: files
+    - name: configure AWS
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: eu-west-2
+        aws-access-key-id: ${{ secrets.S3_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.S3_KEY_SECRET }}
+    - name: upload to s3
+      run: aws s3 sync --dry-run files s3://bsu-distribution
+        
 
