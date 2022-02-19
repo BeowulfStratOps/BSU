@@ -154,7 +154,7 @@ namespace BSU.Core.Tests
             var (implementation, storageMod, eventBus) = CreateStorageMod();
 
             var repo = CreateRepoMod();
-            eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
+            eventBus.Work(200, () => storageMod.GetState() != StorageModStateEnum.Loading);
 
             var targetMatchHash = await MatchHash.CreateAsync(repo, CancellationToken.None);
             var targetVersionHash = await VersionHash.CreateAsync(repo, CancellationToken.None);

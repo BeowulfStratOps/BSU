@@ -211,7 +211,7 @@ internal class Model : IDisposable
         while ((DateTime.Now - start).TotalMilliseconds < timeoutMs)
         {
             if (condition()) return;
-            _dispatcher.Work();
+            Do(() => { });
             Thread.Sleep(1);
         }
         throw new TimeoutException(timeoutMessage?.Invoke());

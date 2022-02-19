@@ -78,7 +78,7 @@ public class UserStories : LoggedTest
         });
 
         var repoVm = vm.ViewModel.RepoPage.Repositories[0];
-        Assert.True(repoVm.UpdateProgress.Active);
+        model.WaitFor(100, () => repoVm.UpdateProgress.Active);
         Assert.Equal("Preparing", repoVm.UpdateProgress.Stage);
 
         var storageMod = storage.GetMod("@mod1");

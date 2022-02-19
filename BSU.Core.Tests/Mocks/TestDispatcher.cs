@@ -38,6 +38,9 @@ namespace BSU.Core.Tests.Mocks
                 if (done != null && done()) return;
                 Thread.Sleep(1);
             }
+
+            if (done != null && !done())
+                throw new TimeoutException();
         }
     }
 }
