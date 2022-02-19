@@ -89,7 +89,7 @@ public class UserStories : LoggedTest
         var popup = model.WaitForDialog<TestInteractionService.MessagePopupDto>(500);
         model.Do(() => popup.Closable.SetResult(null));
 
-        model.WaitFor(100, () => !repoVm.UpdateProgress.Active);
+        model.WaitFor(500, () => !repoVm.UpdateProgress.Active);
 
         FileHelper.AssertFileEquality(repositoryMod.Files, storageMod.Files);
     }
