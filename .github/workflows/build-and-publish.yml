@@ -23,6 +23,8 @@ jobs:
       #run: dotnet test
     - name: Publish
       run: dotnet publish -c Release -o publish BSU
+    - name: dbg
+      run: echo $GITHUB_REF_NAME
     - name: Package
       run: nuget pack -OutputFileNamesWithoutVersion -Version $GITHUB_REF_NAME
     # TODO: download former releases
