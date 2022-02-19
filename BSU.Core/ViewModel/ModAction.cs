@@ -1,7 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;

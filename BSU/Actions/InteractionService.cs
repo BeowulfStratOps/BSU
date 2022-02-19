@@ -15,12 +15,12 @@ namespace BSU.GUI.Actions
 
         public bool AddRepository(AddRepository viewModel)
         {
-            return (bool)new AddRepositoryDialog(viewModel).ShowDialog();
+            return (bool)new AddRepositoryDialog(viewModel).ShowDialog()!;
         }
 
         public bool AddStorage(AddStorage viewModel)
         {
-            return (bool)new AddStorageDialog(viewModel).ShowDialog();
+            return (bool)new AddStorageDialog(viewModel).ShowDialog()!;
         }
 
         public void MessagePopup(string message, string title)
@@ -46,12 +46,12 @@ namespace BSU.GUI.Actions
 
         public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel)
         {
-            return (bool)new SelectRepositoryStorageDialog(viewModel).ShowDialog();
+            return (bool)new SelectRepositoryStorageDialog(viewModel).ShowDialog()!;
         }
 
         public bool PresetSettings(PresetSettings vm)
         {
-            return (bool)new PresetSettingsDialog(vm).ShowDialog();
+            return (bool)new PresetSettingsDialog(vm).ShowDialog()!;
         }
     }
 }

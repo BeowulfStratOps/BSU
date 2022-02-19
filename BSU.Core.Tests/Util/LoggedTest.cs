@@ -1,7 +1,6 @@
 ﻿using System;
 using NLog;
 using NLog.Config;
-using NLog.LayoutRenderers;
 using NLog.Targets;
 using Xunit.Abstractions;
 

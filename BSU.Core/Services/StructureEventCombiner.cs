@@ -1,5 +1,4 @@
 ﻿using System;
-using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;

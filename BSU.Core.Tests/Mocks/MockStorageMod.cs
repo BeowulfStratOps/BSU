@@ -42,7 +42,7 @@ namespace BSU.Core.Tests.Mocks
         {
             private readonly Action<byte[]> _save;
 
-            public MockStream(byte[] data, Action<byte[]> save) : base()
+            public MockStream(byte[] data, Action<byte[]> save)
             {
                 _save = save;
                 Write(data, 0, data.Length);
@@ -60,11 +60,11 @@ namespace BSU.Core.Tests.Mocks
         {
             await _load;
             await using var stream = await OpenRead(path, cancellationToken);
-            var hash = await SHA1AndPboHash.BuildAsync(stream!, Utils.GetExtension(path), CancellationToken.None);
+            var hash = await Sha1AndPboHash.BuildAsync(stream!, Utils.GetExtension(path), CancellationToken.None);
             return hash;
         }
 
-        public async Task<string> GetTitle(CancellationToken cancellationToken) => "Test";
+        public Task<string> GetTitle(CancellationToken cancellationToken) => Task.FromResult("Test");
         public string Path => throw new NotImplementedException();
 
         public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)

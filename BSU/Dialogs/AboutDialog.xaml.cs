@@ -1,16 +1,15 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using System.Windows;
 using System.Windows.Navigation;
 
 namespace BSU.GUI.Dialogs
 {
-    public partial class AboutDialog : Window
+    public partial class AboutDialog
     {
         public AboutDialog()
         {
             InitializeComponent();
-            Version.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            Version.Text = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
         }
 
         private void Hyperlink_OnRequestNavigate(object sender, RequestNavigateEventArgs e)

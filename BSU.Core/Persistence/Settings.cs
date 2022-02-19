@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using BSU.CoreCommon;
 using Newtonsoft.Json;
 using NLog;
 
@@ -25,7 +24,7 @@ namespace BSU.Core.Persistence
         public static Settings Load(FileInfo path)
         {
             path.Refresh();
-            LogManager.GetCurrentClassLogger().Debug("Loading settings from {0}", path.FullName);
+            LogManager.GetCurrentClassLogger().Debug($"Loading settings from {path.FullName}");
             if (!path.Exists) return new Settings(path, new SettingsData());
             var json = File.ReadAllText(path.FullName);
             var data = JsonConvert.DeserializeObject<SettingsData>(json);

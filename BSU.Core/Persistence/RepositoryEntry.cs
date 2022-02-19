@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using BSU.Core.Launch;
 
 namespace BSU.Core.Persistence

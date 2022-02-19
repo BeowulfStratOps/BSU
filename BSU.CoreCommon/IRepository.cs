@@ -13,5 +13,5 @@ namespace BSU.CoreCommon
         Task<ServerInfo> GetServerInfo(CancellationToken cancellationToken);
     }
 
-    public record ServerInfo(string Name, string Url, ushort Port, List<ulong> CDLCs);
+    public record ServerInfo(string Name, string Url, ushort Port, List<ulong> Cdlcs);
 }

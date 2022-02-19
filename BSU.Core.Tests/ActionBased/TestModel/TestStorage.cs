@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Tests.Mocks;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Tests.ActionBased.TestModel;
@@ -61,6 +60,6 @@ internal class TestStorage : IStorage
 
     public Task RemoveMod(string identifier, CancellationToken cancellationToken)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 }

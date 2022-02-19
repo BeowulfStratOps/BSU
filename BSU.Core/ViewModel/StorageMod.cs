@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Services;
-using BSU.Core.Storage;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel

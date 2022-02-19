@@ -29,7 +29,7 @@ namespace BSU.Core.Sync
         private static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage,
             IStorageMod implementation, Logger logger, CancellationToken cancellationToken)
         {
-            logger.Debug("Building sync actions {0} to {1}", storage, repository);
+            logger.Debug($"Building sync actions {storage} to {repository}");
 
             var allActions = new List<SyncWorkUnit>();
             var repositoryList = await repository.GetFileList(cancellationToken);
@@ -62,9 +62,9 @@ namespace BSU.Core.Sync
                 allActions.Add(new DeleteAction(implementation, storageModFile));
             }
 
-            logger.Debug("Download actions: {0}", allActions.OfType<DownloadAction>().Count());
-            logger.Debug("Update actions: {0}", allActions.OfType<UpdateAction>().Count());
-            logger.Debug("Delete actions: {0}", allActions.OfType<DeleteAction>().Count());
+            logger.Debug($"Download actions: {allActions.OfType<DownloadAction>().Count()}");
+            logger.Debug($"Update actions: {allActions.OfType<UpdateAction>().Count()}");
+            logger.Debug($"Delete actions: {allActions.OfType<DeleteAction>().Count()}");
 
             return new RepoSync(allActions, logger);
         }

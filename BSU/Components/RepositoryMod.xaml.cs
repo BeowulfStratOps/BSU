@@ -1,10 +1,8 @@
-﻿using System;
-using System.Windows.Controls;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 
 namespace BSU.GUI.Components
 {
-    public partial class RepositoryMod : UserControl
+    public partial class RepositoryMod
     {
         public RepositoryMod()
         {

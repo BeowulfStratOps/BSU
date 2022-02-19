@@ -8,7 +8,7 @@ public class ServiceProvider : IServiceProvider
     private readonly Dictionary<Type, object> _services = new();
 
     public void Add<T>(T instance) where T : class => _services.Add(typeof(T), instance);
-    public object? GetService(Type serviceType) => _services[serviceType];
+    public object GetService(Type serviceType) => _services[serviceType];
 }
 
 public static class ServiceProviderExtension

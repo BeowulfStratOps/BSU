@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BSU.Core.Model
+﻿namespace BSU.Core.Model
 {
     public enum CalculatedRepositoryStateEnum
     {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
@@ -54,7 +53,7 @@ namespace BSU.Core.Storage
             var extension = Utils.GetExtension(path).ToLowerInvariant();
             var file = await OpenRead(path, cancellationToken);
             if (file == null) throw new FileNotFoundException(path);
-            return await SHA1AndPboHash.BuildAsync(file, extension, cancellationToken);
+            return await Sha1AndPboHash.BuildAsync(file, extension, cancellationToken);
         }
 
         public virtual Task<string> GetTitle(CancellationToken cancellationToken)
@@ -71,7 +70,7 @@ namespace BSU.Core.Storage
             return System.IO.Path.Combine(Dir.FullName, path.Substring(1));
         }
 
-        public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
+        public Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
         {
             if (!_parentStorage.CanWrite())
                 throw new InvalidOperationException();
@@ -84,47 +83,49 @@ namespace BSU.Core.Storage
             // TODO: async?
             Directory.CreateDirectory(new FileInfo(filePath).Directory!.FullName);
             // TODO: async?
-            return File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            return Task.FromResult<Stream>(File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None));
         }
 
-        public async Task<Stream?> OpenRead(string path, CancellationToken cancellationToken)
+        public Task<Stream?> OpenRead(string path, CancellationToken cancellationToken)
         {
             Logger.Trace($"Reading file {path}");
             try
             {
                 // TODO: async?
-                return File.Open(GetFullFilePath(path), FileMode.Open, FileAccess.Read, FileShare.Read);
+                return Task.FromResult<Stream?>(File.Open(GetFullFilePath(path), FileMode.Open, FileAccess.Read, FileShare.Read));
             }
             catch (FileNotFoundException)
             {
-                return null;
+                return Task.FromResult<Stream?>(null);
             }
             catch (DirectoryNotFoundException)
             {
-                return null;
+                return Task.FromResult<Stream?>(null);
             }
         }
 
-        public async Task Move(string from, string to, CancellationToken cancellationToken)
+        public Task Move(string from, string to, CancellationToken cancellationToken)
         {
             if (!_parentStorage.CanWrite()) throw new NotSupportedException();
             Logger.Trace($"Moving file {from} to {to}");
             // TODO: async?
             File.Move(GetFullFilePath(from), GetFullFilePath(to), true);
+            return Task.CompletedTask;
         }
 
-        public async Task<bool> HasFile(string path, CancellationToken cancellationToken)
+        public Task<bool> HasFile(string path, CancellationToken cancellationToken)
         {
             // TODO: async?
-            return File.Exists(GetFullFilePath(path));
+            return Task.FromResult(File.Exists(GetFullFilePath(path)));
         }
 
-        public async Task Delete(string path, CancellationToken cancellationToken)
+        public Task Delete(string path, CancellationToken cancellationToken)
         {
             if (!_parentStorage.CanWrite()) throw new NotSupportedException();
             Logger.Trace($"Deleting file {path}");
             // TODO: async?
             File.Delete(GetFullFilePath(path));
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using BSU.Core.Launch;
-using BSU.Core.Model;
 
 namespace BSU.Core.Persistence
 {

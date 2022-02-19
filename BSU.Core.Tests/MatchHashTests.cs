@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
-using BSU.Core.Model;
 using BSU.Core.Tests.Mocks;
 using Xunit;
 

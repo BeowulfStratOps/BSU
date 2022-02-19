@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Hashes;
@@ -56,7 +55,7 @@ namespace BSU.Core.Tests
         [Fact]
         private void Created()
         {
-            var (implementation, storageMod, eventBus) = CreateStorageMod();
+            var (_, storageMod, eventBus) = CreateStorageMod();
             eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
         }
@@ -65,7 +64,7 @@ namespace BSU.Core.Tests
         private void CreatedWithTarget()
         {
             var target = new UpdateTarget("1234");
-            var (implementation, storageMod, eventBus) = CreateStorageMod(target);
+            var (_, storageMod, eventBus) = CreateStorageMod(target);
 
             eventBus.Work(100, () => storageMod.GetState() == StorageModStateEnum.CreatedWithUpdateTarget);
 
@@ -80,13 +79,12 @@ namespace BSU.Core.Tests
         private void UpdateWithTarget()
         {
             var target = new UpdateTarget("1234");
-            var (implementation, storageMod, eventBus) = CreateStorageMod(target);
+            var (_, storageMod, eventBus) = CreateStorageMod(target);
 
             eventBus.Work(100, () => storageMod.GetState() == StorageModStateEnum.CreatedWithUpdateTarget);
 
             var repo = CreateRepoMod();
-            var update = storageMod.Update(repo, MatchHash.CreateEmpty(),
-                VersionHash.CreateEmpty(), null, CancellationToken.None);
+            storageMod.Update(repo, MatchHash.CreateEmpty(), VersionHash.CreateEmpty(), null, CancellationToken.None);
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
             Assert.True((storageMod.GetMatchHash()).IsMatch(MatchHash.CreateEmpty()));
@@ -96,7 +94,7 @@ namespace BSU.Core.Tests
         [Fact]
         private async Task Updated()
         {
-            var (implementation, storageMod, eventBus) = CreateStorageMod();
+            var (_, storageMod, eventBus) = CreateStorageMod();
 
             var repo = CreateRepoMod();
             eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);
@@ -115,7 +113,7 @@ namespace BSU.Core.Tests
         [Fact]
         private async Task UpdateAborted()
         {
-            var (implementation, storageMod, eventBus) = CreateStorageMod();
+            var (_, storageMod, eventBus) = CreateStorageMod();
 
             var repo = CreateRepoMod();
             eventBus.Work(100, () => storageMod.GetState() != StorageModStateEnum.Loading);

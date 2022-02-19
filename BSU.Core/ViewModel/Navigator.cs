@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel;

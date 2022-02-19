@@ -49,17 +49,17 @@ internal class TestStorageMod : IStorageMod
 
     public Task Move(string @from, string to, CancellationToken cancellationToken)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public Task<bool> HasFile(string path, CancellationToken cancellationToken)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public Task Delete(string path, CancellationToken cancellationToken)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
@@ -70,7 +70,7 @@ internal class TestStorageMod : IStorageMod
 
     public Task<FileHash> GetFileHash(string path, CancellationToken cancellationToken)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public async Task<string> GetTitle(CancellationToken cancellationToken)

@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using BSU.Core.Launch;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel;
 
+[SuppressMessage("Interoperability", "CA1416:Plattformkompatibilität überprüfen")]
 public class PresetSettings : ObservableBase
 {
     public bool CanCancelDialog { get; }

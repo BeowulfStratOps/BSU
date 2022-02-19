@@ -46,7 +46,7 @@ internal class PresetGeneratorService
 
         var presetName = SanitizePresetName(repository.Name);
 
-        var dlcs = repository.GetServerInfo().CDLCs.Select(id => id.ToString()).ToList();
+        var dlcs = repository.GetServerInfo().Cdlcs.Select(id => id.ToString()).ToList();
         var mods = GetModPaths(repository);
 
         var wasUpdatedTask = ArmaLauncher.UpdatePreset(presetName, mods, dlcs);

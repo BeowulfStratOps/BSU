@@ -47,7 +47,7 @@ namespace BSU.BSO
         public async Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
         {
             await _loading;
-            _logger.Trace("Downloading file from {0} / {1}", _url, path);
+            _logger.Trace($"Downloading file from {_url} / {path}");
             byte[] data;
             try
             {
@@ -55,10 +55,10 @@ namespace BSU.BSO
             }
             catch (Exception e)
             {
-                _logger.Error(e, "Failed to download {0} / {1}", _url, path);
+                _logger.Error(e, $"Failed to download {_url} / {path}");
                 throw;
             }
-            _logger.Trace("Finsihed downloading {0} / {1}", _url, path);
+            _logger.Trace($"Finsihed downloading {_url} / {path}");
             return data;
         }
 
@@ -76,7 +76,7 @@ namespace BSU.BSO
         private async Task Load(CancellationToken cancellationToken)
         {
             using var client = new HttpClient();
-            _logger.Trace("Downloading hash file from {0}", _url);
+            _logger.Trace($"Downloading hash file from {_url}");
             var hashFileJson = await client.GetStringAsync(_url + "/hash.json", cancellationToken);
             _logger.Trace("Finished downloading hash file");
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
@@ -96,7 +96,7 @@ namespace BSU.BSO
             if (modCppEntry != null)
             {
                 using var client = new HttpClient();
-                _logger.Trace("Downloading mod.cpp from {0}", _url);
+                _logger.Trace($"Downloading mod.cpp from {_url}");
                 modCpp = await client.GetStringAsync(_url + modCppEntry.FileName, cancellationToken);
             }
 
@@ -121,7 +121,7 @@ namespace BSU.BSO
             await _loading;
             var entry = GetFileEntry(path);
             if (entry == null) throw new InvalidOperationException();
-            return new SHA1AndPboHash(entry.Hash);
+            return new Sha1AndPboHash(entry.Hash);
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace BSU.BSO
 
             var url = _url + GetRealPath(path);
 
-            _logger.Trace("Downloading content {0} / {1}", _url, path);
+            _logger.Trace($"Downloading content {_url} / {path}");
 
             await using var fileStream = await fileSystem.OpenWrite(path, cancellationToken);
 
@@ -159,12 +159,12 @@ namespace BSU.BSO
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger.Info("Aborted downloading content {0} / {1}", _url, path);
+                    _logger.Info($"Aborted downloading content {_url} / {path}");
                     throw;
                 }
 
                 fileStream.SetLength(fileStream.Position);
-                _logger.Trace("Finished downloading content {0} / {1}", _url, path);
+                _logger.Trace($"Finished downloading content {_url} / {path}");
             }
             catch (Exception e)
             {

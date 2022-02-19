@@ -3,7 +3,7 @@ using BSU.Core.ViewModel;
 
 namespace BSU.GUI.Dialogs;
 
-public partial class PresetSettingsDialog : Window
+public partial class PresetSettingsDialog
 {
     public PresetSettingsDialog(PresetSettings viewModel)
     {

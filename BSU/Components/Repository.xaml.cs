@@ -1,9 +1,8 @@
-﻿using System.Windows.Controls;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 
 namespace BSU.GUI.Components
 {
-    public partial class Repository : UserControl
+    public partial class Repository
     {
         public Repository()
         {

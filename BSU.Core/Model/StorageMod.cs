@@ -192,11 +192,6 @@ namespace BSU.Core.Model
             return result;
         }
 
-        private void CheckState(params StorageModStateEnum[] acceptableCurrent)
-        {
-            if (!acceptableCurrent.Contains(State)) throw new InvalidOperationException($"Not allowed in state {State}");
-        }
-
         private void SetState(StorageModStateEnum newState, params StorageModStateEnum[] acceptableCurrent)
         {
             if (!acceptableCurrent.Contains(State)) throw new InvalidOperationException($"Tried to transition from {State} to {newState}");

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Windows.Threading;
 using BSU.Core.Concurrency;
 using NLog;

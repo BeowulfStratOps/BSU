@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Forms;
 using BSU.Core.ViewModel;
 using BSU.Core.ViewModel.Util;
@@ -7,7 +6,7 @@ using Application = System.Windows.Application;
 
 namespace BSU.GUI.Dialogs
 {
-    public partial class AddStorageDialog : Window, ICloseable
+    public partial class AddStorageDialog : ICloseable
     {
         public AddStorageDialog(AddStorage viewModel)
         {

@@ -31,7 +31,7 @@ namespace BSU.BSO
         private async Task Load(CancellationToken cancellationToken)
         {
             using var client = new HttpClient();
-            _logger.Debug("Downloading server file from {0}", _url);
+            _logger.Debug($"Downloading server file from {_url}");
             var serverFileJson = await client.GetStringAsync(_url, cancellationToken);
             _serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
 
@@ -58,7 +58,7 @@ namespace BSU.BSO
 
         private static ServerInfo GetServerInfo(ServerFile serverFile)
         {
-            var cdlcs = serverFile.DLCs?.Select(ulong.Parse).ToList() ?? new List<ulong>();
+            var cdlcs = serverFile.Dlcs?.Select(ulong.Parse).ToList() ?? new List<ulong>();
             return new ServerInfo(serverFile.ServerName, serverFile.ServerAddress, serverFile.ServerPort, cdlcs);
         }
 

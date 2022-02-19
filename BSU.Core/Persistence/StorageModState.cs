@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.Persistence
@@ -30,7 +29,7 @@ namespace BSU.Core.Persistence
             get => _updating.GetValueOrDefault(_identifier);
             set
             {
-                _logger.Debug("Set updating: {0} to {1}", _identifier, value);
+                _logger.Debug($"Set updating: {_identifier} to {value}");
                 if (value == null)
                     _updating.Remove(_identifier);
                 else

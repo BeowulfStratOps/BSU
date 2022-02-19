@@ -9,7 +9,7 @@ namespace BSU.Hashes
     /// Fast but accurate hash for pbo files.
     /// Reads the builtin hash for pbo files, calculates SHA1 for other files.
     /// </summary>
-    public class SHA1AndPboHash : FileHash
+    public class Sha1AndPboHash : FileHash
     {
         private readonly byte[] _hash;
 
@@ -18,7 +18,8 @@ namespace BSU.Hashes
         /// </summary>
         /// <param name="file"></param>
         /// <param name="extension"></param>
-        public static async Task<SHA1AndPboHash> BuildAsync(Stream file, string extension, CancellationToken cancellationToken)
+        /// <param name="cancellationToken"></param>
+        public static async Task<Sha1AndPboHash> BuildAsync(Stream file, string extension, CancellationToken cancellationToken)
         {
             await using (file)
             {
@@ -27,12 +28,12 @@ namespace BSU.Hashes
                     var storedHash = new byte[20];
                     file.Seek(-20L, SeekOrigin.End);
                     await file.ReadAsync(storedHash, 0, 20, cancellationToken);
-                    return new SHA1AndPboHash(storedHash);
+                    return new Sha1AndPboHash(storedHash);
                 }
 
                 using var sha1 = SHA1.Create();
                 var hash = await sha1.ComputeHashAsync(file, cancellationToken);
-                return new SHA1AndPboHash(hash);
+                return new Sha1AndPboHash(hash);
             }
         }
 
@@ -40,8 +41,7 @@ namespace BSU.Hashes
         /// Instantiates from known hash.
         /// </summary>
         /// <param name="hash"></param>
-        /// <param name="length"></param>
-        public SHA1AndPboHash(byte[] hash)
+        public Sha1AndPboHash(byte[] hash)
         {
             _hash = hash;
         }

@@ -2,19 +2,11 @@
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BSU.Core.Tests.Concurrency
 {
     public class WithUpdatesTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public WithUpdatesTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         private class Delays
         {
             private TaskCompletionSource _current = new();

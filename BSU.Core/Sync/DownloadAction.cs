@@ -1,8 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Model;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
@@ -24,7 +21,7 @@ namespace BSU.Core.Sync
 
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
-            Logger.Trace("{0}, {1} Downloading {2}", _repository, _repository, Path);
+            Logger.Trace($"{_repository} Downloading {Path}");
             var progress = new SynchronousProgress<ulong>();
             progress.ProgressChanged += (_, count) => _done += count;
             await _repository.DownloadTo(Path, Storage, progress, cancellationToken);

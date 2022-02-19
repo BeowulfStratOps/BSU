@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
-using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
@@ -14,7 +11,6 @@ namespace BSU.Core.ViewModel
     {
         private readonly IServiceProvider _services;
         private readonly IModel _model;
-        private readonly IInteractionService _interactionService;
         public ObservableCollection<Storage> Storages { get; } = new();
         public DelegateCommand AddStorage { get; }
 
@@ -26,7 +22,6 @@ namespace BSU.Core.ViewModel
             Back = new DelegateCommand(_services.Get<IViewModelService>().NavigateBack);
             var model = services.Get<IModel>();
             _model = model;
-            _interactionService = services.Get<IInteractionService>();
             AddStorage = new DelegateCommand(() => DoAddStorage());
             model.AddedStorage += OnAddStorage;
             model.RemovedStorage += storage =>

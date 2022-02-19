@@ -36,7 +36,7 @@ namespace BSU.Core.Services
 
         private ModSelection GetSelection(IModelRepositoryMod mod)
         {
-            _logger.Trace("Checking auto-selection for mod {0}", mod.Identifier);
+            _logger.Trace($"Checking auto-selection for mod {mod.Identifier}");
 
             var storageMods = _model.GetStorageMods().ToList();
 

@@ -96,7 +96,7 @@ internal static class GameLauncher
         missingDlcs = new List<string>();
 
         // need mods and cdlcs
-        foreach (var cdlc in modelRepository.GetServerInfo().CDLCs)
+        foreach (var cdlc in modelRepository.GetServerInfo().Cdlcs)
         {
             if (ArmaData.IsCDlcInstalled(cdlc))
                 result.Add(ArmaData.CDlcMap[cdlc]);

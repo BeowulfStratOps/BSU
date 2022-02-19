@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Model;
 using BSU.CoreCommon;
 
 namespace BSU.Core.Sync
@@ -17,7 +16,7 @@ namespace BSU.Core.Sync
 
         public override async Task DoAsync(CancellationToken cancellationToken)
         {
-            Logger.Trace("{0} Deleting {1}", Storage, Path);
+            Logger.Trace($"{Storage} Deleting {Path}");
             await Storage.Delete(Path, cancellationToken);
         }
 

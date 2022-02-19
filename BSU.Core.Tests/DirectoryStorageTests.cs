@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Storage;
+using BSU.CoreCommon;
 using Xunit;
 
 namespace BSU.Core.Tests
@@ -36,8 +38,10 @@ namespace BSU.Core.Tests
             await using var file = Create("@ace", "mod.cpp");
             await file.WriteLineAsync("Ey yo");
             var storage = new DirectoryStorage(_tmpDir.FullName);
+
             var mods = await storage.GetMods(CancellationToken.None);
-            // TODO: do some checking
+            Assert.Single(mods);
+            Assert.Contains("@ace", (IDictionary<string, IStorageMod>)mods);
         }
 
         [Fact]

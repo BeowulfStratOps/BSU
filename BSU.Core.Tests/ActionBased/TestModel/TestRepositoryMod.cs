@@ -45,7 +45,7 @@ internal class TestRepositoryMod : IRepositoryMod
     {
         await _loadTcs.Task;
         await using var memStream = new MemoryStream(Files[path]);
-        return await SHA1AndPboHash.BuildAsync(memStream, ".pbo", cancellationToken);
+        return await Sha1AndPboHash.BuildAsync(memStream, ".pbo", cancellationToken);
     }
 
     public Task<byte[]> GetFile(string path, CancellationToken cancellationToken)

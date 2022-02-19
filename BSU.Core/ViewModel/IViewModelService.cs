@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using BSU.Core.Model;
+﻿using BSU.Core.Model;
 
 namespace BSU.Core.ViewModel
 {

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using BSU.Core.Launch;
-using BSU.Core.Model;
-using BSU.CoreCommon;
 using NLog;
 
 namespace BSU.Core.Persistence
@@ -39,7 +36,7 @@ namespace BSU.Core.Persistence
 
         public void RemoveRepository(Guid repositoryIdentifier)
         {
-            _logger.Debug("Removing repo {0}", repositoryIdentifier);
+            _logger.Debug($"Removing repo {repositoryIdentifier}");
             var repoEntry = _settings.Repositories.Single(r => r.Guid == repositoryIdentifier);
             _settings.Repositories.Remove(repoEntry);
             _settings.Store();
@@ -65,7 +62,7 @@ namespace BSU.Core.Persistence
 
         public void RemoveStorage(Guid storageIdentifier)
         {
-            _logger.Debug("Removing storage {0}", storageIdentifier);
+            _logger.Debug($"Removing storage {storageIdentifier}");
             var storageEntry = _settings.Storages.Single(s => s.Guid == storageIdentifier);
             _settings.Storages.Remove(storageEntry);
             _settings.Store();

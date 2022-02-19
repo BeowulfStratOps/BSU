@@ -1,9 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
@@ -51,7 +48,7 @@ namespace BSU.Core.ViewModel
         {
             var model = services.Get<IModel>();
             Actions = new ModActionTree(mod, model);
-            Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection!);
+            Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
             Mod = mod;
             _model = model;
             Name = mod.Identifier;

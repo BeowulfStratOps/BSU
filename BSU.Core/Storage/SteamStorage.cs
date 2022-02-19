@@ -25,7 +25,7 @@ namespace BSU.Core.Storage
             _loading = Load(CancellationToken.None);
         }
 
-        private async Task Load(CancellationToken cancellationToken)
+        private Task Load(CancellationToken cancellationToken)
         {
             // TODO: async?
             var folders = new List<DirectoryInfo>();
@@ -39,6 +39,7 @@ namespace BSU.Core.Storage
             }
 
             _mods = folders.ToDictionary(di => di.Name, di => (IStorageMod) new SteamMod(di, this));
+            return Task.CompletedTask;
         }
 
         public async Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
@@ -63,7 +64,9 @@ namespace BSU.Core.Storage
 
         public static string? GetWorkshopPath()
         {
+#pragma warning disable CA1416
             var path = (string?)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
+#pragma warning restore CA1416
             if (path == null)
             {
                 LogManager.GetCurrentClassLogger().Error("Couldn't find steam install path");

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
@@ -47,7 +46,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public bool CanWrite { get; set; } = true;
         public string Identifier { get; } = null!;
         public IModelStorage ParentStorage { get; } = null!;
-        public bool IsDeleted { get; }
+        public bool IsDeleted { get; } = false;
         public VersionHash GetVersionHash() => _versionHash ?? throw new InvalidOperationException();
 
         public MatchHash GetMatchHash() => _matchHash ?? throw new InvalidOperationException();

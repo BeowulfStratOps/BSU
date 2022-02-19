@@ -30,12 +30,13 @@ namespace BSU.Core.Storage
             _loading = Task.Run(() => Load(CancellationToken.None));
         }
 
-        private async Task Load(CancellationToken cancellationToken)
+        private Task Load(CancellationToken cancellationToken)
         {
             if (!new DirectoryInfo(_path).Exists) throw new DirectoryNotFoundException();
             // TODO: async?
             _mods = new DirectoryInfo(_path).EnumerateDirectories("@*")
                 .ToDictionary(di => di.Name, di => (IStorageMod) new DirectoryMod(di, this));
+            return Task.CompletedTask;
         }
 
         public async Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
@@ -48,7 +49,7 @@ namespace BSU.Core.Storage
         {
             await _loading;
             // TODO: async?
-            _logger.Debug("Creating mod {0}", identifier);
+            _logger.Debug($"Creating mod {identifier}");
             var dir = new DirectoryInfo(Path.Combine(_path, identifier));
             if (dir.Exists) throw new InvalidOperationException("Path exists");
             dir.Create();

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.Tests.Util;
@@ -21,13 +18,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
             mock.Setup(m => m.GetCurrentSelection()).Returns(new ModSelectionNone());
-            return mock.Object;
-        }
-
-        private IModelRepositoryMod Loading()
-        {
-            var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
-            mock.Setup(m => m.GetCurrentSelection()).Returns(new ModSelectionLoading());
             return mock.Object;
         }
 

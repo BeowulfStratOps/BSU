@@ -60,13 +60,13 @@ namespace BSU.Core.Tests.Mocks
         {
             var data = await GetFile(path, cancellationToken);
             await using var stream = new MemoryStream(data);
-            var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None);
+            var hash = await Sha1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None);
             return hash;
         }
 
-        public async Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)
+        public Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)
         {
-            return ("???", "?");
+            return Task.FromResult(("???", "?"));
         }
 
         public async Task<ulong> GetFileSize(string path, CancellationToken cancellationToken)

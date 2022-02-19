@@ -1,8 +1,6 @@
-﻿using System.Windows.Controls;
-
-namespace BSU.GUI.Components
+﻿namespace BSU.GUI.Components
 {
-    public partial class StorageMod : UserControl
+    public partial class StorageMod
     {
         public StorageMod()
         {

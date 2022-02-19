@@ -1,8 +1,6 @@
-﻿using System.Windows.Controls;
-
-namespace BSU.GUI
+﻿namespace BSU.GUI
 {
-    public partial class RepositoriesPage : UserControl
+    public partial class RepositoriesPage
     {
         public RepositoriesPage()
         {

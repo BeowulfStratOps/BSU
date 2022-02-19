@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Model;
 using BSU.CoreCommon;
 using NLog;
 

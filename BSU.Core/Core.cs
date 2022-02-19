@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
@@ -21,7 +20,6 @@ namespace BSU.Core
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Model.Model _model;
         private readonly ViewModel.ViewModel _viewModel;
 
         /// <summary>
@@ -29,6 +27,7 @@ namespace BSU.Core
         /// </summary>
         /// <param name="settingsPath">Location to store local settings, including repo/storage data.</param>
         /// <param name="interactionService"></param>
+        /// <param name="dispatcher"></param>
         public Core(FileInfo settingsPath, IInteractionService interactionService, IDispatcher dispatcher) : this(Settings.Load(settingsPath), interactionService, dispatcher)
         {
         }
@@ -50,12 +49,12 @@ namespace BSU.Core
             // TODO: should this be registered somewhere?
             new PresetGeneratorService(services);
 
-            _model = new Model.Model(state, services, state.CheckIsFirstStart());
-            services.Add<IModel>(_model);
+            var model = new Model.Model(state, services, state.CheckIsFirstStart());
+            services.Add<IModel>(model);
 
             // TODO: should we use different service providers to avoid accidental abuse?
             _viewModel = new ViewModel.ViewModel(services);
-            _model.Load();
+            model.Load();
         }
 
         public ViewModel.ViewModel GetViewModel() => _viewModel;

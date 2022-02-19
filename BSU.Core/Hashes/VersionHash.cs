@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -26,7 +25,7 @@ namespace BSU.Core.Hashes
             {
                 var stream = await mod.OpenRead(file, cancellationToken);
                 if (stream == null) throw new InvalidOperationException();
-                var hash = await SHA1AndPboHash.BuildAsync(stream, Utils.GetExtension(file), cancellationToken);
+                var hash = await Sha1AndPboHash.BuildAsync(stream, Utils.GetExtension(file), cancellationToken);
                 hashes.Add(file, hash);
             }
 

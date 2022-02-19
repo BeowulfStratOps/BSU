@@ -11,7 +11,7 @@ namespace BSU.Hashes
         // TODO: replace SHA1 with MurmurHash?
         public abstract byte[] GetBytes();
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is not FileHash otherHash) return false;
             return GetBytes().SequenceEqual(otherHash.GetBytes());

@@ -6,7 +6,6 @@
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
         xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
         xmlns:converters="clr-namespace:BSU.GUI.Converters"
-        xmlns:system="clr-namespace:System;assembly=System.Runtime"
         mc:Ignorable="d"
         Title="Select Download Location" Width="500" d:DataContext="{d:DesignInstance viewModel:SelectRepositoryStorage}"
         SizeToContent="Height" ResizeMode="NoResize"

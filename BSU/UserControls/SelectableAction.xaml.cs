@@ -1,13 +1,12 @@
 ﻿using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.GUI.UserControls
 {
-    public partial class SelectableAction : UserControl
+    public partial class SelectableAction
     {
         public SelectableAction()
         {
@@ -17,7 +16,7 @@ namespace BSU.GUI.UserControls
 
         private bool _isSelected;
         private bool _isHovered;
-        private SelectableModAction _vm;
+        private SelectableModAction _vm = null!;
 
         private void BorderOnLoaded(object sender, RoutedEventArgs e)
         {
@@ -37,7 +36,7 @@ namespace BSU.GUI.UserControls
             Border.Background = _isHovered ? new SolidColorBrush(Colors.CornflowerBlue) : SystemColors.WindowBrush;
         }
 
-        private void VmOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void VmOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName != nameof(SelectableModAction.IsSelected)) return;
             _isSelected = _vm.IsSelected;

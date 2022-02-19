@@ -6,10 +6,8 @@
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
-             xmlns:components="clr-namespace:BSU.GUI.Components"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              xmlns:util="clr-namespace:BSU.Core.ViewModel.Util;assembly=BSU.Core"
-             xmlns:sys="clr-namespace:System;assembly=System"
              mc:Ignorable="d"
              x:Name="RepoMod"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">

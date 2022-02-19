@@ -63,7 +63,7 @@ namespace BSU.Core.Hashes
             {
                 modCppData = await mod.GetFile("/mod.cpp", cancellationToken);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // ignored
             }
