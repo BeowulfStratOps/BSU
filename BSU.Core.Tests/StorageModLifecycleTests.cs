@@ -164,8 +164,9 @@ namespace BSU.Core.Tests
             eventBus.Work(100);
             var result = await update;
 
+            eventBus.Work(100, () => storageMod.GetState() == StorageModStateEnum.CreatedWithUpdateTarget);
+
             Assert.Equal(UpdateResult.Failed, result);
-            Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
             Assert.True(targetMatchHash.IsMatch(storageMod.GetMatchHash()));
             Assert.True(targetVersionHash.IsMatch(storageMod.GetVersionHash()));
         }
