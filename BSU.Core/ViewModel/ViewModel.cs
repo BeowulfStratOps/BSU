@@ -65,7 +65,7 @@ namespace BSU.Core.ViewModel
             Notifications.Add(new DismissError(error.Message, RemoveNotification));
         }
 
-        private void AddNotification(NotificationEvent evt)
+        public void AddNotification(NotificationEvent evt)
         {
             Notifications.Add(new TimedNotification(evt.Message, RemoveNotification, _dispatcher));
         }

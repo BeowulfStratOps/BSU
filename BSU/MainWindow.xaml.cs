@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using BSU.Core.Events;
 using BSU.Core.ViewModel;
 using BSU.GUI.Actions;
 using BSU.GUI.Dialogs;
@@ -23,6 +24,7 @@ namespace BSU.GUI
     public partial class MainWindow
     {
         private readonly Core.Core _core;
+        private readonly Action _showUpdateNotification;
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
         public MainWindow()
@@ -38,7 +40,12 @@ namespace BSU.GUI
 
                 var dispatcher = new SimpleDispatcher(Dispatcher.CurrentDispatcher);
                 _core = new Core.Core(new FileInfo(settingsLocation), interactionService, dispatcher);
-                DataContext = _core.GetViewModel();
+                var vm = _core.GetViewModel();
+                _showUpdateNotification = () =>
+                {
+                    vm.AddNotification(new NotificationEvent("BSU has been updated. Please restart it."));
+                };
+                DataContext = vm;
             }
             catch (Exception e)
             {
@@ -82,6 +89,7 @@ namespace BSU.GUI
             {
                 using var mgr = new UpdateManager("https://bsu-distribution.bso.ovh/stable/");
                 await mgr.UpdateApp();
+                _showUpdateNotification();
             }
             catch (Exception e)
             {
