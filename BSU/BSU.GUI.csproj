@@ -9,6 +9,7 @@
     <Company>beowulfso.com</Company>
     <Product>BSU</Product>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
