@@ -1,20 +1,10 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
-using BSU.Core.Events;
 using BSU.Core.ViewModel;
-using BSU.GUI.Actions;
 using BSU.GUI.Dialogs;
-using NLog;
-using Squirrel;
 
 namespace BSU.GUI
 {
@@ -23,41 +13,9 @@ namespace BSU.GUI
     /// </summary>
     public partial class MainWindow
     {
-        private readonly Core.Core _core;
-        private readonly Action _showUpdateNotification;
-        private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-
         public MainWindow()
         {
-            Thread.CurrentThread.Name = "main";
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            try
-            {
-                var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-                var settingsLocation = Path.Combine(Directory.GetParent(assemblyLocation)!.Parent!.FullName, "settings.json");
-                var interactionService = new InteractionService(this);
-
-                var dispatcher = new SimpleDispatcher(Dispatcher.CurrentDispatcher);
-                _core = new Core.Core(new FileInfo(settingsLocation), interactionService, dispatcher);
-                var vm = _core.GetViewModel();
-                _showUpdateNotification = () =>
-                {
-                    vm.AddNotification(new NotificationEvent("BSU has been updated. Please restart it."));
-                };
-                DataContext = vm;
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e);
-                throw;
-            }
             InitializeComponent();
-        }
-
-        private void MainWindow_OnClosing(object sender, CancelEventArgs e)
-        {
-            _core.Dispose();
         }
 
         private void ShowLogs_Click(object sender, RoutedEventArgs e)
@@ -69,33 +27,6 @@ namespace BSU.GUI
         private void About_Click(object sender, RoutedEventArgs e)
         {
             new AboutDialog().ShowDialog();
-        }
-
-        private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
-        {
-#pragma warning disable CS4014
-            Update();
-#pragma warning restore CS4014
-        }
-
-        private async Task Update()
-        {
-#if DEBUG
-            return;
-#endif
-
-#pragma warning disable CS0162
-            try
-            {
-                using var mgr = new UpdateManager("https://bsu-distribution.bso.ovh/stable/");
-                await mgr.UpdateApp();
-                _showUpdateNotification();
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e);
-            }
-#pragma warning restore CS0162
         }
 
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
