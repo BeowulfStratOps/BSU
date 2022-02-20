@@ -22,7 +22,7 @@ jobs:
     - name: Test
       run: dotnet test
     - name: Publish
-      run: dotnet publish -c Release -o publish BSU
+      run: dotnet publish -c Release -o publish BSU -r win-x64
     - name: Package
       run: nuget pack -OutputFileNamesWithoutVersion -Version $env:GITHUB_REF_NAME
     - name: Releasify
