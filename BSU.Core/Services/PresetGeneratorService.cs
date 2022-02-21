@@ -48,8 +48,9 @@ internal class PresetGeneratorService
 
         var dlcs = repository.GetServerInfo().Cdlcs.Select(id => id.ToString()).ToList();
         var mods = GetModPaths(repository);
+        var steamMods = GetSteamMods(repository);
 
-        var wasUpdatedTask = ArmaLauncher.UpdatePreset(presetName, mods, dlcs);
+        var wasUpdatedTask = ArmaLauncher.UpdatePreset(presetName, mods, steamMods, dlcs);
         wasUpdatedTask.ContinueInDispatcher(_dispatcher, wasUpdated =>
         {
             try
@@ -73,8 +74,20 @@ internal class PresetGeneratorService
         var result = new List<string>();
         foreach (var mod in repository.GetMods())
         {
-            if (mod.GetCurrentSelection() is ModSelectionStorageMod storageMod)
+            if (mod.GetCurrentSelection() is ModSelectionStorageMod storageMod && storageMod.StorageMod.CanWrite)
                 result.Add(storageMod.StorageMod.GetAbsolutePath());
+        }
+
+        return result;
+    }
+
+    private static List<string> GetSteamMods(IModelRepository repository)
+    {
+        var result = new List<string>();
+        foreach (var mod in repository.GetMods())
+        {
+            if (mod.GetCurrentSelection() is ModSelectionStorageMod storageMod && !storageMod.StorageMod.CanWrite)
+                result.Add(storageMod.StorageMod.Identifier);
         }
 
         return result;

@@ -25,7 +25,7 @@ public static class ArmaLauncher
 
     private static readonly SemaphoreSlim FileSystemLock = new(1);
 
-    public static async Task<bool> UpdatePreset(string presetName, List<string> modFolders, List<string> dlcIds)
+    public static async Task<bool> UpdatePreset(string presetName, List<string> modFolders, List<string> steamMods, List<string> dlcIds)
     {
         await FileSystemLock.WaitAsync();
 
@@ -41,7 +41,7 @@ public static class ArmaLauncher
 
             UpdateLocal(modFolders, local);
             await WriteLocal(local);
-            await WritePreset(presetName, modFolders, dlcIds);
+            await WritePreset(presetName, modFolders, steamMods, dlcIds);
 
             return true;
         }
@@ -91,8 +91,10 @@ public static class ArmaLauncher
     }
 
     private static string ModFolderToPublishedId(string modFolder) => $"local:{modFolder.ToUpperInvariant()}";
+    private static string SteamModToPublishedId(string steamMod) => $"steam:{steamMod}";
 
-    private static async Task WritePreset(string presetName, List<string> modFolders, List<string> dlcIds)
+    private static async Task WritePreset(string presetName, List<string> modFolders, List<string> steamMods,
+        List<string> dlcIds)
     {
         var preset = new Preset2
         {
@@ -104,6 +106,11 @@ public static class ArmaLauncher
         foreach (var modFolder in modFolders)
         {
             preset.PublishedId.Add(ModFolderToPublishedId(modFolder));
+        }
+
+        foreach (var steamMod in steamMods)
+        {
+            preset.PublishedId.Add(SteamModToPublishedId(steamMod));
         }
 
         var xmlSerializer = new XmlSerializer(typeof(Preset2));
