@@ -34,7 +34,7 @@ jobs:
         aws-access-key-id: ${{ secrets.S3_KEY_ID }}
         aws-secret-access-key: ${{ secrets.S3_KEY_SECRET }}
     - name: upload to s3
-      run: aws s3 sync --delete files s3://bsu-distribution/stable
+      run: aws s3 sync --delete releases s3://bsu-distribution/stable
     - name: Invalidate CloudFront cache
       run:  aws cloudfront create-invalidation --distribution-id $env:CF_DISTRIBUTION_ID --paths "/*"
       env:
