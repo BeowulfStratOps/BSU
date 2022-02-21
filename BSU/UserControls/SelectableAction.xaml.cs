@@ -16,12 +16,14 @@ namespace BSU.GUI.UserControls
 
         private bool _isSelected;
         private bool _isHovered;
+        private bool _isEnabled;
         private SelectableModAction _vm = null!;
 
         private void BorderOnLoaded(object sender, RoutedEventArgs e)
         {
             _vm = (SelectableModAction)Border.DataContext;
             _isSelected = _vm.IsSelected;
+            _isEnabled = _vm.IsEnabled;
             _vm.PropertyChanged += VmOnPropertyChanged;
             UpdateColour();
         }
@@ -33,7 +35,14 @@ namespace BSU.GUI.UserControls
                 Border.Background = SystemColors.HighlightBrush;
                 return;
             }
-            Border.Background = _isHovered ? new SolidColorBrush(Colors.CornflowerBlue) : SystemColors.WindowBrush;
+
+            if (_isHovered)
+            {
+                Border.Background = new SolidColorBrush(Colors.CornflowerBlue);
+                return;
+            }
+
+            Border.Background = SystemColors.WindowBrush;
         }
 
         private void VmOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -45,6 +54,7 @@ namespace BSU.GUI.UserControls
 
         private void Border_OnMouseEnter(object sender, MouseEventArgs e)
         {
+            if (!_isEnabled) return;
             _isHovered = true;
             UpdateColour();
         }
@@ -57,6 +67,7 @@ namespace BSU.GUI.UserControls
 
         private void Border_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (!_isEnabled) return;
             ((SelectableModAction)Border.DataContext).Select();
         }
     }

@@ -56,7 +56,7 @@ namespace BSU.Core.ViewModel.Util
             Selection = ModAction.Create(currentSelection, _repoMod);
             Storages.Clear();
             Storages.Add(new SelectableModAction(new SelectDisabled(), SetSelection,
-                false));
+                false, true));
 
             foreach (var storage in _model.GetStorages())
             {
@@ -67,13 +67,12 @@ namespace BSU.Core.ViewModel.Util
                 foreach (var mod in storage.GetMods())
                 {
                     var actionType = CoreCalculation.GetModAction(_repoMod, mod);
-                    if (actionType != ModActionEnum.Unusable)
-                    {
-                        var action = new SelectMod(mod, actionType);
-                        var isSelected = _repoMod.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
-                                         storageMod.StorageMod == mod;
-                        actions.Add(new SelectableModAction(action, SetSelection, isSelected));
-                    }
+                    if (actionType == ModActionEnum.Unusable) continue;
+                    var action = new SelectMod(mod, actionType);
+                    var isSelected = _repoMod.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
+                                     storageMod.StorageMod == mod;
+                    var enabled = storage.CanWrite || actionType == ModActionEnum.Use;
+                    actions.Add(new SelectableModAction(action, SetSelection, isSelected, enabled));
                 }
 
                 if (actions.Any() || storage.CanWrite)
@@ -110,8 +109,8 @@ namespace BSU.Core.ViewModel.Util
             List<SelectableModAction> actions, bool isSelected)
         {
             Storage = storage;
-            if (!storage.CanWrite) return;
-            Mods.Add(new SelectableModAction(new SelectStorage(storage), selectStorage, isSelected));
+            if (storage.CanWrite)
+                Mods.Add(new SelectableModAction(new SelectStorage(storage), selectStorage, isSelected, true));
             foreach (var action in actions)
             {
                 Mods.Add(action);
@@ -121,16 +120,18 @@ namespace BSU.Core.ViewModel.Util
 
     public class SelectableModAction : ObservableBase, IActionListEntry
     {
-        public SelectableModAction(ModAction action, Action<ModAction> select, bool isSelected)
+        public SelectableModAction(ModAction action, Action<ModAction> select, bool isSelected, bool isEnabled)
         {
             _select = select;
             _isSelected = isSelected;
+            IsEnabled = isEnabled;
             Action = action;
         }
 
         public ModAction Action { get; }
         private readonly Action<ModAction> _select;
         private bool _isSelected;
+        public bool IsEnabled { get; }
 
         public bool IsSelected
         {

@@ -304,7 +304,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var result = CalculateState(
                 Disabled()
             );
-            Assert.Equal(CalculatedRepositoryStateEnum.ReadyPartial, result);
+            Assert.Equal(CalculatedRepositoryStateEnum.RequiresUserIntervention, result);
         }
     }
 }

@@ -23,8 +23,8 @@ namespace BSU.GUI.Converters
                 case ModActionEnum.Use:
                     return new SolidColorBrush(Colors.Green);
                 case ModActionEnum.AbortActiveAndUpdate:
-                    return new SolidColorBrush(Colors.Red);
                 case ModActionEnum.Unusable:
+                case ModActionEnum.UnusableSteam:
                     return new SolidColorBrush(Colors.Red);
                 default:
                     throw new ArgumentOutOfRangeException();

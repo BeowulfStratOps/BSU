@@ -94,7 +94,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             var action = DoCheck(1, 1, 1, 2, StorageModStateEnum.Created, false);
 
-            Assert.Equal(ModActionEnum.Unusable, action);
+            Assert.Equal(ModActionEnum.UnusableSteam, action);
         }
     }
 }

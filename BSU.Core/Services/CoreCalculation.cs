@@ -35,7 +35,7 @@ namespace BSU.Core.Services
                 {
                     if (!CheckMatch())  return ModActionEnum.Unusable;
                     if (CheckVersion()) return ModActionEnum.Use;
-                    return storageMod.CanWrite ? ModActionEnum.Update : ModActionEnum.Unusable;
+                    return storageMod.CanWrite ? ModActionEnum.Update : ModActionEnum.UnusableSteam;
                 }
                 case StorageModStateEnum.Updating:
                 {
@@ -134,6 +134,11 @@ namespace BSU.Core.Services
                     mod.selection is ModSelectionStorageMod && mod.action == ModActionEnum.Use))
             {
                 return CalculatedRepositoryStateEnum.Ready;
+            }
+
+            if (infos.All(mod => mod.selection is ModSelectionDisabled))
+            {
+                return CalculatedRepositoryStateEnum.RequiresUserIntervention;
             }
 
             if (infos.All(mod => mod.selection is ModSelectionDisabled || mod.action == ModActionEnum.Use))

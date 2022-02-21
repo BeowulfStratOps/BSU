@@ -9,6 +9,7 @@
         AbortAndUpdate,
         Unusable, // should never reach the user
         AbortActiveAndUpdate,
-        Loading
+        Loading,
+        UnusableSteam
     }
 }

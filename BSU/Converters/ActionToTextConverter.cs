@@ -25,6 +25,8 @@ namespace BSU.GUI.Converters
                     return "Loading";
                 case ModActionEnum.Unusable:
                     return "Unusable";
+                case ModActionEnum.UnusableSteam:
+                    return "Unusable";
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -11,13 +11,14 @@
     <Border x:Name="Border" MouseEnter="Border_OnMouseEnter" MouseLeave="Border_OnMouseLeave" MouseLeftButtonDown="Border_OnMouseLeftButtonDown">
         <Border.Resources>
             <converters:ActionToColorConverter x:Key="ActionToColor" />
+            <converters:ActionTypeToForegroundColorConverter x:Key="ActionTypeToForegroundColor" />
             <DataTemplate DataType="{x:Type viewModel:SelectDisabled}">
-                <TextBlock>Disabled</TextBlock>
+                <TextBlock>Disable</TextBlock>
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:SelectMod}">
                 <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="15" Height="15" Fill="{Binding ActionType, Converter={StaticResource ActionToColor}}" />
-                    <TextBlock Text="{Binding Name}" />
+                    <Ellipse Width="15" Height="15" Margin="0 0 5 0 " Fill="{Binding ActionType, Converter={StaticResource ActionToColor}}" />
+                    <TextBlock Foreground="{Binding ActionType, Converter={StaticResource ActionTypeToForegroundColor}}" Text="{Binding Name}" />
                 </StackPanel>
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
