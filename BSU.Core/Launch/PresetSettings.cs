@@ -25,7 +25,7 @@ public record PresetSettings(string Allocator)
             HugePages = true,
             X64 = ArmaData.Is64BitSystem(),
             ArmaPath = ArmaData.GetGamePath(),
-            UseBsuLauncher = true
+            UseBsuLauncher = false
         };
     }
 }

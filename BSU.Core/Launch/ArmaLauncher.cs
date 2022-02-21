@@ -5,10 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Serialization;
 using BSU.Core.Launch.BiFileTypes;
 using Newtonsoft.Json;
 using NLog;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace BSU.Core.Launch;
 
@@ -30,6 +32,8 @@ public static class ArmaLauncher
         try
         {
             var local = await ReadLocal();
+            if (RemoveDuplicates(local))
+                await WriteLocal(local);
             var preset = await ReadPreset(presetName);
 
             if (CheckLocalIsUpToData(local, modFolders) && preset != null && CheckPresetIsUpToDate(preset, modFolders, dlcIds))
@@ -45,6 +49,19 @@ public static class ArmaLauncher
         {
             FileSystemLock.Release();
         }
+    }
+
+    private static bool RemoveDuplicates(Local local)
+    {
+        var knownLocalMods = local.KnownLocalMods.Distinct(StringComparer.InvariantCultureIgnoreCase).ToList();
+        var userDirectories = local.UserDirectories.Distinct(StringComparer.InvariantCultureIgnoreCase).ToList();
+
+        if (knownLocalMods.Count == local.KnownLocalMods.Count &&
+            userDirectories.Count == local.UserDirectories.Count) return false;
+
+        local.KnownLocalMods = knownLocalMods;
+        local.UserDirectories = userDirectories;
+        return true;
     }
 
     private static bool CheckPresetIsUpToDate(Preset2 preset, List<string> modFolders, List<string> dlcIds)
@@ -93,14 +110,15 @@ public static class ArmaLauncher
 
         var presetPath = Path.Combine(PresetDirectory, $"{presetName}.preset2");
 
-        await using var memoryStream = new MemoryStream();
-        await using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
-
-        xmlSerializer.Serialize(writer, preset);
-
         await using var presetStream = new FileStream(presetPath, FileMode.Create);
-        memoryStream.Position = 0;
-        await memoryStream.CopyToAsync(presetStream);
+        await using var xmlWriter = XmlWriter.Create(presetStream, new XmlWriterSettings
+        {
+            Encoding = Encoding.UTF8,
+            Indent = true,
+            Async = true
+        });
+
+        xmlSerializer.Serialize(xmlWriter, preset);
 
         Logger.Info($"Wrote launcher preset to {presetPath}");
     }
@@ -131,12 +149,12 @@ public static class ArmaLauncher
     {
         foreach (var modFolder in modFolders)
         {
-            if (!local.KnownLocalMods.Exists(x => x != null && x.ToLower() == modFolder))
+            if (!local.KnownLocalMods.Contains(modFolder, StringComparer.InvariantCultureIgnoreCase))
             {
                 local.KnownLocalMods.Add(modFolder);
             }
 
-            if (!local.UserDirectories.Exists(x => x != null && x.ToLower() == modFolder))
+            if (!local.UserDirectories.Contains(modFolder, StringComparer.InvariantCultureIgnoreCase))
             {
                 local.UserDirectories.Add(modFolder);
             }
