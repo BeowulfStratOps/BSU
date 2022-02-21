@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
@@ -25,6 +26,10 @@ internal static class UpdateHelper
     private static async Task DoUpdate(Action<string> showUpdateNotification)
     {
         using var mgr = new UpdateManager("https://bsu-distribution.bso.ovh/stable/");
+        SquirrelAwareApp.HandleEvents(
+            onInitialInstall: _ => UpdateShortcuts(mgr),
+            onAppUpdate: _ => UpdateShortcuts(mgr),
+            onAppUninstall: _ => RemoveShortcuts(mgr));
         var updates = await mgr.CheckForUpdate();
         if (!updates.ReleasesToApply.Any())
             return;
@@ -32,6 +37,20 @@ internal static class UpdateHelper
         await mgr.UpdateApp();
         showUpdateNotification("Updated BSU. Please restart.");
     }
+
+    private static void RemoveShortcuts(UpdateManager updateManager)
+    {
+        updateManager.RemoveShortcutsForExecutable(GetExePath(), ShortcutLocation.Desktop);
+        updateManager.RemoveShortcutsForExecutable(GetExePath(), ShortcutLocation.StartMenu);
+    }
+
+    private static void UpdateShortcuts(UpdateManager updateManager)
+    {
+        updateManager.CreateShortcutsForExecutable(GetExePath(), ShortcutLocation.Desktop, false);
+        updateManager.CreateShortcutsForExecutable(GetExePath(), ShortcutLocation.StartMenu, false);
+    }
+
+    private static string GetExePath() => Path.GetFileName(System.Reflection.Assembly.GetEntryAssembly()!.Location);
 
     public static void Update(Action<string> showUpdateNotification)
     {
