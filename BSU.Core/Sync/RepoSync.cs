@@ -71,12 +71,9 @@ namespace BSU.Core.Sync
 
         private async Task UpdateAsync(CancellationToken cancellationToken, IProgress<FileSyncStats>? progress)
         {
-            // TODO: this creates all tasks right away. might be better for cancellation to create tasks only once needed.
-            var tasks = _allActions.Select(a =>
-                ConcurrencyThrottle.Do(() => a.DoAsync(cancellationToken), cancellationToken));
-            var whenAll = Task.WhenAll(tasks);
+            var task = ConcurrencyThrottle.Do(_allActions, a => a.DoAsync(cancellationToken), cancellationToken);
 
-            await whenAll.WithUpdates(TimeSpan.FromMilliseconds(50), () => ProgressCallback(progress));
+            await task.WithUpdates(TimeSpan.FromMilliseconds(50), () => ProgressCallback(progress));
         }
 
         public static async Task<UpdateResult> UpdateAsync(IRepositoryMod repository, StorageMod storage, IStorageMod implementation, CancellationToken cancellationToken, IProgress<FileSyncStats>? progress)

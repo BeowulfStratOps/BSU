@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,17 +10,34 @@ namespace BSU.Core.Concurrency
     {
         private static readonly SemaphoreSlim Semaphore = new(5); // TODO: get from config
 
-        public static async Task Do(Func<Task> action, CancellationToken cancellationToken)
+        public static async Task Do<T>(IEnumerable<T> workItems, Func<T, Task> taskCreator, CancellationToken cancellationToken)
         {
-            await Semaphore.WaitAsync(cancellationToken);
+            var started = new List<Task>();
+
+            async Task StartTaskWithCleanup(T workItem)
+            {
+                try
+                {
+                    await taskCreator(workItem);
+                }
+                finally
+                {
+                    Semaphore.Release();
+                }
+            }
+
             try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                await action();
+                foreach (var workItem in workItems)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await Semaphore.WaitAsync(cancellationToken);
+                    started.Add(StartTaskWithCleanup(workItem));
+                }
             }
             finally
             {
-                Semaphore.Release();
+                await Task.WhenAll(started);
             }
         }
     }

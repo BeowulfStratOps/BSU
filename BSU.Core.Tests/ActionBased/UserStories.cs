@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using BSU.Core.Model;
 using BSU.Core.Tests.ActionBased.TestModel;
 using BSU.Core.Tests.Mocks;
@@ -79,7 +80,7 @@ public class UserStories : LoggedTest
 
         repositoryMod.FinishUpdate();
 
-        var popup = model.WaitForDialog<TestInteractionService.MessagePopupDto>(500);
+        var popup = model.WaitForDialog<TestInteractionService.MessagePopupDto>(2000);
         model.Do(() => popup.Closable.SetResult(null));
 
         model.WaitFor(500, () => !repoVm.UpdateProgress.Active);
@@ -159,7 +160,7 @@ public class UserStories : LoggedTest
         var storage = model.GetStorage("test");
         storage.Load(new TestException());
 
-        Assert.NotNull(vm.ViewModel.StoragePage.Storages.Single(s => s.Name == "asdf").Error);
+        Assert.NotNull(vm.ViewModel.StoragePage.Storages.Single(s => s.Name == "test").Error);
 
         Assert.Single(model.ErrorEvents);
         Assert.Contains("Failed to load storage", model.ErrorEvents[0].Message);
