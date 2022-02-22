@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using BSU.Core.Launch;
 using BSU.Core.Persistence;
 
 namespace BSU.Core.Tests.Mocks
@@ -12,5 +13,6 @@ namespace BSU.Core.Tests.Mocks
         public List<RepositoryEntry> Repositories { get; } = new();
         public List<StorageEntry> Storages { get; } = new();
         public bool FirstStartDone { get; set; }
+        public GlobalSettings GlobalSettings { get; set; } = new();
     }
 }

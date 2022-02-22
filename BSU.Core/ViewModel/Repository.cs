@@ -220,7 +220,6 @@ namespace BSU.Core.ViewModel
             Play = new DelegateCommand(DoPlay);
             StopPlaying = new DelegateCommand(() => asyncVoidExecutor.Execute(DoStopPlaying));
             Pause = new DelegateCommand(DoPause, false);
-            Settings = new DelegateCommand(ShowSettings);
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation, false);
             modelRepository.StateChanged += _ => OnStateChanged();
             Name = modelRepository.Name;
@@ -251,14 +250,6 @@ namespace BSU.Core.ViewModel
             {
                 Mods.Add(new RepositoryMod(mod, _services));
             }
-        }
-
-        private void ShowSettings()
-        {
-            var vm = new PresetSettings(ModelRepository.Settings, true);
-            var save = _interactionService.PresetSettings(vm);
-            if (save)
-                ModelRepository.Settings = vm.ToLaunchSettings();
         }
 
         private void DoChooseDownloadLocation()
@@ -434,8 +425,6 @@ Cancel - Do not remove this repository";
                 OnPropertyChanged();
             }
         }
-
-        public DelegateCommand Settings { get; }
 
         public DelegateCommand ChooseDownloadLocation { get; }
 

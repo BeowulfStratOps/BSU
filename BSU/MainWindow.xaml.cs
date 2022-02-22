@@ -41,5 +41,11 @@ namespace BSU.GUI
                     break;
             }
         }
+
+        private void Settings_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = (ViewModel)DataContext;
+            vm.Settings.Execute(null);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using BSU.Core.Launch;
 
 namespace BSU.Core.Persistence
 {
@@ -8,5 +9,6 @@ namespace BSU.Core.Persistence
         List<RepositoryEntry> Repositories { get; }
         List<StorageEntry> Storages { get; }
         bool FirstStartDone { get; set; }
+        GlobalSettings GlobalSettings { get; set; }
     }
 }

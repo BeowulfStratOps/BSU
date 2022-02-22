@@ -14,16 +14,12 @@ internal static class BsuLauncher
 {
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
-    public static GameLaunchResult Launch(IModelRepository preset, IDispatcher dispatcher)
+    public static GameLaunchResult Launch(IModelRepository preset, GlobalSettings settings, IDispatcher dispatcher)
     {
-        if (!preset.Settings.UseBsuLauncher) throw new InvalidOperationException();
-
         var modPaths = CollectModPaths(preset, out var missingDlcs);
 
         if (missingDlcs.Any())
             return new GameLaunchResult("Missing CDLCs: " + string.Join(", ", missingDlcs));
-
-        var settings = preset.Settings;
 
         var parameters = BuildParameters(settings) + " \"-mod=" + string.Join(";", modPaths) + " \"";
 
@@ -113,7 +109,7 @@ internal static class BsuLauncher
         return result;
     }
 
-    private static string BuildParameters(PresetSettings settings)
+    private static string BuildParameters(GlobalSettings settings)
     {
         var result = new List<string> { "-noSplash" };
 
@@ -124,14 +120,6 @@ internal static class BsuLauncher
         if (settings.ShowScriptErrors)
             result.Add("-showScriptErrors");
         result.Add("-name=" + settings.Profile);
-
-        switch (settings.Allocator)
-        {
-            case "System":
-                break;
-            default:
-                throw new ArgumentException();
-        }
 
         // TODO: connect, port, password
 

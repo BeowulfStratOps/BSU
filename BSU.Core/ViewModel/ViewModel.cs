@@ -23,10 +23,21 @@ namespace BSU.Core.ViewModel
             eventManager.Subscribe<ErrorEvent>(AddError);
             eventManager.Subscribe<NotificationEvent>(AddNotification);
             services.Add<IViewModelService>(this);
+            _serviceProvider = services;
             _dispatcher = services.Get<IDispatcher>();
             RepoPage = new RepositoriesPage(services);
             StoragePage = new StoragePage(services);
             Navigator = new Navigator(RepoPage);
+            Settings = new DelegateCommand(OpenSettings);
+        }
+
+        private void OpenSettings()
+        {
+            var interactionService = _serviceProvider.Get<IInteractionService>();
+            var model = _serviceProvider.Get<IModel>();
+            var vm = new GlobalSettings(model.GetSettings());
+            if (interactionService.GlobalSettings(vm))
+                model.SetSettings(vm.ToLaunchSettings());
         }
 
         public Navigator Navigator { get; }
@@ -57,6 +68,8 @@ namespace BSU.Core.ViewModel
         }
 
         public ObservableCollection<Notification> Notifications { get; } = new();
+        public readonly DelegateCommand Settings;
+        private readonly ServiceProvider _serviceProvider;
 
         private void AddError(ErrorEvent error)
         {

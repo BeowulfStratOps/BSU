@@ -25,8 +25,9 @@ namespace BSU.Core.Model
         public event Action<IModelRepository>? StateChanged;
         public GameLaunchResult? Launch()
         {
-            if (Settings.UseBsuLauncher)
-                return BsuLauncher.Launch(this, _dispatcher);
+            var settings = _services.Get<IModel>().GetSettings();
+            if (settings.UseBsuLauncher)
+                return BsuLauncher.Launch(this, settings, _dispatcher);
             ArmaLauncher.Launch();
             return null;
         }
@@ -62,22 +63,6 @@ namespace BSU.Core.Model
                 _logger.Debug($"Changing state from {_state} to {value}");
                 _state = value;
                 StateChanged?.Invoke(this);
-            }
-        }
-
-        public PresetSettings Settings
-        {
-            get
-            {
-                var settings = _internalState.GetSettings();
-                if (settings != null) return settings;
-                Settings = PresetSettings.BuildDefault();
-                return Settings;
-            }
-            set
-            {
-                _internalState.SetSettings(value);
-                _eventManager.Publish(new SettingsChangedEvent(this));
             }
         }
 

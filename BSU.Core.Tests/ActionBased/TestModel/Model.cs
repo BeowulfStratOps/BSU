@@ -12,7 +12,6 @@ using BSU.Core.ViewModel;
 using BSU.CoreCommon;
 using NLog;
 using Xunit;
-using PresetSettings = BSU.Core.Launch.PresetSettings;
 
 namespace BSU.Core.Tests.ActionBased.TestModel;
 
@@ -97,7 +96,7 @@ internal class Model : IDisposable
         var settings = new MockSettings();
         foreach (var repository in modelBuildParams.Repositories)
         {
-            settings.Repositories.Add(new RepositoryEntry(repository, "BSO", repository, Guid.NewGuid(), new PresetSettings("System")));
+            settings.Repositories.Add(new RepositoryEntry(repository, "BSO", repository, Guid.NewGuid()));
         }
         foreach (var storage in modelBuildParams.Storages)
         {

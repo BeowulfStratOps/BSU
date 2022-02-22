@@ -36,6 +36,8 @@ internal class TestInteractionService : IInteractionService
     }
 
     public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel) => (bool)Handle(viewModel, new TestClosable())!;
-
-    public bool PresetSettings(PresetSettings vm) => (bool)Handle(vm)!;
+    public bool GlobalSettings(GlobalSettings vm)
+    {
+        throw new NotImplementedException();
+    }
 }

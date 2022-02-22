@@ -1,12 +1,12 @@
-﻿<Window x:Class="BSU.GUI.Dialogs.PresetSettingsDialog"
+﻿<Window x:Class="BSU.GUI.Dialogs.GlobalSettingsDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
         mc:Ignorable="d"
-        Title="Preset Settings" Width="600"
-        SizeToContent="Height" ResizeMode="NoResize" d:DataContext="{d:DesignInstance viewModel:PresetSettings}">
+        Title="Global Settings" Width="600"
+        SizeToContent="Height" ResizeMode="NoResize" d:DataContext="{d:DesignInstance viewModel:GlobalSettings}">
     <DockPanel Margin="15 0 15 15">
         <DockPanel.Resources>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
@@ -14,7 +14,7 @@
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button IsDefault="True" Margin="15, 0" MinWidth="50" Click="ButtonBase_OnClick">Ok</Button>
-            <Button IsCancel="True" MinWidth="50" Visibility="{Binding CanCancelDialog, Converter={StaticResource BooleanToVisibilityConverter}}">Cancel</Button>
+            <Button IsCancel="True" MinWidth="50">Cancel</Button>
         </StackPanel>
 
         <StackPanel Grid.IsSharedSizeScope="True" Margin="0 0 0 15">

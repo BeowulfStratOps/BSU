@@ -12,6 +12,6 @@
 
         bool YesNoPopup(string message, string title);
         bool SelectRepositoryStorage(SelectRepositoryStorage viewModel);
-        bool PresetSettings(PresetSettings vm);
+        bool GlobalSettings(GlobalSettings vm);
     }
 }

@@ -42,10 +42,10 @@ namespace BSU.Core.Persistence
             _settings.Store();
         }
 
-        public (IRepositoryEntry entry, IRepositoryState state) AddRepo(string name, string url, string type, PresetSettings presetSettings)
+        public (IRepositoryEntry entry, IRepositoryState state) AddRepo(string name, string url, string type)
         {
             if (_settings.Repositories.Any(r => r.Name == name)) throw new ArgumentException("Name in use");
-            var repo = new RepositoryEntry(name, type, url, Guid.NewGuid(), presetSettings);
+            var repo = new RepositoryEntry(name, type, url, Guid.NewGuid());
             _settings.Repositories.Add(repo);
             _settings.Store();
             return (repo, new RepositoryState(repo, _settings.Store));
@@ -58,6 +58,16 @@ namespace BSU.Core.Persistence
             _settings.Storages.Add(storage);
             _settings.Store();
             return (storage, new StorageState(storage, _settings.Store));
+        }
+
+        public GlobalSettings Settings
+        {
+            get => _settings.GlobalSettings;
+            set
+            {
+                _settings.GlobalSettings = value;
+                _settings.Store();
+            }
         }
 
         public void RemoveStorage(Guid storageIdentifier)

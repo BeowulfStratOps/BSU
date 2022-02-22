@@ -4,10 +4,8 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel;
 
-public class PresetSettings : ObservableBase
+public class GlobalSettings : ObservableBase
 {
-    public bool CanCancelDialog { get; }
-
     private bool _useBsuLauncher;
     public bool UseBsuLauncher
     {
@@ -27,9 +25,8 @@ public class PresetSettings : ObservableBase
         set => UseBsuLauncher = !value;
     }
 
-    internal PresetSettings(Launch.PresetSettings initial, bool canCancelDialog)
+    internal GlobalSettings(Launch.GlobalSettings initial)
     {
-        CanCancelDialog = canCancelDialog;
         Profile = initial.Profile;
         BattlEye = initial.BattlEye;
         WorldEmpty = initial.WorldEmpty;
@@ -37,7 +34,6 @@ public class PresetSettings : ObservableBase
         X64 = initial.X64;
         ShowScriptErrors = initial.ShowScriptErrors;
         HugePages = initial.HugePages;
-        Allocator = initial.Allocator;
         ArmaPath = initial.ArmaPath;
         UseBsuLauncher = initial.UseBsuLauncher;
     }
@@ -49,16 +45,15 @@ public class PresetSettings : ObservableBase
     public bool X64 { get; set; }
     public bool ShowScriptErrors { get; set; }
     public bool HugePages { get; set; }
-    public string Allocator { get; set; }
     public string? ArmaPath { get; set; }
 
     public IReadOnlyList<string> Profiles { get; } = ArmaData.GetProfiles();
 
     public IReadOnlyList<string> Allocators { get; } = ArmaData.GetAllocators();
 
-    public Launch.PresetSettings ToLaunchSettings()
+    public Launch.GlobalSettings ToLaunchSettings()
     {
-        return new Launch.PresetSettings(Allocator)
+        return new Launch.GlobalSettings
         {
             Profile = Profile,
             BattlEye = BattlEye,

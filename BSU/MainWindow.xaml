@@ -45,6 +45,7 @@
                 <MenuItem Header="_Show Logs" Click="ShowLogs_Click"></MenuItem>
                 <MenuItem Header="_About" Click="About_Click"></MenuItem>
             </MenuItem>
+            <MenuItem Header="_Settings" Click="Settings_Click"></MenuItem>
         </Menu>
         <Grid>
             <ContentControl Content="{Binding Navigator.Content}"></ContentControl>

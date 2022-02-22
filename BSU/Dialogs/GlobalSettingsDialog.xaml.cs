@@ -3,9 +3,9 @@ using BSU.Core.ViewModel;
 
 namespace BSU.GUI.Dialogs;
 
-public partial class PresetSettingsDialog
+public partial class GlobalSettingsDialog
 {
-    public PresetSettingsDialog(PresetSettings viewModel)
+    public GlobalSettingsDialog(GlobalSettings viewModel)
     {
         DataContext = viewModel;
         InitializeComponent();

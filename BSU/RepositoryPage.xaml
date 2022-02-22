@@ -32,8 +32,6 @@
                 <TextBlock Text="{Binding ServerUrl, FallbackValue=srv1.beowulfso.com}"></TextBlock>
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Settings}" Svg="{StaticResource SvgSettings}" ToolTip="Settings" />
-
                 <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Preset">
                     <userControls:SvgButton.CommandParameter>
                         <system:Boolean>

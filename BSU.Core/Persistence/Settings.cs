@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using BSU.Core.Launch;
 using Newtonsoft.Json;
 using NLog;
 
@@ -50,17 +51,25 @@ namespace BSU.Core.Persistence
             set => _data.FirstStartDone = value;
         }
 
+        public GlobalSettings GlobalSettings
+        {
+            get => _data.GlobalSettings;
+            set => _data.GlobalSettings = value;
+        }
+
         private class SettingsData
         {
             public SettingsData()
             {
                 Repositories = new List<RepositoryEntry>();
                 Storages = new List<StorageEntry>();
+                GlobalSettings = new GlobalSettings();
             }
 
             public readonly List<RepositoryEntry> Repositories;
             public readonly List<StorageEntry> Storages;
             public bool FirstStartDone { get; set; }
+            public GlobalSettings GlobalSettings { get; set; }
         }
     }
 }

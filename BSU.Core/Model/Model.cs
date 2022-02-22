@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Launch;
 using BSU.Core.Persistence;
@@ -34,6 +35,13 @@ namespace BSU.Core.Model
 
         public event Action<IModelRepository>? RemovedRepository;
         public event Action<IModelStorage>? RemovedStorage;
+        public GlobalSettings GetSettings() => PersistentState.Settings;
+
+        public void SetSettings(GlobalSettings globalSettings)
+        {
+            PersistentState.Settings = globalSettings;
+            _services.Get<IEventManager>().Publish(new SettingsChangedEvent());
+        }
 
         private IInternalState PersistentState { get; }
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
@@ -65,6 +73,7 @@ namespace BSU.Core.Model
             }
             _logger.Info($"Found steam at {steamPath}. Adding steam storage");
             PersistentState.AddStorage("Steam", steamPath, "STEAM");
+            PersistentState.Settings = GlobalSettings.BuildDefault();
         }
 
         public void Load()
@@ -99,11 +108,11 @@ namespace BSU.Core.Model
             return storage;
         }
 
-        public IModelRepository AddRepository(string type, string url, string name, PresetSettings settings)
+        public IModelRepository AddRepository(string type, string url, string name)
         {
             var types = _services.Get<Types>();
             if (!types.GetRepoTypes().Contains(type)) throw new ArgumentException($"Unknown type {type}", nameof(type));
-            var (entry, repoState) = PersistentState.AddRepo(name, url, type, settings);
+            var (entry, repoState) = PersistentState.AddRepo(name, url, type);
             return CreateRepository(entry, repoState);
         }
 

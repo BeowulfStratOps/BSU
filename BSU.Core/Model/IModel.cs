@@ -13,7 +13,7 @@ namespace BSU.Core.Model
 
         void DeleteRepository(IModelRepository repository, bool removeMods);
         void DeleteStorage(IModelStorage storage, bool removeMods);
-        IModelRepository AddRepository(string type, string url, string name, PresetSettings settings);
+        IModelRepository AddRepository(string type, string url, string name);
         IModelStorage AddStorage(string type, string path, string name);
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();
@@ -25,5 +25,7 @@ namespace BSU.Core.Model
         List<IModelRepositoryMod> GetRepositoryMods();
         event Action<IModelRepository> RemovedRepository;
         event Action<IModelStorage> RemovedStorage;
+        GlobalSettings GetSettings();
+        void SetSettings(GlobalSettings globalSettings);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace BSU.Core.Launch;
 
-public record PresetSettings(string Allocator)
+public record GlobalSettings
 {
     public string? Profile { get; init; }
     public bool BattlEye { get; init; }
@@ -15,9 +15,9 @@ public record PresetSettings(string Allocator)
     public string? ArmaPath { get; init; }
     public bool UseBsuLauncher { get; init; }
 
-    public static PresetSettings BuildDefault()
+    public static GlobalSettings BuildDefault()
     {
-        return new PresetSettings(ArmaData.GetAllocators().First())
+        return new GlobalSettings()
         {
             Profile = ArmaData.GetProfiles().FirstOrDefault(),
             BattlEye = true,
