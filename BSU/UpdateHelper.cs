@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
+using NLog.Fluent;
 using Squirrel;
 
 namespace BSU.GUI;
@@ -50,7 +51,16 @@ internal static class UpdateHelper
         updateManager.CreateShortcutsForExecutable(GetExePath(), ShortcutLocation.StartMenu, false);
     }
 
-    private static string GetExePath() => Path.GetFileName(System.Reflection.Assembly.GetEntryAssembly()!.Location);
+    private static string GetExePath()
+    {
+        var entryAssembly = System.Reflection.Assembly.GetEntryAssembly()!;
+        if (!entryAssembly.FullName!.ToLowerInvariant().Contains("BSU"))
+        {
+            Logger.Error($"Tried to create a shortcut for assembly {entryAssembly.FullName}. Aborting");
+            throw new InvalidOperationException();
+        }
+        return Path.GetFileName(entryAssembly!.Location);
+    }
 
     public static void Update(Action<string> showUpdateNotification)
     {
