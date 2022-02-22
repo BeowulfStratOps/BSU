@@ -149,9 +149,7 @@ namespace BSU.Core.ViewModel
             {
                 var selections = ModelRepository.GetMods().Select(mod => mod.GetCurrentSelection()).ToList();
 
-                DisableAll.SetCanExecute(selections.Any(s => s is not ModSelectionDisabled));
-                EnableAll.SetCanExecute(selections.Any(s => s is ModSelectionDisabled));
-                ChooseDownloadLocation.SetCanExecute(selections.Any(s => s is ModSelectionDownload));
+                ChooseDownloadLocation.SetCanExecute(selections.Any(s => s is ModSelectionDownload or ModSelectionNone));
             }
         }
 
@@ -242,24 +240,6 @@ namespace BSU.Core.ViewModel
                 if (evt.Repository == modelRepository)
                     UsesBsuLauncher = modelRepository.Settings.UseBsuLauncher;
             });
-            EnableAll = new DelegateCommand(DoEnableAll, false);
-            DisableAll = new DelegateCommand(DoDisableAll, false);
-        }
-
-        private void DoEnableAll()
-        {
-            foreach (var mod in ModelRepository.GetMods())
-            {
-                mod.SetSelection(new ModSelectionNone()); // should trigger auto selection. TODO: make it explicit.
-            }
-        }
-
-        private void DoDisableAll()
-        {
-            foreach (var mod in ModelRepository.GetMods())
-            {
-                mod.SetSelection(new ModSelectionDisabled());
-            }
         }
 
         private void UpdateState(CalculatedStateChangedEvent evt)
@@ -471,9 +451,6 @@ Cancel - Do not remove this repository";
         public DelegateCommand ChooseDownloadLocation { get; }
 
         public DelegateCommand StopPlaying { get; }
-
-        public DelegateCommand DisableAll { get; }
-        public DelegateCommand EnableAll { get; }
 
         private bool _pauseButtonVisible;
         public bool PauseButtonVisible
