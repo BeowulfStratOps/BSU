@@ -10,7 +10,7 @@ using NLog;
 
 namespace BSU.Core.Launch;
 
-internal static class GameLauncher
+internal static class BsuLauncher
 {
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 

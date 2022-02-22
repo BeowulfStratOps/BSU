@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -179,5 +180,13 @@ public static class ArmaLauncher
         var json = JsonConvert.SerializeObject(local, Formatting.None, settings);
         await File.WriteAllTextAsync(localPath, json);
         Logger.Info($"Wrote local.json to {localPath}");
+    }
+
+    public static void Launch()
+    {
+        Process.Start(new ProcessStartInfo("steam://run/107410/")
+        {
+            UseShellExecute = true
+        });
     }
 }

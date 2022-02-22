@@ -37,7 +37,7 @@
                         </Viewbox>
                     </Grid>
 
-                    <userControls:SvgButton Width="40" Height="40" Visibility="{Binding ShowPlayButton, Converter={StaticResource CollapseConverter}}" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Arma with this Preset"/>
+                    <userControls:SvgButton Width="40" Height="40" Visibility="{Binding NotIsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Arma with this Preset"/>
                     <userControls:SvgButton Width="40" Height="40" Visibility="{Binding IsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding StopPlaying}" Svg="{StaticResource SvgStop}" SvgBrush="Red" ToolTip="Close the game"/>
                 </StackPanel>
                 <StackPanel x:Name="PresetNamePanel" Orientation="Vertical" Cursor="Hand" MouseLeftButtonUp="Preset_Click">
