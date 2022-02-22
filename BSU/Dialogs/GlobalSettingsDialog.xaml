@@ -51,6 +51,15 @@
                 </StackPanel>
             </Grid>
 
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="Labels" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" HorizontalAlignment="Left">Close BSU after launch:</Label>
+                <CheckBox Grid.Column="1" IsChecked="{Binding CloseAfterLaunch}"></CheckBox>
+            </Grid>
+
             <StackPanel Visibility="{Binding UseBsuLauncher, Converter={StaticResource BooleanToVisibilityConverter}}">
 
                 <Grid>
@@ -69,15 +78,6 @@
                     </Grid.ColumnDefinitions>
                     <Label Grid.Column="0" HorizontalAlignment="Left">BattlEye:</Label>
                     <CheckBox Grid.Column="1" IsChecked="{Binding BattlEye}"></CheckBox>
-                </Grid>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition SharedSizeGroup="Labels" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Label Grid.Column="0" HorizontalAlignment="Left">Close BSU after launch:</Label>
-                    <CheckBox Grid.Column="1" IsChecked="{Binding CloseAfterLaunch}"></CheckBox>
                 </Grid>
 
                 <Expander ExpandDirection="Up">

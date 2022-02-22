@@ -13,6 +13,6 @@ namespace BSU.Core.Model
         LoadingState State { get; }
         ServerInfo GetServerInfo();
         event Action<IModelRepository> StateChanged;
-        GameLaunchResult? Launch();
+        GameLaunchResult? Launch(GlobalSettings settings);
     }
 }

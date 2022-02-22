@@ -53,5 +53,10 @@ namespace BSU.GUI.Actions
         {
             return (bool)new GlobalSettingsDialog(vm).ShowDialog()!;
         }
+
+        public void CloseBsu()
+        {
+            _owner.Close();
+        }
     }
 }

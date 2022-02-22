@@ -13,5 +13,6 @@
         bool YesNoPopup(string message, string title);
         bool SelectRepositoryStorage(SelectRepositoryStorage viewModel);
         bool GlobalSettings(GlobalSettings vm);
+        void CloseBsu();
     }
 }

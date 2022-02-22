@@ -40,4 +40,9 @@ internal class TestInteractionService : IInteractionService
     {
         throw new NotImplementedException();
     }
+
+    public void CloseBsu()
+    {
+        throw new NotImplementedException();
+    }
 }

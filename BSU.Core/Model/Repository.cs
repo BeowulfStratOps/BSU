@@ -23,9 +23,8 @@ namespace BSU.Core.Model
 
         private LoadingState _state = LoadingState.Loading;
         public event Action<IModelRepository>? StateChanged;
-        public GameLaunchResult? Launch()
+        public GameLaunchResult? Launch(GlobalSettings settings)
         {
-            var settings = _services.Get<IModel>().GetSettings();
             if (settings.UseBsuLauncher)
                 return BsuLauncher.Launch(this, settings, _dispatcher);
             ArmaLauncher.Launch();

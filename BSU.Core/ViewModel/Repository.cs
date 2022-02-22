@@ -278,9 +278,16 @@ namespace BSU.Core.ViewModel
                 if (!goAhead) return;
             }
 
-            var launchResult = ModelRepository.Launch();
+            var settings = _services.Get<IModel>().GetSettings();
+            var interactionService = _services.Get<IInteractionService>();
+            var launchResult = ModelRepository.Launch(settings);
 
-            if (launchResult == null) return; // no process tracking, aka Arma launcher
+            if (launchResult == null)
+            {
+                if (settings.CloseAfterLaunch)
+                    interactionService.CloseBsu();
+                return; // no process tracking, aka Arma launcher
+            }
 
             if (launchResult.Succeeded)
             {
@@ -291,6 +298,8 @@ namespace BSU.Core.ViewModel
                     IsRunning = false;
                 };
                 IsRunning = true;
+                if (settings.CloseAfterLaunch)
+                    interactionService.CloseBsu();
             }
             else
             {
