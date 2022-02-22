@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using BSU.Core.Concurrency;
 using BSU.Core.Events;
@@ -42,18 +43,18 @@ internal class Model : IDisposable
 
     public readonly ServiceProvider Services = new();
 
-    private record ModelBuildParams(IEnumerable<string> Repositories, IEnumerable<string> Storages);
+    private record ModelBuildParams(IEnumerable<string> Repositories, IEnumerable<string> Storages, bool SteamLoaded);
 
-    public Model(IEnumerable<string>? repositories = null, IEnumerable<string>? storages = null)
+    public Model(IEnumerable<string>? repositories = null, IEnumerable<string>? storages = null, bool steamLoaded = true)
     {
-        var buildParams = new ModelBuildParams(repositories ?? Array.Empty<string>(), storages ?? Array.Empty<string>());
+        var buildParams = new ModelBuildParams(repositories ?? Array.Empty<string>(), storages ?? Array.Empty<string>(), steamLoaded);
 
         _testModelInterface = new TestModelInterface(DoInModelThreadWithWait);
         _modelThread = new Thread(ModelThread);
         _modelThread.Start(buildParams);
         _modelThreadSuspended.WaitOne();
         if (_modelThreadException != null)
-            throw _modelThreadException;
+            throw new ModelFailedException(_modelThreadException);
     }
 
     private void DoInModelThreadWithWait(Action action, bool wait)
@@ -89,7 +90,8 @@ internal class Model : IDisposable
         var types = new Types();
 
         types.AddRepoType("BSO", CreateRepository);
-        types.AddStorageType("DIRECTORY", CreateStorage);
+        types.AddStorageType("DIRECTORY", p => CreateStorage(p, false));
+        types.AddStorageType("STEAM", p => CreateStorage(p, true));
 
         Services.Add(types);
 
@@ -110,12 +112,17 @@ internal class Model : IDisposable
 
         model.Load();
 
+        if (modelBuildParams.SteamLoaded)
+        {
+            _storages["steam"].LoadEmpty();
+        }
+
         return vm;
     }
 
-    private IStorage CreateStorage(string url)
+    private IStorage CreateStorage(string url, bool isSteam)
     {
-        var storage = new TestStorage(_testModelInterface);
+        var storage = new TestStorage(_testModelInterface, !isSteam);
         _storages.Add(url, storage);
         return storage;
     }

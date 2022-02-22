@@ -16,5 +16,6 @@ namespace BSU.CoreCommon
 
         Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken);
         Task RemoveMod(string identifier, CancellationToken cancellationToken);
+        string Location();
     }
 }

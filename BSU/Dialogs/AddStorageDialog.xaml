@@ -4,7 +4,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
-        xmlns:converters="clr-namespace:BSU.GUI.Converters"
         mc:Ignorable="d"
         Title="Add Download Location" Width="350" d:DataContext="{d:DesignInstance viewModel:AddStorage}"
         SizeToContent="Height" ResizeMode="NoResize"
@@ -20,15 +19,9 @@
         </Grid.RowDefinitions>
         <Grid.Resources>
             <Style BasedOn="{StaticResource {x:Type ToggleButton}}" TargetType="RadioButton"></Style>
-            <converters:BoolToVisibilityConverter x:Key="VisibilityConverter"></converters:BoolToVisibilityConverter>
         </Grid.Resources>
 
-        <UniformGrid Grid.Row="0" Rows="1" Columns="2" Margin="0,0,0,15">
-            <RadioButton Margin="0,0,10,0" IsChecked="{Binding IsDirectory}">Directory</RadioButton>
-            <RadioButton Margin="10,0,0,0" IsChecked="{Binding IsSteam}" IsEnabled="{Binding SteamEnabled}">Steam Workshop</RadioButton>
-        </UniformGrid>
-
-        <Grid Grid.Row="1" Visibility="{Binding IsDirectory, Converter={StaticResource VisibilityConverter}}">
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -51,23 +44,6 @@
                 </Button>
             </Grid>
             <TextBlock Grid.Row="3" Grid.Column="1" Foreground="Red" Text="{Binding PathError}" />
-        </Grid>
-
-        <Grid Grid.Row="1" Visibility="{Binding IsSteam, Converter={StaticResource VisibilityConverter}}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <TextBlock Grid.Row="0" Grid.Column="0" Margin="10">Name:</TextBlock>
-            <TextBlock Grid.Row="0" Grid.Column="1" Margin="10">Steam</TextBlock>
-
-            <TextBlock Grid.Row="1" Grid.Column="0" Margin="10">Path:</TextBlock>
-            <TextBlock Grid.Row="1" Grid.Column="1" Margin="10" Text="{Binding SteamPath}" TextWrapping="Wrap"/>
         </Grid>
 
         <WrapPanel Grid.Row="2" HorizontalAlignment="Right" Margin="10">

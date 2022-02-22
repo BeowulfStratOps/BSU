@@ -14,9 +14,9 @@ internal class DialogService : IDialogService
         _services = services;
     }
 
-    public AddStorageDialogResult? AddStorage(bool allowSteam)
+    public AddStorageDialogResult? AddStorage()
     {
-        var vm = new AddStorage(_services, allowSteam);
+        var vm = new AddStorage(_services);
         if (!_interactionService.AddStorage(vm)) return null;
         var type = vm.GetStorageType();
         var name = vm.GetName();
@@ -27,7 +27,7 @@ internal class DialogService : IDialogService
 
 internal interface IDialogService
 {
-    AddStorageDialogResult? AddStorage(bool allowSteam);
+    AddStorageDialogResult? AddStorage();
 }
 
 internal record AddStorageDialogResult(string Type, string Name, string Path);

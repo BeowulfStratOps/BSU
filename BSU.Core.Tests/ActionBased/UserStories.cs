@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BSU.Core.Model;
 using BSU.Core.Tests.ActionBased.TestModel;
 using BSU.Core.Tests.Mocks;
@@ -158,7 +159,7 @@ public class UserStories : LoggedTest
         var storage = model.GetStorage("test");
         storage.Load(new TestException());
 
-        Assert.NotNull(vm.ViewModel.StoragePage.Storages[0].Error);
+        Assert.NotNull(vm.ViewModel.StoragePage.Storages.Single(s => s.Name == "asdf").Error);
 
         Assert.Single(model.ErrorEvents);
         Assert.Contains("Failed to load storage", model.ErrorEvents[0].Message);
@@ -168,7 +169,7 @@ public class UserStories : LoggedTest
     [Fact]
     private void TestDownloadWithSteam()
     {
-        using var model = new TestModel.Model(new[] { "test" }, new[] { "test", "steam" });
+        using var model = new TestModel.Model(new[] { "test" }, new[] { "test" }, false);
 
         var vm = model.WaitForDialog<ViewModel.ViewModel>();
 
@@ -185,7 +186,7 @@ public class UserStories : LoggedTest
         storage.Load(Array.Empty<string>());
 
         var steam = model.GetStorage("steam");
-        steam.Load(new[] { "@mod2" }, false);
+        steam.Load(new[] { "@mod2" });
         var steamMod = steam.GetMod("@mod2");
         steamMod.Load(FileHelper.CreateFiles(2, 2), false);
 

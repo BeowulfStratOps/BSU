@@ -65,19 +65,15 @@ namespace BSU.Core.Model
         private void DoFirstStartSetup()
         {
             _logger.Info("First start setup");
-            var steamPath = SteamStorage.GetWorkshopPath();
-            if (steamPath == null)
-            {
-                _logger.Info("No steam workshop path found. not adding steam storage");
-                return;
-            }
-            _logger.Info($"Found steam at {steamPath}. Adding steam storage");
-            PersistentState.AddStorage("Steam", steamPath, "STEAM");
             PersistentState.Settings = GlobalSettings.BuildDefault();
         }
 
         public void Load()
         {
+            if (PersistentState.GetStorages().All(e => e.Item1.Type != "STEAM"))
+            {
+                PersistentState.AddStorage("Steam", "steam", "STEAM");
+            }
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
                 CreateRepository(repositoryEntry, repositoryState);
@@ -102,7 +98,7 @@ namespace BSU.Core.Model
         {
             var types = _services.Get<Types>();
             var implementation = types.GetStorageImplementation(data.Type, data.Path);
-            var storage = new Storage(implementation, data.Name, data.Path, state, _services);
+            var storage = new Storage(implementation, data.Name, state, _services);
             _storages.Add(storage);
             AddedStorage?.Invoke(storage);
             return storage;

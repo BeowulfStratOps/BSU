@@ -149,7 +149,7 @@ namespace BSU.Core.ViewModel
 
         private void HandleAdd()
         {
-            var storage = _viewModelService.AddStorage(false);
+            var storage = _viewModelService.AddStorage();
             if (storage != null)
                 AddWhenLoaded(storage);
         }

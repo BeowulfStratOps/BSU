@@ -7,7 +7,7 @@ namespace BSU.Core.ViewModel
         void NavigateToStorages();
         void NavigateToRepository(Repository repository);
         void NavigateBack();
-        IModelStorage? AddStorage(bool allowSteam);
+        IModelStorage? AddStorage();
         Repository FindVmRepo(IModelRepository repo);
     }
 }

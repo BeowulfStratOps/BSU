@@ -37,7 +37,7 @@ namespace BSU.Core.ViewModel
 
         internal Storage(IModelStorage storage, IServiceProvider serviceProvider)
         {
-            Delete = new DelegateCommand(DoDelete);
+            Delete = new DelegateCommand(DoDelete, storage.CanWrite);
             ModelStorage = storage;
             var model = serviceProvider.Get<IModel>();
             _model = model;

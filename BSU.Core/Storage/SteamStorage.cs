@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Launch;
 using BSU.CoreCommon;
-using Microsoft.Win32;
 using NLog;
 
 namespace BSU.Core.Storage
@@ -20,10 +19,17 @@ namespace BSU.Core.Storage
         private Dictionary<string, IStorageMod>? _mods;
         private readonly Task _loading;
 
-        public SteamStorage(string path)
+        public SteamStorage()
         {
-            _basePath = new DirectoryInfo(path);
-            _loading = Load(CancellationToken.None);
+            var workshopPath = GetWorkshopPath();
+            if (workshopPath == null)
+            {
+                _basePath = null!;
+                _loading = Task.FromException(new Exception("Failed to find workshop path"));
+                return;
+            }
+            _basePath = new DirectoryInfo(workshopPath);
+            _loading = Task.Run(() => Load(CancellationToken.None));
         }
 
         private Task Load(CancellationToken cancellationToken)
@@ -49,8 +55,6 @@ namespace BSU.Core.Storage
             return _mods!;
         }
 
-        public string GetLocation() => _basePath.FullName;
-
         public Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("Storage not writable");
@@ -61,9 +65,11 @@ namespace BSU.Core.Storage
             throw new InvalidOperationException("Storage not writable");
         }
 
+        public string Location() => _basePath.FullName;
+
         public bool CanWrite() => false;
 
-        public static string? GetWorkshopPath()
+        private static string? GetWorkshopPath()
         {
             var armaPath = ArmaData.GetGamePath();
             if (armaPath == null) return null;

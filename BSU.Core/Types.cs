@@ -17,7 +17,7 @@ namespace BSU.Core
             {
                 var types = new Types();
                 types.AddRepoType("BSO", url => new BsoRepo(url));
-                types.AddStorageType("STEAM", path => new SteamStorage(path));
+                types.AddStorageType("STEAM", path => new SteamStorage());
                 types.AddStorageType("DIRECTORY", path => new DirectoryStorage(path));
                 return types;
             }
@@ -44,10 +44,10 @@ namespace BSU.Core
             return create(repoUrl);
         }
 
-        internal IStorage GetStorageImplementation(string stroageType, string path)
+        internal IStorage GetStorageImplementation(string storageType, string path)
         {
-            if (!_storageTypes.TryGetValue(stroageType, out var create))
-                throw new NotSupportedException($"Repo type {stroageType} is not supported.");
+            if (!_storageTypes.TryGetValue(storageType, out var create))
+                throw new NotSupportedException($"Storage type {storageType} is not supported.");
             return create(path);
         }
 

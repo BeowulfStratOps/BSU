@@ -65,6 +65,8 @@ namespace BSU.Core.Storage
             dir.Delete(true);
         }
 
+        public string Location() => _path;
+
         public virtual bool CanWrite() => true;
     }
 }

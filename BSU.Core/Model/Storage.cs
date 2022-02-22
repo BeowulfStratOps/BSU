@@ -22,7 +22,6 @@ namespace BSU.Core.Model
         public string Name { get; }
         public bool IsDeleted { get; private set; }
         public Guid Identifier { get; }
-        public string Location { get; }
         private List<IModelStorageMod>? _mods; // TODO: use a property to block access while state is invalid
         private readonly ILogger _logger;
         private LoadingState _state = LoadingState.Loading;
@@ -32,7 +31,7 @@ namespace BSU.Core.Model
         public event Action<IModelStorage>? StateChanged;
         public event Action<IModelStorageMod>? AddedMod;
 
-        public Storage(IStorage implementation, string name, string location, IStorageState internalState, IServiceProvider services)
+        public Storage(IStorage implementation, string name, IStorageState internalState, IServiceProvider services)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
@@ -42,7 +41,6 @@ namespace BSU.Core.Model
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
-            Location = location;
             Load();
         }
 
@@ -82,7 +80,7 @@ namespace BSU.Core.Model
                 catch (DirectoryNotFoundException e)
                 {
                     _eventManager.Publish(new ErrorEvent(
-                        $"Failed to load storage {Name}, directory '{Location}' could not be found."));
+                        $"Failed to load storage {Name}, directory '{Implementation.Location()}' could not be found."));
                     _logger.Error(e);
                     State = LoadingState.Error;
                 }
@@ -125,7 +123,7 @@ namespace BSU.Core.Model
             return _mods!.Any(m => string.Equals(m.Identifier, downloadIdentifier, StringComparison.InvariantCultureIgnoreCase));
         }
 
-        public string GetLocation() => Location;
+        public string GetLocation() => Implementation.Location();
         public bool IsAvailable() => _state != LoadingState.Error;
 
         public void Delete(bool removeMods)

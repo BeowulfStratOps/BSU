@@ -57,9 +57,9 @@ namespace BSU.Core.ViewModel
             Navigator.Back();
         }
 
-        IModelStorage? IViewModelService.AddStorage(bool allowSteam)
+        IModelStorage? IViewModelService.AddStorage()
         {
-            return StoragePage.DoAddStorage(allowSteam);
+            return StoragePage.DoAddStorage();
         }
 
         Repository IViewModelService.FindVmRepo(IModelRepository repo)

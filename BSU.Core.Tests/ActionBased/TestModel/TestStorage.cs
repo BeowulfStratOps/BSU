@@ -11,18 +11,18 @@ internal class TestStorage : IStorage
     private readonly TestModelInterface _testModelInterface;
     private readonly TaskCompletionSource _loadTcs = new();
     private Dictionary<string, IStorageMod> _mods = null!;
-    private bool _canWrite;
+    private readonly bool _canWrite;
 
     public TestStorageMod GetMod(string modName) => (TestStorageMod)_mods[modName];
 
-    public TestStorage(TestModelInterface testModelInterface)
+    public TestStorage(TestModelInterface testModelInterface, bool canWrite)
     {
         _testModelInterface = testModelInterface;
+        _canWrite = canWrite;
     }
 
-    public void Load(IEnumerable<string> mods, bool canWrite = true)
+    public void Load(IEnumerable<string> mods)
     {
-        _canWrite = canWrite;
         var modsDict = new Dictionary<string, IStorageMod>();
         foreach (var modName in mods)
         {
@@ -34,6 +34,12 @@ internal class TestStorage : IStorage
             _mods = modsDict;
             _loadTcs.SetResult();
         }, true);
+    }
+
+    public void LoadEmpty()
+    {
+        _mods = new Dictionary<string, IStorageMod>();
+        _loadTcs.SetResult();
     }
 
     public void Load(Exception exception)
@@ -64,4 +70,6 @@ internal class TestStorage : IStorage
     {
         throw new NotImplementedException();
     }
+
+    public string Location() => "";
 }
