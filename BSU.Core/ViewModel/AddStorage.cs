@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
@@ -30,9 +31,8 @@ namespace BSU.Core.ViewModel
             get => _path;
             set
             {
-                if (_path == value) return;
-                _path = value;
-                ValidatePath();
+                if (SetProperty(ref _path, value) && ValidatePath())
+                    Name = new DirectoryInfo(value).Name;
             }
         }
 
@@ -41,9 +41,8 @@ namespace BSU.Core.ViewModel
             get => _name;
             set
             {
-                if (_name == value) return;
-                _name = value;
-                ValidateName();
+                if (SetProperty(ref _name, value))
+                    ValidateName();
             }
         }
 

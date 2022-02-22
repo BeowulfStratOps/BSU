@@ -14,11 +14,12 @@ namespace BSU.Core.ViewModel.Util
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
-            if (Equals(field, value)) return;
+            if (Equals(field, value)) return false;
             field = value;
             OnPropertyChanged(propertyName);
+            return true;
         }
     }
 }
