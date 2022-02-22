@@ -4,6 +4,7 @@
     {
         Normal,
         Warning,
-        Primary
+        Good,
+        Update
     }
 }

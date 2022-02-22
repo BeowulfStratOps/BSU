@@ -15,7 +15,8 @@ namespace BSU.GUI.Converters
             {
                 ColorIndication.Normal => new SolidColorBrush(Colors.Black),
                 ColorIndication.Warning => new SolidColorBrush(Colors.Orange),
-                ColorIndication.Primary => new SolidColorBrush(Colors.Green),
+                ColorIndication.Good => new SolidColorBrush(Colors.Green),
+                ColorIndication.Update => new SolidColorBrush(Colors.Blue),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

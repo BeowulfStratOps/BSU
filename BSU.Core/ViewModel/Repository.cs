@@ -49,7 +49,8 @@ namespace BSU.Core.ViewModel
                     Update.SetCanExecute(true);
                     UpdateButtonVisible = true;
                     PauseButtonVisible = false;
-                    UpdateButtonColor = ColorIndication.Primary;
+                    UpdateButtonColor = ColorIndication.Update;
+                    UpdateCheckMarkVisible = false;
 
                     Pause.SetCanExecute(false);
                     Delete.SetCanExecute(true);
@@ -64,12 +65,13 @@ namespace BSU.Core.ViewModel
                     UpdateButtonVisible = true;
                     PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
+                    UpdateCheckMarkVisible = true;
 
                     Pause.SetCanExecute(false);
                     Delete.SetCanExecute(true);
 
                     Play.SetCanExecute(true);
-                    PlayButtonColor = ColorIndication.Primary;
+                    PlayButtonColor = ColorIndication.Good;
                     break;
                 case CalculatedRepositoryStateEnum.RequiresUserIntervention:
                     Details.SetCanExecute(true);
@@ -78,6 +80,7 @@ namespace BSU.Core.ViewModel
                     UpdateButtonVisible = true;
                     PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
+                    UpdateCheckMarkVisible = false;
 
                     Pause.SetCanExecute(false);
                     Delete.SetCanExecute(true);
@@ -92,8 +95,9 @@ namespace BSU.Core.ViewModel
                     UpdateButtonVisible = false;
                     PauseButtonVisible = true;
                     UpdateButtonColor = ColorIndication.Normal;
+                    UpdateCheckMarkVisible = false;
 
-                    Pause.SetCanExecute(_cts != null && !_cts.IsCancellationRequested);
+                    Pause.SetCanExecute(_cts is { IsCancellationRequested: false });
                     Delete.SetCanExecute(false);
 
                     Play.SetCanExecute(false);
@@ -106,6 +110,7 @@ namespace BSU.Core.ViewModel
                     UpdateButtonVisible = true;
                     PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
+                    UpdateCheckMarkVisible = false;
 
                     Pause.SetCanExecute(false);
                     Delete.SetCanExecute(false);
@@ -120,6 +125,7 @@ namespace BSU.Core.ViewModel
                     UpdateButtonVisible = true;
                     PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
+                    UpdateCheckMarkVisible = true;
 
                     Pause.SetCanExecute(false);
                     Delete.SetCanExecute(true);
@@ -134,6 +140,7 @@ namespace BSU.Core.ViewModel
                     UpdateButtonVisible = true;
                     PauseButtonVisible = false;
                     UpdateButtonColor = ColorIndication.Normal;
+                    UpdateCheckMarkVisible = false;
 
                     Pause.SetCanExecute(false);
                     Delete.SetCanExecute(true);
@@ -418,7 +425,7 @@ Cancel - Do not remove this repository";
             }
         }
 
-        private ColorIndication _playButtonColor = ColorIndication.Primary;
+        private ColorIndication _playButtonColor = ColorIndication.Good;
         public ColorIndication PlayButtonColor
         {
             get => _playButtonColor;
@@ -462,6 +469,13 @@ Cancel - Do not remove this repository";
                 _pauseButtonVisible = value;
                 OnPropertyChanged();
             }
+        }
+
+        private bool _updateCheckMarkVisible = true;
+        public bool UpdateCheckMarkVisible
+        {
+            get => _updateCheckMarkVisible;
+            set => SetProperty(ref _updateCheckMarkVisible, value);
         }
 
         #endregion

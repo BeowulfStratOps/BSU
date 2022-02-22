@@ -42,8 +42,13 @@
                     </userControls:SvgButton.CommandParameter>
                 </userControls:SvgButton>
 
-                <userControls:SvgButton Width="40" Height="40" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" Visibility="{Binding UpdateButtonVisible, Converter={StaticResource CollapseConverter}}" SvgBrush="{Binding UpdateButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Update/Download" />
-                <userControls:SvgButton Width="40" Height="40" Command="{Binding Pause}" Svg="{StaticResource SvgPause}" Visibility="{Binding PauseButtonVisible, Converter={StaticResource CollapseConverter}}" ToolTip="Stop the Update. No progress is lost" />
+                <Grid>
+                    <userControls:SvgButton Width="40" Height="40" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" Visibility="{Binding UpdateButtonVisible, Converter={StaticResource CollapseConverter}}" SvgBrush="{Binding UpdateButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Update/Download" />
+                    <userControls:SvgButton Width="40" Height="40" Command="{Binding Pause}" Svg="{StaticResource SvgPause}" Visibility="{Binding PauseButtonVisible, Converter={StaticResource CollapseConverter}}" ToolTip="Stop the Update. No progress is lost" />
+                    <Viewbox Width="40" Height="40" Stretch="Fill" Visibility="{Binding UpdateCheckMarkVisible, Converter={StaticResource CollapseConverter}}">
+                        <ContentPresenter Content="{StaticResource SvgCheckmark}"></ContentPresenter>
+                    </Viewbox>
+                </Grid>
 
                 <userControls:SvgButton Width="40" Height="40" Visibility="{Binding ShowPlayButton, Converter={StaticResource CollapseConverter}}" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Arma with this Preset"/>
                 <userControls:SvgButton Width="40" Height="40" Visibility="{Binding IsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding StopPlaying}" Svg="{StaticResource SvgStop}" SvgBrush="Red" ToolTip="Close the game"/>
