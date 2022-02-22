@@ -34,14 +34,6 @@ public class UserStories : LoggedTest
             addRepoDialog.ViewModel.Ok.Execute(addRepoDialog.Closable);
         });
 
-        var presetSettings = model.WaitForDialog<PresetSettings>();
-
-        model.Do(() =>
-        {
-            presetSettings.ViewModel.UseArmaLauncher = true;
-            presetSettings.Closable.SetResult(true);
-        });
-
         var repo = model.GetRepository("test");
         repo.Load(new[] { "@mod1" });
         var repositoryMod = repo.GetMod("@mod1");
