@@ -14,7 +14,6 @@ using NLog;
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
 [assembly: InternalsVisibleTo("RealTest")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
-[assembly: SupportedOSPlatform("windows")]
 
 namespace BSU.Core
 {

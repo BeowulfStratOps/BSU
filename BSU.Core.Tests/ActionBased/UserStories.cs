@@ -164,4 +164,50 @@ public class UserStories : LoggedTest
         Assert.Contains("Failed to load storage", model.ErrorEvents[0].Message);
         model.ErrorEvents.Clear();
     }
+
+    [Fact]
+    private void TestDownloadWithSteam()
+    {
+        using var model = new TestModel.Model(new[] { "test" }, new[] { "test", "steam" });
+
+        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+
+        model.Do(() => vm.ViewModel.RepoPage.AddRepository.Execute());
+
+        var repo = model.GetRepository("test");
+        repo.Load(new[] { "@mod1", "@mod2" });
+        var repositoryMod1 = repo.GetMod("@mod1");
+        repositoryMod1.Load(FileHelper.CreateFiles(1, 1));
+        var repositoryMod2 = repo.GetMod("@mod2");
+        repositoryMod2.Load(FileHelper.CreateFiles(2, 2));
+
+        var storage = model.GetStorage("test");
+        storage.Load(Array.Empty<string>());
+
+        var steam = model.GetStorage("steam");
+        steam.Load(new[] { "@mod2" }, false);
+        var steamMod = steam.GetMod("@mod2");
+        steamMod.Load(FileHelper.CreateFiles(2, 2), false);
+
+        model.Do(() =>
+        {
+            vm.ViewModel.RepoPage.Repositories[0].ChooseDownloadLocation.Execute();
+        });
+
+        var selectRepositoryStorage = model.WaitForDialog<SelectRepositoryStorage>();
+
+        var sVm = selectRepositoryStorage.ViewModel;
+        Assert.False(sVm.IsLoading);
+        Assert.True(sVm.Ok.CanExecute(null));
+        Assert.True(sVm.ShowSteamOption);
+        Assert.True(sVm.UseSteam);
+
+        model.Do(() =>
+        {
+            sVm.UseSteam = false;
+        });
+
+        Assert.True(sVm.ShowSteamOption);
+        Assert.False(sVm.UseSteam);
+    }
 }

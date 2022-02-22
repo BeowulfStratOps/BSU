@@ -112,17 +112,17 @@ namespace BSU.Core.ViewModel
             var model = serviceProvider.Get<IModel>();
             _viewModelService = serviceProvider.Get<IViewModelService>();
 
-            TryLoad();
-            _repository.StateChanged += _ => TryLoad();
+            _repository.StateChanged += _ => TryLoad(); // TODO: memory leak!
             _eventManager = serviceProvider.Get<IEventManager>();
 
             _eventManager.Subscribe<AnythingChangedEvent>(HandleAnythingChanged);
 
             foreach (var storage in model.GetStorages())
             {
-                AddStorageToList(storage);
+                AddWhenLoaded(storage);
             }
-            model.AddedStorage += AddStorageToList;
+
+            TryLoad();
         }
 
 
@@ -139,26 +139,27 @@ namespace BSU.Core.ViewModel
 
         private void AddStorageToList(IModelStorage storage)
         {
+            if (storage.State != LoadingState.Loaded) return;
+            storage.StateChanged -= AddWhenLoaded;
             if (!storage.CanWrite || !storage.IsAvailable()) return;
-            Storages.Add(new StorageSelection(storage));
+            var storageSelection = new StorageSelection(storage);
+            Storages.Add(storageSelection);
+            Storage ??= storageSelection;
         }
 
         private void HandleAdd()
         {
             var storage = _viewModelService.AddStorage(false);
-            if (storage == null) return;
-
-            if (storage.State == LoadingState.Loaded)
-                Storage = new StorageSelection(storage);
-            else
-                storage.StateChanged += HandleAddWhenLoaded;
+            if (storage != null)
+                AddWhenLoaded(storage);
         }
 
-        private void HandleAddWhenLoaded(IModelStorage storage)
+        private void AddWhenLoaded(IModelStorage storage)
         {
-            if (storage.State != LoadingState.Loaded) return;
-            storage.StateChanged -= HandleAddWhenLoaded;
-            Storage = new StorageSelection(storage);
+            if (storage.State == LoadingState.Loaded)
+                AddStorageToList(storage);
+            else
+                storage.StateChanged += AddStorageToList;
         }
 
         private void AdjustSelection()
@@ -197,6 +198,8 @@ namespace BSU.Core.ViewModel
 
         private void TryLoad()
         {
+            if (!IsLoading) return; // only try until we succeed
+
             if (_repository.State == LoadingState.Error) throw new InvalidOperationException(); // TODO: handle properly
 
             if (_repository.State == LoadingState.Loading) return;
@@ -204,8 +207,6 @@ namespace BSU.Core.ViewModel
             var mods = _repository.GetMods();
 
             if (mods.Any(m => m.GetCurrentSelection() is ModSelectionLoading)) return;
-
-            // TODO: Unsubscribe TryLoad from events.
 
             var selections = mods.Select(m =>
             {

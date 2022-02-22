@@ -65,26 +65,6 @@ namespace BSU.Core.Storage
 
         public static string? GetWorkshopPath()
         {
-            var result = GetWorkshopPathFromSteam() ?? GetWorkshopPathFromArma();
-            return result;
-        }
-
-        private static string? GetWorkshopPathFromSteam()
-        {
-            var path = (string?)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath", null);
-            if (path == null)
-            {
-                LogManager.GetCurrentClassLogger().Error("Couldn't find steam install path");
-                return null;
-            }
-            path = Path.Join(path, "steamapps", "workshop", "content", "107410");
-            if (Directory.Exists(path)) return path;
-            LogManager.GetCurrentClassLogger().Error($"Couldn't find arma workshop path. Tried {path}");
-            return null;
-        }
-
-        private static string? GetWorkshopPathFromArma()
-        {
             var armaPath = ArmaData.GetGamePath();
             if (armaPath == null) return null;
 

@@ -11,6 +11,7 @@ internal class TestStorage : IStorage
     private readonly TestModelInterface _testModelInterface;
     private readonly TaskCompletionSource _loadTcs = new();
     private Dictionary<string, IStorageMod> _mods = null!;
+    private bool _canWrite;
 
     public TestStorageMod GetMod(string modName) => (TestStorageMod)_mods[modName];
 
@@ -19,8 +20,9 @@ internal class TestStorage : IStorage
         _testModelInterface = testModelInterface;
     }
 
-    public void Load(IEnumerable<string> mods)
+    public void Load(IEnumerable<string> mods, bool canWrite = true)
     {
+        _canWrite = canWrite;
         var modsDict = new Dictionary<string, IStorageMod>();
         foreach (var modName in mods)
         {
@@ -42,7 +44,7 @@ internal class TestStorage : IStorage
         }, true);
     }
 
-    public bool CanWrite() => true;
+    public bool CanWrite() => _canWrite;
 
     public async Task<Dictionary<string, IStorageMod>> GetMods(CancellationToken cancellationToken)
     {
