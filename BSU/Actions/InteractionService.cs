@@ -1,9 +1,11 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using BSU.Core.ViewModel;
 using BSU.GUI.Dialogs;
 
 namespace BSU.GUI.Actions
 {
+
     public class InteractionService : IInteractionService
     {
         private readonly Window _owner;
@@ -11,6 +13,18 @@ namespace BSU.GUI.Actions
         public InteractionService(Window owner)
         {
             _owner = owner;
+        }
+
+        private static MessageBoxImage MessageImageToMessageBoxImage(MessageImage image)
+        {
+            return image switch
+            {
+                MessageImage.Question => MessageBoxImage.Question,
+                MessageImage.Error => MessageBoxImage.Error,
+                MessageImage.Warning => MessageBoxImage.Warning,
+                MessageImage.Success => MessageBoxImage.None,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         public bool AddRepository(AddRepository viewModel)
@@ -23,14 +37,14 @@ namespace BSU.GUI.Actions
             return (bool)new AddStorageDialog(viewModel).ShowDialog()!;
         }
 
-        public void MessagePopup(string message, string title)
+        public void MessagePopup(string message, string title, MessageImage image)
         {
-            MessageBox.Show(_owner, message, title, MessageBoxButton.OK);
+            MessageBox.Show(_owner, message, title, MessageBoxButton.OK, MessageImageToMessageBoxImage(image));
         }
 
-        public bool? YesNoCancelPopup(string message, string title)
+        public bool? YesNoCancelPopup(string message, string title, MessageImage image)
         {
-            var q = MessageBox.Show(_owner, message, title, MessageBoxButton.YesNoCancel);
+            var q = MessageBox.Show(_owner, message, title, MessageBoxButton.YesNoCancel, MessageImageToMessageBoxImage(image));
             if (q == MessageBoxResult.Cancel)
             {
                 return null;
@@ -38,9 +52,9 @@ namespace BSU.GUI.Actions
             return q == MessageBoxResult.Yes;
         }
 
-        public bool YesNoPopup(string message, string title)
+        public bool YesNoPopup(string message, string title, MessageImage image)
         {
-            var q = MessageBox.Show(_owner, message, title, MessageBoxButton.YesNo);
+            var q = MessageBox.Show(_owner, message, title, MessageBoxButton.YesNo, MessageImageToMessageBoxImage(image));
             return q == MessageBoxResult.Yes;
         }
 

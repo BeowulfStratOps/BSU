@@ -28,7 +28,7 @@ namespace BSU.Core.Services
                 var deleted = currentSelection is ModSelectionDownload download && download.DownloadStorage.IsDeleted ||
                               currentSelection is ModSelectionStorageMod storageMod && storageMod.StorageMod.IsDeleted;
 
-                if (currentSelection is not ModSelectionNone and not ModSelectionLoading and not ModSelectionDownload && !deleted) continue;
+                if (currentSelection is not ModSelectionNone and not ModSelectionLoading && !deleted) continue;
                 var selection = GetSelection(mod);
                 mod.SetSelection(selection);
             }

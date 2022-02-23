@@ -79,13 +79,13 @@ Yes - Delete mods in on this storage
 No - Keep mods
 Cancel - Do not remove this storage";
 
-            var removeMods =  _interactionService.YesNoCancelPopup(text, "Remove Storage");
+            var removeMods =  _interactionService.YesNoCancelPopup(text, "Remove Storage", MessageImage.Question);
             if (removeMods == null) return;
 
 
             if (removeMods == true)
             {
-                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported");
+                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImage.Error);
                 return;
             }
 

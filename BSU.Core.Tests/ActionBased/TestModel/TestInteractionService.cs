@@ -23,14 +23,14 @@ internal class TestInteractionService : IInteractionService
     public bool AddRepository(AddRepository viewModel) => (bool)Handle(viewModel, new TestClosable())!;
     public bool AddStorage(AddStorage viewModel) => (bool)Handle(viewModel, new TestClosable())!;
 
-    public void MessagePopup(string message, string title) => Handle(new MessagePopupDto(message, title));
+    public void MessagePopup(string message, string title, MessageImage image) => Handle(new MessagePopupDto(message, title));
 
-    public bool? YesNoCancelPopup(string message, string title)
+    public bool? YesNoCancelPopup(string message, string title, MessageImage image)
     {
         throw new NotImplementedException();
     }
 
-    public bool YesNoPopup(string message, string title)
+    public bool YesNoPopup(string message, string title, MessageImage image)
     {
         throw new NotImplementedException();
     }

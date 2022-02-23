@@ -274,7 +274,7 @@ namespace BSU.Core.ViewModel
             if (warningMessage != null)
             {
                 warningMessage += " Are your sure you want to launch the game?";
-                var goAhead = _interactionService.YesNoPopup(warningMessage, "Launch Game");
+                var goAhead = _interactionService.YesNoPopup(warningMessage, "Launch Game", MessageImage.Warning);
                 if (!goAhead) return;
             }
 
@@ -303,7 +303,7 @@ namespace BSU.Core.ViewModel
             }
             else
             {
-                _interactionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch");
+                _interactionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch", MessageImage.Error);
             }
         }
 
@@ -329,12 +329,12 @@ Yes - Delete mods if they are not in use by any other repository
 No - Keep local mods
 Cancel - Do not remove this repository";
 
-            var removeData = _interactionService.YesNoCancelPopup(text, "Remove Repository");
+            var removeData = _interactionService.YesNoCancelPopup(text, "Remove Repository", MessageImage.Question);
             if (removeData == null) return;
 
             if (removeData == true)
             {
-                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported");
+                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImage.Error);
                 return;
             }
 
@@ -364,7 +364,7 @@ Cancel - Do not remove this repository";
 
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {
-                    _interactionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete");
+                    _interactionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete", MessageImage.Success);
                     return;
                 }
 
@@ -379,7 +379,7 @@ Cancel - Do not remove this repository";
                     updatedText += "\nFailed due to unknown reason (see logs): " + string.Join(", ",
                         updateStats.Failed.Select(s => $"{s.ParentStorage.Name}/{s.Identifier}"));
                 }
-                _interactionService.MessagePopup(updatedText, "Update finished");
+                _interactionService.MessagePopup(updatedText, "Update finished", MessageImage.Success);
             }
             catch (OperationCanceledException)
             {
