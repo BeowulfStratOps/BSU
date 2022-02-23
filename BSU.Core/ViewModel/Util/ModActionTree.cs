@@ -42,6 +42,17 @@ namespace BSU.Core.ViewModel.Util
 
         public DelegateCommand Open { get; }
 
+        private bool _canOpen = true;
+        public bool CanOpen
+        {
+            get => _canOpen;
+            set
+            {
+                if (SetProperty(ref _canOpen, value))
+                    Open.SetCanExecute(value);
+            }
+        }
+
         internal ModActionTree(IModelRepositoryMod repoMod, IModel model)
         {
             _repoMod = repoMod;
@@ -71,7 +82,7 @@ namespace BSU.Core.ViewModel.Util
                     var action = new SelectMod(mod, actionType);
                     var isSelected = _repoMod.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
                                      storageMod.StorageMod == mod;
-                    var enabled = storage.CanWrite || actionType == ModActionEnum.Use;
+                    var enabled = (storage.CanWrite && actionType != ModActionEnum.Loading) || actionType == ModActionEnum.Use;
                     actions.Add(new SelectableModAction(action, SetSelection, isSelected, enabled));
                 }
 

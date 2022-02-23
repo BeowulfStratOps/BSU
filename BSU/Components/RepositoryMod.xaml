@@ -27,6 +27,8 @@
             <converters:CollapseConverter x:Key="CollapseConverter" />
             <converters:ByteSizeConverter x:Key="ByteSize" />
             <converters:ActionToColorConverter x:Key="ActionToColor" />
+            <converters:EnableToColorConverter x:Key="EnableToColorConverter" />
+            <converters:ButtonEnabledToCursorConverter  x:Key="ButtonEnabledToCursorConverter" />
         </Border.Resources>
         <StackPanel Orientation="Vertical">
             <Grid HorizontalAlignment="Stretch">
@@ -55,7 +57,7 @@
                     <DockPanel x:Name="ComboBoxSelected">
                         <userControls:SvgButton DockPanel.Dock="Right" Width="15" Height="15" Command="{Binding Actions.Open}" Svg="{StaticResource SvgComboOpen}" ToolTip="Show available Download Locations"/>
 
-                        <ContentControl Content="{Binding Actions.Selection}" MouseLeftButtonDown="SelectedMouseDown" MouseLeftButtonUp="SelectedMouseUp" Cursor="Hand">
+                        <ContentControl Foreground="{Binding Actions.CanOpen, Converter={StaticResource EnableToColorConverter}}" Content="{Binding Actions.Selection}" MouseLeftButtonDown="SelectedMouseDown" MouseLeftButtonUp="SelectedMouseUp" Cursor="{Binding Actions.CanOpen, Converter={StaticResource ButtonEnabledToCursorConverter}}">
                             <ContentControl.Resources>
                                 <DataTemplate DataType="{x:Type viewModel:SelectDisabled}">
                                     <TextBlock>Disabled</TextBlock>

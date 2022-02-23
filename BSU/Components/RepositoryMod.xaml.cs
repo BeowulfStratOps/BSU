@@ -19,8 +19,8 @@ namespace BSU.GUI.Components
         private void SelectedMouseUp(object sender, MouseButtonEventArgs e)
         {
             var repoMod = (Core.ViewModel.RepositoryMod)DataContext;
-            _registeredMouseDown = false;
             if (!_registeredMouseDown) return;
+            _registeredMouseDown = false;
             if (!repoMod.Actions.Open.CanExecute(null)) return;
             repoMod.Actions.Open.Execute(null);
         }

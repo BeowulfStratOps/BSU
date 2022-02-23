@@ -348,7 +348,7 @@ Cancel - Do not remove this repository";
             _cts = new CancellationTokenSource();
             foreach (var mod in Mods)
             {
-                mod.Actions.Open.SetCanExecute(false);
+                mod.Actions.CanOpen = false;
             }
 
             try
@@ -388,7 +388,7 @@ Cancel - Do not remove this repository";
             {
                 foreach (var mod in Mods)
                 {
-                    mod.Actions.Open.SetCanExecute(true);
+                    mod.Actions.CanOpen = true;
                 }
             }
         }

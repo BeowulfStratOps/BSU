@@ -70,7 +70,7 @@ internal class PresetGeneratorService
 
                 // TODO: check if the launcher was open. can skip the re-start bit otherwise
                 // TODO: don't really need to restart if it already existed / folders were watched.
-                _eventManager.Publish(new NotificationEvent($"Arma Launcher Preset '{presetName}' was created. You might have to re-start the launcher."));
+                _eventManager.Publish(new NotificationEvent($"Arma Launcher Preset was created. You might have to re-start the launcher."));
             }
             catch (Exception e)
             {
