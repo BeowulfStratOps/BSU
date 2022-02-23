@@ -7,7 +7,7 @@
         xmlns:gui="clr-namespace:BSU.GUI"
         xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
         mc:Ignorable="d"
-        Title="Beowulf Sync Utility" Height="450" Width="800" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
+        Title="Beowulf Sync Utility" Height="450" Width="600" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
         WindowState="Normal"
         MouseDown="OnMouseDown">
     <Window.TaskbarItemInfo>

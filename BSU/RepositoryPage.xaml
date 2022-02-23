@@ -9,7 +9,7 @@
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="700" d:DataContext="{d:DesignInstance viewModel:Repository}">
+             d:DesignHeight="300" d:DesignWidth="600" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <DockPanel>
         <DockPanel.Resources>
             <converters:ColorIndicationConverter x:Key="ColorConverter" />
