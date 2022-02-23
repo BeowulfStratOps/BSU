@@ -80,7 +80,7 @@ public class UserStories : LoggedTest
 
         repositoryMod.FinishUpdate();
 
-        var popup = model.WaitForDialog<TestInteractionService.MessagePopupDto>(2000);
+        var popup = model.WaitForDialog<TestInteractionService.MessagePopupDto>(60000);
         model.Do(() => popup.Closable.SetResult(null));
 
         model.WaitFor(500, () => !repoVm.UpdateProgress.Active);
