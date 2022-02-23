@@ -36,7 +36,10 @@ namespace BSU.GUI
                 var vm = core.GetViewModel();
                 void ShowUpdateNotification(string message)
                 {
-                    vm.AddNotification(new NotificationEvent("BSU has been updated. Please restart it."));
+                    dispatcher.ExecuteSynchronized(() =>
+                    {
+                        vm.AddNotification(new NotificationEvent(message));
+                    });
                 }
                 UpdateHelper.Update(ShowUpdateNotification);
                 mainWindow.DataContext = vm;

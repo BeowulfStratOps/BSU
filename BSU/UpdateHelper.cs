@@ -34,7 +34,7 @@ internal static class UpdateHelper
         var updates = await mgr.CheckForUpdate();
         if (!updates.ReleasesToApply.Any())
             return;
-        showUpdateNotification("Downloading and installing new BSU version...");
+        showUpdateNotification("Downloading and installing a new BSU version...");
         await mgr.UpdateApp();
         showUpdateNotification("Updated BSU. Please restart.");
     }
