@@ -37,7 +37,7 @@ public static class ArmaLauncher
                 await WriteLocal(local);
             var preset = await ReadPreset(presetName);
 
-            if (CheckLocalIsUpToData(local, modFolders) && preset != null && CheckPresetIsUpToDate(preset, modFolders, dlcIds))
+            if (CheckLocalIsUpToDate(local, modFolders) && preset != null && CheckPresetIsUpToDate(preset, modFolders, steamMods, dlcIds))
                 return false;
 
             UpdateLocal(modFolders, local);
@@ -65,13 +65,15 @@ public static class ArmaLauncher
         return true;
     }
 
-    private static bool CheckPresetIsUpToDate(Preset2 preset, List<string> modFolders, List<string> dlcIds)
+    private static bool CheckPresetIsUpToDate(Preset2 preset, List<string> modFolders, List<string> steamMods, List<string> dlcIds)
     {
+        var expectedPublishedIds = modFolders.Select(ModFolderToPublishedId)
+            .Union(steamMods.Select(SteamModToPublishedId)).ToHashSet();
         return dlcIds.ToHashSet().SetEquals(preset.DlcIds) &&
-               modFolders.Select(ModFolderToPublishedId).ToHashSet().SetEquals(preset.PublishedId);
+               expectedPublishedIds.SetEquals(preset.PublishedId);
     }
 
-    private static bool CheckLocalIsUpToData(Local local, List<string> modFolders)
+    private static bool CheckLocalIsUpToDate(Local local, List<string> modFolders)
     {
         return !modFolders.Except(local.KnownLocalMods, StringComparer.InvariantCultureIgnoreCase).Any() &&
                !modFolders.Except(local.UserDirectories, StringComparer.InvariantCultureIgnoreCase).Any();
@@ -134,7 +136,7 @@ public static class ArmaLauncher
     private static async Task<Local> ReadLocal()
     {
         var localPath = Path.Combine(LauncherDirectory, "Local.json");
-        Logger.Info($"Reading local.json from {localPath}");
+        Logger.Debug($"Reading local.json from {localPath}");
 
         if (!File.Exists(localPath))
         {
