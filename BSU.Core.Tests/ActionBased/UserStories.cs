@@ -86,6 +86,8 @@ public class UserStories : LoggedTest
         model.WaitFor(500, () => !repoVm.UpdateProgress.Active);
 
         FileHelper.AssertFileEquality(repositoryMod.Files, storageMod.Files);
+
+        model.CheckErrorEvents();
     }
 
     [Fact]
