@@ -223,7 +223,7 @@ namespace BSU.BSO
                 if (seed != null)
                     await seed.DisposeAsync();
                 await fileStream.DisposeAsync();
-                _logger.Error(e, $"Error while syncing {path}");
+                _logger.Error(e, $"Error while syncing {_url} / {path}");
                 throw;
             }
         }
