@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;

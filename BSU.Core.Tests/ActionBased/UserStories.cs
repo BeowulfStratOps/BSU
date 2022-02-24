@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using BSU.Core.Model;
 using BSU.Core.Tests.ActionBased.TestModel;
 using BSU.Core.Tests.Mocks;

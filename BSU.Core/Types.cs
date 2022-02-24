@@ -17,7 +17,7 @@ namespace BSU.Core
             {
                 var types = new Types();
                 types.AddRepoType("BSO", url => new BsoRepo(url));
-                types.AddStorageType("STEAM", path => new SteamStorage());
+                types.AddStorageType("STEAM", _ => new SteamStorage());
                 types.AddStorageType("DIRECTORY", path => new DirectoryStorage(path));
                 return types;
             }

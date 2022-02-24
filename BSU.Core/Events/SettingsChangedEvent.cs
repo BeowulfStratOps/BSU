@@ -1,3 +1,3 @@
 ﻿namespace BSU.Core.Events;
 
-internal record SettingsChangedEvent();
+internal record SettingsChangedEvent;

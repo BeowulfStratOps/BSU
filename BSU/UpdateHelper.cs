@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
-using NLog.Fluent;
 using Squirrel;
 
 namespace BSU.GUI;
@@ -59,7 +58,7 @@ internal static class UpdateHelper
             Logger.Error($"Tried to create a shortcut for assembly {entryAssembly.FullName}. Aborting");
             throw new InvalidOperationException();
         }
-        return Path.GetFileName(entryAssembly!.Location);
+        return Path.GetFileName(entryAssembly.Location);
     }
 
     public static void Update(Action<string> showUpdateNotification)

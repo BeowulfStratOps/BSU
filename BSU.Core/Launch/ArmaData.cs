@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using NLog;
 
@@ -39,6 +40,8 @@ public static class ArmaData
 
     public static string? GetGamePath()
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) throw new NotSupportedException();
+
         // TODO: fails if the game was never started. Could check steam libraries in that case
         var localKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
         var localValue = localKey.OpenSubKey(@"SOFTWARE\Bohemia Interactive\ArmA 3")?.GetValue("main");

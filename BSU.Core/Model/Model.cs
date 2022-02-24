@@ -8,7 +8,6 @@ using BSU.Core.Ioc;
 using BSU.Core.Launch;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
-using BSU.Core.Storage;
 using BSU.CoreCommon;
 using NLog;
 

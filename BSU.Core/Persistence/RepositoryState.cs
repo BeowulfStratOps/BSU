@@ -1,5 +1,4 @@
 ﻿using System;
-using BSU.Core.Launch;
 
 namespace BSU.Core.Persistence
 {
