@@ -88,10 +88,16 @@ namespace BSU.Core.Services
                 selected.GetState() == StorageModStateEnum.Loading) return false;
 
             if (otherMod.GetVersionHash().IsMatch(origin.GetVersionHash()))
-                return false; // can't possibly be a conflict
+                return false; // that's fine, won't break anything
 
-            // matches, but different target version -> conflict
-            return otherMod.GetMatchHash().IsMatch(selected.GetMatchHash());
+            if (!otherMod.GetMatchHash().IsMatch(selected.GetMatchHash()))
+                return false; // unrelated mod, we don't care
+
+            var actionType = GetModAction(origin, selected);
+
+            if (actionType == ModActionEnum.Use) return false; // not our problem. only show conflict when we're trying to change something
+
+            return true;
         }
 
         // TODO: create tests

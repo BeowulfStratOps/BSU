@@ -54,10 +54,24 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         [Fact]
-        private void SingleUse_AllLoaded_Conflict()
+        private void SingleUse_AllLoaded_Conflict_Use()
         {
             var repoMod = new MockModelRepositoryMod(1, 1);
             var storageMod = FromAction(ModActionEnum.Use);
+
+            var conflict = new MockModelRepositoryMod(1, 3);
+            conflict.SetSelection(new ModSelectionStorageMod(storageMod));
+
+            var result = AutoSelect(repoMod, new[] { conflict }, storageMod);
+
+            Assert.Equal(storageMod, result);
+        }
+
+        [Fact]
+        private void SingleUse_AllLoaded_Conflict_Update()
+        {
+            var repoMod = new MockModelRepositoryMod(1, 1);
+            var storageMod = FromAction(ModActionEnum.Update);
 
             var conflict = new MockModelRepositoryMod(1, 3);
             conflict.SetSelection(new ModSelectionStorageMod(storageMod));
