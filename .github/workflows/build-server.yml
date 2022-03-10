@@ -1,4 +1,4 @@
-name: build-and-publish
+name: Build Server
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: build server
+    name: Build Server
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
