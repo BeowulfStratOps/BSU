@@ -1,0 +1,38 @@
+name: build-and-publish
+
+on:
+  push:
+    tags:        
+      - '*'
+
+jobs:
+  build:
+    name: build server
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Set csproj version
+      run: (Get-Content BSU/BSU.Server.csproj).replace('<Version>0.0.0.0</Version>', '<Version>'+$env:GITHUB_REF_NAME+'.0</Version>') | Set-Content BSU/BSU.Server.csproj
+    - name: Build
+      run: dotnet build --configuration Release --no-restore BSU.Server
+    - name: Publish Windows
+      run: dotnet publish -c Release -o publish_win BSU.Server --self-contained -r win-x64
+    - name: Publish Linux
+    run: dotnet publish -c Release -o publish_linux BSU.Server --self-contained -r linux-x64
+    - name: upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: BSU.Server-Windows.exe
+        path: publish_win/BSU.Server.exe
+    - name: upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: BSU.Server-Linux.exe
+        path: publish_linux/BSU.Server.exe
+
