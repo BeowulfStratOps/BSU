@@ -15,12 +15,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
-    - name: Install dependencies
-      run: dotnet restore BSU.Server
     - name: Set csproj version
       run: sed -i "s,<Version>0.0.0.0</Version>,<Version>$GITHUB_REF_NAME.0</Version>,g" BSU.Server/BSU.Server.csproj
-    - name: Build
-      run: dotnet build --configuration Release --no-restore BSU.Server
     - name: Publish Windows
       run: dotnet publish -c Release -o publish_win BSU.Server --self-contained -r win-x64
     - name: Publish Linux
