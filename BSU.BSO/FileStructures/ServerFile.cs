@@ -42,17 +42,5 @@ namespace BSU.BSO.FileStructures
         }
     }
 
-    public class ModFolder
-    {
-        public string ModName { get; set; } = null!;
-
-        public ModFolder(string modName)
-        {
-            ModName = modName;
-        }
-
-        public ModFolder()
-        {
-        }
-    }
+    public record ModFolder(string ModName);
 }

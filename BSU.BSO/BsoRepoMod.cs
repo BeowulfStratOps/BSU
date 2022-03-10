@@ -64,7 +64,7 @@ namespace BSU.BSO
 
         private string? GetRealPath(string path) => GetFileEntry(path)?.FileName;
 
-        private HashType? GetFileEntry(string path) =>
+        private BsoFileHash? GetFileEntry(string path) =>
             _hashFile?.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
         public BsoRepoMod(string url)

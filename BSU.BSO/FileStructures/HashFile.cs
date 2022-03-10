@@ -11,13 +11,13 @@ namespace BSU.BSO.FileStructures
     public class HashFile
     {
         [JsonProperty] public string FolderName { get; set; } = null!;
-        [JsonProperty] public List<HashType> Hashes { get; set; } = null!;
+        [JsonProperty] public List<BsoFileHash> Hashes { get; set; } = null!;
 
         public HashFile()
         {
         }
 
-        public HashFile(string folderName, List<HashType> hashes)
+        public HashFile(string folderName, List<BsoFileHash> hashes)
         {
             Hashes = hashes;
             FolderName = folderName;
@@ -27,26 +27,5 @@ namespace BSU.BSO.FileStructures
     /// <summary>
     /// Single file hash. For serialization.
     /// </summary>
-    public class HashType
-    {
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// Pbo / SHA1 hash
-        /// </summary>
-        public byte[] Hash { get; set; }
-        public ulong FileSize { get; set; }
-
-        public HashType(string fileName, byte[] hash, ulong fileSize)
-        {
-            FileName = fileName;
-            Hash = hash;
-            FileSize = fileSize;
-        }
-
-        public override string ToString()
-        {
-            return "Hash: " + FileName;
-        }
-    }
+    public record BsoFileHash(string FileName, byte[] Hash, ulong FileSize);
 }
