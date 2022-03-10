@@ -2,7 +2,7 @@ name: build-and-publish
 
 on:
   push:
-    tags:        
+    branches:        
       - '*'
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore BSU.Server
     - name: Set csproj version
       run: (Get-Content BSU/BSU.Server.csproj).replace('<Version>0.0.0.0</Version>', '<Version>'+$env:GITHUB_REF_NAME+'.0</Version>') | Set-Content BSU/BSU.Server.csproj
     - name: Build
