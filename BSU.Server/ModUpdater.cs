@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.BSO.FileStructures;
 using BSU.Hashes;
 using BSU.Server.FileActions;
@@ -14,7 +15,7 @@ public static class ModUpdater
 {
     private record FileHash(byte[] Hash, ulong FileSize);
 
-    public static void UpdateMod(DirectoryInfo source, DirectoryInfo destination, bool dryRun)
+    public static void UpdateMod(DirectoryInfo source, DirectoryInfo destination, bool dryRun, int? zsyncThreads)
     {
         Console.WriteLine($"Working on mod {source.Name}");
 
@@ -43,10 +44,12 @@ public static class ModUpdater
         var copyDeleteTime = DateTime.Now - startCopyDelete;
 
         var startZsync = DateTime.Now;
-        foreach (var action in fileActions.OfType<ZsyncMakeAction>())
-        {
-            action.Do(source, destination, dryRun);
-        }
+        var options = new ParallelOptions();
+        if (zsyncThreads != null) options.MaxDegreeOfParallelism = (int)zsyncThreads;
+        Parallel.ForEach(
+            fileActions.OfType<ZsyncMakeAction>(),
+            options,
+            action => action.Do(source, destination, dryRun));
         var zsyncTime = DateTime.Now - startZsync;
 
         Console.WriteLine($"Copy/Delete took {copyDeleteTime.TotalSeconds:F1}s");

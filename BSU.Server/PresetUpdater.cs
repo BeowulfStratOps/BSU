@@ -39,7 +39,7 @@ public static class PresetUpdater
 
         foreach (var (sourcePath, destinationPath) in modUpdates)
         {
-            ModUpdater.UpdateMod(sourcePath, destinationPath, dryRun);
+            ModUpdater.UpdateMod(sourcePath, destinationPath, dryRun, config.ZsyncThreads);
         }
 
         var serverFile = BuildServerFile(config);
