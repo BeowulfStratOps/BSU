@@ -2,7 +2,7 @@ name: Build Server
 
 on:
   push:
-    branches:        
+    tags:        
       - '*'
 
 jobs:
