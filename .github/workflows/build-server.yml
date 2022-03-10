@@ -24,7 +24,7 @@ jobs:
     - name: Publish Windows
       run: dotnet publish -c Release -o publish_win BSU.Server --self-contained -r win-x64
     - name: Publish Linux
-    run: dotnet publish -c Release -o publish_linux BSU.Server --self-contained -r linux-x64
+      run: dotnet publish -c Release -o publish_linux BSU.Server --self-contained -r linux-x64
     - name: upload artifact
       uses: actions/upload-artifact@v3
       with:
