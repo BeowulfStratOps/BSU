@@ -56,8 +56,11 @@ public static class PresetUpdater
         return new ServerFile
         {
             Dlcs = config.DlcIds,
-            ModFolders = config.ModList.Select(name => new ModFolder(name)).ToList()
-            // TODO
+            ModFolders = config.ModList.Select(name => new ModFolder(name)).ToList(),
+            Password = config.ServerPassword,
+            ServerAddress = config.ServerAddress,
+            ServerName = config.PresetName,
+            ServerPort = config.ServerPort
         };
     }
 }

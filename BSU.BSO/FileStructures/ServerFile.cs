@@ -21,25 +21,6 @@ namespace BSU.BSO.FileStructures
         [JsonProperty] public List<ModFolder> ModFolders { get; set; } = null!;
 
         [JsonProperty] public List<string>? Dlcs { get; set; }
-
-        public ServerFile(string serverName, string serverAddress, ushort serverPort, string password,
-            List<ModFolder> modFolders, DateTime lastUpdate, DateTime creationDate, Guid serverGuid, List<Uri> syncUris, List<string> dlcs)
-        {
-            ServerAddress = serverAddress;
-            ServerName = serverName;
-            Password = password;
-            ServerPort = serverPort;
-            ModFolders = modFolders;
-            CreationDate = creationDate;
-            ServerGuid = serverGuid;
-            SyncUris = syncUris;
-            LastUpdateDate = lastUpdate;
-            Dlcs = dlcs;
-        }
-
-        public ServerFile()
-        {
-        }
     }
 
     public record ModFolder(string ModName);
