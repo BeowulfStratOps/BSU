@@ -6,8 +6,9 @@
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
         xmlns:gui="clr-namespace:BSU.GUI"
         xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
+        xmlns:components="clr-namespace:BSU.GUI.Components"
         mc:Ignorable="d"
-        Title="Beowulf Sync Utility" Height="450" Width="600" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
+        Title="BSU" Height="450" Width="600" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
         WindowState="Normal"
         Style="{StaticResource MetroWindowStyle}"
         MouseDown="OnMouseDown">
@@ -40,17 +41,9 @@
             </Border>
         </DataTemplate>
     </Window.Resources>
-    <DockPanel>
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_Help">
-                <MenuItem Header="_Show Logs" Click="ShowLogs_Click"></MenuItem>
-                <MenuItem Header="_About" Click="About_Click"></MenuItem>
-            </MenuItem>
-            <MenuItem Header="_Settings" Click="Settings_Click"></MenuItem>
-        </Menu>
-        <Grid>
-            <ContentControl Content="{Binding Navigator.Content}"></ContentControl>
-            <ItemsControl VerticalAlignment="Bottom" ItemsSource="{Binding Notifications}" />
-        </Grid>
-    </DockPanel>
+
+    <Grid>
+        <ContentControl Content="{Binding Navigator.Content}"></ContentControl>
+        <ItemsControl VerticalAlignment="Bottom" ItemsSource="{Binding Notifications}" />
+    </Grid>
 </Window>

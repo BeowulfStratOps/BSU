@@ -2,7 +2,8 @@
 
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:resources="clr-namespace:BSU.GUI.Resources">
+                    xmlns:resources="clr-namespace:BSU.GUI.Resources"
+                    xmlns:gui="clr-namespace:BSU.GUI">
     <BooleanToVisibilityConverter x:Key="Bool2VisibilityConverter" />
 
     <Style x:Key="WindowButtonStyle" TargetType="{x:Type Button}">
@@ -73,12 +74,12 @@
         </Setter>
     </Style>
 
-    <Style x:Key="MetroWindowStyle" TargetType="Window">
+    <Style x:Key="MetroWindowStyle" TargetType="gui:MainWindow">
         <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="Window">
+                <ControlTemplate TargetType="gui:MainWindow">
                     <Border x:Name="WindowBorder" Margin="{Binding Source={x:Static SystemParameters.WindowNonClientFrameThickness}}" Background="{StaticResource WindowBackgroundColorBrush}">
                         <Grid>
                             <Border BorderThickness="1">
@@ -122,8 +123,9 @@
                                         </Button>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True" Grid.Row="0">
-                                        <Image Width="20" Height="20" Margin="5 0" Source="{resources:AppIcon}"></Image>
-                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 -1 0 0"  FontSize="12"  Foreground="{TemplateBinding Foreground}"/>
+                                        <Image Width="20" Height="20" Margin="5 0" Source="{resources:AppIcon}" IsHitTestVisible="False"></Image>
+                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 -1 0 0" FontSize="14" FontWeight="SemiBold" Foreground="{TemplateBinding Foreground}" IsHitTestVisible="False"/>
+                                        <ContentPresenter Content="{TemplateBinding TitleBarContent}"></ContentPresenter>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -150,5 +152,4 @@
             </Setter.Value>
         </Setter>
     </Style>
-
 </ResourceDictionary>

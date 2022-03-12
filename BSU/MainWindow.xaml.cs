@@ -1,10 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using BSU.Core.ViewModel;
-using BSU.GUI.Dialogs;
+using BSU.GUI.Components;
 
 namespace BSU.GUI
 {
@@ -15,9 +12,11 @@ namespace BSU.GUI
     {
         public MainWindow()
         {
+            TitleBarContent = new Menu(); // no idea how to this from xaml
+
             CommandBindings.Add(new CommandBinding(SystemCommands.CloseWindowCommand, OnCloseWindow));
             CommandBindings.Add(new CommandBinding(SystemCommands.MaximizeWindowCommand, OnMaximizeWindow, OnCanResizeWindow));
-            CommandBindings.Add(new CommandBinding(SystemCommands.MinimizeWindowCommand, this.OnMinimizeWindow, OnCanMinimizeWindow));
+            CommandBindings.Add(new CommandBinding(SystemCommands.MinimizeWindowCommand, OnMinimizeWindow, OnCanMinimizeWindow));
             CommandBindings.Add(new CommandBinding(SystemCommands.RestoreWindowCommand, OnRestoreWindow, OnCanResizeWindow));
             InitializeComponent();
         }
@@ -52,15 +51,13 @@ namespace BSU.GUI
             SystemCommands.RestoreWindow(this);
         }
 
-        private void ShowLogs_Click(object sender, RoutedEventArgs e)
-        {
-            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
-            Process.Start("explorer.exe", logPath);
-        }
+        public static readonly DependencyProperty TitleBarContentProperty =
+            DependencyProperty.Register("TitleBarContent", typeof(object), typeof(MainWindow), null);
 
-        private void About_Click(object sender, RoutedEventArgs e)
+        public object TitleBarContent
         {
-            new AboutDialog().ShowDialog();
+            get => GetValue(TitleBarContentProperty);
+            set => SetValue(TitleBarContentProperty, value);
         }
 
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -74,12 +71,6 @@ namespace BSU.GUI
                     ((ViewModel)DataContext).Navigator.Forward();
                     break;
             }
-        }
-
-        private void Settings_Click(object sender, RoutedEventArgs e)
-        {
-            var vm = (ViewModel)DataContext;
-            vm.Settings.Execute(null);
         }
     }
 }
