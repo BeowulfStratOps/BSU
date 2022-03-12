@@ -24,6 +24,7 @@ Print empty config:   ./BSU.Server template");
     public static int Main(string[] args)
     {
         var dryRun = false;
+        string configPath;
 
         switch (args.Length)
         {
@@ -31,16 +32,16 @@ Print empty config:   ./BSU.Server template");
                 PrintEmptyConfig();
                 return 0;
             case 1:
+                configPath = args[0];
                 break;
             case 2 when args[0].ToLowerInvariant() == "dryrun":
+                configPath = args[1];
                 dryRun = true;
                 break;
             default:
                 PrintUsage();
                 return 1;
         }
-
-        var configPath = args[^1];
 
         PresetConfig config;
         try
