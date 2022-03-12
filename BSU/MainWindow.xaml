@@ -9,6 +9,7 @@
         mc:Ignorable="d"
         Title="Beowulf Sync Utility" Height="450" Width="600" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
         WindowState="Normal"
+        Style="{StaticResource MetroWindowStyle}"
         MouseDown="OnMouseDown">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo></TaskbarItemInfo>
