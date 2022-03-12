@@ -1,7 +1,8 @@
 ﻿<!-- based on https://stackoverflow.com/a/15520170 -->
 
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:resources="clr-namespace:BSU.GUI.Resources">
     <BooleanToVisibilityConverter x:Key="Bool2VisibilityConverter" />
 
     <Style x:Key="WindowButtonStyle" TargetType="{x:Type Button}">
@@ -121,7 +122,8 @@
                                         </Button>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True" Grid.Row="0">
-                                        <TextBlock x:Name="WindowTitleTextBlock" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="8 -1 0 0"  FontSize="12"  Foreground="{TemplateBinding Foreground}"/>
+                                        <Image Width="20" Height="20" Margin="5 0" Source="{resources:AppIcon}"></Image>
+                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 -1 0 0"  FontSize="12"  Foreground="{TemplateBinding Foreground}"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
