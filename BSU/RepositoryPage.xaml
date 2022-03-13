@@ -18,52 +18,56 @@
             <converters:CalculatedStateToColorBrushConverter x:Key="CalculatedStateToColorBrushConverter"></converters:CalculatedStateToColorBrushConverter>
         </DockPanel.Resources>
 
-        <components:NavigatorBar DockPanel.Dock="Top" Title="{Binding PageTitle}" Navigator="{Binding Navigator}" />
+        <components:NavigatorBar DockPanel.Dock="Top" Title="Preset" Navigator="{Binding Navigator}" />
 
-        <DockPanel Margin="5" Dock="Top">
-            <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                <TextBlock>Server:</TextBlock>
-                <TextBlock Text="{Binding ServerUrl, FallbackValue=srv1.beowulfso.com}"></TextBlock>
+        <DockPanel Dock="Top" Background="LightGray">
+            <StackPanel DockPanel.Dock="Left" Orientation="Vertical" Margin="5">
+                <TextBlock Margin="1" FontSize="16" FontWeight="SemiBold" Text="{Binding Name, FallbackValue=My Amazing Server}"></TextBlock>
+                <TextBlock Margin="1" FontSize="16" FontWeight="SemiBold" Foreground="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToColorBrushConverter}}" Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>
+                <TextBlock Margin="1 3" Text="{Binding ServerUrl, FallbackValue=srv1.beowulfso.com}"></TextBlock>
             </StackPanel>
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Preset">
-                    <userControls:SvgButton.CommandParameter>
-                        <system:Boolean>
-                            True
-                        </system:Boolean>
-                    </userControls:SvgButton.CommandParameter>
-                </userControls:SvgButton>
+            <DockPanel HorizontalAlignment="Right" Margin="5">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Preset">
+                        <userControls:SvgButton.CommandParameter>
+                            <system:Boolean>
+                                True
+                            </system:Boolean>
+                        </userControls:SvgButton.CommandParameter>
+                    </userControls:SvgButton>
 
-                <Grid>
-                    <userControls:SvgButton Width="40" Height="40" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" Visibility="{Binding UpdateButtonVisible, Converter={StaticResource CollapseConverter}}" SvgBrush="{Binding UpdateButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Update/Download" />
-                    <userControls:SvgButton Width="40" Height="40" Command="{Binding Pause}" Svg="{StaticResource SvgPause}" Visibility="{Binding PauseButtonVisible, Converter={StaticResource CollapseConverter}}" ToolTip="Pause the Update. No progress is lost" />
-                    <Viewbox Width="40" Height="40" Stretch="Fill" Visibility="{Binding UpdateCheckMarkVisible, Converter={StaticResource CollapseConverter}}">
-                        <ContentPresenter Content="{StaticResource SvgCheckmark}"></ContentPresenter>
-                    </Viewbox>
-                </Grid>
+                    <Grid>
+                        <userControls:SvgButton Width="40" Height="40" Command="{Binding Update}" Svg="{StaticResource SvgUpdate}" Visibility="{Binding UpdateButtonVisible, Converter={StaticResource CollapseConverter}}" SvgBrush="{Binding UpdateButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Update/Download" />
+                        <userControls:SvgButton Width="40" Height="40" Command="{Binding Pause}" Svg="{StaticResource SvgPause}" Visibility="{Binding PauseButtonVisible, Converter={StaticResource CollapseConverter}}" ToolTip="Pause the Update. No progress is lost" />
+                        <Viewbox Width="40" Height="40" Stretch="Fill" Visibility="{Binding UpdateCheckMarkVisible, Converter={StaticResource CollapseConverter}}">
+                            <ContentPresenter Content="{StaticResource SvgCheckmark}"></ContentPresenter>
+                        </Viewbox>
+                    </Grid>
 
-                <userControls:SvgButton Width="40" Height="40" Visibility="{Binding NotIsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Arma with this Preset"/>
-                <userControls:SvgButton Width="40" Height="40" Visibility="{Binding IsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding StopPlaying}" Svg="{StaticResource SvgStop}" SvgBrush="Red" ToolTip="Close the game"/>
-            </StackPanel>
-
-            <TextBlock FontSize="16" FontWeight="DemiBold" HorizontalAlignment="Center" Foreground="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToColorBrushConverter}}" Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>
+                    <userControls:SvgButton Width="40" Height="40" Visibility="{Binding NotIsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Arma with this Preset"/>
+                    <userControls:SvgButton Width="40" Height="40" Visibility="{Binding IsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding StopPlaying}" Svg="{StaticResource SvgStop}" SvgBrush="Red" ToolTip="Close the game"/>
+                </StackPanel>
+            </DockPanel>
         </DockPanel>
-        <userControls:FileSyncProgressBar Margin="5, 3" DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
+        <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
 
-        <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Right" Orientation="Horizontal">
-            <userControls:CommandLink Margin="5 0" Command="{Binding ChooseDownloadLocation}" Text="Change Download Location" />
-        </StackPanel>
-
-        <Rectangle DockPanel.Dock="Top" HorizontalAlignment="Stretch" Fill="Black" Height="1"/>
-
-        <ScrollViewer Margin="5" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Path=Mods}" Grid.IsSharedSizeScope="True">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <components:RepositoryMod></components:RepositoryMod>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.IsSharedSizeScope="True">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition SharedSizeGroup="RepoModShared2" />
+                    </Grid.ColumnDefinitions>
+                    <userControls:CommandLink Grid.Column="1" DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="5" Command="{Binding ChooseDownloadLocation}" Text="Change Download Location" />
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Path=Mods}" AlternationCount="2">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <components:RepositoryMod></components:RepositoryMod>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
         </ScrollViewer>
     </DockPanel>
 </UserControl>

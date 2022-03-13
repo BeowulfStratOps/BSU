@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
@@ -16,6 +17,7 @@ namespace BSU.Core.ViewModel
         public ObservableCollection<StorageMod> Mods { get; } = new();
 
         public DelegateCommand Delete { get; }
+        public DelegateCommand ToggleShowMods { get; }
         public Guid Identifier { get; }
 
         public string Path { get; }
@@ -31,6 +33,19 @@ namespace BSU.Core.ViewModel
             }
         }
 
+        private bool _isShowingMods;
+        public bool IsShowingMods
+        {
+            get => _isShowingMods;
+            set
+            {
+                if (SetProperty(ref _isShowingMods, value))
+                    OnPropertyChanged(nameof(NotIsShowingMods));
+            }
+        }
+
+        public bool NotIsShowingMods => !IsShowingMods;
+
         private string? _error;
         private readonly IInteractionService _interactionService;
         private readonly IServiceProvider _services;
@@ -38,6 +53,7 @@ namespace BSU.Core.ViewModel
         internal Storage(IModelStorage storage, IServiceProvider serviceProvider)
         {
             Delete = new DelegateCommand(DoDelete, storage.CanWrite);
+            ToggleShowMods = new DelegateCommand(() => IsShowingMods = !IsShowingMods);
             ModelStorage = storage;
             var model = serviceProvider.Get<IModel>();
             _model = model;

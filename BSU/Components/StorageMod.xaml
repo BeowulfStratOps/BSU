@@ -6,14 +6,14 @@
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:StorageMod}">
-    <StackPanel Orientation="Horizontal">
+             d:DesignHeight="30" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:StorageMod}">
+    <StackPanel Orientation="Horizontal" Margin="5">
         <StackPanel.Resources>
             <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
         </StackPanel.Resources>
-        <TextBlock FontWeight="Bold" Text="{Binding Path=Title}" />
-        <TextBlock Margin="4,0,0,0" Visibility="{Binding UsedBy, Converter={StaticResource NullToVisibility}}">
-            <Run>- Used by </Run>
+        <TextBlock VerticalAlignment="Center" FontWeight="Bold" FontSize="12" Text="{Binding Path=Title, FallbackValue=Modname}" />
+        <TextBlock VerticalAlignment="Center" Margin="4,0,0,0" Visibility="{Binding UsedBy, Converter={StaticResource NullToVisibility}}">
+            <Run Foreground="DimGray">- Used by </Run>
             <Run Text="{Binding UsedBy}"/>
         </TextBlock>
     </StackPanel>

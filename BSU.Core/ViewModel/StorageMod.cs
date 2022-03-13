@@ -55,7 +55,7 @@ namespace BSU.Core.ViewModel
         private void Update(AnythingChangedEvent modSelectionChangedEvent)
         {
             var usedBy = CoreCalculation.GetUsedBy(_modelStorageMod, _model.GetRepositoryMods());
-            var names = usedBy.Select(m => $"{m.ParentRepository.Name}/{m.Identifier}").ToList();
+            var names = usedBy.Select(m => $"{m.ParentRepository.Name}").ToList();
             UsedBy = names.Any() ? string.Join(", ", names) : null;
         }
     }

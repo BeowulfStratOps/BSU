@@ -14,11 +14,11 @@
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"></converters:BoolToVisibilityConverter>
         </Grid.Resources>
         <DockPanel Background="{DynamicResource BackgroundColor1Brush}">
-            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Back_Click" ToolTip="Back" Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel Margin="3 1" DockPanel.Dock="Left" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Back_Click" ToolTip="Back" Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisibilityConverter}}">
                 <gui:FontIcon FontWeight="Black" FontSize="12" Icon="E96F" />
                 <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Back</TextBlock>
             </StackPanel>
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Storages_Click" ToolTip="Show Download Locations" Visibility="{Binding CanGoToStorages, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel Margin="3 1" DockPanel.Dock="Right" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Storages_Click" ToolTip="Show Download Locations" Visibility="{Binding CanGoToStorages, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Storage</TextBlock>
                 <gui:FontIcon FontWeight="Black" FontSize="12" Icon="E970" />
             </StackPanel>

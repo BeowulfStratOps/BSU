@@ -7,37 +7,37 @@
              xmlns:components="clr-namespace:BSU.GUI.Components"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
+             xmlns:gui="clr-namespace:BSU.GUI"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Storage}">
-    <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
+             d:DesignHeight="100" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Storage}">
+    <Border Background="{DynamicResource BackgroundColor2Brush}" Margin="5">
         <Border.Resources>
-            <converters:NullToVisibilityConverter x:Key="NullToVisibility" />
+            <converters:NullToCollapseConverter x:Key="NullToCollapse" />
         </Border.Resources>
         <DockPanel>
-            <DockPanel Dock="Top">
+            <DockPanel Dock="Top" Margin="5">
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                    <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name}"></TextBlock>
-                    <TextBlock Text="{Binding Path}"></TextBlock>
-                    <TextBlock Foreground="Red" Visibility="{Binding Error, Converter={StaticResource NullToVisibility}}" Text="{Binding Error}" />
+                    <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name, FallbackValue=Name}"></TextBlock>
+                    <TextBlock Text="{Binding Path, FallbackValue=C:\asdf\places\and\stuff}"></TextBlock>
+                    <TextBlock Foreground="Red" Visibility="{Binding Error, Converter={StaticResource NullToCollapse}}" Text="{Binding Error}" />
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <userControls:SvgButton DockPanel.Dock="Right" Width="40" Height="40" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Download Location"/>
+                    <userControls:SvgButton DockPanel.Dock="Right" Width="30" Height="30" HideIfDisabled="True" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Download Location"/>
                 </StackPanel>
             </DockPanel>
-            <Expander>
-                <Expander.Header>
-                    <TextBlock>Mods</TextBlock>
-                </Expander.Header>
-                <Border BorderBrush="Black" BorderThickness="1">
-                    <ItemsControl ItemsSource="{Binding Path=Mods}" Padding="5">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <components:StorageMod></components:StorageMod>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Border>
-            </Expander>
+            <StackPanel DockPanel.Dock="Top" MouseLeftButtonUp="ToggleShowMods" Background="{DynamicResource BackgroundColor1Brush}">
+                <gui:FontIcon Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96D" Margin="3" />
+                <gui:FontIcon Visibility="{Binding NotIsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96E" Margin="3" />
+            </StackPanel>
+            <Border Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" Background="{DynamicResource BackgroundColor1Brush}">
+                <ItemsControl ItemsSource="{Binding Path=Mods}" Padding="5">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <components:StorageMod></components:StorageMod>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
         </DockPanel>
     </Border>
 </UserControl>

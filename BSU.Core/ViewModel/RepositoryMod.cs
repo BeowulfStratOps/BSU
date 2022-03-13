@@ -44,12 +44,13 @@ namespace BSU.Core.ViewModel
             Mod.SetSelection(value.AsSelection);
         }
 
-        internal RepositoryMod(IModelRepositoryMod mod, IServiceProvider services)
+        internal RepositoryMod(IModelRepositoryMod mod, IServiceProvider services, int stripeIndex)
         {
             var model = services.Get<IModel>();
             Actions = new ModActionTree(mod, model);
             Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
             Mod = mod;
+            _stripeIndex = stripeIndex;
             _model = model;
             Name = mod.Identifier;
             ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded);
@@ -111,6 +112,13 @@ namespace BSU.Core.ViewModel
         }
 
         public bool NotIsExpanded => !IsExpanded;
+
+        private int _stripeIndex;
+        public int StripeIndex
+        {
+            get => _stripeIndex;
+            set => SetProperty(ref _stripeIndex, value);
+        }
 
         private void Update()
         {

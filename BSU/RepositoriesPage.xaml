@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoriesPage}">
     <DockPanel>
-        <components:NavigatorBar DockPanel.Dock="Top" Title="Presets" Navigator="{Binding Navigator}" CanGoBack="False" />
+        <components:NavigatorBar DockPanel.Dock="Top" Title="Presets" Navigator="{Binding Navigator}" CanGoBack="False" Margin="0 0 0 5" />
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>

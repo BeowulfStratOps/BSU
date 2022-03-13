@@ -10,7 +10,7 @@
              xmlns:util="clr-namespace:BSU.Core.ViewModel.Util;assembly=BSU.Core"
              mc:Ignorable="d"
              x:Name="RepoMod"
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
+             d:DesignHeight="50" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
     <UserControl.Resources>
         <Style TargetType="Border" x:Key="Expanded">
             <Style.Triggers>
@@ -20,8 +20,9 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <converters:StripeColorBrushConverter x:Key="StripeColorBrushConverter" />
     </UserControl.Resources>
-    <Border Margin="2" Style="{StaticResource Expanded}">
+    <Border Padding="5" Style="{StaticResource Expanded}" Background="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}">
         <Border.Resources>
             <converters:ActionToTextConverter x:Key="ActionToText" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
@@ -30,7 +31,7 @@
             <converters:EnableToColorConverter x:Key="EnableToColorConverter" />
             <converters:ButtonEnabledToCursorConverter  x:Key="ButtonEnabledToCursorConverter" />
         </Border.Resources>
-        <StackPanel Orientation="Vertical">
+        <StackPanel Orientation="Vertical" Margin="5 0">
             <Grid HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="RepoModShared1"/>
@@ -44,12 +45,6 @@
                             <i:InvokeCommandAction Command="{Binding ToggleExpand}"></i:InvokeCommandAction>
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
-                    <Viewbox Visibility="{Binding IsExpanded, Converter={StaticResource CollapseConverter}}" Width="12" Height="12" Stretch="Fill">
-                        <ContentPresenter Content="{StaticResource SvgCaretDown}" />
-                    </Viewbox>
-                    <Viewbox Visibility="{Binding NotIsExpanded, Converter={StaticResource CollapseConverter}}" Width="12" Height="12" Stretch="Fill">
-                        <ContentPresenter Content="{StaticResource SvgCaretRight}" />
-                    </Viewbox>
                     <TextBlock Margin="3, 0"  DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Path=Name}" />
                 </StackPanel>
 
@@ -89,7 +84,7 @@
 
                     <userControls:ComboBoxPopup IsOpen="{Binding Actions.IsOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=ComboBoxSelected}" MinWidth="{Binding ElementName=ComboBoxSelected, Path=ActualWidth}">
                         <Border BorderBrush="Black" BorderThickness="1">
-                            <ItemsControl Background="White" ItemsSource="{Binding Actions.Storages}">
+                            <ItemsControl Background="{DynamicResource WindowBackgroundColorBrush}" ItemsSource="{Binding Actions.Storages}">
                                 <ItemsControl.Resources>
                                     <DataTemplate DataType="{x:Type util:SelectableModAction}">
                                         <userControls:SelectableAction />

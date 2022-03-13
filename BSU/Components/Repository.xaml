@@ -9,7 +9,7 @@
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d"
              d:DesignHeight="100" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModel:Repository}">
-    <Border BorderThickness="1" BorderBrush="Black" Margin="5" Padding="5">
+    <Border Background="{DynamicResource BackgroundColor2Brush}" Margin="5" Padding="5">
         <Border.Resources>
             <converters:ColorIndicationConverter x:Key="ColorConverter" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
@@ -50,7 +50,7 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock FontSize="14" Foreground="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToColorBrushConverter}}" Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToColorBrushConverter}}" Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>
                 </StackPanel>
             </DockPanel>
             <userControls:FileSyncProgressBar DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />

@@ -4,7 +4,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:resources="clr-namespace:BSU.GUI.Resources"
                     xmlns:gui="clr-namespace:BSU.GUI">
-    <BooleanToVisibilityConverter x:Key="Bool2VisibilityConverter" />
+    <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
     <Style x:Key="WindowButtonStyle" TargetType="{x:Type Button}">
         <Setter Property="Foreground" Value="{DynamicResource ForegroundColorBrush}" />
@@ -124,12 +124,12 @@
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True" Grid.Row="0">
                                         <Image Width="20" Height="20" Margin="5 0" Source="{resources:AppIcon}" IsHitTestVisible="False"></Image>
-                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 -1 0 0" FontSize="14" FontWeight="SemiBold" Foreground="{TemplateBinding Foreground}" IsHitTestVisible="False"/>
+                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 -1 0 0" FontSize="12" Foreground="{TemplateBinding Foreground}" IsHitTestVisible="False"/>
                                         <ContentPresenter Content="{TemplateBinding TitleBarContent}"></ContentPresenter>
                                     </StackPanel>
                                 </Grid>
                             </Border>
-                            <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding IsActive, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Converter={StaticResource Bool2VisibilityConverter}}" />
+                            <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding IsActive, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>

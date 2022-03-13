@@ -240,9 +240,9 @@ namespace BSU.Core.ViewModel
 
             ServerUrl = ModelRepository.GetServerInfo().Url;
             var mods = ModelRepository.GetMods();
-            foreach (var mod in mods.OrderBy(m => m.Identifier))
+            foreach (var (i, mod) in mods.OrderBy(m => m.Identifier).Enumerate())
             {
-                Mods.Add(new RepositoryMod(mod, _services));
+                Mods.Add(new RepositoryMod(mod, _services, i % 2));
             }
         }
 
@@ -453,8 +453,6 @@ Cancel - Do not remove this repository";
         }
 
         public INavigator Navigator { get; init; }
-
-        public string PageTitle => $"Preset: {Name}";
 
         #endregion
     }
