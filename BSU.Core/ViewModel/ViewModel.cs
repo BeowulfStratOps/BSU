@@ -11,7 +11,7 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class ViewModel : ObservableBase, IViewModelService
+    public class ViewModel : ObservableBase, IViewModelService, INavigator
     {
         internal readonly RepositoriesPage RepoPage;
         internal readonly StoragePage StoragePage;
@@ -23,6 +23,7 @@ namespace BSU.Core.ViewModel
             eventManager.Subscribe<ErrorEvent>(AddError);
             eventManager.Subscribe<NotificationEvent>(AddNotification);
             services.Add<IViewModelService>(this);
+            services.Add<INavigator>(this);
             _serviceProvider = services;
             _dispatcher = services.Get<IDispatcher>();
             RepoPage = new RepositoriesPage(services);

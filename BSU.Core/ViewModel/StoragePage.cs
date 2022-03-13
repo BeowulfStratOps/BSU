@@ -14,12 +14,12 @@ namespace BSU.Core.ViewModel
         public ObservableCollection<Storage> Storages { get; } = new();
         public DelegateCommand AddStorage { get; }
 
-        public DelegateCommand Back { get; }
+        public INavigator Navigator { get; init; }
 
         internal StoragePage(IServiceProvider services)
         {
             _services = services;
-            Back = new DelegateCommand(_services.Get<IViewModelService>().NavigateBack);
+            Navigator = services.Get<INavigator>();
             var model = services.Get<IModel>();
             _model = model;
             AddStorage = new DelegateCommand(() => DoAddStorage());

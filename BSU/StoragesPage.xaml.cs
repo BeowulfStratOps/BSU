@@ -9,10 +9,5 @@ namespace BSU.GUI
         {
             InitializeComponent();
         }
-
-        private void Back_Click(object sender, MouseButtonEventArgs e)
-        {
-            ((StoragePage)DataContext).Back.Execute(null);
-        }
     }
 }

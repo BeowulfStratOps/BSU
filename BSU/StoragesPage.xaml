@@ -9,18 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:StoragePage}">
     <DockPanel>
-        <!-- TODO: figure out how to reuse this for all pages -->
-        <Grid DockPanel.Dock="Top">
-            <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Back_Click" ToolTip="Back">
-                    <Viewbox Margin="3" Width="25" Height="25" Stretch="Fill">
-                        <ContentPresenter Content="{StaticResource SvgBack}"></ContentPresenter>
-                    </Viewbox>
-                    <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Back</TextBlock>
-                </StackPanel>
-            </DockPanel>
-            <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center">Download Locations</TextBlock>
-        </Grid>
+        <components:NavigatorBar DockPanel.Dock="Top" Title="Storages" Navigator="{Binding Navigator}" CanGoToStorages="False" />
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>

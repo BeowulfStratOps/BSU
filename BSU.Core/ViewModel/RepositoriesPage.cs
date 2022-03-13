@@ -17,16 +17,16 @@ namespace BSU.Core.ViewModel
         public ObservableCollection<Repository> Repositories { get; } = new();
         public DelegateCommand AddRepository { get; }
 
-        public DelegateCommand ShowStorage { get; }
+        public INavigator Navigator { get; init; }
 
         internal RepositoriesPage(IServiceProvider services)
         {
             _services = services;
             _viewModelService = services.Get<IViewModelService>();
+            Navigator = _services.Get<INavigator>();
             _model = services.Get<IModel>();
             _interactionService = services.Get<IInteractionService>();
 
-            ShowStorage = new DelegateCommand(_viewModelService.NavigateToStorages);
             AddRepository = new DelegateCommand(DoAddRepository);
             _model.AddedRepository += repository => AddedRepository(repository);
             _model.RemovedRepository += repository =>

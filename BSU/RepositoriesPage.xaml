@@ -9,19 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoriesPage}">
     <DockPanel>
-        <!-- TODO: figure out how to reuse this for all pages -->
-        <Grid DockPanel.Dock="Top">
-            <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Storages_Click" ToolTip="Show Download Locations">
-                    <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Locations</TextBlock>
-                    <Viewbox Margin="3" Width="25" Height="25" Stretch="Fill">
-                        <ContentPresenter Content="{StaticResource SvgStorage}"></ContentPresenter>
-                    </Viewbox>
-                </StackPanel>
-            </DockPanel>
-            <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center">Presets</TextBlock>
-        </Grid>
-
+        <components:NavigatorBar DockPanel.Dock="Top" Title="Presets" Navigator="{Binding Navigator}" CanGoBack="False" />
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>

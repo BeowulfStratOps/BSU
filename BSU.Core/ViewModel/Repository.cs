@@ -169,11 +169,6 @@ namespace BSU.Core.ViewModel
         public DelegateCommand Details { get; }
         public DelegateCommand Play { get; }
 
-
-        public DelegateCommand Back { get; }
-
-        public DelegateCommand ShowStorage { get; }
-
         private string _serverUrl = "Loading...";
 
         public string ServerUrl
@@ -209,13 +204,12 @@ namespace BSU.Core.ViewModel
         {
             ModelRepository = modelRepository;
             _model = serviceProvider.Get<IModel>();
+            Navigator = serviceProvider.Get<INavigator>();
             _viewModelService = serviceProvider.Get<IViewModelService>();
             _interactionService = serviceProvider.Get<IInteractionService>();
             var asyncVoidExecutor = serviceProvider.Get<IAsyncVoidExecutor>();
             Delete = new DelegateCommand(DoDelete, false);
             Update = new DelegateCommand(() => asyncVoidExecutor.Execute(DoUpdate));
-            Back = new DelegateCommand(_viewModelService.NavigateBack);
-            ShowStorage = new DelegateCommand(_viewModelService.NavigateToStorages); // TODO: select specific storage or smth?
             Details = new DelegateCommand(() => _viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
             StopPlaying = new DelegateCommand(() => asyncVoidExecutor.Execute(DoStopPlaying));
@@ -340,7 +334,7 @@ Cancel - Do not remove this repository";
 
             _model.DeleteRepository(ModelRepository, (bool)removeData);
 
-            if ((bool) objOnDetailsPage!) _viewModelService.NavigateBack();
+            if ((bool) objOnDetailsPage!) _services.Get<INavigator>().NavigateBack();
         }
 
         public async Task DoUpdate()
@@ -457,6 +451,10 @@ Cancel - Do not remove this repository";
             get => _updateCheckMarkVisible;
             set => SetProperty(ref _updateCheckMarkVisible, value);
         }
+
+        public INavigator Navigator { get; init; }
+
+        public string PageTitle => $"Preset: {Name}";
 
         #endregion
     }

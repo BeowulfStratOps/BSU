@@ -18,23 +18,7 @@
             <converters:CalculatedStateToColorBrushConverter x:Key="CalculatedStateToColorBrushConverter"></converters:CalculatedStateToColorBrushConverter>
         </DockPanel.Resources>
 
-        <Grid DockPanel.Dock="Top">
-            <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Back_Click" ToolTip="Back">
-                    <Viewbox Margin="3" Width="25" Height="25" Stretch="Fill">
-                        <ContentPresenter Content="{StaticResource SvgBack}"></ContentPresenter>
-                    </Viewbox>
-                    <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Back</TextBlock>
-                </StackPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Storages_Click" ToolTip="Show Download Locations">
-                    <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Locations</TextBlock>
-                    <Viewbox Margin="3" Width="25" Height="25" Stretch="Fill">
-                        <ContentPresenter Content="{StaticResource SvgStorage}"></ContentPresenter>
-                    </Viewbox>
-                </StackPanel>
-            </DockPanel>
-            <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center"><Run>Preset:</Run> <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
-        </Grid>
+        <components:NavigatorBar DockPanel.Dock="Top" Title="{Binding PageTitle}" Navigator="{Binding Navigator}" />
 
         <DockPanel Margin="5" Dock="Top">
             <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
