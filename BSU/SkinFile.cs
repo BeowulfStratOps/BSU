@@ -3,8 +3,11 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Media;
 using NLog;
+using Brush = System.Windows.Media.Brush;
 using Color = System.Windows.Media.Color;
+using SystemColors = System.Windows.SystemColors;
 
 namespace BSU.GUI;
 
@@ -48,16 +51,17 @@ public class SkinFile : ResourceDictionary
             var split = line.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             if (split.Length != 2)
                 throw new InvalidDataException($"Expected color name and value separated by space. Got: '{line}'");
-            var name = split[0];
-            var color = ParseColor(split[1]);
+            var name = split[0] + "Brush";
+            var brush = ParseColor(split[1]);
 
-            this[name] = color;
+            this[name] = brush;
         }
     }
 
-    private static Color ParseColor(string color)
+    private static Brush ParseColor(string colorString)
     {
-        var sdColor = ColorTranslator.FromHtml(color);
-        return Color.FromArgb(sdColor.A, sdColor.R, sdColor.G, sdColor.B);
+        var sdColor = ColorTranslator.FromHtml(colorString);
+        var color = Color.FromArgb(sdColor.A, sdColor.R, sdColor.G, sdColor.B);
+        return new SolidColorBrush(color);
     }
 }
