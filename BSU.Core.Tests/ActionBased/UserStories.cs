@@ -63,7 +63,7 @@ public class UserStories : LoggedTest
 
         model.Do(() =>
         {
-            var (modName, modAction) = selectRepositoryStorage.ViewModel.Mods[0];
+            var (modName, modAction, _) = selectRepositoryStorage.ViewModel.Mods[0];
             Assert.Equal("@mod1", modName);
             Assert.IsType<SelectStorage>(modAction);
 
