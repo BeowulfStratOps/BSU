@@ -76,12 +76,12 @@
 
     <Style x:Key="MetroWindowStyle" TargetType="gui:MainWindow">
         <Setter Property="UseLayoutRounding" Value="True" />
-
+        <Setter Property="TextElement.FontFamily" Value="{DynamicResource Font}"></Setter>
         <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="gui:MainWindow">
-                    <Border x:Name="WindowBorder" Margin="{Binding Source={x:Static SystemParameters.WindowNonClientFrameThickness}}" Background="{StaticResource WindowBackground}">
+                    <Border x:Name="WindowBorder" Margin="{Binding Source={x:Static SystemParameters.WindowNonClientFrameThickness}}" Background="{DynamicResource WindowBackground}">
                         <Grid>
                             <Border BorderThickness="1">
                                 <Grid x:Name="LayoutRoot">

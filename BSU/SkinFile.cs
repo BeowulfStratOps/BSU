@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
@@ -7,20 +8,22 @@ using System.Windows.Media;
 using NLog;
 using Brush = System.Windows.Media.Brush;
 using Color = System.Windows.Media.Color;
-using SystemColors = System.Windows.SystemColors;
+using FontFamily = System.Windows.Media.FontFamily;
 
 namespace BSU.GUI;
 
 public class SkinFile : ResourceDictionary
 {
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
+
     public SkinFile()
     {
         try
         {
-            var skinPath = FindSkinFile();
-            if (skinPath == null) return;
-            LoadSkin(skinPath);
+            if (TryFindSkinFile(out var skinPath))
+                LoadSkin(skinPath);
+            else
+                CreateDefaultSkinFile(skinPath);
         }
         catch (Exception e)
         {
@@ -29,16 +32,42 @@ public class SkinFile : ResourceDictionary
         }
     }
 
-    private static string? FindSkinFile()
+    private void CreateDefaultSkinFile(string skinPath)
+    {
+        var skinResourceDictionary = new ResourceDictionary
+        {
+            Source = new Uri(";component/Resources/Skin.xaml", UriKind.RelativeOrAbsolute)
+        };
+
+        using var writer = new StreamWriter(skinPath);
+
+        foreach (DictionaryEntry entry in skinResourceDictionary)
+        {
+            var (objKey, value) = entry;
+            if (objKey is not string key) throw new InvalidDataException();
+
+            switch (value)
+            {
+                case FontFamily font:
+                    writer.WriteLine($"# {key}={font.Source}");
+                    break;
+                case SolidColorBrush brush:
+                    writer.WriteLine($"# {key}={ColorToHtml(brush.Color)}");
+                    break;
+            }
+        }
+    }
+
+    private static bool TryFindSkinFile(out string skinPath)
     {
         var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-        var skinPath = Path.Combine(Directory.GetParent(assemblyLocation)!.Parent!.FullName, "default.skin");
+        skinPath = Path.Combine(Directory.GetParent(assemblyLocation)!.Parent!.FullName, "default.skin");
 
         var exists = File.Exists(skinPath);
 
         Logger.Info($"Checking possible skin file location: {skinPath} -> Exists: {exists}");
 
-        return exists ? skinPath : null;
+        return exists;
     }
 
     private void LoadSkin(string skinPath)
@@ -48,17 +77,31 @@ public class SkinFile : ResourceDictionary
         foreach (var line in skinText.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
         {
             if (line.StartsWith("#")) continue;
-            var split = line.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            var split = line.Split("=", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             if (split.Length != 2)
-                throw new InvalidDataException($"Expected color name and value separated by space. Got: '{line}'");
+                throw new InvalidDataException($"Expected name and value separated by =. Got: '{line}'");
             var name = split[0];
-            var brush = ParseColor(split[1]);
+
+            if (name == "Font")
+            {
+                var font = new FontFamily(split[1]);
+                this["Font"] = font;
+                continue;
+            }
+
+            var brush = HtmlToColor(split[1]);
 
             this[name] = brush;
         }
     }
 
-    private static Brush ParseColor(string colorString)
+    private static string ColorToHtml(Color color)
+    {
+        var sdColor = System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B);
+        return ColorTranslator.ToHtml(sdColor);
+    }
+
+    private static Brush HtmlToColor(string colorString)
     {
         var sdColor = ColorTranslator.FromHtml(colorString);
         var color = Color.FromArgb(sdColor.A, sdColor.R, sdColor.G, sdColor.B);

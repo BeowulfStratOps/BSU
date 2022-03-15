@@ -50,7 +50,7 @@
 
     <SolidColorBrush x:Key="StorageBackground" Color="LightGray"/>
     <SolidColorBrush x:Key="StorageModsBackground" Color="#EEEEEE"/>
-    <SolidColorBrush x:Key="StorageForeground" Color="LightGray"/>
+    <SolidColorBrush x:Key="StorageForeground" Color="Black"/>
     <SolidColorBrush x:Key="StorageForegroundSecondary" Color="DimGray"/>
     <SolidColorBrush x:Key="StorageModsExtenderHover" Color="LightGray"/>
 
@@ -59,4 +59,5 @@
     <SolidColorBrush x:Key="NotificationBackgroundBad" Color="Red"/>
     <SolidColorBrush x:Key="NotificationBackgroundBadForeground" Color="White"/>
 
+    <FontFamily x:Key="Font">Segoe UI</FontFamily>
 </ResourceDictionary>
