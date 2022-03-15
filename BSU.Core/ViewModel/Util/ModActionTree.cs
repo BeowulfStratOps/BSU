@@ -116,6 +116,8 @@ namespace BSU.Core.ViewModel.Util
 
         public ObservableCollection<SelectableModAction> Mods { get; } = new();
 
+        public string Path => Storage.GetLocation();
+
         internal StorageModActionList(IModelStorage storage, Action<ModAction> selectStorage,
             List<SelectableModAction> actions, bool isSelected)
         {

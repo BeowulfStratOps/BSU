@@ -9,13 +9,23 @@
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d"
              d:DesignHeight="100" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModel:Repository}">
-    <Border Background="{DynamicResource BackgroundColor2Brush}" Margin="5" Padding="5">
+    <Border Margin="5" Padding="5">
         <Border.Resources>
             <converters:ColorIndicationConverter x:Key="ColorConverter" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
             <converters:CalculatedStateToTextConverter x:Key="CalculatedStateToText" />
             <converters:CalculatedStateToColorBrushConverter x:Key="CalculatedStateToColorBrushConverter"></converters:CalculatedStateToColorBrushConverter>
         </Border.Resources>
+        <Border.Style>
+            <Style TargetType="Border">
+                <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding ElementName=PresetNamePanel, Path=IsMouseOver}" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource BackgroundColor1Brush}"></Setter>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
         <DockPanel>
             <DockPanel Dock="Top">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -38,17 +48,8 @@
                     <userControls:SvgButton Width="40" Height="40" Visibility="{Binding NotIsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding Play}" Svg="{StaticResource SvgPlay}" SvgBrush="{Binding PlayButtonColor, Converter={StaticResource ColorConverter}}" ToolTip="Start Arma with this Preset"/>
                     <userControls:SvgButton Width="40" Height="40" Visibility="{Binding IsRunning, Converter={StaticResource CollapseConverter}}" Command="{Binding StopPlaying}" Svg="{StaticResource SvgStop}" SvgBrush="Red" ToolTip="Close the game"/>
                 </StackPanel>
-                <StackPanel x:Name="PresetNamePanel" Orientation="Vertical" Cursor="Hand" MouseLeftButtonUp="Preset_Click">
+                <StackPanel x:Name="PresetNamePanel" Orientation="Vertical" MouseLeftButtonUp="Preset_Click">
                     <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name, FallbackValue=Name}">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ElementName=PresetNamePanel, Path=IsMouseOver}" Value="True">
-                                        <Setter Property="TextDecorations" Value="Underline"></Setter>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
                     </TextBlock>
                     <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToColorBrushConverter}}" Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>
                 </StackPanel>

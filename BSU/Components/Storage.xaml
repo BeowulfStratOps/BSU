@@ -25,7 +25,17 @@
                     <userControls:SvgButton DockPanel.Dock="Right" Width="30" Height="30" HideIfDisabled="True" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Download Location"/>
                 </StackPanel>
             </DockPanel>
-            <StackPanel DockPanel.Dock="Top" MouseLeftButtonUp="ToggleShowMods" Background="{DynamicResource BackgroundColor1Brush}">
+            <StackPanel DockPanel.Dock="Top" MouseLeftButtonUp="ToggleShowMods">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Background" Value="{DynamicResource BackgroundColor1Brush}"></Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <gui:FontIcon Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96D" Margin="3" />
                 <gui:FontIcon Visibility="{Binding NotIsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96E" Margin="3" />
             </StackPanel>

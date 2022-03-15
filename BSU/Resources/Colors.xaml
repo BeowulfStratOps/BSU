@@ -14,11 +14,13 @@
 
     <Color x:Key="WindowBackgroundColor">White</Color>
     <Color x:Key="ForegroundColor">Black</Color>
+    <Color x:Key="ForegroundColor1">LightSlateGray</Color>
     <Color x:Key="BackgroundColor1">#EEEEEE</Color>
     <Color x:Key="BackgroundColor2">LightGray</Color>
 
     <SolidColorBrush x:Key="WindowBackgroundColorBrush" Color="{StaticResource WindowBackgroundColor}"/>
     <SolidColorBrush x:Key="ForegroundColorBrush" Color="{StaticResource ForegroundColor}"/>
+    <SolidColorBrush x:Key="ForegroundColor1Brush" Color="{StaticResource ForegroundColor1}"/>
     <SolidColorBrush x:Key="BackgroundColor1Brush" Color="{StaticResource BackgroundColor1}"/>
     <SolidColorBrush x:Key="BackgroundColor2Brush" Color="{StaticResource BackgroundColor2}"/>
 </ResourceDictionary>

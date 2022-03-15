@@ -10,28 +10,32 @@
              xmlns:util="clr-namespace:BSU.Core.ViewModel.Util;assembly=BSU.Core"
              mc:Ignorable="d"
              x:Name="RepoMod"
-             d:DesignHeight="50" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
+             d:DesignHeight="75" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
     <UserControl.Resources>
-        <Style TargetType="Border" x:Key="Expanded">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsExpanded}" Value="True">
-                    <Setter Property="Background" Value="LightGray" />
-                    <Setter Property="CornerRadius" Value="3" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
         <converters:StripeColorBrushConverter x:Key="StripeColorBrushConverter" />
     </UserControl.Resources>
-    <Border Padding="5" Style="{StaticResource Expanded}" Background="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}">
+    <Border Padding="5" MouseLeftButtonDown="ToggleExpandMouseDown" MouseLeftButtonUp="ToggleExpandMouseUp">
+        <Border.Style>
+            <Style TargetType="Border">
+                <Setter Property="Background" Value="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}"></Setter>
+                <Style.Triggers>
+                    <!--<DataTrigger Binding="{Binding ElementName=NamePanel, Path=IsMouseOver}" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
+                    </DataTrigger>-->
+                    <Trigger Property="IsMouseDirectlyOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
         <Border.Resources>
             <converters:ActionToTextConverter x:Key="ActionToText" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
             <converters:ByteSizeConverter x:Key="ByteSize" />
             <converters:ActionToColorConverter x:Key="ActionToColor" />
             <converters:EnableToColorConverter x:Key="EnableToColorConverter" />
-            <converters:ButtonEnabledToCursorConverter  x:Key="ButtonEnabledToCursorConverter" />
         </Border.Resources>
-        <StackPanel Orientation="Vertical" Margin="5 0">
+        <StackPanel Orientation="Vertical">
             <Grid HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="RepoModShared1"/>
@@ -39,20 +43,25 @@
                     <ColumnDefinition Width="Auto" SharedSizeGroup="RepoModShared2"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Cursor="Hand" Orientation="Horizontal">
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="MouseLeftButtonDown">
-                            <i:InvokeCommandAction Command="{Binding ToggleExpand}"></i:InvokeCommandAction>
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                    <TextBlock Margin="3, 0"  DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Path=Name}" />
+                <StackPanel Grid.Column="0" Orientation="Horizontal" IsHitTestVisible="False" VerticalAlignment="Center">
+                    <TextBlock Margin="3, 0"  DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Path=Name, FallbackValue=ModName}" />
                 </StackPanel>
 
-                <Grid Grid.Column="2" DockPanel.Dock="Right">
-                    <DockPanel x:Name="ComboBoxSelected">
+                <Grid Grid.Column="2" DockPanel.Dock="Right" MouseLeftButtonDown="SelectedMouseDown" MouseLeftButtonUp="SelectedMouseUp">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Background" Value="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}"></Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <DockPanel x:Name="ComboBoxSelected" Margin="5">
                         <userControls:SvgButton DockPanel.Dock="Right" Width="15" Height="15" Command="{Binding Actions.Open}" Svg="{StaticResource SvgComboOpen}" ToolTip="Show available Download Locations"/>
 
-                        <ContentControl Foreground="{Binding Actions.CanOpen, Converter={StaticResource EnableToColorConverter}}" Content="{Binding Actions.Selection}" MouseLeftButtonDown="SelectedMouseDown" MouseLeftButtonUp="SelectedMouseUp" Cursor="{Binding Actions.CanOpen, Converter={StaticResource ButtonEnabledToCursorConverter}}">
+                        <ContentControl Foreground="{Binding Actions.CanOpen, Converter={StaticResource EnableToColorConverter}}" Content="{Binding Actions.Selection}">
                             <ContentControl.Resources>
                                 <DataTemplate DataType="{x:Type viewModel:SelectDisabled}">
                                     <TextBlock>Disabled</TextBlock>
@@ -84,13 +93,13 @@
 
                     <userControls:ComboBoxPopup IsOpen="{Binding Actions.IsOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=ComboBoxSelected}" MinWidth="{Binding ElementName=ComboBoxSelected, Path=ActualWidth}">
                         <Border BorderBrush="Black" BorderThickness="1">
-                            <ItemsControl Background="{DynamicResource WindowBackgroundColorBrush}" ItemsSource="{Binding Actions.Storages}">
+                            <ItemsControl Background="{DynamicResource WindowBackgroundColorBrush}" ItemsSource="{Binding Actions.Storages}" Padding="2">
                                 <ItemsControl.Resources>
                                     <DataTemplate DataType="{x:Type util:SelectableModAction}">
                                         <userControls:SelectableAction />
                                     </DataTemplate>
                                     <DataTemplate DataType="{x:Type util:StorageModActionList}">
-                                        <Border BorderBrush="Black" BorderThickness="1" Margin="0" Padding="2">
+                                        <Border Margin="2" Padding="2" ToolTip="{Binding Path=Path}">
                                             <StackPanel>
                                                 <TextBlock FontWeight="Bold" Foreground="DimGray" Text="{Binding Name}" />
                                                 <ItemsControl Margin="4,0,0,0" ItemsSource="{Binding Mods}" />
@@ -104,12 +113,12 @@
                 </Grid>
 
 
-                <Grid Grid.Column="1" HorizontalAlignment="Stretch">
+                <Grid Grid.Column="1" HorizontalAlignment="Stretch" IsHitTestVisible="False" Margin="0">
                     <userControls:FileSyncProgressBar Margin="15, 0" DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
-                    <TextBlock HorizontalAlignment="Right" Margin="5,0" Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText}"></TextBlock>
+                    <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,0" Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText, FallbackValue=No error}"></TextBlock>
                 </Grid>
             </Grid>
-            <WrapPanel Orientation="Horizontal" Visibility="{Binding IsExpanded, Converter={StaticResource CollapseConverter}}">
+            <WrapPanel Orientation="Horizontal" Visibility="{Binding IsExpanded, Converter={StaticResource CollapseConverter}}" IsHitTestVisible="False">
                 <TextBlock DockPanel.Dock="Left" Margin="10, 5">Name: <Run Text="{Binding Path=Info.Name, Mode=OneWay}" /></TextBlock>
                 <TextBlock DockPanel.Dock="Left" Margin="10, 5">Version: <Run Text="{Binding Path=Info.Version, Mode=OneWay}" /></TextBlock>
                 <TextBlock DockPanel.Dock="Left" Margin="10, 5">Size: <Run Text="{Binding Path=Info.Size, Mode=OneWay, Converter={StaticResource ByteSize}}" /></TextBlock>

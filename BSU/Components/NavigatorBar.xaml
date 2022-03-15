@@ -12,15 +12,24 @@
     <Grid DataContext="{Binding ElementName=Uc}">
         <Grid.Resources>
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"></converters:BoolToVisibilityConverter>
+            <Style TargetType="StackPanel">
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource ForegroundColorBrush}"></Setter>
+                <Setter Property="Background" Value="{DynamicResource BackgroundColor1Brush}"></Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="TextElement.Foreground" Value="{DynamicResource ForegroundColor1Brush}"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
         </Grid.Resources>
         <DockPanel Background="{DynamicResource BackgroundColor1Brush}">
-            <StackPanel Margin="3 1" DockPanel.Dock="Left" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Back_Click" ToolTip="Back" Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisibilityConverter}}">
-                <gui:FontIcon FontWeight="Black" FontSize="12" Icon="E96F" />
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" MouseLeftButtonDown="Back_Click" ToolTip="Back" Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisibilityConverter}}">
+                <gui:FontIcon Margin="3 1" FontWeight="Black" FontSize="12" Icon="E96F" />
                 <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Back</TextBlock>
             </StackPanel>
-            <StackPanel Margin="3 1" DockPanel.Dock="Right" Orientation="Horizontal" Cursor="Hand" MouseLeftButtonDown="Storages_Click" ToolTip="Show Download Locations" Visibility="{Binding CanGoToStorages, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" MouseLeftButtonDown="Storages_Click" ToolTip="Show Download Locations" Visibility="{Binding CanGoToStorages, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Storage</TextBlock>
-                <gui:FontIcon FontWeight="Black" FontSize="12" Icon="E970" />
+                <gui:FontIcon Margin="3 1" FontWeight="Black" FontSize="12" Icon="E970" />
             </StackPanel>
             <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Text="{Binding Title, FallbackValue=Page, TargetNullValue=???}" />
         </DockPanel>
