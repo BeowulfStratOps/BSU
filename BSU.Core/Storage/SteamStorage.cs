@@ -15,7 +15,7 @@ namespace BSU.Core.Storage
     /// </summary>
     public class SteamStorage : IStorage
     {
-        private readonly DirectoryInfo _basePath;
+        private readonly DirectoryInfo? _basePath;
         private Dictionary<string, IStorageMod>? _mods;
         private readonly Task _loading;
 
@@ -36,7 +36,7 @@ namespace BSU.Core.Storage
         {
             // TODO: async?
             var folders = new List<DirectoryInfo>();
-            if (!_basePath.Exists) throw new FileNotFoundException(); // TODO: useful error
+            if (!_basePath!.Exists) throw new FileNotFoundException(); // TODO: useful error
 
             foreach (var mod in _basePath.EnumerateDirectories())
             {
@@ -65,12 +65,13 @@ namespace BSU.Core.Storage
             throw new InvalidOperationException("Storage not writable");
         }
 
-        public string Location() => _basePath.FullName;
+        public string Location() => _basePath?.FullName ?? "???";
 
         public bool CanWrite() => false;
 
         private static string? GetWorkshopPath()
         {
+            return null;
             var armaPath = ArmaData.GetGamePath();
             if (armaPath == null) return null;
 
