@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Media;
 using NLog;
 using Brush = System.Windows.Media.Brush;
@@ -39,8 +42,9 @@ public class SkinFile : ResourceDictionary
             Source = new Uri(";component/Resources/Skin.xaml", UriKind.RelativeOrAbsolute)
         };
 
-        using var writer = new StreamWriter(skinPath);
+        var entries = new List<(string key, string value)>();
 
+        // TODO: sort keys
         foreach (DictionaryEntry entry in skinResourceDictionary)
         {
             var (objKey, value) = entry;
@@ -49,12 +53,18 @@ public class SkinFile : ResourceDictionary
             switch (value)
             {
                 case FontFamily font:
-                    writer.WriteLine($"# {key}={font.Source}");
+                    entries.Add((key, font.Source));
                     break;
                 case SolidColorBrush brush:
-                    writer.WriteLine($"# {key}={ColorToHtml(brush.Color)}");
+                    entries.Add((key, ColorToHtml(brush.Color)));
                     break;
             }
+        }
+
+        using var writer = new StreamWriter(skinPath);
+        foreach (var (key, value) in entries.OrderBy(e => e.key))
+        {
+            writer.WriteLine($"# {key}={value}");
         }
     }
 
