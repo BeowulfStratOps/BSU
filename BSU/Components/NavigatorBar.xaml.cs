@@ -22,7 +22,7 @@ public partial class NavigatorBar
         set => SetValue(TitleProperty, value);
     }
 
-    public INavigator Navigator
+    public INavigator? Navigator
     {
         get => (INavigator)GetValue(NavigatorProperty);
         set => SetValue(NavigatorProperty, value);
@@ -42,11 +42,11 @@ public partial class NavigatorBar
 
     private void Storages_Click(object sender, MouseButtonEventArgs e)
     {
-        Navigator.NavigateToStorages();
+        Navigator?.NavigateToStorages();
     }
 
     private void Back_Click(object sender, MouseButtonEventArgs e)
     {
-        Navigator.NavigateBack();
+        Navigator?.NavigateBack();
     }
 }

@@ -15,6 +15,13 @@
                             <Viewbox.Resources>
                                 <Style TargetType="Path">
                                     <Setter Property="Fill" Value="{Binding Brush}"></Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ElementName=circle, Path=IsMouseOver}" Value="True">
+                                            <Setter Property="Fill" Value="{Binding HoverBrush}"></Setter>
+                                        </DataTrigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                        </Trigger>
+                                    </Style.Triggers>
                                 </Style>
                             </Viewbox.Resources>
                             <ContentPresenter Content="{Binding Svg}"></ContentPresenter>

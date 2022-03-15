@@ -26,17 +26,17 @@
             <gui:RepositoryPage />
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewModel:DismissError}">
-            <Border Margin="5" Padding="5" Background="#DDFF0000" CornerRadius="3">
+            <Border Margin="5" Padding="5" Background="Red">
                 <DockPanel LastChildFill="False">
-                    <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Text}" />
+                    <TextBlock DockPanel.Dock="Left" Foreground="White" FontWeight="Bold" Text="{Binding Text}" />
                     <userControls:SvgButton Width="20" Height="20" DockPanel.Dock="Right" Command="{Binding Dismiss}" Svg="{StaticResource SvgClose}" ToolTip="Dismiss"/>
                 </DockPanel>
             </Border>
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewModel:TimedNotification}">
-            <Border Margin="5" Padding="5" Background="Green" CornerRadius="3">
+            <Border Margin="5" Padding="5" Background="Green">
                 <DockPanel LastChildFill="False">
-                    <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Text}" />
+                    <TextBlock DockPanel.Dock="Left" Foreground="White" FontWeight="Bold" Text="{Binding Text}" />
                 </DockPanel>
             </Border>
         </DataTemplate>

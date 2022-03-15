@@ -58,7 +58,7 @@
                         <ColumnDefinition />
                         <ColumnDefinition SharedSizeGroup="RepoModShared2" />
                     </Grid.ColumnDefinitions>
-                    <userControls:CommandLink Grid.Column="1" DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="5" Command="{Binding ChooseDownloadLocation}" Text="Change Download Location" />
+                    <userControls:CommandLink Grid.Column="1" DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="5" Command="{Binding ChooseDownloadLocation}" CollapseIfDisabled="True" Text="Change Download Location" ToolTip="Change the download location of all mods currently marked for download" />
                 </Grid>
                 <ItemsControl ItemsSource="{Binding Path=Mods}" AlternationCount="2">
                     <ItemsControl.ItemTemplate>

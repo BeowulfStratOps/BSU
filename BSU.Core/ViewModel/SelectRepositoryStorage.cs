@@ -233,13 +233,13 @@ namespace BSU.Core.ViewModel
 
         private void Update()
         {
-            Mods = _repository.GetMods().Select(mod =>
+            Mods = _repository.GetMods().OrderBy(m => m.Identifier).Select((mod, index) =>
             {
                 var selection = mod.GetCurrentSelection();
                 var action = ModAction.Create(selection, mod);
-                var entry = new ModStorageSelectionInfo(mod.Identifier, action);
+                var entry = new ModStorageSelectionInfo(mod.Identifier, action, index % 2);
                 return entry;
-            }).OrderBy(t => t.ModName).ToList();
+            }).ToList();
         }
 
         private bool _showDownload;
@@ -261,7 +261,7 @@ namespace BSU.Core.ViewModel
             ((ICloseable)objWindow!).Close(true);
         }
 
-        public record ModStorageSelectionInfo(string ModName, ModAction? Action);
+        public record ModStorageSelectionInfo(string ModName, ModAction? Action, int StripeIndex);
 
         public class StorageSelection
         {

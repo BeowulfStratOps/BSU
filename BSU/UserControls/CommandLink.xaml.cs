@@ -28,6 +28,7 @@ public partial class CommandLink : INotifyPropertyChanged
         var canExecute = Command != null && Command.CanExecute(null);
         Foreground = canExecute ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.DimGray);
         Cursor = canExecute ? Cursors.Hand : Cursors.Arrow;
+        Visibility = !canExecute && CollapseIfDisabled ? Visibility.Collapsed : Visibility.Visible;
     }
 
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register("Text", typeof(string), typeof(CommandLink), new PropertyMetadata(default(string)));
@@ -36,6 +37,8 @@ public partial class CommandLink : INotifyPropertyChanged
     {
         InitializeComponent();
     }
+
+    public bool CollapseIfDisabled { get; set; }
 
     public ICommand? Command
     {

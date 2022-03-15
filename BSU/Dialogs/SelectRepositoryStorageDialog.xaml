@@ -8,12 +8,13 @@
         xmlns:converters="clr-namespace:BSU.GUI.Converters"
         mc:Ignorable="d"
         Title="Select Download Location" Width="500" d:DataContext="{d:DesignInstance viewModel:SelectRepositoryStorage}"
-        SizeToContent="Height" ResizeMode="NoResize"
+        SizeToContent="Height" ResizeMode="CanResizeWithGrip"
         x:Name="Window">
     <DockPanel Margin="15">
         <DockPanel.Resources>
             <converters:ActionToColorConverter x:Key="ActionToColor" />
             <converters:CollapseConverter x:Key="BoolToVisibility" />
+            <converters:StripeColorBrushConverter x:Key="StripeColorBrushConverter"></converters:StripeColorBrushConverter>
         </DockPanel.Resources>
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -24,20 +25,20 @@
         <Grid>
             <TextBlock FontSize="16" Foreground="DimGray" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">Loading...</TextBlock>
 
-            <StackPanel Orientation="Vertical" Visibility="{Binding NotIsLoading, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Visibility="{Binding UpdateAfter, Converter={StaticResource BoolToVisibility}}" TextWrapping="Wrap" Margin="0,0,0,15">
+            <DockPanel Visibility="{Binding NotIsLoading, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock DockPanel.Dock="Top" Visibility="{Binding UpdateAfter, Converter={StaticResource BoolToVisibility}}" TextWrapping="Wrap" Margin="0,0,0,15">
                     BSU automatically determined which mods you already have on your system, and which need to be downloaded or updated.
                     <LineBreak />
                     You can review the selection below and continue if you agree with the selection, or select Cancel to make changes manually.
                 </TextBlock>
 
-                <CheckBox Margin="0, 5" Visibility="{Binding ShowSteamOption, Converter={StaticResource BoolToVisibility}}"
+                <CheckBox DockPanel.Dock="Top" Margin="0, 5" Visibility="{Binding ShowSteamOption, Converter={StaticResource BoolToVisibility}}"
                           IsChecked="{Binding UseSteam}">
                     Use mods you have downloaded from Steam Workshop.
                 </CheckBox>
 
-                <Label Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">Download Location</Label>
-                <DockPanel Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">
+                <Label DockPanel.Dock="Top" Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">Download Location</Label>
+                <DockPanel DockPanel.Dock="Top" Height="25" Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">
                     <userControls:SvgButton DockPanel.Dock="Right" Command="{Binding AddStorage}" Svg="{StaticResource SvgAdd}" SvgBrush="Black"
                                             Width="25" Height="{Binding Path=Height, ElementName=ComboBox}" ToolTip="Add new Download Location"/>
                     <ComboBox ItemsSource="{Binding Storages}" IsSynchronizedWithCurrentItem="True" SelectedIndex="0"
@@ -54,12 +55,12 @@
                     </ComboBox>
                 </DockPanel>
 
-                <Border BorderThickness="1" BorderBrush="Black" Margin="0, 15" Padding="5">
-                    <ScrollViewer Height="200" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding Mods}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <DockPanel LastChildFill="False" Margin="0,0,5,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0 10">
+                    <ItemsControl ItemsSource="{Binding Mods}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Background="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}">
+                                    <DockPanel Margin="5" LastChildFill="False" >
                                         <TextBlock DockPanel.Dock="Left" Text="{Binding ModName}" />
                                         <ContentPresenter DockPanel.Dock="Right" Content="{Binding Action}">
                                             <ContentPresenter.Resources>
@@ -87,12 +88,12 @@
                                             </ContentPresenter.Resources>
                                         </ContentPresenter>
                                     </DockPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Border>
-            </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
         </Grid>
 
     </DockPanel>

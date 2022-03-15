@@ -13,6 +13,9 @@
             See <Hyperlink NavigateUri="https://github.com/BeowulfStratOps/BSU" RequestNavigate="Hyperlink_OnRequestNavigate">https://github.com/BeowulfStratOps/BSU</Hyperlink>  for more information.
             <LineBreak/>
             <LineBreak/>
+            If you find any issues or have a question, please contact us via GitHub or the #support channel on our Discord.
+            <LineBreak/>
+            <LineBreak/>
             Version: <Run x:Name="Version"></Run>
         </TextBlock>
         <Button Padding="15, 2" HorizontalAlignment="Right" IsCancel="True">OK</Button>

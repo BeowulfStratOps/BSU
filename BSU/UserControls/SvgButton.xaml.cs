@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using BSU.Core.Annotations;
+using BSU.Core.ViewModel.Util;
 
 namespace BSU.GUI.UserControls
 {
@@ -82,8 +83,27 @@ namespace BSU.GUI.UserControls
                 if (_brush == value) return;
                 _brush = value;
                 OnPropertyChanged();
+                var color = ((SolidColorBrush)value).Color;
+                HoverBrush = BuildHoverBrush(color);
+                OnPropertyChanged(nameof(HoverBrush));
             }
         }
+
+        private static Brush BuildHoverBrush(Color color)
+        {
+            var averageWith = Colors.Gray;
+
+            byte Avg(byte a, byte b) => (byte)((a + b) / 2);
+
+            var mixedColor = Color.FromRgb(
+                Avg(color.R, averageWith.R),
+                Avg(color.G, averageWith.G),
+                Avg(color.B, averageWith.B)
+            );
+            return new SolidColorBrush(mixedColor);
+        }
+
+        public Brush HoverBrush { get; private set; } = BuildHoverBrush(Colors.Black);
 
         public Brush SvgBrush
         {
