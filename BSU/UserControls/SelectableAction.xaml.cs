@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using BSU.Core.ViewModel.Util;
 
 namespace BSU.GUI.UserControls
@@ -32,17 +31,17 @@ namespace BSU.GUI.UserControls
         {
             if (_isSelected)
             {
-                Border.Background = SystemColors.HighlightBrush;
+                Border.Background = Theme.GetBrush("SelectionBackgroundSelected");
                 return;
             }
 
             if (_isHovered)
             {
-                Border.Background = new SolidColorBrush(Colors.CornflowerBlue);
+                Border.Background = Theme.GetBrush("SelectionBackgroundHover");
                 return;
             }
 
-            Border.Background = SystemColors.WindowBrush;
+            Border.Background = Theme.GetBrush("SelectionBackground");
         }
 
         private void VmOnPropertyChanged(object? sender, PropertyChangedEventArgs e)

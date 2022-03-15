@@ -26,7 +26,7 @@ public partial class CommandLink : INotifyPropertyChanged
     private void Update()
     {
         var canExecute = Command != null && Command.CanExecute(null);
-        Foreground = canExecute ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.DimGray);
+        Foreground = canExecute ? Theme.GetBrush("ButtonNormal") : Theme.GetBrush("ButtonDisabled");
         Cursor = canExecute ? Cursors.Hand : Cursors.Arrow;
         Visibility = !canExecute && CollapseIfDisabled ? Visibility.Collapsed : Visibility.Visible;
     }

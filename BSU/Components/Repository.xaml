@@ -19,6 +19,7 @@
         <Border.Style>
             <Style TargetType="Border">
                 <Setter Property="Background" Value="{DynamicResource PresetListPanelBackground}"></Setter>
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource PresetListPanelForeground}"></Setter>
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding ElementName=PresetNamePanel, Path=IsMouseOver}" Value="True">
                         <Setter Property="Background" Value="{DynamicResource PresetListPanelBackgroundHover}"></Setter>

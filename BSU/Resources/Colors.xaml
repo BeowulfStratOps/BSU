@@ -22,6 +22,7 @@
 
     <SolidColorBrush x:Key="ButtonNormal" Color="Black"/>
     <SolidColorBrush x:Key="ButtonDisabled" Color="DimGray"/>
+    <SolidColorBrush x:Key="ButtonShadeTo" Color="Gray"/>
 
     <SolidColorBrush x:Key="IndicatorLoading" Color="DimGray"/>
     <SolidColorBrush x:Key="IndicatorGood" Color="Green"/>
@@ -41,12 +42,11 @@
     <SolidColorBrush x:Key="ModListBackground1Hover" Color="LightGray"/>
 
     <SolidColorBrush x:Key="SelectionBackground" Color="White"/>
+    <SolidColorBrush x:Key="SelectionBorder" Color="Black"/>
     <SolidColorBrush x:Key="SelectionForeground" Color="Black"/>
     <SolidColorBrush x:Key="SelectionStorageForeground" Color="DimGray"/>
     <SolidColorBrush x:Key="SelectionBackgroundHover" Color="CornflowerBlue"/>
-    <SolidColorBrush x:Key="SelectionForegroundHover" Color="Black"/>
     <SolidColorBrush x:Key="SelectionBackgroundSelected" Color="#0078D7"/>
-    <SolidColorBrush x:Key="SelectionForegroundSelected" Color="Black"/>
 
     <SolidColorBrush x:Key="StorageBackground" Color="LightGray"/>
     <SolidColorBrush x:Key="StorageModsBackground" Color="#EEEEEE"/>

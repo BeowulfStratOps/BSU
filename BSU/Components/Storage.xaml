@@ -14,6 +14,11 @@
         <Border.Resources>
             <converters:NullToCollapseConverter x:Key="NullToCollapse" />
         </Border.Resources>
+        <Border.Style>
+            <Style TargetType="Border">
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource StorageForeground}"></Setter>
+            </Style>
+        </Border.Style>
         <DockPanel>
             <DockPanel Dock="Top" Margin="5">
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
@@ -36,8 +41,8 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <gui:FontIcon Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96D" Margin="3" />
-                <gui:FontIcon Visibility="{Binding NotIsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96E" Margin="3" />
+                <gui:FontIcon Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96D" Margin="3" Foreground="{DynamicResource ButtonNormal}" />
+                <gui:FontIcon Visibility="{Binding NotIsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96E" Margin="3" Foreground="{DynamicResource ButtonNormal}" />
             </StackPanel>
             <Border Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" Background="{DynamicResource StorageModsBackground}">
                 <ItemsControl ItemsSource="{Binding Path=Mods}" Padding="5">

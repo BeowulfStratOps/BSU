@@ -31,7 +31,7 @@
                 <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Storage</TextBlock>
                 <gui:FontIcon Margin="3 1" FontWeight="Black" FontSize="12" Icon="E970" />
             </StackPanel>
-            <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Text="{Binding Title, FallbackValue=Page, TargetNullValue=???}" />
+            <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Text="{Binding Title, FallbackValue=Page, TargetNullValue=???}" Foreground="{DynamicResource NavbarForeground}" />
         </DockPanel>
     </Grid>
 </UserControl>

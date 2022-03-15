@@ -13,7 +13,7 @@ namespace BSU.GUI.UserControls
     public partial class SvgButton : INotifyPropertyChanged
     {
         public static readonly DependencyProperty CommandProperty = DependencyProperty.Register("Command", typeof(ICommand), typeof(SvgButton), new PropertyMetadata(default(ICommand), CommandChangedCallback));
-        public static readonly DependencyProperty SvgBrushProperty = DependencyProperty.Register("SvgBrush", typeof(Brush), typeof(SvgButton), new PropertyMetadata(new SolidColorBrush(Colors.Black), ColorChangedCallback));
+        public static readonly DependencyProperty SvgBrushProperty = DependencyProperty.Register("SvgBrush", typeof(Brush), typeof(SvgButton), new PropertyMetadata(Theme.GetBrush("ButtonNormal"), ColorChangedCallback));
 
         private static void ColorChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -51,7 +51,7 @@ namespace BSU.GUI.UserControls
             }
             else
             {
-                Brush = new SolidColorBrush(Colors.Gray);
+                Brush = Theme.GetBrush("ButtonDisabled");
                 IsEnabled = false;
                 if (HideIfDisabled) Visibility = Visibility.Collapsed;
             }
@@ -91,14 +91,14 @@ namespace BSU.GUI.UserControls
 
         private static Brush BuildHoverBrush(Color color)
         {
-            var averageWith = Colors.Gray;
+            var shade = (SolidColorBrush)Theme.GetBrush("ButtonShadeTo");
 
             byte Avg(byte a, byte b) => (byte)((a + b) / 2);
 
             var mixedColor = Color.FromRgb(
-                Avg(color.R, averageWith.R),
-                Avg(color.G, averageWith.G),
-                Avg(color.B, averageWith.B)
+                Avg(color.R, shade.Color.R),
+                Avg(color.G, shade.Color.G),
+                Avg(color.B, shade.Color.B)
             );
             return new SolidColorBrush(mixedColor);
         }

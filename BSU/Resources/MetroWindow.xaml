@@ -7,7 +7,7 @@
     <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
     <Style x:Key="WindowButtonStyle" TargetType="{x:Type Button}">
-        <Setter Property="Foreground" Value="{DynamicResource ForegroundColorBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource WindowBarForeground}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -76,6 +76,7 @@
 
     <Style x:Key="MetroWindowStyle" TargetType="gui:MainWindow">
         <Setter Property="UseLayoutRounding" Value="True" />
+
         <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
         <Setter Property="Template">
             <Setter.Value>
@@ -123,8 +124,13 @@
                                         </Button>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True" Grid.Row="0">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Setter Property="TextElement.Foreground" Value="{DynamicResource WindowBarForeground}"></Setter>
+                                            </Style>
+                                        </StackPanel.Style>
                                         <Image Width="20" Height="20" Margin="5 0" Source="{resources:AppIcon}" IsHitTestVisible="False"></Image>
-                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 -1 0 0" FontSize="12" Foreground="{TemplateBinding Foreground}" IsHitTestVisible="False"/>
+                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 -1 0 0" FontSize="12" IsHitTestVisible="False"/>
                                         <ContentPresenter Content="{TemplateBinding TitleBarContent}"></ContentPresenter>
                                     </StackPanel>
                                 </Grid>

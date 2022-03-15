@@ -7,7 +7,6 @@
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              xmlns:util="clr-namespace:BSU.Core.ViewModel.Util;assembly=BSU.Core"
-             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d"
              x:Name="RepoMod"
              d:DesignHeight="75" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
@@ -89,8 +88,8 @@
                     </DockPanel>
 
                     <userControls:ComboBoxPopup IsOpen="{Binding Actions.IsOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=ComboBoxSelected}" MinWidth="{Binding ElementName=ComboBoxSelected, Path=ActualWidth}">
-                        <Border BorderBrush="Black" BorderThickness="1">
-                            <ItemsControl Background="{DynamicResource WindowBackground}" ItemsSource="{Binding Actions.Storages}" Padding="2">
+                        <Border BorderBrush="{DynamicResource SelectionBorder}" BorderThickness="1" Background="{DynamicResource SelectionBackground}">
+                            <ItemsControl ItemsSource="{Binding Actions.Storages}" Padding="2">
                                 <ItemsControl.Resources>
                                     <DataTemplate DataType="{x:Type util:SelectableModAction}">
                                         <userControls:SelectableAction />

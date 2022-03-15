@@ -11,6 +11,11 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="600" d:DataContext="{d:DesignInstance viewModel:Repository}">
     <DockPanel>
+        <DockPanel.Style>
+            <Style TargetType="DockPanel">
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource PresetForeground}"></Setter>
+            </Style>
+        </DockPanel.Style>
         <DockPanel.Resources>
             <converters:ColorIndicationConverter x:Key="ColorConverter" />
             <converters:CollapseConverter x:Key="CollapseConverter" />
