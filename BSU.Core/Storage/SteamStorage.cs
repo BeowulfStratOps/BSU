@@ -71,7 +71,6 @@ namespace BSU.Core.Storage
 
         private static string? GetWorkshopPath()
         {
-            return null;
             var armaPath = ArmaData.GetGamePath();
             if (armaPath == null) return null;
 
