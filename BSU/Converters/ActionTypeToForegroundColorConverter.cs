@@ -13,8 +13,8 @@ public class ActionTypeToForegroundColorConverter : IValueConverter
         var value = (ModActionEnum)objValue;
         return value switch
         {
-            ModActionEnum.UnusableSteam => new SolidColorBrush(Colors.DimGray),
-            _ => new SolidColorBrush(Colors.Black)
+            ModActionEnum.UnusableSteam => Theme.GetBrush("ButtonDisabled"),
+            _ => Theme.GetBrush("SelectionForeground")
         };
     }
 

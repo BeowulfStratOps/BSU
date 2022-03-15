@@ -13,10 +13,10 @@ namespace BSU.GUI.Converters
             var color = (ColorIndication)value;
             return color switch
             {
-                ColorIndication.Normal => new SolidColorBrush(Colors.Black),
-                ColorIndication.Warning => new SolidColorBrush(Colors.Orange),
-                ColorIndication.Good => new SolidColorBrush(Colors.Green),
-                ColorIndication.Update => new SolidColorBrush(Colors.Blue),
+                ColorIndication.Normal => Theme.GetBrush("ButtonNormal"),
+                ColorIndication.Warning => Theme.GetBrush("IndicatorWarning"),
+                ColorIndication.Good => Theme.GetBrush("IndicatorGood"),
+                ColorIndication.Update => Theme.GetBrush("IndicatorSync"),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

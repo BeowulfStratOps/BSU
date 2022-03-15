@@ -10,7 +10,7 @@
              xmlns:gui="clr-namespace:BSU.GUI"
              mc:Ignorable="d"
              d:DesignHeight="100" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:Storage}">
-    <Border Background="{DynamicResource BackgroundColor2Brush}" Margin="5">
+    <Border Background="{DynamicResource StorageBackground}" Margin="5">
         <Border.Resources>
             <converters:NullToCollapseConverter x:Key="NullToCollapse" />
         </Border.Resources>
@@ -19,7 +19,7 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
                     <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name, FallbackValue=Name}"></TextBlock>
                     <TextBlock Text="{Binding Path, FallbackValue=C:\asdf\places\and\stuff}"></TextBlock>
-                    <TextBlock Foreground="Red" Visibility="{Binding Error, Converter={StaticResource NullToCollapse}}" Text="{Binding Error}" />
+                    <TextBlock Foreground="{DynamicResource ValidationError}" Visibility="{Binding Error, Converter={StaticResource NullToCollapse}}" Text="{Binding Error}" />
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                     <userControls:SvgButton DockPanel.Dock="Right" Width="30" Height="30" HideIfDisabled="True" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Download Location"/>
@@ -28,10 +28,10 @@
             <StackPanel DockPanel.Dock="Top" MouseLeftButtonUp="ToggleShowMods">
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
-                        <Setter Property="Background" Value="{DynamicResource BackgroundColor1Brush}"></Setter>
+                        <Setter Property="Background" Value="{DynamicResource StorageModsBackground}"></Setter>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
+                                <Setter Property="Background" Value="{DynamicResource StorageModsExtenderHover}"></Setter>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -39,7 +39,7 @@
                 <gui:FontIcon Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96D" Margin="3" />
                 <gui:FontIcon Visibility="{Binding NotIsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" FontWeight="Bold" HorizontalAlignment="Center" Icon="E96E" Margin="3" />
             </StackPanel>
-            <Border Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" Background="{DynamicResource BackgroundColor1Brush}">
+            <Border Visibility="{Binding IsShowingMods, Converter={StaticResource BoolToVisibilityConverter}}" Background="{DynamicResource StorageModsBackground}">
                 <ItemsControl ItemsSource="{Binding Path=Mods}" Padding="5">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

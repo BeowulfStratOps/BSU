@@ -9,8 +9,7 @@ public class EnableToColorConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        var color = (bool)value ? Colors.Black : Colors.Gray;
-        return new SolidColorBrush(color);
+        return (bool)value ? Theme.GetBrush("ButtonNormal") : Theme.GetBrush("ButtonDisabled");
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

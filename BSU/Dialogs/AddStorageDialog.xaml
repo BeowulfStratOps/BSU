@@ -40,11 +40,11 @@
                     <TextBlock Margin="2, 0" FontWeight="ExtraBold">...</TextBlock>
                 </Button>
             </Grid>
-            <TextBlock Grid.Row="1" Grid.Column="1" Foreground="Red" Text="{Binding PathError}" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Foreground="{DynamicResource ValidationError}" Text="{Binding PathError}" />
 
             <Label Grid.Row="2" Grid.Column="0">Name:</Label>
             <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"></TextBox>
-            <TextBlock Grid.Row="3" Grid.Column="1" Foreground="Red" Margin="0,0,0,5" Text="{Binding NameError}" />
+            <TextBlock Grid.Row="3" Grid.Column="1" Foreground="{DynamicResource ValidationError}" Margin="0,0,0,5" Text="{Binding NameError}" />
         </Grid>
 
         <WrapPanel Grid.Row="2" HorizontalAlignment="Right" Margin="10">

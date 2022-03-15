@@ -1,14 +1,62 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <SolidColorBrush x:Key="HighlightColorBrush" Color="#E5E5E5"/>
-    <SolidColorBrush x:Key="ButtonPressColorBrush" Color="#CCCCCC"/>
-    <SolidColorBrush x:Key="CloseButtonHoverColorBrush" Color="#E81123"/>
-    <SolidColorBrush x:Key="CloseButtonPressColorBrush" Color="#F1707A"/>
-    <SolidColorBrush x:Key="CloseButtonAltForegroundColorBrush" Color="White"/>
-    <SolidColorBrush x:Key="WindowBackgroundColorBrush" Color="White"/>
-    <SolidColorBrush x:Key="ForegroundColorBrush" Color="Black"/>
-    <SolidColorBrush x:Key="ForegroundColor1Brush" Color="LightSlateGray"/>
-    <SolidColorBrush x:Key="BackgroundColor1Brush" Color="#EEEEEE"/>
-    <SolidColorBrush x:Key="BackgroundColor2Brush" Color="LightGray"/>
+    <SolidColorBrush x:Key="WindowBarBackground" Color="White"/>
+    <SolidColorBrush x:Key="WindowBarButtonHover" Color="#E5E5E5"/>
+    <SolidColorBrush x:Key="WindowBarButtonPress" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="WindowBarForeground" Color="Black"/>
+
+    <SolidColorBrush x:Key="WindowCloseBackgroundHover" Color="#E81123"/>
+    <SolidColorBrush x:Key="WindowCloseBackgroundPress" Color="#F1707A"/>
+    <SolidColorBrush x:Key="WindowCloseAltForeground" Color="White"/>
+
+    <SolidColorBrush x:Key="WindowBackground" Color="White"/>
+
+    <SolidColorBrush x:Key="NavbarBackground" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="NavbarForeground" Color="Black"/>
+    <SolidColorBrush x:Key="NavbarForegroundHover" Color="LightSlateGray"/>
+
+    <SolidColorBrush x:Key="PresetListPanelBackground" Color="LightGray"/>
+    <SolidColorBrush x:Key="PresetListPanelBackgroundHover" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="PresetListPanelForeground" Color="Black"/>
+
+    <SolidColorBrush x:Key="ButtonNormal" Color="Black"/>
+    <SolidColorBrush x:Key="ButtonDisabled" Color="DimGray"/>
+
+    <SolidColorBrush x:Key="IndicatorLoading" Color="DimGray"/>
+    <SolidColorBrush x:Key="IndicatorGood" Color="Green"/>
+    <SolidColorBrush x:Key="IndicatorWarning" Color="Orange"/>
+    <SolidColorBrush x:Key="IndicatorError" Color="Red"/>
+    <SolidColorBrush x:Key="IndicatorSync" Color="Blue"/>
+
+    <SolidColorBrush x:Key="ValidationError" Color="Red"/>
+
+    <SolidColorBrush x:Key="PresetBackground" Color="LightGray"/>
+    <SolidColorBrush x:Key="PresetForeground" Color="Black"/>
+
+    <SolidColorBrush x:Key="ModListBackground0" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="ModListBackground1" Color="White"/>
+    <SolidColorBrush x:Key="ModListForeground" Color="Black"/>
+    <SolidColorBrush x:Key="ModListBackground0Hover" Color="LightGray"/>
+    <SolidColorBrush x:Key="ModListBackground1Hover" Color="LightGray"/>
+
+    <SolidColorBrush x:Key="SelectionBackground" Color="White"/>
+    <SolidColorBrush x:Key="SelectionForeground" Color="Black"/>
+    <SolidColorBrush x:Key="SelectionStorageForeground" Color="DimGray"/>
+    <SolidColorBrush x:Key="SelectionBackgroundHover" Color="CornflowerBlue"/>
+    <SolidColorBrush x:Key="SelectionForegroundHover" Color="Black"/>
+    <SolidColorBrush x:Key="SelectionBackgroundSelected" Color="#0078D7"/>
+    <SolidColorBrush x:Key="SelectionForegroundSelected" Color="Black"/>
+
+    <SolidColorBrush x:Key="StorageBackground" Color="LightGray"/>
+    <SolidColorBrush x:Key="StorageModsBackground" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="StorageForeground" Color="LightGray"/>
+    <SolidColorBrush x:Key="StorageForegroundSecondary" Color="DimGray"/>
+    <SolidColorBrush x:Key="StorageModsExtenderHover" Color="LightGray"/>
+
+    <SolidColorBrush x:Key="NotificationBackgroundGood" Color="Green"/>
+    <SolidColorBrush x:Key="NotificationBackgroundGoodForeground" Color="White"/>
+    <SolidColorBrush x:Key="NotificationBackgroundBad" Color="Red"/>
+    <SolidColorBrush x:Key="NotificationBackgroundBadForeground" Color="White"/>
+
 </ResourceDictionary>

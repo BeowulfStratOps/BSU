@@ -6,7 +6,7 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid Height="30">
-        <Menu Background="{DynamicResource WindowBackgroundColorBrush}" Margin="5 7 0 0" Height="20">
+        <Menu Background="{DynamicResource WindowBackground}" Margin="5 7 0 0" Height="20">
             <Menu.Resources>
                 <Style x:Key="TopLevelItem" TargetType="MenuItem">
                     <Setter Property="Margin" Value="5 0"></Setter>

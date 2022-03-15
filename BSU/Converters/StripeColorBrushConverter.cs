@@ -8,14 +8,15 @@ namespace BSU.GUI.Converters;
 
 public class StripeColorBrushConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var app = Application.Current;;
         var index = (int)value;
+        var suffix = parameter is "Hover" ? "Hover" : "";
+
         return index switch
         {
-            0 => (Brush)app.FindResource("BackgroundColor1Brush")!,
-            1 => new SolidColorBrush(Colors.White),
+            0 => Theme.GetBrush("ModListBackground0" + suffix),
+            1 => Theme.GetBrush("ModListBackground1" + suffix),
             _ => throw new ArgumentOutOfRangeException()
         };
     }

@@ -23,7 +23,7 @@
         </StackPanel>
 
         <Grid>
-            <TextBlock FontSize="16" Foreground="DimGray" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">Loading...</TextBlock>
+            <TextBlock FontSize="16" Foreground="{DynamicResource IndicatorLoading}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">Loading...</TextBlock>
 
             <DockPanel Visibility="{Binding NotIsLoading, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock DockPanel.Dock="Top" Visibility="{Binding UpdateAfter, Converter={StaticResource BoolToVisibility}}" TextWrapping="Wrap" Margin="0,0,0,15">
@@ -80,7 +80,7 @@
                                                     <TextBlock>Disabled</TextBlock>
                                                 </DataTemplate>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectNone}">
-                                                    <TextBlock Foreground="Red" FontStyle="Italic" Text="Nothing selected" />
+                                                    <TextBlock Foreground="{DynamicResource ValidationError}" FontStyle="Italic" Text="Nothing selected" />
                                                 </DataTemplate>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectLoading}">
                                                     <TextBlock Text="Loading" />

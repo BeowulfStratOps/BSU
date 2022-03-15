@@ -39,7 +39,7 @@
         <Grid Grid.Row="1" Grid.Column="1">
             <Grid Margin="0,0,0,6" >
                 <TextBlock Text="{Binding CheckResult}"></TextBlock>
-                <TextBlock Foreground="Red" Text="{Binding CheckError}"></TextBlock>
+                <TextBlock Foreground="{DynamicResource ValidationError}" Text="{Binding CheckError}"></TextBlock>
             </Grid>
         </Grid>
 
@@ -47,7 +47,7 @@
         <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
 
         <Grid Grid.Row="3" Grid.Column="1">
-            <TextBlock Foreground="Red" Text="{Binding NameValidation}"></TextBlock>
+            <TextBlock Foreground="{DynamicResource ValidationError}" Text="{Binding NameValidation}"></TextBlock>
         </Grid>
 
         <WrapPanel Grid.Row="4" Grid.Column="1" HorizontalAlignment="Right" Margin="15">

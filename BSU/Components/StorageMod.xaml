@@ -13,7 +13,7 @@
         </StackPanel.Resources>
         <TextBlock VerticalAlignment="Center" FontWeight="Bold" FontSize="12" Text="{Binding Path=Title, FallbackValue=Modname}" />
         <TextBlock VerticalAlignment="Center" Margin="4,0,0,0" Visibility="{Binding UsedBy, Converter={StaticResource NullToVisibility}}">
-            <Run Foreground="DimGray">- Used by </Run>
+            <Run Foreground="{DynamicResource StorageForegroundSecondary}">- Used by </Run>
             <Run Text="{Binding UsedBy}"/>
         </TextBlock>
     </StackPanel>

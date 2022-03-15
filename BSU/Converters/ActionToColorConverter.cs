@@ -14,18 +14,18 @@ namespace BSU.GUI.Converters
             switch (value)
             {
                 case ModActionEnum.Loading:
-                    return new SolidColorBrush(Colors.DimGray);
+                    return Theme.GetBrush("IndicatorLoading");
                 case ModActionEnum.Update:
                 case ModActionEnum.ContinueUpdate:
                 case ModActionEnum.AbortAndUpdate:
                 case ModActionEnum.Await:
-                    return new SolidColorBrush(Colors.Blue);
+                    return Theme.GetBrush("IndicatorSync");
                 case ModActionEnum.Use:
-                    return new SolidColorBrush(Colors.Green);
+                    return Theme.GetBrush("IndicatorGood");;
                 case ModActionEnum.AbortActiveAndUpdate:
                 case ModActionEnum.Unusable:
                 case ModActionEnum.UnusableSteam:
-                    return new SolidColorBrush(Colors.Red);
+                    return Theme.GetBrush("IndicatorError");;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

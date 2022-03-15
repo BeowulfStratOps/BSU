@@ -13,16 +13,16 @@
         <Grid.Resources>
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"></converters:BoolToVisibilityConverter>
             <Style TargetType="StackPanel">
-                <Setter Property="TextElement.Foreground" Value="{DynamicResource ForegroundColorBrush}"></Setter>
-                <Setter Property="Background" Value="{DynamicResource BackgroundColor1Brush}"></Setter>
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource NavbarForeground}"></Setter>
+                <Setter Property="Background" Value="{DynamicResource NavbarBackground}"></Setter>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="TextElement.Foreground" Value="{DynamicResource ForegroundColor1Brush}"></Setter>
+                        <Setter Property="TextElement.Foreground" Value="{DynamicResource NavbarForegroundHover}"></Setter>
                     </Trigger>
                 </Style.Triggers>
             </Style>
         </Grid.Resources>
-        <DockPanel Background="{DynamicResource BackgroundColor1Brush}">
+        <DockPanel Background="{DynamicResource NavbarBackground}">
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" MouseLeftButtonDown="Back_Click" ToolTip="Back" Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisibilityConverter}}">
                 <gui:FontIcon Margin="3 1" FontWeight="Black" FontSize="12" Icon="E96F" />
                 <TextBlock Margin="0 3" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center">Back</TextBlock>

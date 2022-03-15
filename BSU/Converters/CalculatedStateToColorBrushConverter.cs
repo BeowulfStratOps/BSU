@@ -12,18 +12,17 @@ public class CalculatedStateToColorBrushConverter : IValueConverter
     public object Convert(object objValue, Type targetType, object parameter, CultureInfo culture)
     {
         var value = (CalculatedRepositoryStateEnum)objValue;
-        var color = value switch
+        return value switch
         {
-            CalculatedRepositoryStateEnum.NeedsSync => Colors.Blue,
-            CalculatedRepositoryStateEnum.Ready => Colors.Green,
-            CalculatedRepositoryStateEnum.RequiresUserIntervention => Colors.Red,
-            CalculatedRepositoryStateEnum.Syncing => Colors.DimGray,
-            CalculatedRepositoryStateEnum.Loading => Colors.DimGray,
-            CalculatedRepositoryStateEnum.ReadyPartial => Colors.Orange,
-            CalculatedRepositoryStateEnum.Error => Colors.Red,
+            CalculatedRepositoryStateEnum.NeedsSync => Theme.GetBrush("IndicatorSync"),
+            CalculatedRepositoryStateEnum.Ready => Theme.GetBrush("IndicatorGood"),
+            CalculatedRepositoryStateEnum.RequiresUserIntervention => Theme.GetBrush("IndicatorError"),
+            CalculatedRepositoryStateEnum.Syncing => Theme.GetBrush("IndicatorLoading"),
+            CalculatedRepositoryStateEnum.Loading => Theme.GetBrush("IndicatorLoading"),
+            CalculatedRepositoryStateEnum.ReadyPartial => Theme.GetBrush("IndicatorWarning"),
+            CalculatedRepositoryStateEnum.Error => Theme.GetBrush("IndicatorError"),
             _ => throw new ArgumentOutOfRangeException()
         };
-        return new SolidColorBrush(color);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

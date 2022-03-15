@@ -4,10 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
-             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
              xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
              xmlns:util="clr-namespace:BSU.Core.ViewModel.Util;assembly=BSU.Core"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d"
              x:Name="RepoMod"
              d:DesignHeight="75" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:RepositoryMod}">
@@ -19,11 +19,8 @@
             <Style TargetType="Border">
                 <Setter Property="Background" Value="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}"></Setter>
                 <Style.Triggers>
-                    <!--<DataTrigger Binding="{Binding ElementName=NamePanel, Path=IsMouseOver}" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
-                    </DataTrigger>-->
                     <Trigger Property="IsMouseDirectlyOver" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
+                        <Setter Property="Background" Value="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}, ConverterParameter=Hover}"></Setter>
                     </Trigger>
                 </Style.Triggers>
             </Style>
@@ -53,7 +50,7 @@
                             <Setter Property="Background" Value="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}"></Setter>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource BackgroundColor2Brush}"></Setter>
+                                    <Setter Property="Background" Value="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}, ConverterParameter=Hover}"></Setter>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -82,7 +79,7 @@
                                     </StackPanel>
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type viewModel:SelectNone}">
-                                    <TextBlock Foreground="Red" FontStyle="Italic" Text="Nothing Selected" />
+                                    <TextBlock Foreground="{DynamicResource ValidationError}" FontStyle="Italic" Text="Nothing Selected" />
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type viewModel:SelectLoading}">
                                     <TextBlock Text="Loading" />
@@ -93,7 +90,7 @@
 
                     <userControls:ComboBoxPopup IsOpen="{Binding Actions.IsOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=ComboBoxSelected}" MinWidth="{Binding ElementName=ComboBoxSelected, Path=ActualWidth}">
                         <Border BorderBrush="Black" BorderThickness="1">
-                            <ItemsControl Background="{DynamicResource WindowBackgroundColorBrush}" ItemsSource="{Binding Actions.Storages}" Padding="2">
+                            <ItemsControl Background="{DynamicResource WindowBackground}" ItemsSource="{Binding Actions.Storages}" Padding="2">
                                 <ItemsControl.Resources>
                                     <DataTemplate DataType="{x:Type util:SelectableModAction}">
                                         <userControls:SelectableAction />
@@ -101,7 +98,7 @@
                                     <DataTemplate DataType="{x:Type util:StorageModActionList}">
                                         <Border Margin="2" Padding="2" ToolTip="{Binding Path=Path}">
                                             <StackPanel>
-                                                <TextBlock FontWeight="Bold" Foreground="DimGray" Text="{Binding Name}" />
+                                                <TextBlock FontWeight="Bold" Foreground="{DynamicResource SelectionStorageForeground}" Text="{Binding Name}" />
                                                 <ItemsControl Margin="4,0,0,0" ItemsSource="{Binding Mods}" />
                                             </StackPanel>
                                         </Border>
@@ -115,7 +112,7 @@
 
                 <Grid Grid.Column="1" HorizontalAlignment="Stretch" IsHitTestVisible="False" Margin="0">
                     <userControls:FileSyncProgressBar Margin="15, 0" DockPanel.Dock="Top" DataContext="{Binding UpdateProgress}" />
-                    <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,0" Foreground="Red" FontStyle="Italic" Text="{Binding ErrorText, FallbackValue=No error}"></TextBlock>
+                    <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource ValidationError}" FontStyle="Italic" Text="{Binding ErrorText, FallbackValue=No error}"></TextBlock>
                 </Grid>
             </Grid>
             <WrapPanel Orientation="Horizontal" Visibility="{Binding IsExpanded, Converter={StaticResource CollapseConverter}}" IsHitTestVisible="False">

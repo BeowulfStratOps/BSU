@@ -20,7 +20,7 @@
 
         <components:NavigatorBar DockPanel.Dock="Top" Title="Preset" Navigator="{Binding Navigator}" />
 
-        <DockPanel Dock="Top" Background="LightGray">
+        <DockPanel Dock="Top" Background="{DynamicResource LightGray}">
             <StackPanel DockPanel.Dock="Left" Orientation="Vertical" Margin="5">
                 <TextBlock Margin="1" FontSize="16" FontWeight="SemiBold" Text="{Binding Name, FallbackValue=My Amazing Server}"></TextBlock>
                 <TextBlock Margin="1" FontSize="16" FontWeight="SemiBold" Foreground="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToColorBrushConverter}}" Text="{Binding Path=CalculatedState, Converter={StaticResource CalculatedStateToText}, FallbackValue=Ready}"></TextBlock>

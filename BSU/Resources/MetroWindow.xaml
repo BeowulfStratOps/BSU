@@ -25,10 +25,10 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource HighlightColorBrush}" />
+                            <Setter Property="Background" Value="{DynamicResource WindowBarButtonHover}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource ButtonPressColorBrush}" />
+                            <Setter Property="Background" Value="{DynamicResource WindowBarButtonPress}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
                             <Setter TargetName="contentPresenter" Property="Opacity" Value=".5" />
@@ -40,7 +40,7 @@
     </Style>
 
     <Style x:Key="WindowCloseButtonStyle" TargetType="{x:Type Button}">
-        <Setter Property="Foreground" Value="{DynamicResource ForegroundColorBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource WindowBarForeground}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -58,12 +58,12 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource CloseButtonHoverColorBrush}" />
-                            <Setter Property="Foreground" Value="{StaticResource CloseButtonAltForegroundColorBrush}"></Setter>
+                            <Setter Property="Background" Value="{DynamicResource WindowCloseBackgroundHover}" />
+                            <Setter Property="Foreground" Value="{DynamicResource WindowCloseAltForeground}"></Setter>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource CloseButtonPressColorBrush}" />
-                            <Setter Property="Foreground" Value="{StaticResource CloseButtonAltForegroundColorBrush}"></Setter>
+                            <Setter Property="Background" Value="{DynamicResource WindowCloseBackgroundPress}" />
+                            <Setter Property="Foreground" Value="{DynamicResource WindowCloseAltForeground}"></Setter>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
                             <Setter TargetName="contentPresenter" Property="Opacity" Value=".5" />
@@ -80,7 +80,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="gui:MainWindow">
-                    <Border x:Name="WindowBorder" Margin="{Binding Source={x:Static SystemParameters.WindowNonClientFrameThickness}}" Background="{StaticResource WindowBackgroundColorBrush}">
+                    <Border x:Name="WindowBorder" Margin="{Binding Source={x:Static SystemParameters.WindowNonClientFrameThickness}}" Background="{StaticResource WindowBackground}">
                         <Grid>
                             <Border BorderThickness="1">
                                 <Grid x:Name="LayoutRoot">
@@ -89,7 +89,7 @@
                                         <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
                                     <ContentPresenter Grid.Row="1" Margin="0"/>
-                                    <Rectangle x:Name="HeaderBackground" Height="30" Fill="{DynamicResource WindowBackgroundColorBrush}" VerticalAlignment="Top" Grid.Row="0"/>
+                                    <Rectangle x:Name="HeaderBackground" Height="30" Fill="{DynamicResource WindowBarBackground}" VerticalAlignment="Top" Grid.Row="0"/>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" WindowChrome.IsHitTestVisibleInChrome="True" Grid.Row="0">
                                         <Button Command="{Binding Source={x:Static SystemCommands.MinimizeWindowCommand}}" ToolTip="minimize" Style="{StaticResource WindowButtonStyle}">
                                             <Button.Content>

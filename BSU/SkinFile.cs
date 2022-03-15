@@ -51,7 +51,7 @@ public class SkinFile : ResourceDictionary
             var split = line.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             if (split.Length != 2)
                 throw new InvalidDataException($"Expected color name and value separated by space. Got: '{line}'");
-            var name = split[0] + "Brush";
+            var name = split[0];
             var brush = ParseColor(split[1]);
 
             this[name] = brush;
