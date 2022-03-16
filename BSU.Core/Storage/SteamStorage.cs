@@ -35,8 +35,13 @@ namespace BSU.Core.Storage
         private Task Load(CancellationToken cancellationToken)
         {
             // TODO: async?
+
             var folders = new List<DirectoryInfo>();
-            if (!_basePath!.Exists) throw new FileNotFoundException(); // TODO: useful error
+            if (!_basePath!.Exists)
+            {
+                _mods = new Dictionary<string, IStorageMod>();
+                return Task.CompletedTask;
+            }
 
             foreach (var mod in _basePath.EnumerateDirectories())
             {
@@ -76,9 +81,8 @@ namespace BSU.Core.Storage
 
             var path = Path.Join(armaPath, "..", "..", "workshop", "content", "107410");
             path = Path.GetFullPath(path);
-            if (Directory.Exists(path)) return path;
-            LogManager.GetCurrentClassLogger().Error($"Couldn't find arma workshop path. Tried {path}");
-            return null;
+            LogManager.GetCurrentClassLogger().Info($"Arma workshop path {path}. Exists: {Directory.Exists(path)}");
+            return path;
         }
     }
 }
