@@ -37,9 +37,13 @@ public static class PresetUpdater
             modUpdates.Add(new ModUpdatePaths(sourcePath, destinationPath));
         }
 
+        var options = new ModUpdateOptions();
+
         foreach (var (sourcePath, destinationPath) in modUpdates)
         {
-            ModUpdater.UpdateMod(sourcePath, destinationPath, dryRun, config.ZsyncThreads);
+            var sourceMod = new LocalSourceMod(sourcePath);
+            var destinationMod = new LocalDestinationMod(destinationPath, dryRun);
+            ModUpdater.UpdateMod(sourcePath.Name, sourceMod, destinationMod, options);
         }
 
         var serverFile = BuildServerFile(config);
