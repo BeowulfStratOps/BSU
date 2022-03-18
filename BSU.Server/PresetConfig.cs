@@ -17,4 +17,11 @@ public class PresetConfig
     public string ServerFileName { get; set; } = "server.json";
     public int? ZsyncThreads { get; set; } = null;
     public string ServerPassword { get; set; } = "";
+    public BunnyCdnConfig? BunnyCdn { get; set; }
+}
+
+public class BunnyCdnConfig
+{
+    public string ZoneName { get; set; } = "";
+    public string ApiKey { get; set; } = "";
 }

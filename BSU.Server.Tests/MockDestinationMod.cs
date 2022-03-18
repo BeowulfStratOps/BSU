@@ -11,11 +11,12 @@ public class MockDestinationMod : IDestinationMod
     public readonly HashSet<NormalizedPath> WrittenFiles = new();
     public readonly HashSet<NormalizedPath> RemovedFiles = new();
 
-    public List<NormalizedPath> GetFileList() => Files.Keys.ToList();
+    public Dictionary<NormalizedPath, long> GetFileList() =>
+        Files.ToDictionary(kv => kv.Key, kv => (long)kv.Value.Length);
 
-    public Stream? OpenRead(NormalizedPath path)
+    public Stream OpenRead(NormalizedPath path)
     {
-        if (!Files.TryGetValue(path, out var data)) return null;
+        if (!Files.TryGetValue(path, out var data)) throw new KeyNotFoundException();
         return new NonSeekableStream(data);
     }
 

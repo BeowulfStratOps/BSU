@@ -16,10 +16,10 @@ public class LocalDestinationMod : IDestinationMod
         _dryRun = dryRun;
     }
 
-    public List<NormalizedPath> GetFileList()
+    public Dictionary<NormalizedPath, long> GetFileList()
     {
         var fis = _destinationPath.EnumerateFiles("*", SearchOption.AllDirectories);
-        return fis.Select(fi => Util.GetRelativePath(_destinationPath, fi)).ToList();
+        return fis.ToDictionary(fi => Util.GetRelativePath(_destinationPath, fi), fi => fi.Length);
     }
 
     public Stream OpenRead(NormalizedPath path)
@@ -37,6 +37,8 @@ public class LocalDestinationMod : IDestinationMod
             return;
         }
         var fullPath = Util.GetAbsolutePath(_destinationPath, path);
+        var fileInfo = new FileInfo(fullPath);
+        fileInfo.Directory!.Create();
         using var fs = new FileStream(fullPath, FileMode.Create, FileAccess.Write);
         data.CopyTo(fs);
     }

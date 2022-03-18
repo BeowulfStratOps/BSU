@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BSU.BSO.FileStructures;
 using BSU.Hashes;
 using Newtonsoft.Json;
@@ -10,24 +12,25 @@ using zsyncnet;
 
 namespace BSU.Server;
 
-public record ModUpdateOptions;
 public static class ModUpdater
 {
     private record FileHash(byte[] Hash, ulong FileSize);
 
-    public static void UpdateMod(string name, ISourceMod source, IDestinationMod destination, ModUpdateOptions options)
+    public static void UpdateMod(string name, ISourceMod source, IDestinationMod destination)
     {
         Console.WriteLine($"Working on mod {name}");
 
         Console.WriteLine($"Hashing source files");
         var sourceHashes = HashSourceFiles(source);
 
-        Console.WriteLine($"Hashing destination files");
+        Console.WriteLine($"Listing destination files");
         var destinationFiles = destination.GetFileList();
-        var commonFiles = sourceHashes.Keys.Intersect(destinationFiles).ToList();
+        var commonFiles = sourceHashes.Keys.Intersect(destinationFiles.Keys).ToList();
+
+        Console.WriteLine($"Retrieving destination hashes");
         var destinationHashes = GetDestinationHashes(destination, commonFiles, destinationFiles);
 
-        var deletes = FindDeletes(sourceHashes.Keys, destinationFiles);
+        var deletes = FindDeletes(sourceHashes.Keys, destinationFiles.Keys);
         var updates = FindUpdates(sourceHashes, destinationHashes);
 
         Console.WriteLine($"{deletes.Count} deletes");
@@ -38,9 +41,9 @@ public static class ModUpdater
             destination.Remove(path);
         }
 
-        DoUpdates(source, destination, updates, sourceHashes, destinationFiles, options);
+        DoUpdates(source, destination, updates, sourceHashes, destinationFiles);
 
-        var oldHashFile = TryReadHashFile(destination, destinationFiles);
+        var oldHashFile = TryReadHashFile(destination, destinationFiles.Keys);
         var hashFile = BuildHashFile(name, sourceHashes);
         if (oldHashFile != null && HashFilesMatch(oldHashFile, hashFile))
             return;
@@ -67,7 +70,7 @@ public static class ModUpdater
         return true;
     }
 
-    private static HashFile? TryReadHashFile(IDestinationMod destination, List<NormalizedPath> destinationFiles)
+    private static HashFile? TryReadHashFile(IDestinationMod destination, ICollection<NormalizedPath> destinationFiles)
     {
         if (!destinationFiles.Contains("/hash.json"))
             return null;
@@ -77,32 +80,55 @@ public static class ModUpdater
         return JsonConvert.DeserializeObject<HashFile>(json);
     }
 
-    private static void DoUpdates(ISourceMod source, IDestinationMod destination, List<NormalizedPath> updates, Dictionary<NormalizedPath, FileHash> sourceHashes,
-        List<NormalizedPath> destinationFiles, ModUpdateOptions modUpdateOptions)
-    {
-        // TODO: pipeline, so that we always have 1GB (adjustable) prepared for upload.
-        // -> prepare-worker and upload-worker. If deletes or small file uploads are super slow, use more to mask that. but need to make sure they handle different files
+    private record UpdateWorkerInfo(ISourceMod Source, IDestinationMod Destination, ConcurrentQueue<NormalizedPath> Updates,
+        Dictionary<NormalizedPath, FileHash> SourceHashes,
+        Dictionary<NormalizedPath, long> DestinationFiles);
 
-        foreach (var path in updates)
+    private static void DoUpdates(ISourceMod source, IDestinationMod destination, List<NormalizedPath> updates,
+        Dictionary<NormalizedPath, FileHash> sourceHashes,
+        Dictionary<NormalizedPath, long> destinationFiles)
+    {
+        var queue = new ConcurrentQueue<NormalizedPath>(updates);
+
+        var workerInfo = new UpdateWorkerInfo(source, destination, queue, sourceHashes, destinationFiles);
+
+        var worker1 = new Thread(UpdateWorker);
+        var worker2 = new Thread(UpdateWorker);
+
+        worker1.Start(workerInfo);
+        worker2.Start(workerInfo);
+
+        worker1.Join();
+        worker2.Join();
+    }
+
+    private static void UpdateWorker(object? workerInfoObj)
+    {
+        var workerInfo = (UpdateWorkerInfo)workerInfoObj!;
+
+        var (source, destination, queue, sourceHashes, destinationFiles) = workerInfo;
+
+        while (queue.TryDequeue(out var path))
         {
             Console.WriteLine($"Updating {path}");
 
             var hashPath = new NormalizedPath(path + ".hash");
 
-            if (destinationFiles.Contains(hashPath))
+            if (destinationFiles.ContainsKey(hashPath))
                 destination.Remove(hashPath);
 
-            var fileInMemory = new MemoryStream();
+            byte[] fileInMemory;
             using (var sourceFile = source.OpenRead(path))
             {
-                sourceFile.CopyTo(fileInMemory);
+                fileInMemory = new byte[sourceFile.Length];
+                var read = sourceFile.Read(fileInMemory);
+                if (read != sourceFile.Length)
+                    throw new NotImplementedException();
             }
 
-            fileInMemory.Position = 0;
-            destination.Write(path, fileInMemory);
+            destination.Write(path, new MemoryStream(fileInMemory));
 
-            fileInMemory.Position = 0;
-            var cfStream = BuildControlFileStream(fileInMemory, source.GetLastChangeDateTime(path), path.GetFileName());
+            var cfStream = BuildControlFileStream(new MemoryStream(fileInMemory), source.GetLastChangeDateTime(path), path.GetFileName());
             destination.Write(path + ".zsync", cfStream);
 
             // TODO: zip, if wanted
@@ -128,7 +154,7 @@ public static class ModUpdater
 
         unaccountedFiles.Remove("/hash.json");
 
-        var suffixes = new[] { "", ".zsync", ".zip", ".hash" };
+        var suffixes = new[] { "", ".zsync", ".hash" };
 
         foreach (var sourcePath in sourceFiles)
         {
@@ -156,24 +182,26 @@ public static class ModUpdater
         return updates;
     }
 
-    private static Dictionary<NormalizedPath, byte[]> GetDestinationHashes(IDestinationMod destination, List<NormalizedPath> fileList, List<NormalizedPath> destinationFileList)
+    private static Dictionary<NormalizedPath, byte[]> GetDestinationHashes(IDestinationMod destination, List<NormalizedPath> fileList, Dictionary<NormalizedPath, long> destinationFileList)
     {
-        var result = new Dictionary<NormalizedPath, byte[]>();
+        var result = new ConcurrentDictionary<NormalizedPath, byte[]>();
 
-        foreach (var path in fileList)
+        var options = new ParallelOptions { MaxDegreeOfParallelism = 5 };
+
+        Parallel.ForEach(fileList, options, path =>
         {
             var hashPath = new NormalizedPath(path + ".hash");
-            if (!destinationFileList.Contains(hashPath))
-                continue;
+            if (!destinationFileList.TryGetValue(hashPath, out var hashLength))
+                return;
             var stream = destination.OpenRead(hashPath);
-            var hash = new byte[stream.Length];
+            var hash = new byte[hashLength];
             var read = stream.Read(hash);
             if (read != hash.Length)
                 throw new NotImplementedException();
-            result.Add(path, hash);
-        }
+            result.TryAdd(path, hash);
+        });
 
-        return result;
+        return result.ToDictionary(kv => kv.Key, kv => kv.Value);
     }
 
     private static HashFile BuildHashFile(string modName, Dictionary<NormalizedPath, FileHash> hashes)

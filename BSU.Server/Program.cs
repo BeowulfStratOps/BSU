@@ -16,7 +16,7 @@ Print empty config:   ./BSU.Server template");
 
     private static void PrintEmptyConfig()
     {
-        var config = new PresetConfig();
+        var config = new PresetConfig { BunnyCdn = new BunnyCdnConfig() };
         var json = JsonConvert.SerializeObject(config, Formatting.Indented);
         Console.WriteLine(json);
     }
@@ -57,7 +57,10 @@ Print empty config:   ./BSU.Server template");
 
         try
         {
+            var start = DateTime.Now;
             PresetUpdater.UpdatePreset(config, dryRun);
+            var elapsed = DateTime.Now - start;
+            Console.WriteLine($"Done in {elapsed:hh\\:mm\\:ss\\.ff}");
             return 0;
         }
         catch (Exception e)

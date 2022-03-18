@@ -13,7 +13,7 @@ public class Tests
         var sourceMod = new MockSourceMod();
         var destinationMod = new MockDestinationMod();
 
-        ModUpdater.UpdateMod("Test", sourceMod, destinationMod, new ModUpdateOptions());
+        ModUpdater.UpdateMod("Test", sourceMod, destinationMod);
 
         TestUtil.AssertCorrect(sourceMod.Files, destinationMod.Files);
     }
@@ -25,7 +25,7 @@ public class Tests
         sourceMod.Files.Add("/addons/test.pbo", TestUtil.RandomData(10 * Mb));
         var destinationMod = new MockDestinationMod();
 
-        ModUpdater.UpdateMod("Test", sourceMod, destinationMod, new ModUpdateOptions());
+        ModUpdater.UpdateMod("Test", sourceMod, destinationMod);
 
         TestUtil.AssertCorrect(sourceMod.Files, destinationMod.Files);
         TestUtil.CheckChangedFiles(new[]
@@ -47,7 +47,7 @@ public class Tests
         destinationMod.Files.Add("/addons/test.pbo.hash", TestUtil.PboHash(testPboData));
         destinationMod.Files.Add("/addons/test.pbo.zsync", TestUtil.ControlFile(testPboData, "test.pbo"));
 
-        ModUpdater.UpdateMod("Test", sourceMod, destinationMod, new ModUpdateOptions());
+        ModUpdater.UpdateMod("Test", sourceMod, destinationMod);
 
         TestUtil.AssertCorrect(sourceMod.Files, destinationMod.Files);
         TestUtil.CheckChangedFiles(new[]
@@ -70,7 +70,7 @@ public class Tests
         destinationMod.Files.Add("/addons/test.pbo.hash", TestUtil.PboHash(test2PboData));
         destinationMod.Files.Add("/addons/test.pbo.zsync", TestUtil.ControlFile(test2PboData, "test.pbo"));
 
-        ModUpdater.UpdateMod("Test", sourceMod, destinationMod, new ModUpdateOptions());
+        ModUpdater.UpdateMod("Test", sourceMod, destinationMod);
 
         TestUtil.AssertCorrect(sourceMod.Files, destinationMod.Files);
         TestUtil.CheckChangedFiles(new[]
@@ -95,7 +95,7 @@ public class Tests
         destinationMod.Files.Add("/addons/test.pbo.hash", TestUtil.PboHash(testPboData));
         destinationMod.Files.Add("/addons/test.pbo.zsync", TestUtil.ControlFile(testPboData, "test.pbo"));
 
-        ModUpdater.UpdateMod("Test", sourceMod, destinationMod, new ModUpdateOptions());
+        ModUpdater.UpdateMod("Test", sourceMod, destinationMod);
 
         TestUtil.AssertCorrect(sourceMod.Files, destinationMod.Files);
         TestUtil.CheckChangedFiles(new[]
@@ -119,7 +119,7 @@ public class Tests
         destinationMod.Files.Add("/addons/test.pbo", testPboData);
         destinationMod.Files.Add("/addons/test.pbo.zsync", TestUtil.ControlFile(testPboData, "test.pbo"));
 
-        ModUpdater.UpdateMod("Test", sourceMod, destinationMod, new ModUpdateOptions());
+        ModUpdater.UpdateMod("Test", sourceMod, destinationMod);
 
         TestUtil.AssertCorrect(sourceMod.Files, destinationMod.Files);
         TestUtil.CheckChangedFiles(new[]

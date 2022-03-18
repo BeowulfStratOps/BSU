@@ -41,7 +41,6 @@ public static class TestUtil
 
             accountedFiles.Add(path);
             accountedFiles.Add(path + ".zsync");
-            accountedFiles.Add(path + ".zip");
             accountedFiles.Add(path + ".hash");
         }
 

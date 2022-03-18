@@ -9,41 +9,28 @@ namespace BSU.Server;
 
 public static class PresetUpdater
 {
-    private record ModUpdatePaths(DirectoryInfo SourcePath, DirectoryInfo DestinationSource);
+    private record ModUpdatePaths(string Name, ISourceMod Source, IDestinationMod Destination);
 
     public static void UpdatePreset(PresetConfig config, bool dryRun)
     {
-        if (!new DirectoryInfo(config.DestinationPath).Exists)
-            throw new FileNotFoundException($"Folder {config.DestinationPath} doesn't exist");
-
         var modUpdates = new List<ModUpdatePaths>();
 
         foreach (var modName in config.ModList)
         {
             var sourcePath = new DirectoryInfo(Path.Combine(config.SourcePath, modName));
-            var destinationPath = new DirectoryInfo(Path.Combine(config.DestinationPath, modName));
 
             if (!sourcePath.Exists)
                 throw new DirectoryNotFoundException($"Directory {sourcePath} does not exist");
+            var sourceMod = new LocalSourceMod(sourcePath);
 
-            if (!destinationPath.Exists)
-            {
-                if (dryRun)
-                    Console.WriteLine($"Would create folder {destinationPath}");
-                else
-                    destinationPath.Create();
-            }
+            var destinationMod = GetDestinationMod(config, modName, dryRun);
 
-            modUpdates.Add(new ModUpdatePaths(sourcePath, destinationPath));
+            modUpdates.Add(new ModUpdatePaths(sourcePath.Name, sourceMod, destinationMod));
         }
 
-        var options = new ModUpdateOptions();
-
-        foreach (var (sourcePath, destinationPath) in modUpdates)
+        foreach (var (name, sourceMod, destinationMod) in modUpdates)
         {
-            var sourceMod = new LocalSourceMod(sourcePath);
-            var destinationMod = new LocalDestinationMod(destinationPath, dryRun);
-            ModUpdater.UpdateMod(sourcePath.Name, sourceMod, destinationMod, options);
+            ModUpdater.UpdateMod(name, sourceMod, destinationMod);
         }
 
         var serverFile = BuildServerFile(config);
@@ -53,6 +40,24 @@ public static class PresetUpdater
             Console.WriteLine($"Would write {serverFilePath}");
         else
             File.WriteAllText(serverFilePath, serverFileJson);
+    }
+
+    private static IDestinationMod GetDestinationMod(PresetConfig config, string modName, bool dryRun)
+    {
+        if (config.BunnyCdn != null)
+            return new BunnyCdnDestination(config.BunnyCdn, modName, dryRun);
+
+        var destinationPath = new DirectoryInfo(Path.Combine(config.DestinationPath, modName));
+
+        if (!destinationPath.Exists)
+        {
+            if (dryRun)
+                Console.WriteLine($"Would create folder {destinationPath}");
+            else
+                destinationPath.Create();
+        }
+
+        return new LocalDestinationMod(destinationPath, dryRun);
     }
 
     private static ServerFile BuildServerFile(PresetConfig config)
