@@ -15,7 +15,6 @@ public class PresetConfig
     public string ServerAddress { get; set; } = "";
     public ushort ServerPort { get; set; } = 2302;
     public string ServerFileName { get; set; } = "server.json";
-    public int? ZsyncThreads { get; set; } = null;
     public string ServerPassword { get; set; } = "";
     public BunnyCdnConfig? BunnyCdn { get; set; }
 }

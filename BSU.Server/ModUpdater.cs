@@ -92,14 +92,19 @@ public static class ModUpdater
 
         var workerInfo = new UpdateWorkerInfo(source, destination, queue, sourceHashes, destinationFiles);
 
-        var worker1 = new Thread(UpdateWorker);
-        var worker2 = new Thread(UpdateWorker);
+        var workers = new List<Thread>();
 
-        worker1.Start(workerInfo);
-        worker2.Start(workerInfo);
+        for (int i = 0; i < 4; i++)
+        {
+            var worker = new Thread(UpdateWorker);
+            workers.Add(worker);
+            worker.Start(workerInfo);
+        }
 
-        worker1.Join();
-        worker2.Join();
+        foreach (var worker in workers)
+        {
+            worker.Join();
+        }
     }
 
     private static void UpdateWorker(object? workerInfoObj)

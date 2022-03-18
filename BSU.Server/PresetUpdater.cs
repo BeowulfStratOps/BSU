@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BSU.BSO.FileStructures;
+using BunnyCDN.Net.Storage;
 using Newtonsoft.Json;
 
 namespace BSU.Server;
@@ -35,11 +36,36 @@ public static class PresetUpdater
 
         var serverFile = BuildServerFile(config);
         var serverFileJson = JsonConvert.SerializeObject(serverFile, Formatting.Indented);
+        WriteServerFile(config, serverFileJson, dryRun);
+    }
+
+    private static void WriteServerFile(PresetConfig config, string serverFileJson, bool dryRun)
+    {
+        if (config.BunnyCdn != null)
+        {
+            var path = $"/{config.BunnyCdn.ZoneName}/{config.ServerFileName}";
+            if (dryRun)
+            {
+                Console.WriteLine($"Would write {path}");
+                return;
+            }
+
+            var storage = new BunnyCDNStorage(config.BunnyCdn.ZoneName, config.BunnyCdn.ApiKey);
+
+            storage.UploadAsync(Util.StringToStream(serverFileJson), path).GetAwaiter().GetResult();
+
+            return;
+        }
+
         var serverFilePath = Path.Combine(config.DestinationPath, config.ServerFileName);
+
         if (dryRun)
+        {
             Console.WriteLine($"Would write {serverFilePath}");
-        else
-            File.WriteAllText(serverFilePath, serverFileJson);
+            return;
+        }
+
+        File.WriteAllText(serverFilePath, serverFileJson);
     }
 
     private static IDestinationMod GetDestinationMod(PresetConfig config, string modName, bool dryRun)
