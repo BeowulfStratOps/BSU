@@ -46,13 +46,24 @@ namespace BSU.Core.ViewModel
 
         public bool NotIsShowingMods => !IsShowingMods;
 
+        public bool CanWrite { get; }
+
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            private set => SetProperty(ref _isLoading, value);
+        }
+
         private string? _error;
         private readonly IInteractionService _interactionService;
         private readonly IServiceProvider _services;
 
         internal Storage(IModelStorage storage, IServiceProvider serviceProvider)
         {
-            Delete = new DelegateCommand(DoDelete, storage.CanWrite);
+            _isLoading = storage.State == LoadingState.Loading;
+            CanWrite = storage.CanWrite;
+            Delete = new DelegateCommand(DoDelete, storage.State != LoadingState.Loading);
             ToggleShowMods = new DelegateCommand(() => IsShowingMods = !IsShowingMods);
             ModelStorage = storage;
             var model = serviceProvider.Get<IModel>();
@@ -68,6 +79,9 @@ namespace BSU.Core.ViewModel
 
         private void OnStateChanged()
         {
+            Delete.SetCanExecute(_storage.State != LoadingState.Loading);
+            IsLoading = _storage.State == LoadingState.Loading;
+
             if (_storage.State == LoadingState.Error)
             {
                 Error = "Failed to load";

@@ -25,9 +25,12 @@
                     <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Path=Name, FallbackValue=Name}"></TextBlock>
                     <TextBlock Text="{Binding Path, FallbackValue=C:\asdf\places\and\stuff}"></TextBlock>
                     <TextBlock Foreground="{DynamicResource ValidationError}" Visibility="{Binding Error, Converter={StaticResource NullToCollapse}}" Text="{Binding Error}" />
+                    <TextBlock Foreground="{DynamicResource IndicatorLoading}" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">Loading...</TextBlock>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <userControls:SvgButton DockPanel.Dock="Right" Width="30" Height="30" HideIfDisabled="True" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Download Location"/>
+                    <Grid Visibility="{Binding CanWrite, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <userControls:SvgButton DockPanel.Dock="Right" Width="30" Height="30" Command="{Binding Delete}" Svg="{StaticResource SvgDelete}" ToolTip="Remove this Download Location"/>
+                    </Grid>
                 </StackPanel>
             </DockPanel>
             <StackPanel DockPanel.Dock="Top" MouseLeftButtonUp="ToggleShowMods">

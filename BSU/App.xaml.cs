@@ -25,6 +25,10 @@ namespace BSU.GUI
             Thread.CurrentThread.Name = "main";
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+            var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
+            _logger.Info($"BSU Version {version}");
+
             try
             {
                 var assemblyLocation = Assembly.GetExecutingAssembly().Location;

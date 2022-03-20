@@ -128,7 +128,7 @@ namespace BSU.Core.Model
 
         public void Delete(bool removeMods)
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
+            if (State != LoadingState.Loaded && State != LoadingState.Error) throw new InvalidOperationException($"Not allowed in State {State}");
             IsDeleted = true;
             foreach (var mod in _mods!)
             {
