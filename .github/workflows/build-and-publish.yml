@@ -25,6 +25,8 @@ jobs:
       run: dotnet test
     - name: Publish
       run: dotnet publish -c Release -o publish BSU --self-contained -r win-x64
+    - name: Remove createdump.exe
+      run: rm publish/createdump.exe
     - name: Package
       run: nuget pack -OutputFileNamesWithoutVersion -Version $env:GITHUB_REF_NAME
     - name: Releasify
