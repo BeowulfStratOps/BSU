@@ -20,6 +20,7 @@ namespace BSU.GUI
 
         protected override void OnStartup(StartupEventArgs startupEventArgs)
         {
+            SquirrelHelper.HandleEvents();
             base.OnStartup(startupEventArgs);
             var mainWindow = new MainWindow();
             Thread.CurrentThread.Name = "main";
@@ -45,7 +46,7 @@ namespace BSU.GUI
                         vm.AddNotification(new NotificationEvent(message));
                     });
                 }
-                UpdateHelper.Update(ShowUpdateNotification);
+                SquirrelHelper.Update(ShowUpdateNotification);
                 mainWindow.DataContext = vm;
                 mainWindow.Show();
                 core.Dispose();

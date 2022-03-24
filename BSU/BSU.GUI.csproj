@@ -14,6 +14,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyMetadata Include="SquirrelAwareVersion" Value="1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BSU.Core\BSU.Core.csproj" />
   </ItemGroup>
 
