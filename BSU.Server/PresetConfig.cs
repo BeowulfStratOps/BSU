@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace BSU.Server;
 
@@ -17,6 +18,7 @@ public class PresetConfig
     public string ServerFileName { get; set; } = "server.json";
     public string ServerPassword { get; set; } = "";
     public BunnyCdnConfig? BunnyCdn { get; set; }
+    public List<Uri> SyncUris { get; set; } = new();
 }
 
 public class BunnyCdnConfig

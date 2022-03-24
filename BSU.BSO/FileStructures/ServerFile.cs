@@ -14,10 +14,8 @@ namespace BSU.BSO.FileStructures
         [JsonProperty] public string ServerAddress { get; set; } = null!;
         [JsonProperty] public ushort ServerPort { get; set; }
         [JsonProperty] public string Password { get; set; } = null!;
-        [JsonProperty] public DateTime CreationDate { get; set; }
         [JsonProperty] public DateTime LastUpdateDate { get; set; }
         [JsonProperty] public List<Uri> SyncUris { get; set; } = null!;
-        [JsonProperty] public Guid ServerGuid { get; set; }
         [JsonProperty] public List<ModFolder> ModFolders { get; set; } = null!;
 
         [JsonProperty] public List<string>? Dlcs { get; set; }

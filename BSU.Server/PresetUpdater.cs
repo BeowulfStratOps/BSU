@@ -95,7 +95,9 @@ public static class PresetUpdater
             Password = config.ServerPassword,
             ServerAddress = config.ServerAddress,
             ServerName = config.PresetName,
-            ServerPort = config.ServerPort
+            ServerPort = config.ServerPort,
+            SyncUris = config.SyncUris,
+            LastUpdateDate = DateTime.UtcNow
         };
     }
 }

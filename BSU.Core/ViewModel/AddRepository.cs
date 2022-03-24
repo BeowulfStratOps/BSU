@@ -98,9 +98,9 @@ namespace BSU.Core.ViewModel
 
         public List<KnownUrl> KnownUrls { get; } = new()
         {
-            new KnownUrl("Beowulf", "http://u.beowulfso.com/synctest/server.json"),
-            new KnownUrl("Beowulf 'NAAAAAM", "http://u.beowulfso.com/synctest/server-vn.json"),
-            new KnownUrl("Beowulf - WS Compat", "http://u.beowulfso.com/synctest/server-compat.json")
+            new KnownUrl("Beowulf", "http://sync.bso.ovh/server.json"),
+            new KnownUrl("Beowulf 'NAAAAAM", "http://sync.bso.ovh/server-vn.json"),
+            new KnownUrl("Beowulf - WS Compat", "http://sync.bso.ovh/server-compat.json")
         };
 
         internal AddRepository(IModel model, IServiceProvider services)
