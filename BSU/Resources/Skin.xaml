@@ -59,5 +59,7 @@
     <SolidColorBrush x:Key="NotificationBackgroundBad" Color="Red"/>
     <SolidColorBrush x:Key="NotificationBackgroundBadForeground" Color="White"/>
 
+    <SolidColorBrush x:Key="MenuForeground" Color="Black"/>
+
     <FontFamily x:Key="Font">Segoe UI</FontFamily>
 </ResourceDictionary>

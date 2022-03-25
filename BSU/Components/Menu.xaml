@@ -17,10 +17,10 @@
                     <Setter Property="BorderThickness" Value="1"></Setter>
                 </Style>
             </Menu.Resources>
-            <MenuItem Style="{StaticResource TopLevelItem}" Header="_Settings" Click="Settings_Click"></MenuItem>
-            <MenuItem Style="{StaticResource TopLevelItem}" Header="_Help" VerticalContentAlignment="Bottom">
-                <MenuItem Header="_Show Logs" Click="ShowLogs_Click" ></MenuItem>
-                <MenuItem Header="_About" Click="About_Click"></MenuItem>
+            <MenuItem Foreground="{DynamicResource MenuForeground}" Style="{StaticResource TopLevelItem}" Header="_Settings" Click="Settings_Click"></MenuItem>
+            <MenuItem Foreground="{DynamicResource MenuForeground}" Style="{StaticResource TopLevelItem}" Header="_Help" VerticalContentAlignment="Bottom">
+                <MenuItem Foreground="Black" Header="_Show Logs" Click="ShowLogs_Click" ></MenuItem>
+                <MenuItem Foreground="Black" Header="_About" Click="About_Click"></MenuItem>
             </MenuItem>
         </Menu>
     </Grid>
