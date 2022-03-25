@@ -11,12 +11,15 @@ public class BunnyCdnDestination : IDestinationMod
 {
     private readonly string _basePath;
     private readonly bool _dryRun;
+    private readonly ChangedFileTracker _changedFileTracker;
     private readonly BunnyCDNStorage _storage;
 
-    public BunnyCdnDestination(BunnyCdnConfig config, string modName, bool dryRun)
+    public BunnyCdnDestination(BunnyCdnConfig config, string modName, bool dryRun,
+        ChangedFileTracker changedFileTracker)
     {
         _basePath = $"/{config.ZoneName}/{modName}";
         _dryRun = dryRun;
+        _changedFileTracker = changedFileTracker;
         _storage = new BunnyCDNStorage(config.ZoneName, config.ApiKey);
         var httpClientField = _storage.GetType().GetField("_http", BindingFlags.NonPublic | BindingFlags.Instance);
         var httpClient = (HttpClient)httpClientField!.GetValue(_storage)!;
@@ -75,6 +78,7 @@ public class BunnyCdnDestination : IDestinationMod
             return;
         }
 
+        _changedFileTracker.AddChangedFilePath(path);
         var storagePath = GetStoragePath(path);
         _storage.UploadAsync(data, storagePath, true).GetAwaiter().GetResult();
     }

@@ -57,8 +57,9 @@ Print empty config:   ./BSU.Server template");
 
         try
         {
+            var changedFiles = new ChangedFileTracker("changed_files.txt");
             var start = DateTime.Now;
-            PresetUpdater.UpdatePreset(config, dryRun);
+            PresetUpdater.UpdatePreset(config, dryRun, changedFiles);
             var elapsed = DateTime.Now - start;
             Console.WriteLine($"Done in {elapsed:hh\\:mm\\:ss\\.ff}");
             return 0;

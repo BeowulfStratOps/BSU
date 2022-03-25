@@ -9,11 +9,13 @@ public class LocalDestinationMod : IDestinationMod
 {
     private readonly DirectoryInfo _destinationPath;
     private readonly bool _dryRun;
+    private readonly ChangedFileTracker _changedFileTracker;
 
-    public LocalDestinationMod(DirectoryInfo destinationPath, bool dryRun)
+    public LocalDestinationMod(DirectoryInfo destinationPath, bool dryRun, ChangedFileTracker changedFileTracker)
     {
         _destinationPath = destinationPath;
         _dryRun = dryRun;
+        _changedFileTracker = changedFileTracker;
     }
 
     public Dictionary<NormalizedPath, long> GetFileList()
@@ -36,6 +38,7 @@ public class LocalDestinationMod : IDestinationMod
             Console.WriteLine($"Would write {path}");
             return;
         }
+        _changedFileTracker.AddChangedFilePath(path);
         var fullPath = Util.GetAbsolutePath(_destinationPath, path);
         var fileInfo = new FileInfo(fullPath);
         fileInfo.Directory!.Create();

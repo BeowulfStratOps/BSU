@@ -12,7 +12,7 @@ public static class PresetUpdater
 {
     private record ModUpdatePaths(string Name, ISourceMod Source, IDestinationMod Destination);
 
-    public static void UpdatePreset(PresetConfig config, bool dryRun)
+    public static void UpdatePreset(PresetConfig config, bool dryRun, ChangedFileTracker changedFiles)
     {
         var modUpdates = new List<ModUpdatePaths>();
 
@@ -24,7 +24,7 @@ public static class PresetUpdater
                 throw new DirectoryNotFoundException($"Directory {sourcePath} does not exist");
             var sourceMod = new LocalSourceMod(sourcePath);
 
-            var destinationMod = GetDestinationMod(config, modName, dryRun);
+            var destinationMod = GetDestinationMod(config, modName, dryRun, changedFiles);
 
             modUpdates.Add(new ModUpdatePaths(sourcePath.Name, sourceMod, destinationMod));
         }
@@ -36,11 +36,14 @@ public static class PresetUpdater
 
         var serverFile = BuildServerFile(config);
         var serverFileJson = JsonConvert.SerializeObject(serverFile, Formatting.Indented);
-        WriteServerFile(config, serverFileJson, dryRun);
+        WriteServerFile(config, serverFileJson, dryRun, changedFiles);
     }
 
-    private static void WriteServerFile(PresetConfig config, string serverFileJson, bool dryRun)
+    private static void WriteServerFile(PresetConfig config, string serverFileJson, bool dryRun,
+        ChangedFileTracker changedFileTracker)
     {
+        changedFileTracker.AddChangedFilePath("/" + config.ServerFileName);
+
         if (config.BunnyCdn != null)
         {
             var path = $"/{config.BunnyCdn.ZoneName}/{config.ServerFileName}";
@@ -68,10 +71,11 @@ public static class PresetUpdater
         File.WriteAllText(serverFilePath, serverFileJson);
     }
 
-    private static IDestinationMod GetDestinationMod(PresetConfig config, string modName, bool dryRun)
+    private static IDestinationMod GetDestinationMod(PresetConfig config, string modName, bool dryRun,
+        ChangedFileTracker changedFileTracker)
     {
         if (config.BunnyCdn != null)
-            return new BunnyCdnDestination(config.BunnyCdn, modName, dryRun);
+            return new BunnyCdnDestination(config.BunnyCdn, modName, dryRun, changedFileTracker);
 
         var destinationPath = new DirectoryInfo(Path.Combine(config.DestinationPath, modName));
 
@@ -83,7 +87,7 @@ public static class PresetUpdater
                 destinationPath.Create();
         }
 
-        return new LocalDestinationMod(destinationPath, dryRun);
+        return new LocalDestinationMod(destinationPath, dryRun, changedFileTracker);
     }
 
     private static ServerFile BuildServerFile(PresetConfig config)
