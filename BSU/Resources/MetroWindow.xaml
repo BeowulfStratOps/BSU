@@ -129,8 +129,8 @@
                                                 <Setter Property="TextElement.Foreground" Value="{DynamicResource WindowBarForeground}"></Setter>
                                             </Style>
                                         </StackPanel.Style>
-                                        <Image Width="20" Height="20" Margin="5 0" Source="{resources:AppIcon}" IsHitTestVisible="False"></Image>
-                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 -1 0 0" FontSize="12" IsHitTestVisible="False"/>
+                                        <Image Width="20" Height="20" Margin="8 4 5 0" Source="{resources:AppIcon}" IsHitTestVisible="False"></Image>
+                                        <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 3 0 0" FontSize="12" IsHitTestVisible="False"/>
                                         <ContentPresenter Content="{TemplateBinding TitleBarContent}"></ContentPresenter>
                                     </StackPanel>
                                 </Grid>
