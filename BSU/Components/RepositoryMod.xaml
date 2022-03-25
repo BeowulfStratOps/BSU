@@ -74,7 +74,7 @@
                                 <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock>Download to <Run Text="{Binding Name, Mode=OneWay}" /> / @</TextBlock>
-                                        <TextBox MinWidth="100" MaxWidth="200" Text="{Binding DataContext.DownloadIdentifier, ElementName=RepoMod, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox BorderBrush="{DynamicResource TextBoxBorder}" Background="{DynamicResource TextBoxBackground}" Foreground="{DynamicResource TextBoxForeground}" MinWidth="100" MaxWidth="200" Text="{Binding DataContext.DownloadIdentifier, ElementName=RepoMod, UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type viewModel:SelectNone}">
