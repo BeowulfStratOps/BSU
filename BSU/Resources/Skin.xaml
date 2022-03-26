@@ -61,9 +61,9 @@
 
     <SolidColorBrush x:Key="MenuForeground" Color="Black"/>
 
-    <SolidColorBrush x:Key="TextBoxBorder" Color="#ABADB3"/>
-    <SolidColorBrush x:Key="TextBoxBackground" Color="White"/>
-    <SolidColorBrush x:Key="TextBoxForeground" Color="Black"/>
+    <SolidColorBrush x:Key="InputBorder" Color="#ABADB3"/>
+    <SolidColorBrush x:Key="InputBackground" Color="White"/>
+    <SolidColorBrush x:Key="InputForeground" Color="Black"/>
 
     <SolidColorBrush x:Key="ScrollBarBackground" Color="#F0F0F0"/>
     <SolidColorBrush x:Key="ScrollBarForeground" Color="Black"/>
