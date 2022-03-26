@@ -74,13 +74,13 @@
         </Setter>
     </Style>
 
-    <Style x:Key="MetroWindowStyle" TargetType="gui:MainWindow">
+    <Style x:Key="MetroWindowStyle" TargetType="gui:BaseWindow">
         <Setter Property="UseLayoutRounding" Value="True" />
-        <Setter Property="TextElement.FontFamily" Value="{DynamicResource Font}"></Setter>
+        <Setter Property="TextElement.FontFamily" Value="{DynamicResource Font}" />
         <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="gui:MainWindow">
+                <ControlTemplate TargetType="gui:BaseWindow">
                     <Border x:Name="WindowBorder" Margin="{Binding Source={x:Static SystemParameters.WindowNonClientFrameThickness}}" Background="{DynamicResource WindowBackground}">
                         <Grid>
                             <Border BorderThickness="1">
@@ -92,7 +92,7 @@
                                     <ContentPresenter Grid.Row="1" Margin="0"/>
                                     <Rectangle x:Name="HeaderBackground" Height="30" Fill="{DynamicResource WindowBarBackground}" VerticalAlignment="Top" Grid.Row="0"/>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" WindowChrome.IsHitTestVisibleInChrome="True" Grid.Row="0">
-                                        <Button Command="{Binding Source={x:Static SystemCommands.MinimizeWindowCommand}}" ToolTip="minimize" Style="{StaticResource WindowButtonStyle}">
+                                        <Button x:Name="Minimize" Command="{Binding Source={x:Static SystemCommands.MinimizeWindowCommand}}" ToolTip="minimize" Style="{StaticResource WindowButtonStyle}">
                                             <Button.Content>
                                                 <Grid Width="30" Height="30" RenderTransform="1,0,0,1,0,0">
                                                     <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" HorizontalAlignment="Center" />
@@ -131,7 +131,7 @@
                                         </StackPanel.Style>
                                         <Image Width="20" Height="20" Margin="8 4 5 0" Source="{resources:AppIcon}" IsHitTestVisible="False"></Image>
                                         <TextBlock x:Name="WindowTitleTextBlock" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Title}" TextTrimming="CharacterEllipsis" Margin="0 3 0 0" FontSize="12" IsHitTestVisible="False"/>
-                                        <ContentPresenter Content="{TemplateBinding TitleBarContent}"></ContentPresenter>
+                                        <ContentPresenter Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay, Path=TitleBarContent}"></ContentPresenter>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -146,6 +146,11 @@
                         </Trigger>
                         <Trigger Property="WindowState" Value="Normal">
                             <Setter TargetName="Maximize" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Restore" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="ResizeMode" Value="NoResize">
+                            <Setter TargetName="Minimize" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="Maximize" Property="Visibility" Value="Collapsed" />
                             <Setter TargetName="Restore" Property="Visibility" Value="Collapsed" />
                         </Trigger>
                     </ControlTemplate.Triggers>

@@ -1,15 +1,22 @@
-﻿<Window x:Class="BSU.GUI.Dialogs.GlobalSettingsDialog"
+﻿<gui:BaseWindow x:Class="BSU.GUI.Dialogs.GlobalSettingsDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
+        xmlns:gui="clr-namespace:BSU.GUI"
         mc:Ignorable="d"
         Title="Global Settings" Width="600"
+        Style="{StaticResource MetroWindowStyle}"
         SizeToContent="Height" ResizeMode="NoResize" d:DataContext="{d:DesignInstance viewModel:GlobalSettings}">
     <DockPanel Margin="15 0 15 15">
         <DockPanel.Resources>
-            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
+            <ResourceDictionary>
+                <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="../Resources/Popup.xaml"></ResourceDictionary>
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
         </DockPanel.Resources>
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -22,10 +29,10 @@
                 <Style TargetType="{x:Type Grid}">
                     <Setter Property="Margin" Value="0 5" />
                 </Style>
-                <Style TargetType="{x:Type Label}">
+                <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
                     <Setter Property="Margin" Value="0 0 5 0"></Setter>
                 </Style>
-                <Style TargetType="{x:Type CheckBox}">
+                <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
                     <Setter Property="LayoutTransform">
                         <Setter.Value>
                             <ScaleTransform ScaleX="1.5" ScaleY="1.5"></ScaleTransform>
@@ -42,10 +49,10 @@
                 <Label Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">Launch Method:</Label>
 
                 <StackPanel Grid.Column="1" DockPanel.Dock="Top" Orientation="Horizontal">
-                    <RadioButton Margin="0" Padding="5" Style="{StaticResource {x:Type ToggleButton}}" IsChecked="{Binding UseBsuLauncher}">
+                    <RadioButton Margin="0" Padding="5" Style="{StaticResource RadioToggleButtonStyle}" IsChecked="{Binding UseBsuLauncher}">
                         Launch directly
                     </RadioButton>
-                    <RadioButton Margin="5 0" Padding="5" Style="{StaticResource {x:Type ToggleButton}}" IsChecked="{Binding UseArmaLauncher}">
+                    <RadioButton Margin="5 0" Padding="5" Style="{StaticResource RadioToggleButtonStyle}" IsChecked="{Binding UseArmaLauncher}">
                         Arma Launcher
                     </RadioButton>
                 </StackPanel>
@@ -144,4 +151,4 @@
 
         </StackPanel>
     </DockPanel>
-</Window>
+</gui:BaseWindow>

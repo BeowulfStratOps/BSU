@@ -71,5 +71,15 @@
     <SolidColorBrush x:Key="ScrollBarHover" Color="#A6A6A6"/>
     <SolidColorBrush x:Key="ScrollBarPressed" Color="#606060"/>
 
+    <SolidColorBrush x:Key="ButtonBorder" Color="#707070"/>
+    <SolidColorBrush x:Key="ButtonBackground" Color="#DDDDDD"/>
+    <SolidColorBrush x:Key="ButtonForeground" Color="Black"/>
+    <SolidColorBrush x:Key="ButtonHover" Color="#BEE6FD"/>
+    <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="#838383"/>
+
+    <SolidColorBrush x:Key="PopupForeground" Color="Black"/>
+
+    <SolidColorBrush x:Key="Hyperlink" Color="#0066CC"/>
+
     <FontFamily x:Key="Font">Segoe UI</FontFamily>
 </ResourceDictionary>

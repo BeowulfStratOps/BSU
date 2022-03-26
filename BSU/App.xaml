@@ -9,6 +9,10 @@
                 <ResourceDictionary Source="Resources/Svgs.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Resources/MetroWindow.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Resources/Scrollbar.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Resources/Button.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Resources/RadioToggleButton.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Resources/CheckBox.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Resources/ComboBox.xaml"></ResourceDictionary>
                 <gui:SkinFile />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

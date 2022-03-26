@@ -1,4 +1,4 @@
-﻿<Window x:Class="BSU.GUI.MainWindow"
+﻿<gui:BaseWindow x:Class="BSU.GUI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,7 +6,6 @@
         xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
         xmlns:gui="clr-namespace:BSU.GUI"
         xmlns:userControls="clr-namespace:BSU.GUI.UserControls"
-        xmlns:components="clr-namespace:BSU.GUI.Components"
         mc:Ignorable="d"
         Title="BSU" Height="450" Width="600" d:DataContext="{d:DesignInstance viewModel:ViewModel}"
         WindowState="Normal"
@@ -46,4 +45,4 @@
         <ContentControl Content="{Binding Navigator.Content}"></ContentControl>
         <ItemsControl VerticalAlignment="Bottom" ItemsSource="{Binding Notifications}" />
     </Grid>
-</Window>
+</gui:BaseWindow>

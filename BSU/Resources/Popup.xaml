@@ -1,0 +1,19 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:gui="clr-namespace:BSU.GUI">
+    <Style TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource InputBackground}"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource InputForeground}"></Setter>
+        <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"></Setter>
+    </Style>
+
+    <Style TargetType="Label">
+        <Setter Property="Foreground" Value="{DynamicResource PopupForeground}"></Setter>
+    </Style>
+
+    <Style TargetType="ComboBox" BasedOn="{StaticResource PopupWindowComboBox}"></Style>
+
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource InputForeground}"></Setter>
+    </Style>
+</ResourceDictionary>
