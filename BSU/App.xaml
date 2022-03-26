@@ -8,6 +8,7 @@
                 <ResourceDictionary Source="Resources/Skin.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Resources/Svgs.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Resources/MetroWindow.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Resources/Scrollbar.xaml"></ResourceDictionary>
                 <gui:SkinFile />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
