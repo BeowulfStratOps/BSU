@@ -11,7 +11,9 @@ namespace BSU.GUI.Components
 
         private void Preset_Click(object sender, MouseButtonEventArgs e)
         {
-            ((Core.ViewModel.Repository)DataContext).Details.Execute(null);
+            var command = ((Core.ViewModel.Repository)DataContext).Details;
+            if (command.CanExecute(null))
+                command.Execute(null);
         }
     }
 }

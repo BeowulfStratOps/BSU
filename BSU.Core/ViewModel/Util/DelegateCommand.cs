@@ -37,12 +37,20 @@ namespace BSU.Core.ViewModel.Util
         public bool CanExecute(object? parameter) => _canExecute;
         public void Execute(object? parameter)
         {
-            if (!_canExecute) throw new InvalidOperationException();
-            _logger.Trace($"Executing command: {_actionCode}");
-            if (_objAction != null)
-                _objAction(parameter);
-            else
-                _action!();
+            try
+            {
+                if (!_canExecute) throw new InvalidOperationException();
+                _logger.Trace($"Executing command: {_actionCode}");
+                if (_objAction != null)
+                    _objAction(parameter);
+                else
+                    _action!();
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+                throw;
+            }
         }
 
         public event EventHandler? CanExecuteChanged;
