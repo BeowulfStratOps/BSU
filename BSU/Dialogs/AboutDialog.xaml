@@ -18,10 +18,10 @@
             </ResourceDictionary>
         </StackPanel.Resources>
         <TextBlock>
-            Beowulf Sync Utility, developed by Beowulf Strategic Operations (<Hyperlink Foreground="{DynamicResource Hyperlink}" NavigateUri="https://beowulfso.com" RequestNavigate="Hyperlink_OnRequestNavigate">https://beowulfso.com</Hyperlink>).
+            Beowulf Sync Utility, developed by <Hyperlink Foreground="{DynamicResource Hyperlink}" NavigateUri="https://beowulfso.com" RequestNavigate="Hyperlink_OnRequestNavigate" ToolTip="https://beowulfso.com">Beowulf Strategic Operations</Hyperlink>.
             <LineBreak/>
             <LineBreak/>
-            See <Hyperlink Foreground="{DynamicResource Hyperlink}" NavigateUri="https://github.com/BeowulfStratOps/BSU" RequestNavigate="Hyperlink_OnRequestNavigate">https://github.com/BeowulfStratOps/BSU</Hyperlink>  for more information.
+            Check the <Hyperlink Foreground="{DynamicResource Hyperlink}" NavigateUri="https://github.com/BeowulfStratOps/BSU" RequestNavigate="Hyperlink_OnRequestNavigate" ToolTip="https://github.com/BeowulfStratOps/BSU">GitHub Repository</Hyperlink>  for more information.
             <LineBreak/>
             <LineBreak/>
             If you find any issues or have a question, please contact us via GitHub or the #support channel on our Discord.
