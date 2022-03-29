@@ -11,6 +11,10 @@
         <Setter Property="Foreground" Value="{DynamicResource PopupForeground}"></Setter>
     </Style>
 
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource PopupForeground}"></Setter>
+    </Style>
+
     <Style TargetType="ComboBox" BasedOn="{StaticResource PopupWindowComboBox}"></Style>
 
     <Style TargetType="ComboBoxItem">

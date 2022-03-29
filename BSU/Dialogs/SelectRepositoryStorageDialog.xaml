@@ -18,6 +18,7 @@
                 <converters:ActionToColorConverter x:Key="ActionToColor" />
                 <converters:CollapseConverter x:Key="BoolToVisibility" />
                 <converters:StripeColorBrushConverter x:Key="StripeColorBrushConverter"></converters:StripeColorBrushConverter>
+                <Style x:Key="TextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}"></Style>
                 <ResourceDictionary.MergedDictionaries>
                     <ResourceDictionary Source="../Resources/Popup.xaml"></ResourceDictionary>
                 </ResourceDictionary.MergedDictionaries>
@@ -39,14 +40,14 @@
                     You can review the selection below and continue if you agree with the selection, or select Cancel to make changes manually.
                 </TextBlock>
 
-                <CheckBox DockPanel.Dock="Top" Margin="0, 5" Visibility="{Binding ShowSteamOption, Converter={StaticResource BoolToVisibility}}"
+                <CheckBox Foreground="{DynamicResource PopupForeground}" DockPanel.Dock="Top" Margin="0, 5" Visibility="{Binding ShowSteamOption, Converter={StaticResource BoolToVisibility}}"
                           IsChecked="{Binding UseSteam}">
                     Use mods you have downloaded from Steam Workshop.
                 </CheckBox>
 
                 <Label DockPanel.Dock="Top" Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">Download Location</Label>
                 <DockPanel DockPanel.Dock="Top" Height="25" Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">
-                    <userControls:SvgButton DockPanel.Dock="Right" Command="{Binding AddStorage}" Svg="{StaticResource SvgAdd}" SvgBrush="Black"
+                    <userControls:SvgButton DockPanel.Dock="Right" Command="{Binding AddStorage}" Svg="{StaticResource SvgAdd}"
                                             Width="25" Height="{Binding Path=Height, ElementName=ComboBox}" ToolTip="Add new Download Location"/>
                     <ComboBox ItemsSource="{Binding Storages}" IsSynchronizedWithCurrentItem="True" SelectedIndex="0"
                               SelectedItem="{Binding Storage}" IsEnabled="{Binding DownloadEnabled}"
@@ -68,11 +69,11 @@
                             <DataTemplate>
                                 <Grid Background="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}">
                                     <DockPanel Margin="5" LastChildFill="False" >
-                                        <TextBlock DockPanel.Dock="Left" Text="{Binding ModName}" />
+                                        <TextBlock Style="{StaticResource TextBlockStyle}" DockPanel.Dock="Left" Text="{Binding ModName}" />
                                         <ContentPresenter DockPanel.Dock="Right" Content="{Binding Action}">
                                             <ContentPresenter.Resources>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectMod}">
-                                                    <TextBlock>
+                                                    <TextBlock Style="{StaticResource TextBlockStyle}">
                                                         <Ellipse Width="15" Height="15" Fill="{Binding ActionType, Converter={StaticResource ActionToColor}}" />
                                                         <Run Text="{Binding ActionType, Mode=OneWay}" />
                                                         <Run Text="{Binding StorageName, Mode=OneWay}" />
@@ -81,16 +82,16 @@
                                                     </TextBlock>
                                                 </DataTemplate>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectStorage}">
-                                                    <TextBlock>Download to <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
+                                                    <TextBlock Style="{StaticResource TextBlockStyle}">Download to <Run Text="{Binding Name, Mode=OneWay}" /></TextBlock>
                                                 </DataTemplate>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectDisabled}">
-                                                    <TextBlock>Disabled</TextBlock>
+                                                    <TextBlock Style="{StaticResource TextBlockStyle}">Disabled</TextBlock>
                                                 </DataTemplate>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectNone}">
                                                     <TextBlock Foreground="{DynamicResource ValidationError}" FontStyle="Italic" Text="Nothing selected" />
                                                 </DataTemplate>
                                                 <DataTemplate DataType="{x:Type viewModel:SelectLoading}">
-                                                    <TextBlock Text="Loading" />
+                                                    <TextBlock Foreground="{DynamicResource IndicatorLoading}" Text="Loading" />
                                                 </DataTemplate>
                                             </ContentPresenter.Resources>
                                         </ContentPresenter>
