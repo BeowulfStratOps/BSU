@@ -31,6 +31,9 @@
                             <Trigger Property="IsPressed" Value="true">
                                 <Setter Property="Background" TargetName="border" Value="{DynamicResource ButtonHover}"/>
                             </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Background" TargetName="border" Value="{DynamicResource ButtonHover}"/>
+                            </Trigger>
                             <Trigger Property="IsEnabled" Value="false">
                                 <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource ButtonForegroundDisabled}"/>
                             </Trigger>
