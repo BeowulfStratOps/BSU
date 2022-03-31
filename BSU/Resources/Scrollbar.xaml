@@ -48,7 +48,7 @@
                                 <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ScrollBarPressed}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Opacity" TargetName="contentPresenter" Value="0.56"/>
+                                <!--<Setter Property="Opacity" TargetName="contentPresenter" Value="0.56"/>-->
                                 <Setter Property="Background" TargetName="border" Value="{DynamicResource ScrollBarBackground}"/>
                                 <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ScrollBarBackground}"/>
                             </Trigger>
@@ -115,7 +115,7 @@
                             </Grid.RowDefinitions>
                             <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Grid.Row="1"/>
                             <RepeatButton x:Name="PART_LineUpButton" Command="{x:Static ScrollBar.LineUpCommand}" IsEnabled="{TemplateBinding IsMouseOver}" Style="{StaticResource ScrollBarButton}">
-                                <Path x:Name="ArrowTop" Data="M 0,4 C0,4 0,6 0,6 0,6 3.5,2.5 3.5,2.5 3.5,2.5 7,6 7,6 7,6 7,4 7,4 7,4 3.5,0.5 3.5,0.5 3.5,0.5 0,4 0,4 z" Fill="{DynamicResource ScrollBarForeground}" Margin="3,4,3,3" Stretch="Uniform"/>
+                                <Path x:Name="ArrowTop" Data="M 0,4 C0,4 0,6 0,6 0,6 3.5,2.5 3.5,2.5 3.5,2.5 7,6 7,6 7,6 7,4 7,4 7,4 3.5,0.5 3.5,0.5 3.5,0.5 0,4 0,4 z" Fill="{DynamicResource ScrollBarForegroundInactive}" Margin="3,4,3,3" Stretch="Uniform" />
                             </RepeatButton>
                             <Track x:Name="PART_Track" IsDirectionReversed="true" IsEnabled="{TemplateBinding IsMouseOver}" Grid.Row="1">
                                 <Track.DecreaseRepeatButton>
@@ -129,7 +129,7 @@
                                 </Track.Thumb>
                             </Track>
                             <RepeatButton x:Name="PART_LineDownButton" Command="{x:Static ScrollBar.LineDownCommand}" IsEnabled="{TemplateBinding IsMouseOver}" Grid.Row="2" Style="{StaticResource ScrollBarButton}">
-                                <Path x:Name="ArrowBottom" Data="M 0,2.5 C0,2.5 0,0.5 0,0.5 0,0.5 3.5,4 3.5,4 3.5,4 7,0.5 7,0.5 7,0.5 7,2.5 7,2.5 7,2.5 3.5,6 3.5,6 3.5,6 0,2.5 0,2.5 z" Fill="{DynamicResource ScrollBarForeground}" Margin="3,4,3,3" Stretch="Uniform"/>
+                                <Path x:Name="ArrowBottom" Data="M 0,2.5 C0,2.5 0,0.5 0,0.5 0,0.5 3.5,4 3.5,4 3.5,4 7,0.5 7,0.5 7,0.5 7,2.5 7,2.5 7,2.5 3.5,6 3.5,6 3.5,6 0,2.5 0,2.5 z" Fill="{DynamicResource ScrollBarForegroundInactive}" Margin="3,4,3,3" Stretch="Uniform"/>
                             </RepeatButton>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -165,6 +165,10 @@
                                 <Setter Property="Fill" TargetName="ArrowTop" Value="{DynamicResource ScrollBarForeground}"/>
                                 <Setter Property="Fill" TargetName="ArrowBottom" Value="{DynamicResource ScrollBarForeground}"/>
                             </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ArrowTop" Property="Fill" Value="{DynamicResource ScrollBarForeground}" />
+                                <Setter TargetName="ArrowBottom" Property="Fill" Value="{DynamicResource ScrollBarForeground}" />
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -187,7 +191,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Grid.Column="1"/>
                                     <RepeatButton x:Name="PART_LineLeftButton" Command="{x:Static ScrollBar.LineLeftCommand}" IsEnabled="{TemplateBinding IsMouseOver}" Style="{StaticResource ScrollBarButton}">
-                                        <Path x:Name="ArrowLeft" Data="M 3.18,7 C3.18,7 5,7 5,7 5,7 1.81,3.5 1.81,3.5 1.81,3.5 5,0 5,0 5,0 3.18,0 3.18,0 3.18,0 0,3.5 0,3.5 0,3.5 3.18,7 3.18,7 z" Fill="{DynamicResource ScrollBarForeground}" Margin="3" Stretch="Uniform"/>
+                                        <Path x:Name="ArrowLeft" Data="M 3.18,7 C3.18,7 5,7 5,7 5,7 1.81,3.5 1.81,3.5 1.81,3.5 5,0 5,0 5,0 3.18,0 3.18,0 3.18,0 0,3.5 0,3.5 0,3.5 3.18,7 3.18,7 z" Fill="{DynamicResource ScrollBarForegroundInactive}" Margin="3" Stretch="Uniform"/>
                                     </RepeatButton>
                                     <Track x:Name="PART_Track" Grid.Column="1" IsEnabled="{TemplateBinding IsMouseOver}">
                                         <Track.DecreaseRepeatButton>
@@ -201,7 +205,7 @@
                                         </Track.Thumb>
                                     </Track>
                                     <RepeatButton x:Name="PART_LineRightButton" Command="{x:Static ScrollBar.LineRightCommand}" Grid.Column="2" IsEnabled="{TemplateBinding IsMouseOver}" Style="{StaticResource ScrollBarButton}">
-                                        <Path x:Name="ArrowRight" Data="M 1.81,7 C1.81,7 0,7 0,7 0,7 3.18,3.5 3.18,3.5 3.18,3.5 0,0 0,0 0,0 1.81,0 1.81,0 1.81,0 5,3.5 5,3.5 5,3.5 1.81,7 1.81,7 z" Fill="{DynamicResource ScrollBarForeground}" Margin="3" Stretch="Uniform"/>
+                                        <Path x:Name="ArrowRight" Data="M 1.81,7 C1.81,7 0,7 0,7 0,7 3.18,3.5 3.18,3.5 3.18,3.5 0,0 0,0 0,0 1.81,0 1.81,0 1.81,0 5,3.5 5,3.5 5,3.5 1.81,7 1.81,7 z" Fill="{DynamicResource ScrollBarForegroundInactive}" Margin="3" Stretch="Uniform"/>
                                     </RepeatButton>
                                 </Grid>
                                 <ControlTemplate.Triggers>
@@ -236,6 +240,10 @@
                                     <Trigger Property="IsEnabled" Value="false">
                                         <Setter Property="Fill" TargetName="ArrowLeft" Value="{DynamicResource ScrollBarForeground}"/>
                                         <Setter Property="Fill" TargetName="ArrowRight" Value="{DynamicResource ScrollBarForeground}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="ArrowLeft" Property="Fill" Value="{DynamicResource ScrollBarForeground}" />
+                                        <Setter TargetName="ArrowRight" Property="Fill" Value="{DynamicResource ScrollBarForeground}" />
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
