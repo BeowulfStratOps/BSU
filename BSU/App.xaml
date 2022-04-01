@@ -13,6 +13,7 @@
                 <ResourceDictionary Source="Resources/RadioToggleButton.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Resources/CheckBox.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Resources/ComboBox.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Resources/MenuItem.xaml"></ResourceDictionary>
                 <gui:SkinFile />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

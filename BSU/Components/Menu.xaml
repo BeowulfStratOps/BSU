@@ -6,21 +6,20 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid Height="30">
-        <Menu Background="{DynamicResource WindowBarBackground}" Margin="5 7 0 0" Height="20">
+        <Menu Background="{DynamicResource WindowBarBackground}" Margin="5 7 0 0" Height="20" Foreground="{DynamicResource MenuForeground}">
             <Menu.Resources>
-                <Style x:Key="TopLevelItem" TargetType="MenuItem">
+                <Style x:Key="TopLevelItem" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
                     <Setter Property="Margin" Value="5 0"></Setter>
                     <Setter Property="VerticalAlignment" Value="Bottom"></Setter>
                     <Setter Property="VerticalContentAlignment" Value="Bottom"></Setter>
                     <Setter Property="FontSize" Value="12"></Setter>
                     <Setter Property="BorderBrush" Value="DarkGray"></Setter>
-                    <Setter Property="BorderThickness" Value="1"></Setter>
                 </Style>
             </Menu.Resources>
-            <MenuItem Foreground="{DynamicResource MenuForeground}" Style="{StaticResource TopLevelItem}" Header="_Settings" Click="Settings_Click"></MenuItem>
-            <MenuItem Foreground="{DynamicResource MenuForeground}" Style="{StaticResource TopLevelItem}" Header="_Help" VerticalContentAlignment="Bottom">
-                <MenuItem Foreground="Black" Header="_Show Logs" Click="ShowLogs_Click" ></MenuItem>
-                <MenuItem Foreground="Black" Header="_About" Click="About_Click"></MenuItem>
+            <MenuItem Style="{StaticResource TopLevelItem}" Header="_Settings" Click="Settings_Click" />
+            <MenuItem Style="{StaticResource TopLevelItem}" Header="_Help">
+                <MenuItem Header="_Show Logs" Click="ShowLogs_Click" ></MenuItem>
+                <MenuItem Header="_About" Click="About_Click"></MenuItem>
             </MenuItem>
         </Menu>
     </Grid>
