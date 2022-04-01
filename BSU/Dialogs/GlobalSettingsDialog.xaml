@@ -87,7 +87,7 @@
                     <CheckBox Grid.Column="1" IsChecked="{Binding BattlEye}"></CheckBox>
                 </Grid>
 
-                <Expander ExpandDirection="Up">
+                <Expander ExpandDirection="Down">
                     <Expander.Header>
                         <TextBlock Margin="5">Advanced Options</TextBlock>
                     </Expander.Header>
