@@ -82,5 +82,9 @@
 
     <SolidColorBrush x:Key="Hyperlink" Color="#0066CC"/>
 
+    <SolidColorBrush x:Key="ProgressBackground" Color="#E6E6E6"/>
+    <SolidColorBrush x:Key="ProgressBar" Color="#05B024"/>
+    <SolidColorBrush x:Key="ProgressText" Color="Black"/>
+
     <FontFamily x:Key="Font">Segoe UI</FontFamily>
 </ResourceDictionary>

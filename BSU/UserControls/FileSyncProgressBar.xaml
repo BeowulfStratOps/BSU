@@ -6,18 +6,18 @@
              xmlns:converters="clr-namespace:BSU.GUI.Converters"
              xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance viewModel:FileSyncProgress}">
+             d:DesignHeight="40" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModel:FileSyncProgress}">
     <UserControl.Resources>
         <converters:ByteSizeConverter x:Key="ByteSizeConverter" />
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
         <converters:CollapseConverter x:Key="CollapseConverter" />
     </UserControl.Resources>
     <Grid Visibility="{Binding Active, Converter={StaticResource CollapseConverter}}" Margin="5, 3">
-        <ProgressBar DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsIndeterminate}" Value="{Binding ProgressValue, Mode=OneWay}"></ProgressBar>
-        <TextBlock Visibility="{Binding Stage, Converter={StaticResource NullToVisibilityConverter}}">
+        <ProgressBar Background="{DynamicResource ProgressBackground}" Foreground="{DynamicResource ProgressBar}" DockPanel.Dock="Top" MinHeight="20" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsIndeterminate}" Value="{Binding ProgressValue, Mode=OneWay}"></ProgressBar>
+        <TextBlock Foreground="{DynamicResource ProgressText}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding Stage, Converter={StaticResource NullToVisibilityConverter}}">
             <Run Text="{Binding Stage, Mode=OneWay}" />...
         </TextBlock>
-        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding Stats, Converter={StaticResource NullToVisibilityConverter}}">
+        <TextBlock Foreground="{DynamicResource ProgressText}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding Stats, Converter={StaticResource NullToVisibilityConverter}}">
             Sync:
             <Run Text="{Binding Stats.Done, Converter={StaticResource ByteSizeConverter}}" />
             /
