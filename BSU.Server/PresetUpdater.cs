@@ -29,14 +29,30 @@ public static class PresetUpdater
             modUpdates.Add(new ModUpdatePaths(sourcePath.Name, sourceMod, destinationMod));
         }
 
+        var stats = new List<ModUpdateStats>();
+
         foreach (var (name, sourceMod, destinationMod) in modUpdates)
         {
-            ModUpdater.UpdateMod(name, sourceMod, destinationMod);
+            var modStats = ModUpdater.UpdateMod(name, sourceMod, destinationMod);
+            stats.Add(modStats);
         }
 
         var serverFile = BuildServerFile(config);
         var serverFileJson = JsonConvert.SerializeObject(serverFile, Formatting.Indented);
         WriteServerFile(config, serverFileJson, dryRun, changedFiles);
+
+        PrintStats(stats);
+    }
+
+    private static void PrintStats(List<ModUpdateStats> stats)
+    {
+        foreach (var entry in stats)
+        {
+            Console.WriteLine(entry.ModName);
+            Console.WriteLine("  New:     " + entry.New);
+            Console.WriteLine("  Updated: " + entry.Updated);
+            Console.WriteLine("  Deleted: " + entry.Deleted);
+        }
     }
 
     private static void WriteServerFile(PresetConfig config, string serverFileJson, bool dryRun,

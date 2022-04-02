@@ -38,7 +38,7 @@ public class LocalDestinationMod : IDestinationMod
             Console.WriteLine($"Would write {path}");
             return;
         }
-        _changedFileTracker.AddChangedFilePath(path);
+        _changedFileTracker.AddChangedFilePath(_destinationPath.Name, path);
         var fullPath = Util.GetAbsolutePath(_destinationPath, path);
         var fileInfo = new FileInfo(fullPath);
         fileInfo.Directory!.Create();

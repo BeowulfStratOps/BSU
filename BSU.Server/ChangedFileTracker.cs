@@ -7,7 +7,7 @@ namespace BSU.Server;
 public class ChangedFileTracker
 {
     private readonly StreamWriter _writer;
-    private readonly object _fileLock = new();
+    private readonly object _lock = new();
     private readonly HashSet<string> _existingEntries = new();
 
     public ChangedFileTracker(string path)
@@ -22,12 +22,15 @@ public class ChangedFileTracker
         _writer = new StreamWriter(path, true);
     }
 
-    public void AddChangedFilePath(NormalizedPath path)
+    public void AddChangedFilePath(string modName, NormalizedPath path) => AddChangedFilePath($"/{modName}{path}");
+
+    public void AddChangedFilePath(string path)
     {
-        if (_existingEntries.Contains(path))
-            return;
-        lock (_fileLock)
+        lock (_lock)
         {
+            if (_existingEntries.Contains(path))
+                return;
+            _existingEntries.Add(path);
             _writer.WriteLine(path);
             _writer.Flush();
         }

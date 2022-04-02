@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using Newtonsoft.Json;
 
 namespace BSU.Server;
@@ -9,9 +10,10 @@ public class Program
     private static void PrintUsage()
     {
         Console.WriteLine(@"Usage:
-Update a preset: ./BSU.Server <path to config file>
-Dry run update: ./BSU.Server dryrun <path to config file>
-Print empty config:   ./BSU.Server template");
+Update a preset:    ./BSU.Server <path to config file>
+Dry run update:     ./BSU.Server dryrun <path to config file>
+Print empty config: ./BSU.Server template
+Print version:      ./BSU.Server version");
     }
 
     private static void PrintEmptyConfig()
@@ -30,6 +32,9 @@ Print empty config:   ./BSU.Server template");
         {
             case 1 when args[0].ToLowerInvariant() == "template":
                 PrintEmptyConfig();
+                return 0;
+            case 1 when args[0].ToLowerInvariant() == "version":
+                PrintVersion();
                 return 0;
             case 1:
                 configPath = args[0];
@@ -69,5 +74,11 @@ Print empty config:   ./BSU.Server template");
             Console.WriteLine(e);
             return 3;
         }
+    }
+
+    private static void PrintVersion()
+    {
+        var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
+        Console.WriteLine(version);
     }
 }

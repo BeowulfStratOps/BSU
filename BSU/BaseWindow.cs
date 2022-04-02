@@ -17,6 +17,7 @@ public class BaseWindow : Window
 
     public BaseWindow()
     {
+        WindowStartupLocation = WindowStartupLocation.CenterOwner;
         CommandBindings.Add(new CommandBinding(SystemCommands.CloseWindowCommand, OnCloseWindow));
         CommandBindings.Add(new CommandBinding(SystemCommands.MaximizeWindowCommand, OnMaximizeWindow,
             CanResizeWindow));

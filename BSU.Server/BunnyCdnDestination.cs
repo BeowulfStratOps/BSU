@@ -10,6 +10,7 @@ namespace BSU.Server;
 public class BunnyCdnDestination : IDestinationMod
 {
     private readonly string _basePath;
+    private readonly string _modName;
     private readonly bool _dryRun;
     private readonly ChangedFileTracker _changedFileTracker;
     private readonly BunnyCDNStorage _storage;
@@ -18,6 +19,7 @@ public class BunnyCdnDestination : IDestinationMod
         ChangedFileTracker changedFileTracker)
     {
         _basePath = $"/{config.ZoneName}/{modName}";
+        _modName = modName;
         _dryRun = dryRun;
         _changedFileTracker = changedFileTracker;
         _storage = new BunnyCDNStorage(config.ZoneName, config.ApiKey);
@@ -78,7 +80,7 @@ public class BunnyCdnDestination : IDestinationMod
             return;
         }
 
-        _changedFileTracker.AddChangedFilePath(path);
+        _changedFileTracker.AddChangedFilePath(_modName, path);
         var storagePath = GetStoragePath(path);
         _storage.UploadAsync(data, storagePath, true).GetAwaiter().GetResult();
     }

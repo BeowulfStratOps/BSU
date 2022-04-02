@@ -16,8 +16,10 @@ public static class ModUpdater
 {
     private record FileHash(byte[] Hash, ulong FileSize);
 
-    public static void UpdateMod(string name, ISourceMod source, IDestinationMod destination)
+    public static ModUpdateStats UpdateMod(string name, ISourceMod source, IDestinationMod destination)
     {
+        var stats = new ModUpdateStats(name);
+
         Console.WriteLine($"Working on mod {name}");
 
         Console.WriteLine($"Hashing source files");
@@ -30,8 +32,8 @@ public static class ModUpdater
         Console.WriteLine($"Retrieving destination hashes");
         var destinationHashes = GetDestinationHashes(destination, commonFiles, destinationFiles);
 
-        var deletes = FindDeletes(sourceHashes.Keys, destinationFiles.Keys);
-        var updates = FindUpdates(sourceHashes, destinationHashes);
+        var deletes = FindDeletes(sourceHashes.Keys, destinationFiles.Keys, stats);
+        var updates = FindUpdates(sourceHashes, destinationHashes, stats);
 
         Console.WriteLine($"{deletes.Count} deletes");
         Console.WriteLine($"{updates.Count} updates");
@@ -46,10 +48,11 @@ public static class ModUpdater
         var oldHashFile = TryReadHashFile(destination, destinationFiles.Keys);
         var hashFile = BuildHashFile(name, sourceHashes);
         if (oldHashFile != null && HashFilesMatch(oldHashFile, hashFile))
-            return;
+            return stats;
         var hashFileJson = JsonConvert.SerializeObject(hashFile);
         var hashJsonStream = Util.StringToStream(hashFileJson);
         destination.Write("/hash.json", hashJsonStream);
+        return stats;
     }
 
     private static bool HashFilesMatch(HashFile a, HashFile b)
@@ -153,7 +156,7 @@ public static class ModUpdater
     }
 
     private static List<NormalizedPath> FindDeletes(IEnumerable<NormalizedPath> sourceFiles,
-        IEnumerable<NormalizedPath> destinationFiles)
+        IEnumerable<NormalizedPath> destinationFiles, ModUpdateStats stats)
     {
         var unaccountedFiles = new List<NormalizedPath>(destinationFiles);
 
@@ -169,19 +172,33 @@ public static class ModUpdater
             }
         }
 
+        stats.Deleted = unaccountedFiles.Count(f =>
+        {
+            var ext = f.GetExtension();
+            return ext != "zsync" && ext != "hash";
+        });
         return unaccountedFiles;
     }
 
     private static List<NormalizedPath> FindUpdates(Dictionary<NormalizedPath, FileHash> sourceHashes,
-        Dictionary<NormalizedPath, byte[]> destinationHashes)
+        Dictionary<NormalizedPath, byte[]> destinationHashes, ModUpdateStats stats)
     {
         var updates = new List<NormalizedPath>();
 
         foreach (var (sourcePath, sourceHash) in sourceHashes)
         {
-            if (!destinationHashes.TryGetValue(sourcePath, out var destinationHash) ||
-                !sourceHash.Hash.SequenceEqual(destinationHash))
+            if (!destinationHashes.TryGetValue(sourcePath, out var destinationHash))
+            {
+                stats.New++;
                 updates.Add(sourcePath);
+                continue;
+            }
+
+            if (!sourceHash.Hash.SequenceEqual(destinationHash))
+            {
+                stats.Updated++;
+                updates.Add(sourcePath);
+            }
         }
 
         return updates;
@@ -198,7 +215,7 @@ public static class ModUpdater
             var hashPath = new NormalizedPath(path + ".hash");
             if (!destinationFileList.TryGetValue(hashPath, out var hashLength))
                 return;
-            var stream = destination.OpenRead(hashPath);
+            using var stream = destination.OpenRead(hashPath);
             var hash = new byte[hashLength];
             var read = stream.Read(hash);
             if (read != hash.Length)
