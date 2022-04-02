@@ -35,4 +35,11 @@
     <None Remove="default.skin" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Themes\Dark.theme" />
+    <EmbeddedResource Include="Themes\Dark.theme">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

@@ -10,6 +10,8 @@
         Style="{StaticResource MetroWindowStyle}"
         SizeToContent="Height" ResizeMode="NoResize" d:DataContext="{d:DesignInstance viewModel:GlobalSettings}">
     <DockPanel Margin="15 0 15 15">
+        <!-- TODO: this is an absolute mess. -->
+
         <DockPanel.Resources>
             <ResourceDictionary>
                 <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
@@ -40,6 +42,16 @@
                     </Setter>
                 </Style>
             </StackPanel.Resources>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="Labels" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">Theme:</Label>
+
+                <ComboBox Grid.Column="1" SelectedValue="{Binding Theme}" ItemsSource="{Binding AvailableThemes}"></ComboBox>
+            </Grid>
 
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -126,15 +138,6 @@
                             </Grid.ColumnDefinitions>
                             <Label Grid.Column="0" HorizontalAlignment="Left">Use huge pages:</Label>
                             <CheckBox Grid.Column="1" IsChecked="{Binding HugePages}"></CheckBox>
-                        </Grid>
-
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition SharedSizeGroup="Labels" />
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
-                            <Label Grid.Column="0" HorizontalAlignment="Left">Allocator:</Label>
-                            <ComboBox Grid.Column="1" ItemsSource="{Binding Allocators}" SelectedValue="{Binding Allocator}"></ComboBox>
                         </Grid>
 
                         <Grid>

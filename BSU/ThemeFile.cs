@@ -48,7 +48,7 @@ internal static class ThemeFile
         using var writer = new StreamWriter(themePath);
         foreach (var (key, value) in entries.OrderBy(e => e.key))
         {
-            writer.WriteLine($"# {key}={value}");
+            writer.WriteLine($"{key}={value}");
         }
     }
 

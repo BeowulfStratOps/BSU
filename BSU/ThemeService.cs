@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using BSU.Core;
 using Microsoft.Win32;
@@ -30,9 +31,17 @@ public class ThemeService : IThemeService
         var lightPath = Path.Combine(_themeFolder.FullName, "Light.theme");
         ThemeFile.CreateDefaultThemeFile(lightPath);
 
-        // TODO: copy built-in themes
-        var darkPath = Path.Combine(_themeFolder.FullName, "Dark.theme");
-        File.Copy(lightPath, darkPath, true);
+        CopyBuiltInTheme("Dark");
+    }
+
+    private void CopyBuiltInTheme(string name)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceStream = assembly.GetManifestResourceStream($"BSU.GUI.Themes.{name}.theme")!;
+        var themePath = Path.Combine(_themeFolder.FullName, $"{name}.theme");
+
+        using var file = new FileStream(themePath, FileMode.Create, FileAccess.Write);
+        resourceStream.CopyTo(file);
     }
 
     public void SetTheme(string theme)
@@ -46,8 +55,9 @@ public class ThemeService : IThemeService
 
     public List<string> GetAvailableThemes()
     {
-        var files = _themeFolder.EnumerateFiles($"*.theme");
-        return files.Select(fi => fi.Name).ToList();
+        const string suffix = ".theme";
+        var files = _themeFolder.EnumerateFiles($"*{suffix}");
+        return files.Select(fi => fi.Name[..^suffix.Length]).ToList();
     }
 
     public string GetDefaultTheme()

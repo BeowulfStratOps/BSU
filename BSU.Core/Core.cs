@@ -48,7 +48,8 @@ namespace BSU.Core
             services.Add(dispatcher);
             services.Add(interactionService);
             services.Add<IDialogService>(new DialogService(services));
-            services.Add<IEventManager>(EventManager);
+            services.Add(EventManager);
+            services.Add(themeService);
             services.Add<IRepositoryStateService>(new RepositoryStateService(services));
 
             // TODO: should this be registered somewhere?

@@ -36,9 +36,12 @@ namespace BSU.Core.ViewModel
         {
             var interactionService = _serviceProvider.Get<IInteractionService>();
             var model = _serviceProvider.Get<IModel>();
-            var vm = new GlobalSettings(model.GetSettings());
+            var themeService = _serviceProvider.Get<IThemeService>();
+            var vm = new GlobalSettings(model.GetSettings(), themeService);
             if (interactionService.GlobalSettings(vm))
-                model.SetSettings(vm.ToLaunchSettings());
+                model.SetSettings(vm.ToModelSettings());
+            else
+                themeService.SetTheme(model.GetSettings().Theme!); // reset theme
         }
 
         public Navigator Navigator { get; }
