@@ -6,7 +6,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using BSU.Core.Annotations;
-using BSU.Core.ViewModel.Util;
 
 namespace BSU.GUI.UserControls
 {

@@ -17,7 +17,6 @@ namespace BSU.Core.ViewModel
     {
         internal readonly IModelRepository ModelRepository;
         private readonly IModel _model;
-        private readonly IViewModelService _viewModelService;
         public string Name { get; }
 
         public FileSyncProgress UpdateProgress { get; } = new();
@@ -206,12 +205,12 @@ namespace BSU.Core.ViewModel
             ModelRepository = modelRepository;
             _model = serviceProvider.Get<IModel>();
             Navigator = serviceProvider.Get<INavigator>();
-            _viewModelService = serviceProvider.Get<IViewModelService>();
+            var viewModelService = serviceProvider.Get<IViewModelService>();
             _interactionService = serviceProvider.Get<IInteractionService>();
             var asyncVoidExecutor = serviceProvider.Get<IAsyncVoidExecutor>();
             Delete = new DelegateCommand(DoDelete, false);
             Update = new DelegateCommand(() => asyncVoidExecutor.Execute(DoUpdate));
-            Details = new DelegateCommand(() => _viewModelService.NavigateToRepository(this));
+            Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
             StopPlaying = new DelegateCommand(() => asyncVoidExecutor.Execute(DoStopPlaying));
             Pause = new DelegateCommand(DoPause, false);

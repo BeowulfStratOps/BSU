@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
-using System.Windows.Media;
 using BSU.Core.Model;
 
 namespace BSU.GUI.Converters
@@ -21,11 +20,11 @@ namespace BSU.GUI.Converters
                 case ModActionEnum.Await:
                     return Theme.GetBrush("IndicatorSync");
                 case ModActionEnum.Use:
-                    return Theme.GetBrush("IndicatorGood");;
+                    return Theme.GetBrush("IndicatorGood");
                 case ModActionEnum.AbortActiveAndUpdate:
                 case ModActionEnum.Unusable:
                 case ModActionEnum.UnusableSteam:
-                    return Theme.GetBrush("IndicatorError");;
+                    return Theme.GetBrush("IndicatorError");
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using BSU.Core.ViewModel;
 using BSU.GUI.Components;
 

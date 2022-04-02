@@ -2,13 +2,12 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using System.Windows.Controls;
 using BSU.Core.ViewModel;
 using BSU.GUI.Dialogs;
 
 namespace BSU.GUI.Components;
 
-public partial class Menu : UserControl
+public partial class Menu
 {
     public Menu()
     {

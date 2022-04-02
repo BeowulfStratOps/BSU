@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
-using System.Windows.Media;
 using BSU.Core.Model;
 
 namespace BSU.GUI.Converters;

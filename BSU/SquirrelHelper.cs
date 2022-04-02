@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
@@ -19,8 +18,9 @@ internal static class SquirrelHelper
             return false;
 #if DEBUG
         return false;
-#endif
+#else
         return true;
+#endif
     }
 
     private static string UpdateUrl => "https://bsu-distribution.bso.ovh/stable/";

@@ -18,7 +18,6 @@ namespace BSU.Core
 {
     public class Core : IDisposable
     {
-        private readonly ISettings _settings;
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly ViewModel.ViewModel _viewModel;
@@ -36,7 +35,6 @@ namespace BSU.Core
 
         internal Core(ISettings settings, IInteractionService interactionService, IDispatcher dispatcher, IThemeService themeService)
         {
-            _settings = settings;
             _logger.Info("Creating new core instance");
             var state = new InternalState(settings);
 

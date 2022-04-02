@@ -13,6 +13,6 @@ public class AppIcon : MarkupExtension
     public override object ProvideValue(IServiceProvider serviceProvider)
     {
         using var ico = Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);
-        return Imaging.CreateBitmapSourceFromHIcon(ico.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+        return Imaging.CreateBitmapSourceFromHIcon(ico!.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
     }
 }

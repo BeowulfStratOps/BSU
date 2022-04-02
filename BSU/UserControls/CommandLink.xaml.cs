@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using BSU.Core.Annotations;
 
 namespace BSU.GUI.UserControls;
