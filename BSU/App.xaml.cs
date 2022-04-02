@@ -20,6 +20,7 @@ namespace BSU.GUI
 
         protected override void OnStartup(StartupEventArgs startupEventArgs)
         {
+
             SquirrelHelper.HandleEvents();
             base.OnStartup(startupEventArgs);
             var mainWindow = new MainWindow();
@@ -33,20 +34,22 @@ namespace BSU.GUI
             try
             {
                 var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-                var settingsLocation = Path.Combine(Directory.GetParent(assemblyLocation)!.Parent!.FullName, "settings.json");
+                var parentPath = Directory.GetParent(assemblyLocation)!.Parent!.FullName;
+                var settingsLocation = Path.Combine(parentPath, "settings.json");
                 var interactionService = new InteractionService(mainWindow);
 
                 var dispatcher = new SimpleDispatcher(Dispatcher.CurrentDispatcher);
-                var core = new Core.Core(new FileInfo(settingsLocation), interactionService, dispatcher);
+                var themeService = new ThemeService(Resources, Path.Combine(parentPath, "themes"));
+                var core = new Core.Core(new FileInfo(settingsLocation), interactionService, dispatcher, themeService);
                 var vm = core.GetViewModel();
-                void ShowUpdateNotification(string message)
+                void ShowNotification(string message)
                 {
                     dispatcher.ExecuteSynchronized(() =>
                     {
-                        vm.AddNotification(new NotificationEvent(message));
+                        core.EventManager.Publish(new NotificationEvent(message));
                     });
                 }
-                SquirrelHelper.Update(ShowUpdateNotification);
+                SquirrelHelper.Update(ShowNotification);
                 mainWindow.DataContext = vm;
                 mainWindow.Show();
                 core.Dispose();

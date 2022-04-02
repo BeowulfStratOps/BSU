@@ -5,17 +5,16 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Resources/Skin.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/Svgs.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/MetroWindow.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/Scrollbar.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/Button.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/RadioToggleButton.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/CheckBox.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/ComboBox.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/MenuItem.xaml"></ResourceDictionary>
-                <ResourceDictionary Source="Resources/Expander.xaml"></ResourceDictionary>
-                <gui:SkinFile />
+                <ResourceDictionary Source="Resources/Skin.xaml" />
+                <ResourceDictionary Source="Resources/Svgs.xaml" />
+                <ResourceDictionary Source="Resources/MetroWindow.xaml" />
+                <ResourceDictionary Source="Resources/Scrollbar.xaml" />
+                <ResourceDictionary Source="Resources/Button.xaml" />
+                <ResourceDictionary Source="Resources/RadioToggleButton.xaml" />
+                <ResourceDictionary Source="Resources/CheckBox.xaml" />
+                <ResourceDictionary Source="Resources/ComboBox.xaml" />
+                <ResourceDictionary Source="Resources/MenuItem.xaml" />
+                <ResourceDictionary Source="Resources/Expander.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

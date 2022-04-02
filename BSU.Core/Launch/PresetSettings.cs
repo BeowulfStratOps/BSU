@@ -14,6 +14,7 @@ public record GlobalSettings
     public bool HugePages { get; init; }
     public string? ArmaPath { get; init; }
     public bool UseBsuLauncher { get; init; }
+    public string? Theme { get; set; }
 
     public static GlobalSettings BuildDefault()
     {
