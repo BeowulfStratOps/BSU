@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using BSU.Core.ViewModel;
 using BSU.GUI.Dialogs;
@@ -15,18 +17,6 @@ namespace BSU.GUI.Actions
             _owner = owner;
         }
 
-        private static MessageBoxImage MessageImageToMessageBoxImage(MessageImage image)
-        {
-            return image switch
-            {
-                MessageImage.Question => MessageBoxImage.Question,
-                MessageImage.Error => MessageBoxImage.Error,
-                MessageImage.Warning => MessageBoxImage.Warning,
-                MessageImage.Success => MessageBoxImage.None,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-
         public bool AddRepository(AddRepository viewModel)
         {
             return (bool)new AddRepositoryDialog(viewModel).ShowDialog()!;
@@ -37,25 +27,19 @@ namespace BSU.GUI.Actions
             return (bool)new AddStorageDialog(viewModel).ShowDialog()!;
         }
 
-        public void MessagePopup(string message, string title, MessageImage image)
+        public void MessagePopup(string message, string title, MessageImageEnum image)
         {
-            MessageBox.Show(_owner, message, title, MessageBoxButton.OK, MessageImageToMessageBoxImage(image));
+            new MessageDialog(message, title, image).ShowDialog();
         }
 
-        public bool? YesNoCancelPopup(string message, string title, MessageImage image)
+        public T OptionsPopup<T>(string message, string title, Dictionary<T, string> options, MessageImageEnum image) where T : notnull
         {
-            var q = MessageBox.Show(_owner, message, title, MessageBoxButton.YesNoCancel, MessageImageToMessageBoxImage(image));
-            if (q == MessageBoxResult.Cancel)
-            {
-                return null;
-            }
-            return q == MessageBoxResult.Yes;
-        }
-
-        public bool YesNoPopup(string message, string title, MessageImage image)
-        {
-            var q = MessageBox.Show(_owner, message, title, MessageBoxButton.YesNo, MessageImageToMessageBoxImage(image));
-            return q == MessageBoxResult.Yes;
+            var dialog = new OptionsDialog(message, title, options.ToDictionary(kv => (object)kv.Key, kv => kv.Value),
+                image);
+            var result = dialog.ShowDialog();
+            if (result != true)
+                return default!;
+            return (T)dialog.Result!;
         }
 
         public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel)

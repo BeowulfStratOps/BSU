@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -268,7 +269,12 @@ namespace BSU.Core.ViewModel
             if (warningMessage != null)
             {
                 warningMessage += " Are your sure you want to launch the game?";
-                var goAhead = _interactionService.YesNoPopup(warningMessage, "Launch Game", MessageImage.Warning);
+                var options = new Dictionary<bool, string>
+                {
+                    { true, "Launch" },
+                    { false, "Cancel" }
+                };
+                var goAhead = _interactionService.OptionsPopup(warningMessage, "Launch Game", options, MessageImageEnum.Warning);
                 if (!goAhead) return;
             }
 
@@ -297,7 +303,7 @@ namespace BSU.Core.ViewModel
             }
             else
             {
-                _interactionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch", MessageImage.Error);
+                _interactionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch", MessageImageEnum.Error);
             }
         }
 
@@ -314,25 +320,35 @@ namespace BSU.Core.ViewModel
             UpdateButtonStates();
         }
 
+        private enum DeletionTypeEnum
+        {
+            Cancel = 0,
+            DeleteMods,
+            KeepMods
+        }
+
         private void DoDelete(object? objOnDetailsPage)
         {
             // TODO: this doesn't look like it belongs here
-            var text = $@"Removing repository {Name}. Do you want to remove mods used by this repository?
+            var text = $"Removing repository {Name}. Do you want to remove mods used by this repository?";
 
-Yes - Delete mods if they are not in use by any other repository
-No - Keep local mods
-Cancel - Do not remove this repository";
-
-            var removeData = _interactionService.YesNoCancelPopup(text, "Remove Repository", MessageImage.Question);
-            if (removeData == null) return;
-
-            if (removeData == true)
+            var options = new Dictionary<DeletionTypeEnum, string>
             {
-                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImage.Error);
+                { DeletionTypeEnum.DeleteMods, "Delete mods if they are not in use by any other repository" },
+                { DeletionTypeEnum.KeepMods, "Keep local mods" },
+                { DeletionTypeEnum.Cancel, "Cancel" }
+            };
+
+            var removeData = _interactionService.OptionsPopup(text, "Remove Repository", options, MessageImageEnum.Question);
+            if (removeData == DeletionTypeEnum.Cancel) return;
+
+            if (removeData == DeletionTypeEnum.DeleteMods)
+            {
+                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImageEnum.Error);
                 return;
             }
 
-            _model.DeleteRepository(ModelRepository, (bool)removeData);
+            _model.DeleteRepository(ModelRepository, removeData == DeletionTypeEnum.DeleteMods);
 
             if ((bool) objOnDetailsPage!) _services.Get<INavigator>().NavigateBack();
         }
@@ -358,7 +374,7 @@ Cancel - Do not remove this repository";
 
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {
-                    _interactionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete", MessageImage.Success);
+                    _interactionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete", MessageImageEnum.Success);
                     return;
                 }
 
@@ -373,7 +389,7 @@ Cancel - Do not remove this repository";
                     updatedText += "\nFailed due to unknown reason (see logs): " + string.Join(", ",
                         updateStats.Failed.Select(s => $"{s.ParentStorage.Name}/{s.Identifier}"));
                 }
-                _interactionService.MessagePopup(updatedText, "Update finished", MessageImage.Success);
+                _interactionService.MessagePopup(updatedText, "Update finished", MessageImageEnum.Success);
             }
             catch (OperationCanceledException)
             {

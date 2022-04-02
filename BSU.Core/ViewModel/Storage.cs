@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using BSU.Core.Ioc;
@@ -94,6 +95,13 @@ namespace BSU.Core.ViewModel
             }
         }
 
+        private enum DeletionTypeEnum
+        {
+            Cancel = 0,
+            DeleteMods,
+            KeepMods
+        }
+
         private void DoDelete()
         {
             if (!_storage.IsAvailable() || !_storage.CanWrite) // Errored loading, probably because the folder doesn't exist anymore. or steam
@@ -103,23 +111,26 @@ namespace BSU.Core.ViewModel
             }
 
             // TODO: this doesn't look like it belongs here
-            var text = $@"Removing storage {Name}. Do you want to delete the files?
+            var text = $@"Removing storage {Name}. Do you want to delete the files?";
 
-Yes - Delete mods in on this storage
-No - Keep mods
-Cancel - Do not remove this storage";
-
-            var removeMods =  _interactionService.YesNoCancelPopup(text, "Remove Storage", MessageImage.Question);
-            if (removeMods == null) return;
-
-
-            if (removeMods == true)
+            var options = new Dictionary<DeletionTypeEnum, string>
             {
-                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImage.Error);
+                { DeletionTypeEnum.DeleteMods, "Delete mods in this storage" },
+                { DeletionTypeEnum.KeepMods, "Keep mods" },
+                { DeletionTypeEnum.Cancel, "Cancel" },
+            };
+
+            var removeMods =  _interactionService.OptionsPopup(text, "Remove Storage", options, MessageImageEnum.Question);
+            if (removeMods == DeletionTypeEnum.Cancel) return;
+
+
+            if (removeMods == DeletionTypeEnum.DeleteMods)
+            {
+                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImageEnum.Error);
                 return;
             }
 
-            _model.DeleteStorage(_storage, (bool) removeMods);
+            _model.DeleteStorage(_storage, removeMods == DeletionTypeEnum.DeleteMods);
         }
     }
 }

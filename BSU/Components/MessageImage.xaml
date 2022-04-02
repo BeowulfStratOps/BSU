@@ -1,0 +1,37 @@
+﻿<UserControl x:Class="BSU.GUI.Components.MessageImage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:BSU.GUI.Components"
+             xmlns:gui="clr-namespace:BSU.GUI"
+             xmlns:converters="clr-namespace:BSU.GUI.Converters"
+             xmlns:viewModel="clr-namespace:BSU.Core.ViewModel;assembly=BSU.Core"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance local:MessageImage}">
+    <Grid>
+        <Grid.Resources>
+            <converters:EqualToVisibilityConverter x:Key="VisibilityConverter" />
+            <Style TargetType="gui:FontIcon">
+                <Setter Property="FontSize" Value="30" />
+                <Setter Property="Margin" Value=" 5" />
+            </Style>
+        </Grid.Resources>
+        <Grid Visibility="{Binding Image, ConverterParameter={x:Static viewModel:MessageImageEnum.Warning}, Converter={StaticResource VisibilityConverter}}">
+            <gui:FontIcon Foreground="{DynamicResource IndicatorWarning}" Icon="f139" />
+            <gui:FontIcon Foreground="{DynamicResource WindowBackground}" Icon="F13B" />
+        </Grid>
+        <Grid Visibility="{Binding Image, ConverterParameter={x:Static viewModel:MessageImageEnum.Error}, Converter={StaticResource VisibilityConverter}}">
+            <gui:FontIcon Foreground="{DynamicResource IndicatorError}" Icon="F136" />
+            <gui:FontIcon Foreground="{DynamicResource WindowBackground}" Icon="F13D" />
+        </Grid>
+        <Grid Visibility="{Binding Image, ConverterParameter={x:Static viewModel:MessageImageEnum.Question}, Converter={StaticResource VisibilityConverter}}">
+            <gui:FontIcon Foreground="{DynamicResource IndicatorSync}" Icon="F136" />
+            <gui:FontIcon Foreground="{DynamicResource WindowBackground}" Icon="f142" />
+        </Grid>
+        <Grid Visibility="{Binding Image, ConverterParameter={x:Static viewModel:MessageImageEnum.Success}, Converter={StaticResource VisibilityConverter}}">
+            <gui:FontIcon Foreground="{DynamicResource IndicatorGood}" Icon="F136" />
+            <gui:FontIcon Foreground="{DynamicResource WindowBackground}" Icon="F13E" />
+        </Grid>
+    </Grid>
+</UserControl>

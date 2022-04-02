@@ -1,0 +1,34 @@
+﻿<gui:BaseWindow x:Class="BSU.GUI.Dialogs.OptionsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:BSU.GUI.Dialogs"
+        xmlns:gui="clr-namespace:BSU.GUI"
+        xmlns:components="clr-namespace:BSU.GUI.Components"
+        mc:Ignorable="d"
+        Height="300" MaxWidth="400" Width="300" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        d:DataContext="{d:DesignInstance local:OptionsDialog}">
+    <StackPanel>
+        <StackPanel.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="../Resources/Popup.xaml"></ResourceDictionary>
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+        </StackPanel.Resources>
+        <DockPanel>
+            <components:MessageImage DockPanel.Dock="Left" Margin="10" Image="{Binding Image}" />
+            <TextBlock TextWrapping="Wrap" Margin="0 10 20 10" VerticalAlignment="Center" Text="{Binding Message, FallbackValue=Some placeholder message}" />
+        </DockPanel>
+        <ItemsControl Margin="0 0 0 10" ItemsSource="{Binding Options}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="local:OptionsDialogOption">
+                    <Button HorizontalContentAlignment="Left" Margin="15 8" Padding="8 8 15 8" Command="{Binding Click}">
+                        <TextBlock Text="{Binding Text, FallbackValue=Some text for testing}" />
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</gui:BaseWindow>
