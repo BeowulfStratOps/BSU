@@ -135,7 +135,7 @@
                                     </StackPanel>
                                 </Grid>
                             </Border>
-                            <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding IsActive, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <Border BorderBrush="DimGray" BorderThickness="1" Visibility="{Binding IsActive, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
