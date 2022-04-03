@@ -8,6 +8,7 @@
         xmlns:components="clr-namespace:BSU.GUI.Components"
         mc:Ignorable="d"
         Height="300" MaxWidth="400" Width="300" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Style="{StaticResource MetroWindowStyle}"
         d:DataContext="{d:DesignInstance local:OptionsDialog}">
     <StackPanel>
         <StackPanel.Resources>
