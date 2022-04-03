@@ -43,7 +43,7 @@ internal static class SquirrelHelper
             return;
         showUpdateNotification("Downloading and installing a new BSU version...");
         await mgr.UpdateApp();
-        showUpdateNotification("Updated BSU. Please restart.");
+        showUpdateNotification("Update complete - Please restart BSU.");
     }
 
     public static void Update(Action<string> showUpdateNotification)

@@ -20,6 +20,7 @@
             <Setter Property="ScrollViewer.PanningMode" Value="VerticalFirst"/>
             <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
             <Setter Property="Foreground" Value="{DynamicResource InputForeground}"></Setter>
+            <Setter Property="CaretBrush" Value="{DynamicResource InputForeground}"></Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TextBox}">
