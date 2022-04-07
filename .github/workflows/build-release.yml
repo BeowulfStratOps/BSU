@@ -1,0 +1,48 @@
+name: Build Release
+
+on:
+  push:
+    tags:        
+      - '*'
+
+jobs:
+  build:
+    name: build-test-package
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Create Version String
+      run: Write-Host "::set-output name=VERSION_STRING::$($env:GITHUB_REF_NAME).0"
+      id: version-string
+    - name: Install dependencies
+      run: dotnet restore --packages packages
+    - name: Set csproj version
+      run: (Get-Content BSU/BSU.GUI.csproj).replace('<Version>0.0.0.0</Version>', '<Version>${{ steps.version-string.outputs.VERSION_STRING }}</Version>') | Set-Content BSU/BSU.GUI.csproj
+    - name: Build
+      run: dotnet build --configuration Release --no-restore BSU
+    - name: Test
+      run: dotnet test
+    - name: Publish
+      run: dotnet publish -c Release -o publish BSU --self-contained -r win-x64
+    - name: Remove createdump.exe
+      run: rm publish/createdump.exe
+    - name: Package
+      run: nuget pack -OutputFileNamesWithoutVersion -Version ${{ steps.version-string.outputs.VERSION_STRING }}
+    - name: Releasify
+      run: powershell.exe -ExecutionPolicy Bypass -Command "packages\squirrel.windows\1.9.0\tools\Squirrel.exe -r releases --setupIcon BSU/icon.ico --no-msi --no-delta --releasify BSU.nupkg ... | Write-Output"
+    - name: configure AWS
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: eu-west-2
+        aws-access-key-id: ${{ secrets.S3_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.S3_KEY_SECRET }}
+    - name: upload to s3
+      run: aws s3 sync --delete releases s3://bsu-distribution/stable
+    - name: Invalidate CloudFront cache
+      run:  aws cloudfront create-invalidation --distribution-id $env:CF_DISTRIBUTION_ID --paths "/*"
+      env:
+        CF_DISTRIBUTION_ID: ${{ secrets.CF_DISTRIBUTION_ID }}
