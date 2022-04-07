@@ -31,7 +31,7 @@ PresetListPanelBackground=#262626
 PresetListPanelBackgroundHover=#333333
 PresetListPanelForeground=#F5F5F5
 
-SelectionBackground=171717
+SelectionBackground=#171717
 SelectionBackgroundHover=#6495ED
 SelectionBackgroundSelected=#4db0ff
 SelectionBorder=#000000
@@ -64,7 +64,7 @@ InputBackground=#171717
 InputForeground=#F5F5F5
 
 ScrollBarBackground=#171717
-ScrollBarForegound=#F5F5F5
+ScrollBarForeground=#F5F5F5
 ScrollBarThumb=#717172
 ScrollBarHover=#5e5e5f
 ScrollBarPressed=#414141
