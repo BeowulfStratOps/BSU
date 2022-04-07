@@ -32,7 +32,6 @@
     <Content Include="nlog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Remove="default.skin" />
   </ItemGroup>
 
   <ItemGroup>

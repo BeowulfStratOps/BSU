@@ -41,6 +41,8 @@ public class EventManager : IEventManager
 
     public void Publish<T>(T evt)
     {
+        // TODO: check if gui thread, otherwise send it there
+
         if (!_handlers.TryGetValue(typeof(T), out var list))
         {
             _logger.Info($"No handlers for {evt}.");

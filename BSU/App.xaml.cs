@@ -20,8 +20,13 @@ namespace BSU.GUI
 
         protected override void OnStartup(StartupEventArgs startupEventArgs)
         {
+            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            var parentPath = Directory.GetParent(assemblyLocation)!.Parent!.FullName;
 
-            SquirrelHelper.HandleEvents();
+            var branchFilePath = Path.Combine(parentPath, "branch");
+            var squirrel = new SquirrelHelper(branchFilePath);
+
+            squirrel.HandleEvents();
             base.OnStartup(startupEventArgs);
             var mainWindow = new MainWindow();
             Thread.CurrentThread.Name = "main";
@@ -33,8 +38,6 @@ namespace BSU.GUI
 
             try
             {
-                var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-                var parentPath = Directory.GetParent(assemblyLocation)!.Parent!.FullName;
                 var settingsLocation = Path.Combine(parentPath, "settings.json");
                 var interactionService = new InteractionService(mainWindow);
 
@@ -42,6 +45,7 @@ namespace BSU.GUI
                 var themeService = new ThemeService(Resources, Path.Combine(parentPath, "themes"));
                 var core = new Core.Core(new FileInfo(settingsLocation), interactionService, dispatcher, themeService);
                 var vm = core.GetViewModel();
+
                 void ShowNotification(string message)
                 {
                     dispatcher.ExecuteSynchronized(() =>
@@ -49,7 +53,15 @@ namespace BSU.GUI
                         core.EventManager.Publish(new NotificationEvent(message));
                     });
                 }
-                SquirrelHelper.Update(ShowNotification);
+                void ShowError(string message)
+                {
+                    dispatcher.ExecuteSynchronized(() =>
+                    {
+                        core.EventManager.Publish(new ErrorEvent(message));
+                    });
+                }
+                squirrel.Update(ShowNotification, ShowError);
+
                 mainWindow.DataContext = vm;
                 mainWindow.Show();
                 core.Dispose();
