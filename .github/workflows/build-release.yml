@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore --packages packages
     - name: Set csproj version
-      run: (Get-Content BSU/BSU.GUI.csproj).replace('<Version>0.0.0.0</Version>', '<Version>${{ steps.version-string.outputs.VERSION_STRING }}</Version>') | Set-Content BSU/BSU.GUI.csproj
+      run: (Get-Content BSU/BSU.GUI.csproj).replace('<Version>0.0.0</Version>', '<Version>${{ steps.version-string.outputs.VERSION_STRING }}</Version>') | Set-Content BSU/BSU.GUI.csproj
     - name: Build
       run: dotnet build --configuration Release --no-restore BSU
     - name: Test

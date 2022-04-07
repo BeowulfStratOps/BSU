@@ -4,7 +4,7 @@
         <!-- Required elements-->
         <id>BSU</id>
         <title>Beowulf Sync Utility</title>
-        <version>0.0.0.0</version> <!-- should be overwritten by pack command -->
+        <version>0.0.0</version> <!-- should be overwritten by pack command -->
         <description>Beowulf Sync Utility</description>
         <authors>Keithen</authors>
 
