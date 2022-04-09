@@ -30,17 +30,12 @@ namespace BSU.Core.ViewModel
             }
         }
 
-        private string _downloadIdentifier = "";
-
         public FileSyncProgress UpdateProgress { get; } = new();
 
         public ModActionTree Actions { get; }
 
         private void SetSelectionFromView(ModAction value)
         {
-            var identifier = Mod.Identifier;
-            if (identifier.StartsWith("@")) identifier = identifier[1..];
-            DownloadIdentifier = identifier;
             Mod.SetSelection(value.AsSelection);
         }
 
@@ -55,11 +50,6 @@ namespace BSU.Core.ViewModel
             Name = mod.Identifier;
             ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded);
 
-            var downloadIdentifier = mod.DownloadIdentifier;
-            if (downloadIdentifier.StartsWith("@")) downloadIdentifier = downloadIdentifier[1..];
-
-            DownloadIdentifier = downloadIdentifier;
-
             mod.StateChanged += _ => OnStateChanged();
             services.Get<IEventManager>().Subscribe<AnythingChangedEvent>(_ => Update());
             Update();
@@ -68,18 +58,6 @@ namespace BSU.Core.ViewModel
         private void OnStateChanged()
         {
             Info = Mod.GetModInfo();
-        }
-
-        public string DownloadIdentifier
-        {
-            get => _downloadIdentifier;
-            set
-            {
-                if (value == _downloadIdentifier) return;
-                Mod.DownloadIdentifier = "@" + value;
-                _downloadIdentifier = value;
-                OnPropertyChanged();
-            }
         }
 
         private bool _isExpanded;
@@ -122,7 +100,6 @@ namespace BSU.Core.ViewModel
 
         private void Update()
         {
-            DownloadIdentifier = Mod.DownloadIdentifier[1..];
             ErrorText = CoreCalculation.GetErrorForSelection(Mod, _model.GetRepositoryMods()) ?? "";
             Actions.Update();
         }

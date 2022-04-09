@@ -169,14 +169,14 @@ namespace BSU.Core.Services
             {
                 case ModSelectionDisabled:
                     return null;
-                case ModSelectionDownload when string.IsNullOrWhiteSpace(mod.DownloadIdentifier):
-                    return "Name must be a valid folder name";
-                case ModSelectionDownload when mod.DownloadIdentifier.IndexOfAny(Path.GetInvalidPathChars()) >= 0 || mod.DownloadIdentifier.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0:
-                    return "Invalid characters in name";
+                case ModSelectionDownload download when !download.IsNameValid(out var error):
+                {
+                    return error;
+                }
                 case ModSelectionDownload selectStorage:
                 {
                     if (selectStorage.DownloadStorage.State == LoadingState.Loading) return null;
-                    var folderExists = selectStorage.DownloadStorage.HasMod(mod.DownloadIdentifier);
+                    var folderExists = selectStorage.DownloadStorage.HasMod(selectStorage.DownloadName);
                     return folderExists ? "Name in use" : null;
                 }
                 case ModSelectionStorageMod selectMod when GetModAction(mod, selectMod.StorageMod) == ModActionEnum.AbortActiveAndUpdate:

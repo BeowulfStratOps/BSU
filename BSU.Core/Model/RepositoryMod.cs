@@ -30,7 +30,6 @@ namespace BSU.Core.Model
         public event Action<IModelRepositoryMod>? StateChanged;
         public PersistedSelection? GetPreviousSelection() => _internalState.Selection;
         public event Action<IModelRepositoryMod>? SelectionChanged;
-        public event Action<IModelRepositoryMod>? DownloadIdentifierChanged;
 
         private ModSelection Selection
         {
@@ -57,7 +56,6 @@ namespace BSU.Core.Model
             _eventManager = services.Get<IEventManager>();
             _implementation = implementation;
             Identifier = identifier;
-            _downloadIdentifier = identifier;
 
             if (_internalState.Selection?.Type == PersistedSelectionType.DoNothing)
                 _selection = new ModSelectionDisabled();
@@ -158,7 +156,7 @@ namespace BSU.Core.Model
             if (Selection is ModSelectionDownload actionDownload)
             {
                 var updateTarget = new UpdateTarget(_versionHash!.GetHashString());
-                var mod = await actionDownload.DownloadStorage.CreateMod(DownloadIdentifier, updateTarget, _matchHash!);
+                var mod = await actionDownload.DownloadStorage.CreateMod(actionDownload.DownloadName, updateTarget, _matchHash!);
                 Selection = new ModSelectionStorageMod(mod);
                 var updateTask = mod.Update(_implementation, _matchHash!, _versionHash, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, mod);
@@ -167,22 +165,9 @@ namespace BSU.Core.Model
             throw new InvalidOperationException(); // Impossible
         }
 
-        private string _downloadIdentifier;
         private LoadingState _state;
         private readonly IDispatcher _dispatcher;
         private readonly IEventManager _eventManager;
-
-        public string DownloadIdentifier
-        {
-            get => _downloadIdentifier;
-            set
-            {
-                if (!value.StartsWith("@")) throw new ArgumentException();
-                if (value == _downloadIdentifier) return;
-                _downloadIdentifier = value;
-                DownloadIdentifierChanged?.Invoke(this);
-            }
-        }
 
         public override string ToString() => Identifier;
     }

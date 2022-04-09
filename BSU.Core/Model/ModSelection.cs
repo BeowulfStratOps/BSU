@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace BSU.Core.Model
 {
@@ -51,15 +52,43 @@ namespace BSU.Core.Model
     internal sealed class ModSelectionDownload : ModSelection
     {
         public IModelStorage DownloadStorage { get; }
-        public ModSelectionDownload(IModelStorage storage)
+        public string DownloadName { get; }
+
+        public ModSelectionDownload(IModelStorage storage, string name)
         {
             DownloadStorage = storage;
+            DownloadName = name;
         }
 
-        public override string ToString() => $"Storage:{DownloadStorage.Name}";
+        public bool IsNameValid(out string error)
+        {
+            if (!DownloadName.StartsWith("@"))
+            {
+                error = "Must start with a '@'";
+                return false;
+            }
+
+            if (DownloadName.IndexOfAny(Path.GetInvalidPathChars()) >= 0 ||
+                DownloadName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                error = "Contains illegal characters";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(DownloadName))
+            {
+                error = "Is empty";
+                return false;
+            }
+
+            error = "";
+            return true;
+        }
+
+        public override string ToString() => $"Storage:{DownloadStorage.Name}/{DownloadName}";
         public override bool Equals(ModSelection? other)
         {
-            return other is ModSelectionDownload download && download.DownloadStorage.Equals(DownloadStorage);
+            return other is ModSelectionDownload download && download.DownloadStorage.Equals(DownloadStorage) && download.DownloadName == DownloadName;
         }
     }
 }

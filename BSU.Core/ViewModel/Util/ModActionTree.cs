@@ -64,7 +64,7 @@ namespace BSU.Core.ViewModel.Util
         public void Update()
         {
             var currentSelection = _repoMod.GetCurrentSelection();
-            Selection = ModAction.Create(currentSelection, _repoMod);
+            Selection = ModAction.Create(currentSelection, _repoMod, SetSelection);
             Storages.Clear();
             Storages.Add(new SelectableModAction(new SelectDisabled(), SetSelection,
                 false, true));
@@ -88,9 +88,14 @@ namespace BSU.Core.ViewModel.Util
 
                 if (actions.Any() || storage.CanWrite)
                 {
-                    var isSelected = _repoMod.GetCurrentSelection() is ModSelectionDownload download &&
-                                     download.DownloadStorage == storage;
-                    Storages.Add(new StorageModActionList(storage, SetSelection, actions, isSelected));
+                    var isSelected = false;
+                    var downloadName = _repoMod.Identifier;
+                    if (_repoMod.GetCurrentSelection() is ModSelectionDownload download)
+                    {
+                        isSelected = download.DownloadStorage == storage;
+                        downloadName = download.DownloadName;
+                    }
+                    Storages.Add(new StorageModActionList(storage, downloadName, SetSelection, actions, isSelected));
                 }
             }
         }
@@ -98,7 +103,6 @@ namespace BSU.Core.ViewModel.Util
         private void SetSelection(ModAction action)
         {
             IsOpen = false;
-            if (Equals(_selection, action)) return;
             Selection = action;
             SelectionChanged?.Invoke();
         }
@@ -118,12 +122,12 @@ namespace BSU.Core.ViewModel.Util
 
         public string Path => Storage.GetLocation();
 
-        internal StorageModActionList(IModelStorage storage, Action<ModAction> selectStorage,
+        internal StorageModActionList(IModelStorage storage, string downloadName, Action<ModAction> selectStorage,
             List<SelectableModAction> actions, bool isSelected)
         {
             Storage = storage;
             if (storage.CanWrite)
-                Mods.Add(new SelectableModAction(new SelectStorage(storage), selectStorage, isSelected, true));
+                Mods.Add(new SelectableModAction(new SelectStorage(storage, downloadName, selectStorage), selectStorage, isSelected, true));
             foreach (var action in actions)
             {
                 Mods.Add(action);

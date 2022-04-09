@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.ViewModel.Util;
@@ -7,14 +8,15 @@ namespace BSU.Core.ViewModel
 {
     public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
-        internal static ModAction Create(ModSelection selection, IModelRepositoryMod parent)
+        internal static ModAction Create(ModSelection selection, IModelRepositoryMod parent, Action<ModAction>? downloadNameChanged = null)
         {
+            downloadNameChanged ??= _ => { };
             return selection switch
             {
                 ModSelectionNone => new SelectNone(),
                 ModSelectionLoading => new SelectLoading(),
                 ModSelectionDisabled => new SelectDisabled(),
-                ModSelectionDownload download => new SelectStorage(download.DownloadStorage),
+                ModSelectionDownload download => new SelectStorage(download.DownloadStorage, download.DownloadName, downloadNameChanged),
                 ModSelectionStorageMod actionStorageMod => new SelectMod(actionStorageMod.StorageMod,
                     CoreCalculation.GetModAction(parent, actionStorageMod.StorageMod)),
                 _ => throw new ArgumentException()
@@ -83,19 +85,38 @@ namespace BSU.Core.ViewModel
 
     public class SelectStorage : ModAction
     {
+        // TODO: make it mutable
+        private readonly Action _changed;
         internal IModelStorage DownloadStorage { get; }
         public string Name => DownloadStorage.Name;
 
-        internal SelectStorage(IModelStorage downloadStorage)
+        private string _downloadName;
+
+        public string DownloadName
         {
+            get => _downloadName;
+            set
+            {
+                if (_downloadName == value) return;
+                _downloadName = value;
+                _changed();
+            }
+        }
+
+        internal SelectStorage(IModelStorage downloadStorage, string downloadName, Action<ModAction> changed)
+        {
+            _changed = () => changed(this);
             DownloadStorage = downloadStorage;
+            if (!downloadName.StartsWith("@"))
+                throw new InvalidDataException();
+            _downloadName = downloadName[1..];
         }
 
         public override bool Equals(ModAction? other)
         {
-            return other is SelectStorage selectMod && selectMod.DownloadStorage == DownloadStorage;
+            return other is SelectStorage selectMod && selectMod.DownloadStorage == DownloadStorage && selectMod.DownloadName == DownloadName;
         }
 
-        internal override ModSelection AsSelection => new ModSelectionDownload(DownloadStorage);
+        internal override ModSelection AsSelection => new ModSelectionDownload(DownloadStorage, "@" + DownloadName);
     }
 }

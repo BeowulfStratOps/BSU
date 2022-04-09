@@ -12,6 +12,5 @@ public record AnythingChangedEvent;
 //  repo state change
 //  repo mod state change
 //  repo mod selection changed  (selection is only target. not target type / action type)
-//  repo mod download identifier changed
 
 // TODO: have a good think about how to split this up...

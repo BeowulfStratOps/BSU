@@ -5,7 +5,7 @@ namespace BSU.Core.Persistence
 {
     internal class PersistedSelection : IEquatable<PersistedSelection>
     {
-        // TODO: might need a way to store download identifier?
+        // TODO: might need a way to store download name?
 
         public PersistedSelectionType Type { get; }
         public Guid? Storage { get; }
