@@ -28,7 +28,9 @@ namespace BSU.Core.Model
         private ModSelection _selection = new ModSelectionNone();
 
         public event Action<IModelRepositoryMod>? StateChanged;
-        public PersistedSelection? GetPreviousSelection() => _internalState.Selection;
+
+        private PersistedSelection? _previousSelection;
+        public PersistedSelection? GetPreviousSelection() => _previousSelection;
         public event Action<IModelRepositoryMod>? SelectionChanged;
 
         private ModSelection Selection
@@ -59,6 +61,8 @@ namespace BSU.Core.Model
 
             if (_internalState.Selection?.Type == PersistedSelectionType.DoNothing)
                 _selection = new ModSelectionDisabled();
+            else
+                _previousSelection = _internalState.Selection;
 
             Load();
         }
@@ -126,6 +130,7 @@ namespace BSU.Core.Model
 
         public void SetSelection(ModSelection selection)
         {
+            _previousSelection = null;
             Selection = selection;
         }
 

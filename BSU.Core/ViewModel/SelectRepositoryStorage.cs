@@ -111,6 +111,7 @@ namespace BSU.Core.ViewModel
             _repository = repository;
             var model = serviceProvider.Get<IModel>();
             _viewModelService = serviceProvider.Get<IViewModelService>();
+            _model = serviceProvider.Get<IModel>();
 
             _repository.StateChanged += _ => TryLoad(); // TODO: memory leak!
             _eventManager = serviceProvider.Get<IEventManager>();
@@ -164,36 +165,17 @@ namespace BSU.Core.ViewModel
 
         private void AdjustSelection()
         {
-            // TODO: better interface functions
-            if (IsLoading) return;
+            if (_repository.State != LoadingState.Loaded) return;
 
-            var mods = _repository.GetMods();
-            if (UseSteam)
+            foreach (var mod in _repository.GetMods())
             {
-                foreach (var mod in mods)
-                {
-                    if (mod.GetCurrentSelection() is ModSelectionDownload)
-                    {
-                        mod.SetSelection(new ModSelectionNone());
-                    }
-                }
+                var steamUsage = UseSteam
+                    ? AutoSelectorCalculation.SteamUsage.UseSteamAndPreferIt
+                    : AutoSelectorCalculation.SteamUsage.DontUseSteam;
+                var updateSelection = AutoSelectorCalculation.GetAutoSelection(_model, mod, steamUsage, true);
+                if (updateSelection != null)
+                    mod.SetSelection(updateSelection);
             }
-
-            if (Storage == null) return;
-
-            foreach (var mod in mods)
-            {
-                var selection = mod.GetCurrentSelection();
-                if (selection is ModSelectionDownload ||
-                    (selection is ModSelectionStorageMod storageMod && !storageMod.StorageMod.CanWrite &&
-                     !UseSteam))
-                {
-                    mod.SetSelection(new ModSelectionDownload(Storage.Storage));
-                    mod.DownloadIdentifier = CoreCalculation.GetAvailableDownloadIdentifier(Storage.Storage, mod.Identifier);
-                }
-            }
-
-            Ok.SetCanExecute(true);
         }
 
         private void TryLoad()
@@ -225,6 +207,8 @@ namespace BSU.Core.ViewModel
 
             IsLoading = false;
 
+            AdjustSelection();
+
             if (Storage != null)
                 Ok.SetCanExecute(true);
 
@@ -240,10 +224,18 @@ namespace BSU.Core.ViewModel
                 var entry = new ModStorageSelectionInfo(mod.Identifier, action, index % 2);
                 return entry;
             }).ToList();
+
+            var isValidSelection = _repository.GetMods().All(mod =>
+            {
+                var selection = mod.GetCurrentSelection();
+                return selection is not ModSelectionNone and not ModSelectionLoading; // TODO: whitelist rather than blacklist? or even some attribute on the selection
+            });
+            Ok.SetCanExecute(isValidSelection);
         }
 
         private bool _showDownload;
         private readonly IEventManager _eventManager;
+        private readonly IModel _model;
 
         public bool ShowDownload
         {

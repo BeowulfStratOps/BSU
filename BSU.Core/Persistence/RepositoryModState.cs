@@ -10,33 +10,19 @@ namespace BSU.Core.Persistence
 
     internal class PersistedRepositoryModState : IPersistedRepositoryModState
     {
-        private readonly Dictionary<string, PersistedSelection> _usedMods;
-        private readonly Action _store;
-        private readonly string _identifier;
+        private readonly Func<PersistedSelection?> _getUsedMod;
+        private readonly Action<PersistedSelection?> _setUsedMod;
 
-        public PersistedRepositoryModState(Dictionary<string, PersistedSelection> usedMods, Action store, string identifier)
+        public PersistedRepositoryModState(Func<PersistedSelection?> getUsedMod, Action<PersistedSelection?> setUsedMod)
         {
-            _usedMods = usedMods;
-            _store = store;
-            _identifier = identifier;
+            _getUsedMod = getUsedMod;
+            _setUsedMod = setUsedMod;
         }
 
         public PersistedSelection? Selection
         {
-            get => _usedMods.GetValueOrDefault(_identifier);
-            set
-            {
-                if (value == null)
-                {
-                    _usedMods.Remove(_identifier);
-                    _store();
-                    return;
-                }
-
-                if (_usedMods.TryGetValue(_identifier, out var oldValue) && oldValue.Equals(value)) return;
-                _usedMods[_identifier] = value;
-                _store();
-            }
+            get => _getUsedMod();
+            set => _setUsedMod(value);
         }
     }
 }

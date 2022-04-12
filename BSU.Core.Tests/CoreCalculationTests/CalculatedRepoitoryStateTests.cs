@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using BSU.Core.Model;
 using BSU.Core.Services;
+using BSU.Core.Tests.AutoSelectionTests;
 using BSU.Core.Tests.Util;
 using Moq;
 using Xunit;
@@ -32,17 +33,16 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             var storage = new Mock<IModelStorage>(MockBehavior.Strict);
             storage.Setup(s => s.State).Returns(LoadingState.Loaded);
-            storage.Setup(s => s.HasMod("asdf")).Returns(false);
-            var selection = new ModSelectionDownload(storage.Object);
+            storage.Setup(s => s.HasMod("@asdf")).Returns(false);
+            var selection = new ModSelectionDownload(storage.Object, "@asdf");
             var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
             mock.Setup(o => o.GetCurrentSelection()).Returns(selection);
-            mock.Setup(o => o.DownloadIdentifier).Returns("asdf");
             return mock.Object;
         }
 
         private IModelRepositoryMod StorageMod(ModActionEnum action)
         {
-            var storageMod = AutoselectTests.FromAction(action);
+            var storageMod = TestUtils.StorageModFromAction(action);
             var selection = new ModSelectionStorageMod(storageMod);
             var mock = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
             mock.Setup(m => m.GetCurrentSelection()).Returns(selection);

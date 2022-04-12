@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using BSU.Core.Model;
 
@@ -46,39 +45,6 @@ namespace BSU.Core.Services
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }
-
-        internal static IModelStorageMod? AutoSelect(IModelRepositoryMod repoMod, IEnumerable<IModelStorageMod> storageMods, List<IModelRepositoryMod> allRepoMods)
-        {
-            var byActionType = new Dictionary<ModActionEnum, List<IModelStorageMod>>();
-
-            foreach (var storageMod in storageMods)
-            {
-                if (GetConflictsUsingMod(repoMod, storageMod, allRepoMods).Any())
-                    continue;
-                var action = GetModAction(repoMod, storageMod);
-                byActionType.AddInBin(action, storageMod);
-            }
-
-            // Order of precedence
-            var precedence = new[]
-                {ModActionEnum.Use, ModActionEnum.Await, ModActionEnum.ContinueUpdate, ModActionEnum.Update};
-
-            foreach (var actionType in precedence)
-            {
-                if (!byActionType.TryGetValue(actionType, out var candidates))
-                    continue;
-
-                // no steam
-                var foundMod = candidates.FirstOrDefault(mod => mod.CanWrite);
-                if (foundMod != null) return foundMod;
-
-                // steam
-                foundMod = candidates.FirstOrDefault(mod => !mod.CanWrite);
-                if (foundMod != null) return foundMod;
-            }
-
-            return null;
         }
 
         private static bool IsConflicting(IModelRepositoryMod origin, IModelRepositoryMod otherMod,
@@ -195,7 +161,7 @@ namespace BSU.Core.Services
             }
         }
 
-        private static List<IModelRepositoryMod> GetConflictsUsingMod(IModelRepositoryMod repoMod, IModelStorageMod storageMod, IEnumerable<IModelRepositoryMod> allRepoMods)
+        public static List<IModelRepositoryMod> GetConflictsUsingMod(IModelRepositoryMod repoMod, IModelStorageMod storageMod, IEnumerable<IModelRepositoryMod> allRepoMods)
         {
             var result = new List<IModelRepositoryMod>();
 

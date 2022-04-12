@@ -57,7 +57,7 @@ namespace BSU.Core.Model
             _services = services;
 
             // TODO: should they be registered somewhere?
-            new AutoSelectorService(_services, this);
+            new AutoSelectionActor(_services, this);
             new StructureEventCombiner(_services, this);
         }
 
