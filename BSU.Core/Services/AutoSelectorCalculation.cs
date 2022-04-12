@@ -93,7 +93,6 @@ namespace BSU.Core.Services
         {
             Logger.Trace($"Checking auto-selection for mod {mod.Identifier}");
 
-
             if (model.GetStorages().Any(s => s.State == LoadingState.Loading)) return new ModSelectionLoading();
 
             var storageMods = model.GetStorageMods().ToList();
@@ -124,7 +123,7 @@ namespace BSU.Core.Services
                 return new ModSelectionDownload(storage, downloadName);
             }
 
-            return null;
+            return new ModSelectionNone();
         }
     }
 }

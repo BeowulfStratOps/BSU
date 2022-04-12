@@ -62,7 +62,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
 
             var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
 
-            Assert.Null(selection);
+            Assert.IsType<ModSelectionNone>(selection);
         }
 
         [Fact]
@@ -137,6 +137,19 @@ namespace BSU.Core.Tests.AutoSelectionTests
 
             var selected = Assert.IsType<ModSelectionStorageMod>(selection);
             Assert.Equal(storageMod2, selected.StorageMod);
+        }
+
+        [Fact]
+        private void MoveOnFromLoading()
+        {
+            var (model, repo, storage) = GetModel();
+
+            var repoMod = repo.AddMod();
+            repoMod.SetSelection(new ModSelectionLoading());
+
+            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
+
+            Assert.IsType<ModSelectionNone>(selection);
         }
     }
 }
