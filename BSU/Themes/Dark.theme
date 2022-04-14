@@ -18,7 +18,7 @@ ModListForeground=#F5F5F5
 
 NavbarBackground=#171717
 NavbarForeground=#F5F5F5
-NavbarForegroundHover=#F5F5F5
+NavbarForegroundHover=#c0c0c0
 
 NotificationBackgroundBad=#d55252
 NotificationBackgroundBadForeground=#F5F5F5
