@@ -13,5 +13,6 @@ namespace BSU.Core.Persistence
         void RemoveStorage(Guid storageIdentifier);
         (IStorageEntry entry, IStorageState state) AddStorage(string name, string path, string type);
         GlobalSettings Settings { get; set; }
+        bool CheckIsFirstStart();
     }
 }

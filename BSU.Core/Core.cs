@@ -53,7 +53,7 @@ namespace BSU.Core
             // TODO: should this be registered somewhere?
             new PresetGeneratorService(services);
 
-            var model = new Model.Model(state, services, state.CheckIsFirstStart());
+            var model = new Model.Model(state, services);
             services.Add<IModel>(model);
 
             // TODO: should we use different service providers to avoid accidental abuse?

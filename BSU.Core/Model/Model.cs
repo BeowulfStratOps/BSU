@@ -46,13 +46,15 @@ namespace BSU.Core.Model
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
         private readonly IServiceProvider _services;
 
-        public Model(IInternalState persistentState, ServiceProvider services, bool isFirstStart)
+        public Model(IInternalState persistentState, IServiceProvider services)
         {
             PersistentState = persistentState;
-            if (isFirstStart)
-            {
+
+            if (PersistentState.GetStorages().All(e => e.Item1.Type != "STEAM"))
+                PersistentState.AddStorage("Steam", "steam", "STEAM");
+
+            if (PersistentState.CheckIsFirstStart())
                 DoFirstStartSetup();
-            }
 
             _services = services;
 
@@ -65,14 +67,14 @@ namespace BSU.Core.Model
         {
             _logger.Info("First start setup");
             PersistentState.Settings = GlobalSettings.BuildDefault();
+
+            var bsuDownloadLocation = BsuPrototypeMigration.TryGetDownloadLocation();
+            if (bsuDownloadLocation != null)
+                PersistentState.AddStorage(bsuDownloadLocation!.Name, bsuDownloadLocation.FullName, "DIRECTORY");
         }
 
         public void Load()
         {
-            if (PersistentState.GetStorages().All(e => e.Item1.Type != "STEAM"))
-            {
-                PersistentState.AddStorage("Steam", "steam", "STEAM");
-            }
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
                 CreateRepository(repositoryEntry, repositoryState);

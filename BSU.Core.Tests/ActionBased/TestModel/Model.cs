@@ -104,7 +104,8 @@ internal class Model : IDisposable
             settings.Storages.Add(new StorageEntry(storage , "DIRECTORY", storage, Guid.NewGuid()));
         }
         var persistentState = new InternalState(settings);
-        var model = new BSU.Core.Model.Model(persistentState, Services, false);
+        persistentState.CheckIsFirstStart();
+        var model = new BSU.Core.Model.Model(persistentState, Services);
         Services.Add<IModel>(model);
 
         var vm = new ViewModel.ViewModel(Services);
