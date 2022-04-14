@@ -16,10 +16,7 @@ namespace BSU.Core.ViewModel
         private readonly IModelRepository _repository;
         private readonly IViewModelService _viewModelService;
         private bool _isLoading = true;
-        private bool _hasNonSteamDownloads;
-        private bool _showSteamOption;
         private bool _useSteam;
-        private bool _downloadEnabled;
         private List<ModStorageSelectionInfo> _mods = new();
         private StorageSelection? _storage;
 
@@ -53,17 +50,6 @@ namespace BSU.Core.ViewModel
 
         public bool NotIsLoading => !IsLoading;
 
-        public bool ShowSteamOption
-        {
-            get => _showSteamOption;
-            set
-            {
-                if (_showSteamOption == value) return;
-                _showSteamOption = value;
-                OnPropertyChanged();
-            }
-        }
-
         public DelegateCommand AddStorage { get; }
 
         public bool UseSteam
@@ -74,20 +60,7 @@ namespace BSU.Core.ViewModel
                 if (_useSteam == value) return;
                 _useSteam = value;
                 OnPropertyChanged();
-                DownloadEnabled = !value || _hasNonSteamDownloads;
                 AdjustSelection();
-            }
-        }
-
-        public bool DownloadEnabled
-        {
-            get => _downloadEnabled;
-            set
-            {
-                if (_downloadEnabled == value) return;
-                _downloadEnabled = value;
-                OnPropertyChanged();
-                AddStorage.SetCanExecute(value);
             }
         }
 
@@ -107,7 +80,7 @@ namespace BSU.Core.ViewModel
         {
             UpdateAfter = updateAfter;
             Ok = new DelegateCommand(HandleOk, !updateAfter);
-            AddStorage = new DelegateCommand(HandleAdd, false);
+            AddStorage = new DelegateCommand(HandleAdd);
             _repository = repository;
             var model = serviceProvider.Get<IModel>();
             _viewModelService = serviceProvider.Get<IViewModelService>();
@@ -197,13 +170,9 @@ namespace BSU.Core.ViewModel
                 return (m, action);
             }).ToList();
 
-            UseSteam = ShowSteamOption = selections.Any(s =>
+            UseSteam = selections.Any(s =>
                 s.action is SelectMod storageMod &&
                 !storageMod.StorageMod.ParentStorage.CanWrite);
-
-            _hasNonSteamDownloads = DownloadEnabled = selections.Any(s => s.action is SelectStorage or SelectNone);
-            ShowDownload = DownloadEnabled || ShowSteamOption;
-            AddStorage.SetCanExecute(DownloadEnabled);
 
             IsLoading = false;
 
@@ -233,20 +202,8 @@ namespace BSU.Core.ViewModel
             Ok.SetCanExecute(isValidSelection);
         }
 
-        private bool _showDownload;
         private readonly IEventManager _eventManager;
         private readonly IModel _model;
-
-        public bool ShowDownload
-        {
-            get => _showDownload;
-            private set
-            {
-                if (_showDownload == value) return;
-                _showDownload = value;
-                OnPropertyChanged();
-            }
-        }
 
         private void HandleOk(object? objWindow)
         {

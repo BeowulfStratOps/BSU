@@ -202,15 +202,14 @@ public class UserStories : LoggedTest
         var sVm = selectRepositoryStorage.ViewModel;
         Assert.False(sVm.IsLoading);
         Assert.True(sVm.Ok.CanExecute(null));
-        Assert.True(sVm.ShowSteamOption);
-        Assert.True(sVm.UseSteam);
 
         model.Do(() =>
         {
             sVm.UseSteam = false;
         });
 
-        Assert.True(sVm.ShowSteamOption);
         Assert.False(sVm.UseSteam);
+
+        // TODO: make sure the download actually works?
     }
 }
