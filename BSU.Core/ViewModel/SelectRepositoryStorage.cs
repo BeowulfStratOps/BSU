@@ -186,6 +186,8 @@ namespace BSU.Core.ViewModel
 
         private void Update()
         {
+            if (_repository.State == LoadingState.Loading) return;
+
             Mods = _repository.GetMods().OrderBy(m => m.Identifier).Select((mod, index) =>
             {
                 var selection = mod.GetCurrentSelection();
