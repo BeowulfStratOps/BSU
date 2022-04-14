@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
@@ -32,6 +35,7 @@ namespace BSU.Core.Model
 
         private StorageModStateEnum _state = StorageModStateEnum.Loading; // TODO: should not be directly accessible
         private readonly IDispatcher _dispatcher;
+        private ReadOnlyDictionary<string, byte[]> _keyFiles = null!;
 
         private StorageModStateEnum State
         {
@@ -77,13 +81,36 @@ namespace BSU.Core.Model
             }
         }
 
-        private async Task<(MatchHash matchHash, VersionHash versionHash, string title)> LoadAsync(CancellationToken cancellationToken)
+        private async Task<(MatchHash matchHash, VersionHash versionHash, string title, Dictionary<string, byte[]> keyFiles)> LoadAsync(CancellationToken cancellationToken)
         {
             var versionHash = await VersionHash.CreateAsync(_implementation, cancellationToken);
             var matchHash = await MatchHash.CreateAsync(_implementation, cancellationToken);
             var title = await _implementation.GetTitle(cancellationToken);
 
-            return (matchHash, versionHash, title);
+            var keyFiles = await ReadKeyFiles(cancellationToken);
+
+            return (matchHash, versionHash, title, keyFiles);
+        }
+
+        private static readonly Regex BikeyRegex = new("^/keys/([^/]+.bikey)$", RegexOptions.Compiled);
+
+        private async Task<Dictionary<string, byte[]>> ReadKeyFiles(CancellationToken cancellationToken)
+        {
+            var result = new Dictionary<string, byte[]>();
+
+            foreach (var file in await _implementation.GetFileList(cancellationToken))
+            {
+                var match = BikeyRegex.Match(file);
+                if (!match.Success) continue;
+                var name = match.Groups[1].Value;
+
+                using var stream = await _implementation.OpenRead(file, cancellationToken);
+                var content = new byte[stream!.Length];
+                stream.Read(content);
+                result.Add(name, content);
+            }
+
+            return result;
         }
 
         private void Load(bool onlyMatchHash)
@@ -92,7 +119,8 @@ namespace BSU.Core.Model
             {
                 try
                 {
-                    (_matchHash, var versionHash, _title) = getResult();
+                    (_matchHash, var versionHash, _title, var keyFiles) = getResult();
+                    _keyFiles = new ReadOnlyDictionary<string, byte[]>(keyFiles);
                     if (onlyMatchHash)
                     {
                         SetState(StorageModStateEnum.CreatedWithUpdateTarget, StorageModStateEnum.Loading);
@@ -135,6 +163,13 @@ namespace BSU.Core.Model
         }
 
         public string GetAbsolutePath() => _implementation.Path;
+        public ReadOnlyDictionary<string, byte[]> GetKeyFiles()
+        {
+            if (State != StorageModStateEnum.Created) throw new InvalidOperationException();
+
+            return _keyFiles;
+        }
+
         private UpdateTarget? UpdateTarget
         {
             get => _updateTarget;

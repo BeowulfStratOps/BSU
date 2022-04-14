@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
@@ -67,6 +69,11 @@ internal class MockStorageMod : IModelStorageMod
     }
 
     public string GetAbsolutePath()
+    {
+        throw new NotImplementedException();
+    }
+
+    public ReadOnlyDictionary<string, byte[]> GetKeyFiles()
     {
         throw new NotImplementedException();
     }

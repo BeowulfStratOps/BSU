@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
@@ -26,5 +29,6 @@ namespace BSU.Core.Model
         string GetTitle();
         void Delete(bool removeData);
         string GetAbsolutePath();
+        ReadOnlyDictionary<string, byte[]> GetKeyFiles();
     }
 }

@@ -52,6 +52,7 @@ namespace BSU.Core
 
             // TODO: should this be registered somewhere?
             new PresetGeneratorService(services);
+            new BiKeyCopyService(services);
 
             var model = new Model.Model(state, services);
             services.Add<IModel>(model);
