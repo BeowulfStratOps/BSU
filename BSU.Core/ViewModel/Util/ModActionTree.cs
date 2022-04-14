@@ -78,7 +78,7 @@ namespace BSU.Core.ViewModel.Util
                 foreach (var mod in storage.GetMods())
                 {
                     var actionType = CoreCalculation.GetModAction(_repoMod, mod);
-                    if (actionType == ModActionEnum.Unusable) continue;
+                    if (actionType is ModActionEnum.Unusable or ModActionEnum.Loading) continue;
                     var action = new SelectMod(mod, actionType);
                     var isSelected = _repoMod.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
                                      storageMod.StorageMod == mod;
