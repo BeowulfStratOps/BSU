@@ -22,3 +22,13 @@
 .sync-url-description {
     margin: 0.75em;
 }
+
+.header-link {
+    color: #b5e853;
+    text-decoration: none;
+    text-shadow: none;
+}
+
+h2 .header-link {
+    color: #666;
+}
