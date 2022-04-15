@@ -7,7 +7,7 @@ Currently being developed at https://beowulfso.com
 
 # Website / Download
 
-https://beowulfstratops.github.io/bsu-website/
+https://beowulfstratops.github.io/BSU/
 
 # Documenation
 
