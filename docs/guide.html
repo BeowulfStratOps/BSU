@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8'>
+
+  <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css">
+  <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css">
+  <link rel="stylesheet" type="text/css" href="stylesheets/bsu.css">
+
+  <title>BSU - User Guide</title>
+</head>
+
+<body>
+
+  <header>
+    <div class="container">
+      <h1>User Guide</h1>
+      <h2>Beowulf Syncing Utility </h2>
+
+      <section id="downloads">
+        <a href="https://bsu-distribution.bso.ovh/stable/Setup.exe" class="btn"><strong>Download BSU</strong></a>
+      </section>
+    </div>
+  </header>
+
+  <div class="container">
+    <section id="main_content">
+      <h1>User Guide</h1>
+
+      <p>If you are using BSU for the first time, start with the <span class="highlight-name">Add Preset</span> section.</p>
+
+      <ol>
+          <li><a href="#add-preset">Add Preset</a></li>
+          <li><a href="#add-storage">Add Storage</a></li>
+          <li><a href="#make-adjustments">Make Adjustments</a></li>
+      </ol>
+
+      <h1 id="add-preset">Add Preset</h1>
+
+      <p>Add a new Preset by clicking the Plus button on the <span class="highlight-name">Presets</span> page.</p>
+
+      <img class="guide-image" src="images/AddPresetButton.png" alt="Add Preset Button">
+
+      <p>Choose a sync url from the dropdown, or fill in your own.</p>
+
+      <img class="guide-image" src="images/PresetUrlDropdown.png" alt="Preset Url Dropdown">
+
+      <div class="note-panel">
+          Sync Urls for BSO
+          <ul>
+              <li>Beowulf<br><code>http://sync.bso.ovh/server.json</code><br>Default if you DO own the Western Sahara DLC</li>
+              <li>Beowulf 'NAAAAAM<br><code>http://sync.bso.ovh/server-vn.json</code><br>Default if you DO NOT own the Western Sahara DLC</li>
+              <li>Beowulf - WS Compat<br><code>http://sync.bso.ovh/server-compat.json</code><br>Vietnam Event</li>
+          </ul>
+      </div>
+
+      <p>You can change the name of the preset if you like.</p>
+
+      <p>Click Ok to continue to the <span class="highlight-name">storage selection</span> dialog.</p>
+
+      <p>If you used the old <span class="highlight-name">BSU.Prototype</span>, chances are that all mods show green, and you can press Ok and be done with the setup. You can skip the rest of this guide.</p>
+
+      <p>You can now select a download location from the dropdown. If there are none, you will have to create one first using the Plus button.</p>
+
+      <img class="guide-image" src="images/StorageSelectionAdd.png" alt="Storage Selection Add">
+
+      <p>Refer to the next section for the details of the <span class="highlight-name">Add Storage</span> dialog</p>
+
+      <p>Once you have added a storage, the mods should be ready to download. Click Ok to proceed.</p>
+
+      <p>If you are not happy with the setup, or want to customise things, click Cancel and proceed to the <a href="#make-adjustments">Make Adjustments Section</a>.</p>
+
+      <h1 id="add-storage">Add Storage</h1>
+
+      <p>You can open a storage / download location either from the <span class="highlight-name">Storages</span> page in BSU or the <span class="highlight-name">Select Download Location</span> dialog when you first add a preset.</p>
+
+      <table><tr>
+        
+        <td>
+      <img class="guide-image" style="width: 100%;" src="images/NavigateStorage.png" alt="Navigate Storages">
+      <img class="guide-image" style="width: 100%;" src="images/StoragesAdd.png" alt="Storages Add">
+      <small>From Storages</small>
+    </td><td>
+      <img class="guide-image" style="width: 100%;" src="images/StorageSelectionAdd.png" alt="Storage Selection Add">
+      <small>From Download Selection</small>
+    </td>
+
+    </tr></table>
+
+      <p>In the <span class="highlight-name">Add Storage</span> dialog, use the 3 dots to select a path. The name will default to the folder name, but you can change it to your liking. Press Ok once you are happy with the path and name.</p>
+
+      <img class="guide-image" src="images/StoragePathSelect.png" alt="Storage Path Select">
+
+      <h1 id="make-adjustments">Make Adjustments</h1>
+
+      <p>There are some situation in which you might want to adjust how BSU handles each mod of a preset:</p>
+
+      <ul>
+        <li>You want to use multiple storage locations</li>
+        <li>You have different versions of mods on your drives</li>
+        <li>BSU couldn't figure your mod setup out</li>
+        <li>...</li>
+      </ul>
+
+      <p>Click on a preset to get to the detailed <span class="highlight-name">Preset</span> page.</p>
+
+      <img class="guide-image" src="images/ClickPreset.png" alt="Click Preset">
+
+      <p>Here you will see a list of all the mods. You can click on a mod to see more detailed information.</p>
+
+      <img class="guide-image" src="images/ClickMod.png" alt="Click Mod">
+
+      <p>Each mod has a selection on the right side. You can click on the selection or the little dropdown icon to change it.</p>
+      
+      <img class="guide-image" src="images/ClickSelection.png" alt="Click Selection">
+      
+      <p>The options are ordered by storage location. There are 3 type of options:</p>
+
+      <ul>
+          <li><span class="highlight-name">Disable</span>: The mod won't be downloaded / updated / launched</li>
+          <li><span class="highlight-name">Download here</span>: Download the mod to this storage location. You can change the folder name.</li>
+          <li><span class="highlight-name">Existing Mod</span>: Use this local mod. A blue dot indicates that it will need to be updated.</li>
+      </ul>
+
+      <p>Unless the preset shows a green Ready, click the blue cloud icon to update your mods.</p>
+    </section>
+  </div>
+
+
+</body>
+
+</html>

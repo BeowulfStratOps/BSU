@@ -1,14 +1,11 @@
 # BSU - Beowulf Sync Utility
-BSU. some call it core. or rewrite.
 
-Mod downloader/manager supporting multiple repositories, repository types, and local directories
+Mod downloader / manager for Arma 3.
+
+Easier to use and more capable than any other tool out their. That's the goal anyways...
 
 Currently being developed at https://beowulfso.com
 
-# Website / Download
+# Website / Download / Documentation
 
 https://beowulfstratops.github.io/BSU/
-
-# Documenation
-
-TODO :D
