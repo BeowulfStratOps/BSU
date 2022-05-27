@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using BSU.BSO.FileStructures;
 using BunnyCDN.Net.Storage;
 using Newtonsoft.Json;
@@ -30,14 +29,16 @@ public static class PresetUpdater
         }
 
         var stats = new List<ModUpdateStats>();
+        var modFolders = new List<ModFolder>();
 
         foreach (var (name, sourceMod, destinationMod) in modUpdates)
         {
-            var modStats = ModUpdater.UpdateMod(name, sourceMod, destinationMod);
+            var (modStats, modFolder) = ModUpdater.UpdateMod(name, sourceMod, destinationMod);
             stats.Add(modStats);
+            modFolders.Add(modFolder);
         }
 
-        var serverFile = BuildServerFile(config);
+        var serverFile = BuildServerFile(config, modFolders);
         var serverFileJson = JsonConvert.SerializeObject(serverFile, Formatting.Indented);
         WriteServerFile(config, serverFileJson, dryRun, changedFiles);
 
@@ -106,12 +107,12 @@ public static class PresetUpdater
         return new LocalDestinationMod(destinationPath, dryRun, changedFileTracker);
     }
 
-    private static ServerFile BuildServerFile(PresetConfig config)
+    private static ServerFile BuildServerFile(PresetConfig config, List<ModFolder> mods)
     {
         return new ServerFile
         {
             Dlcs = config.DlcIds,
-            ModFolders = config.ModList.Select(name => new ModFolder(name)).ToList(),
+            ModFolders = mods,
             Password = config.ServerPassword,
             ServerAddress = config.ServerAddress,
             ServerName = config.PresetName,

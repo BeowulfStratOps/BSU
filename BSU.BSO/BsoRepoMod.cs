@@ -26,6 +26,7 @@ namespace BSU.BSO
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _url;
+        private readonly string _expectedHash;
         private HashFile? _hashFile;
         private readonly Task _loading;
         private readonly HttpClient _client = new();
@@ -67,9 +68,10 @@ namespace BSU.BSO
         private BsoFileHash? GetFileEntry(string path) =>
             _hashFile?.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
-        public BsoRepoMod(string url)
+        public BsoRepoMod(string url, string expectedHash)
         {
             _url = url;
+            _expectedHash = expectedHash;
             _loading = Task.Run(() => Load(CancellationToken.None));
         }
 
@@ -80,6 +82,10 @@ namespace BSU.BSO
             var hashFileJson = await client.GetStringAsync(_url + "/hash.json", cancellationToken);
             _logger.Trace("Finished downloading hash file");
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
+            var actualHash = _hashFile.BuildModHash();
+            // TODO: will have the mod stuck on loading
+            if (actualHash != _expectedHash)
+                throw new InvalidDataException($"Expected hash: {_expectedHash}. Actual hash: {actualHash}.");
         }
 
 

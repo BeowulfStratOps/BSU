@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.BSO.FileStructures;
@@ -16,20 +18,20 @@ public static class ModUpdater
 {
     private record FileHash(byte[] Hash, ulong FileSize);
 
-    public static ModUpdateStats UpdateMod(string name, ISourceMod source, IDestinationMod destination)
+    public static (ModUpdateStats stats, ModFolder modInfo) UpdateMod(string name, ISourceMod source, IDestinationMod destination)
     {
         var stats = new ModUpdateStats(name);
 
         Console.WriteLine($"Working on mod {name}");
 
-        Console.WriteLine($"Hashing source files");
+        Console.WriteLine("Hashing source files");
         var sourceHashes = HashSourceFiles(source);
 
-        Console.WriteLine($"Listing destination files");
+        Console.WriteLine("Listing destination files");
         var destinationFiles = destination.GetFileList();
         var commonFiles = sourceHashes.Keys.Intersect(destinationFiles.Keys).ToList();
 
-        Console.WriteLine($"Retrieving destination hashes");
+        Console.WriteLine("Retrieving destination hashes");
         var destinationHashes = GetDestinationHashes(destination, commonFiles, destinationFiles);
 
         var deletes = FindDeletes(sourceHashes.Keys, destinationFiles.Keys, stats);
@@ -47,12 +49,13 @@ public static class ModUpdater
 
         var oldHashFile = TryReadHashFile(destination, destinationFiles.Keys);
         var hashFile = BuildHashFile(name, sourceHashes);
+        var modInfo = new ModFolder(name, hashFile.BuildModHash());
         if (oldHashFile != null && HashFilesMatch(oldHashFile, hashFile))
-            return stats;
+            return (stats, modInfo);
         var hashFileJson = JsonConvert.SerializeObject(hashFile);
         var hashJsonStream = Util.StringToStream(hashFileJson);
         destination.Write("/hash.json", hashJsonStream);
-        return stats;
+        return (stats, modInfo);
     }
 
     private static bool HashFilesMatch(HashFile a, HashFile b)

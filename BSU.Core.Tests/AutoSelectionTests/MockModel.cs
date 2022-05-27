@@ -38,7 +38,7 @@ internal class MockModel : IModel
 
     public IEnumerable<IModelRepository> GetRepositories() => _repositories;
 
-    public Task<ServerInfo?> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
+    public Task<ServerUrlCheck?> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

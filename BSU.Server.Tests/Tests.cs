@@ -129,6 +129,40 @@ public class Tests
         }, destinationMod.WrittenFiles);
         TestUtil.CheckChangedFiles(Array.Empty<string>(), destinationMod.RemovedFiles);
     }
+    
+    [Fact]
+    public void TestModHashMatch()
+    {
+        var sourceMod1 = new MockSourceMod();
+        sourceMod1.Files.Add("/addons/test.pbo", TestUtil.RandomData(10 * Mb, 1));
+        var destinationMod1 = new MockDestinationMod();
+        
+        var sourceMod2 = new MockSourceMod();
+        sourceMod2.Files.Add("/addons/test.pbo", TestUtil.RandomData(10 * Mb, 1));
+        var destinationMod2 = new MockDestinationMod();
+
+        var (_, info1) = ModUpdater.UpdateMod("Test", sourceMod1, destinationMod1);
+        var (_, info2) = ModUpdater.UpdateMod("Test", sourceMod2, destinationMod2);
+
+        Assert.Equal(info1.Hash, info2.Hash);
+    }
+    
+    [Fact]
+    public void TestModHashDiffer()
+    {
+        var sourceMod1 = new MockSourceMod();
+        sourceMod1.Files.Add("/addons/test.pbo", TestUtil.RandomData(10 * Mb, 1));
+        var destinationMod1 = new MockDestinationMod();
+        
+        var sourceMod2 = new MockSourceMod();
+        sourceMod2.Files.Add("/addons/test.pbo", TestUtil.RandomData(10 * Mb, 2));
+        var destinationMod2 = new MockDestinationMod();
+
+        var (_, info1) = ModUpdater.UpdateMod("Test", sourceMod1, destinationMod1);
+        var (_, info2) = ModUpdater.UpdateMod("Test", sourceMod2, destinationMod2);
+
+        Assert.NotEqual(info1.Hash, info2.Hash);
+    }
 
     // TODO: test combinations of the above (or just all of them)
     // TODO: test cancellation

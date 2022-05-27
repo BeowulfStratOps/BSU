@@ -1,4 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using BSU.Hashes;
 using Newtonsoft.Json;
 
 namespace BSU.BSO.FileStructures
@@ -21,6 +27,20 @@ namespace BSU.BSO.FileStructures
         {
             Hashes = hashes;
             FolderName = folderName;
+        }
+
+        public string BuildModHash()
+        {
+            using var sha1 = SHA1.Create();
+            var filesAndHashes = new MemoryStream();
+            foreach (var hash in Hashes.OrderBy(h => h.FileName, StringComparer.InvariantCultureIgnoreCase))
+            {
+                filesAndHashes.Write(Encoding.UTF8.GetBytes(hash.FileName.ToLowerInvariant()));
+                filesAndHashes.Write(hash.Hash);
+            }
+            filesAndHashes.Position = 0;
+            var modHash = sha1.ComputeHash(filesAndHashes);
+            return Utils.ToHexString(modHash);
         }
     }
 

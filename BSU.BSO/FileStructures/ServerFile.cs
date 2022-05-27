@@ -21,5 +21,5 @@ namespace BSU.BSO.FileStructures
         [JsonProperty] public List<string>? Dlcs { get; set; }
     }
 
-    public record ModFolder(string ModName);
+    public record ModFolder(string ModName, string Hash);
 }

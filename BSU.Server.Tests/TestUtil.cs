@@ -77,6 +77,13 @@ public static class TestUtil
         Random.NextBytes(buffer);
         return buffer;
     }
+    
+    public static byte[] RandomData(ulong length, int seed)
+    {
+        var buffer = new byte[length];
+        new Random(seed).NextBytes(buffer);
+        return buffer;
+    }
 
     public static void CheckChangedFiles(IEnumerable<string> strings, HashSet<NormalizedPath> destinationModWrittenFiles)
     {

@@ -40,7 +40,7 @@ namespace BSU.BSO
             parts[^1] = "";
             var baseUrl = string.Join('/', parts);
             _mods = _serverFile.ModFolders.ToDictionary(m => m.ModName,
-                m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName));
+                m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName, m.Hash));
         }
 
         public async Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken)
