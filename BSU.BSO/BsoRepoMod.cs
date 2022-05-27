@@ -28,7 +28,7 @@ namespace BSU.BSO
         private readonly string _url;
         private HashFile? _hashFile;
         private readonly Task _loading;
-            private readonly HttpClient _client = new();
+        private readonly HttpClient _client = new();
 
 
         public async Task<List<string>> GetFileList(CancellationToken cancellationToken)

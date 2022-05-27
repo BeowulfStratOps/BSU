@@ -17,7 +17,7 @@ namespace BSU.Core.Model
         IModelStorage AddStorage(string type, string path, string name);
         IEnumerable<IModelStorage> GetStorages();
         IEnumerable<IModelRepository> GetRepositories();
-        Task<ServerInfo?> CheckRepositoryUrl(string url, CancellationToken cancellationToken);
+        Task<ServerUrlCheck?> CheckRepositoryUrl(string url, CancellationToken cancellationToken);
 
         event Action<IModelRepository> AddedRepository;
         event Action<IModelStorage> AddedStorage;

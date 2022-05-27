@@ -125,7 +125,7 @@ namespace BSU.Core.Model
 
         public IEnumerable<IModelRepository> GetRepositories() => _repositories;
 
-        public async Task<ServerInfo?> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
+        public async Task<ServerUrlCheck?> CheckRepositoryUrl(string url, CancellationToken cancellationToken)
         {
             var types = _services.Get<Types>();
             return await types.CheckUrl(url, cancellationToken);

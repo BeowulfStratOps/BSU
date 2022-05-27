@@ -48,7 +48,7 @@ namespace BSU.Core.ViewModel
             var vm = new AddRepository(_model, _services);
             if (!_interactionService.AddRepository(vm)) return;
 
-            var repo = _model.AddRepository("BSO", vm.Url.Trim(), vm.Name.Trim());
+            var repo = _model.AddRepository(vm.RepoType, vm.Url.Trim(), vm.Name.Trim());
 
             var vmRepo = _viewModelService.FindVmRepo(repo);
 

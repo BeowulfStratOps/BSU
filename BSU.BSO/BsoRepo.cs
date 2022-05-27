@@ -15,6 +15,7 @@ namespace BSU.BSO
     /// </summary>
     public class BsoRepo : IRepository
     {
+        public const string RepoType = "BSO";
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _url;
@@ -62,14 +63,14 @@ namespace BSU.BSO
             return new ServerInfo(serverFile.ServerName, serverFile.ServerAddress, serverFile.ServerPort, cdlcs);
         }
 
-        public static async Task<ServerInfo?> CheckUrl(string url, CancellationToken cancellationToken)
+        public static async Task<ServerUrlCheck?> CheckUrl(string url, CancellationToken cancellationToken)
         {
             try
             {
                 using var client = new HttpClient();
                 var serverFileJson = await client.GetStringAsync(url, cancellationToken);
                 var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
-                return GetServerInfo(serverFile);
+                return new ServerUrlCheck(GetServerInfo(serverFile), RepoType);
             }
             catch
             {

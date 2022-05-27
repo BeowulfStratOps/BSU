@@ -14,4 +14,8 @@ namespace BSU.CoreCommon
     }
 
     public record ServerInfo(string Name, string Url, ushort Port, List<ulong> Cdlcs);
+
+    public record ServerUrlCheck(ServerInfo Server, string Type);
+
+    public delegate Task<ServerUrlCheck?> RepositoryUrlChecker(string url, CancellationToken cancellationToken);
 }

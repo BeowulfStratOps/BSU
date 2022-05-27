@@ -10,7 +10,7 @@ namespace BSU.BSO.FileStructures
     [JsonObject(MemberSerialization.OptIn)]
     public class ServerFile
     {
-        [JsonProperty] public string ServerName { get; set; } = null!;
+        [JsonProperty] [JsonRequired] public string ServerName { get; set; } = null!;
         [JsonProperty] public string ServerAddress { get; set; } = null!;
         [JsonProperty] public ushort ServerPort { get; set; }
         [JsonProperty] public string Password { get; set; } = null!;

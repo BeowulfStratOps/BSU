@@ -103,6 +103,8 @@ namespace BSU.Core.ViewModel
             new KnownUrl("Beowulf - WS Compat", "http://sync.bso.ovh/server-compat.json")
         };
 
+        public string RepoType { get; private set; } = null!;
+
         internal AddRepository(IModel model, IServiceProvider services)
         {
             Ok = new DelegateCommand(HandleOkClick);
@@ -159,14 +161,14 @@ namespace BSU.Core.ViewModel
                 CheckError = "Invalid Sync URL";
                 return;
             }
-            CheckResult = $"Found Preset: {result.Name}";
+            CheckResult = $"Found Preset: {result.Server.Name}";
             CheckError = "";
             if (string.IsNullOrWhiteSpace(Name)) // TODO: also replace it if the current value came from a repo as well / wasn't modified by the user
             {
-                Name = result.Name;
+                Name = result.Server.Name;
                 OnPropertyChanged(nameof(Name));
             }
-
+            RepoType = result.Type;
         }
     }
 

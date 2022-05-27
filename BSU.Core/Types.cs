@@ -16,7 +16,7 @@ namespace BSU.Core
             get
             {
                 var types = new Types();
-                types.AddRepoType("BSO", url => new BsoRepo(url));
+                types.AddRepoType(BsoRepo.RepoType, url => new BsoRepo(url));
                 types.AddStorageType("STEAM", _ => new SteamStorage());
                 types.AddStorageType("DIRECTORY", path => new DirectoryStorage(path));
                 return types;
@@ -51,7 +51,7 @@ namespace BSU.Core
             return create(path);
         }
 
-        public async Task<ServerInfo?> CheckUrl(string url, CancellationToken cancellationToken)
+        public async Task<ServerUrlCheck?> CheckUrl(string url, CancellationToken cancellationToken)
         {
             return await BsoRepo.CheckUrl(url, cancellationToken);
         }
