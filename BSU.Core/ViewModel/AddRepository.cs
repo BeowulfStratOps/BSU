@@ -103,7 +103,7 @@ namespace BSU.Core.ViewModel
             new KnownUrl("Beowulf - WS Compat", "http://sync.bso.ovh/server-compat.json")
         };
 
-        public string RepoType { get; private set; } = null!;
+        public string RepoType { get; set; } = null!;
 
         internal AddRepository(IModel model, IServiceProvider services)
         {

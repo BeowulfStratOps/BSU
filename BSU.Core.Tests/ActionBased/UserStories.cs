@@ -32,6 +32,7 @@ public class UserStories : LoggedTest
         {
             addRepoDialog.ViewModel.Name = "Test";
             addRepoDialog.ViewModel.Url = "test";
+            addRepoDialog.ViewModel.RepoType = "BSO";
             addRepoDialog.ViewModel.Ok.Execute(addRepoDialog.Closable);
         });
 
