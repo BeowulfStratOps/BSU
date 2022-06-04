@@ -92,9 +92,16 @@ namespace BSU.Core.Model
         {
             Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInDispatcher(_dispatcher, getResult =>
             {
-                // TODO: handle errors!
-                (_matchHash, _versionHash, _modInfo) = getResult();
-                State = LoadingState.Loaded;
+                try
+                {
+                    (_matchHash, _versionHash, _modInfo) = getResult();
+                    State = LoadingState.Loaded;
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e);
+                    State = LoadingState.Error;
+                }
             });
         }
 
