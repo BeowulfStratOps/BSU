@@ -83,8 +83,9 @@ namespace BSU.BSO
             _logger.Trace("Finished downloading hash file");
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
             var actualHash = _hashFile.BuildModHash();
-            // TODO: will have the mod stuck on loading
+            _logger.Debug($"Expected hash: {_expectedHash}. Actual hash: {actualHash}.");
             if (actualHash != _expectedHash)
+                // TODO: will have the mod stuck on loading
                 throw new InvalidDataException($"Expected hash: {_expectedHash}. Actual hash: {actualHash}.");
         }
 
