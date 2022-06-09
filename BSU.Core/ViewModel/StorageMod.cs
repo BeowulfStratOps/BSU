@@ -43,7 +43,7 @@ namespace BSU.Core.ViewModel
             _model = serviceProvider.Get<IModel>();
             _title = mod.Identifier;
 
-            mod.StateChanged += _ => OnStateChanged();
+            mod.StateChanged += OnStateChanged;
             serviceProvider.Get<IEventManager>().Subscribe<AnythingChangedEvent>(_ => Update());
         }
 

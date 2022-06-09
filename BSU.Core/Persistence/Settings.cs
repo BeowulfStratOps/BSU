@@ -28,7 +28,10 @@ namespace BSU.Core.Persistence
             LogManager.GetCurrentClassLogger().Debug($"Loading settings from {path.FullName}");
             if (!path.Exists) return new Settings(path, new SettingsData());
             var json = File.ReadAllText(path.FullName);
-            var data = JsonConvert.DeserializeObject<SettingsData>(json);
+            var data = JsonConvert.DeserializeObject<SettingsData>(json, new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto
+            });
             return new Settings(path, data);
         }
 
@@ -37,7 +40,10 @@ namespace BSU.Core.Persistence
             lock (_path)
             {
                 _logger.Trace("Saving settings");
-                var json = JsonConvert.SerializeObject(_data);
+                var json = JsonConvert.SerializeObject(_data, new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto
+                });
                 File.WriteAllText(_path.FullName, json);
             }
         }

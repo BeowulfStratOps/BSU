@@ -5,15 +5,15 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.CoreCommon;
 using BSU.Hashes;
 
-namespace BSU.Core.Hashes
+namespace BSU.CoreCommon.Hashes
 {
     /// <summary>
     /// Hash to determine whether two file-sets match exactly.
     /// </summary>
-    public class VersionHash
+    [HashClass(HashType.Version, 10)]
+    public class VersionHash : IModHash
     {
         private readonly byte[] _hash;
 
@@ -55,7 +55,7 @@ namespace BSU.Core.Hashes
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public bool IsMatch(VersionHash other)
+        private bool IsMatch(VersionHash other)
         {
             return _hash.SequenceEqual(other._hash);
         }
@@ -88,6 +88,11 @@ namespace BSU.Core.Hashes
         }
 
         public override string ToString() => GetHashString();
+        public bool IsMatch(IModHash other)
+        {
+            if (other is not VersionHash otherHash) throw new InvalidOperationException();
+            return IsMatch(otherHash);
+        }
 
         public static VersionHash FromDigest(string hashString)
         {

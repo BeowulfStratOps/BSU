@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Persistence;
+using BSU.CoreCommon.Hashes;
+using BSU.Hashes;
 
 namespace BSU.Core.Model
 {
@@ -10,7 +12,7 @@ namespace BSU.Core.Model
     {
         List<IModelStorageMod> GetMods();
 
-        Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget, MatchHash matchHash);
+        Task<IModelStorageMod> CreateMod(string identifier, HashCollection hashes);
         bool CanWrite { get; }
         Guid Identifier { get; }
         string Name { get; }

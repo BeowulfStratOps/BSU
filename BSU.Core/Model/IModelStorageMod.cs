@@ -9,13 +9,15 @@ using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
+using BSU.Hashes;
 
 namespace BSU.Core.Model
 {
-    internal interface IModelStorageMod
+    internal interface IModelStorageMod : IHashCollection
     {
-        event Action<IModelStorageMod> StateChanged;
-        Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion,
+        event Action StateChanged;
+        Task<UpdateResult> Update(IRepositoryMod repositoryMod, UpdateTarget target,
             IProgress<FileSyncStats>? progress, CancellationToken cancellationToken);
         void Abort();
         PersistedSelection GetStorageModIdentifiers();
@@ -23,12 +25,10 @@ namespace BSU.Core.Model
         string Identifier { get; }
         IModelStorage ParentStorage { get; }
         bool IsDeleted { get; }
-        VersionHash GetVersionHash();
-        MatchHash GetMatchHash();
         StorageModStateEnum GetState();
-        string GetTitle();
         void Delete(bool removeData);
         string GetAbsolutePath();
-        ReadOnlyDictionary<string, byte[]> GetKeyFiles();
+        Task<Dictionary<string, byte[]>> GetKeyFiles(CancellationToken token);
+        string GetTitle();
     }
 }
