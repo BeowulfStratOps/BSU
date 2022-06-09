@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.Model;
+using BSU.CoreCommon.Hashes;
 
 namespace BSU.Core.Services
 {
@@ -19,32 +22,64 @@ namespace BSU.Core.Services
             if (repoMod.State == LoadingState.Error || storageMod.GetState() == StorageModStateEnum.Error)
                 return ModActionEnum.Unusable;
 
-            bool CheckMatch() => repoMod.GetMatchHash().IsMatch(storageMod.GetMatchHash());
-            bool CheckVersion() => repoMod.GetVersionHash().IsMatch(storageMod.GetVersionHash());
-
+            // TODO: there gotta be a less ugly way....
+            
             switch (storageMod.GetState())
             {
                 case StorageModStateEnum.CreatedWithUpdateTarget:
                 {
-                    if (CheckVersion()) return ModActionEnum.ContinueUpdate;
-                    if (CheckMatch()) return ModActionEnum.AbortAndUpdate;
+                    var version = CheckHash(HashType.Version, repoMod, storageMod);
+                    if (version == null) return ModActionEnum.Loading;
+                    if (version == true) return ModActionEnum.ContinueUpdate;
+                    var match = CheckHash(HashType.Match, repoMod, storageMod);
+                    if (match == null) return ModActionEnum.Loading;
+                    if (match == true) return ModActionEnum.AbortAndUpdate;
                     return ModActionEnum.Unusable;
                 }
                 case StorageModStateEnum.Created:
                 {
-                    if (!CheckMatch())  return ModActionEnum.Unusable;
-                    if (CheckVersion()) return ModActionEnum.Use;
+                    var match = CheckHash(HashType.Match, repoMod, storageMod);
+                    if (match == null) return ModActionEnum.Loading;
+                    if (match == false)  return ModActionEnum.Unusable;
+                    var version = CheckHash(HashType.Version, repoMod, storageMod);
+                    if (version == null) return ModActionEnum.Loading;
+                    if (version == true) return ModActionEnum.Use;
                     return storageMod.CanWrite ? ModActionEnum.Update : ModActionEnum.UnusableSteam;
                 }
                 case StorageModStateEnum.Updating:
                 {
-                    if (CheckVersion()) return ModActionEnum.Await;
-                    if (CheckMatch()) return ModActionEnum.AbortActiveAndUpdate;
+                    var version = CheckHash(HashType.Version, repoMod, storageMod);
+                    if (version == null) return ModActionEnum.Loading;
+                    if (version == true) return ModActionEnum.Await;
+                    var match = CheckHash(HashType.Match, repoMod, storageMod);
+                    if (match == null) return ModActionEnum.Loading;
+                    if (match == true) return ModActionEnum.AbortActiveAndUpdate;
                     return ModActionEnum.Unusable;
                 }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private static bool? CheckHash(HashType type, IHashCollection mod1, IHashCollection mod2)
+        {
+            var supportedTypes1 = mod1.GetSupportedHashTypes();
+            var supportedTypes2 = mod2.GetSupportedHashTypes();
+            var supportedType = supportedTypes1.Intersect(supportedTypes2).Where(t => HashHelper.GetHashType(t) == type)
+                .MaxBy(HashHelper.GetPriority);
+
+            if (supportedType == null)
+                throw new InvalidOperationException();
+
+            var hashTask1 = mod1.GetHash(supportedType);
+            var hashTask2 = mod2.GetHash(supportedType);
+            
+            if (!hashTask1.IsCompleted || !hashTask2.IsCompleted) return null;
+
+            var hash1 = hashTask1.GetAwaiter().GetResult();
+            var hash2 = hashTask2.GetAwaiter().GetResult();
+
+            return hash1.IsMatch(hash2);
         }
 
         private static bool IsConflicting(IModelRepositoryMod origin, IModelRepositoryMod otherMod,
@@ -53,11 +88,11 @@ namespace BSU.Core.Services
             if (origin.State == LoadingState.Loading || otherMod.State == LoadingState.Loading ||
                 selected.GetState() == StorageModStateEnum.Loading) return false;
 
-            if (otherMod.GetVersionHash().IsMatch(origin.GetVersionHash()))
+            if (CheckHash(HashType.Version, otherMod, origin) != false)
                 return false; // that's fine, won't break anything
 
-            if (!otherMod.GetMatchHash().IsMatch(selected.GetMatchHash()))
-                return false; // unrelated mod, we don't care
+            if (CheckHash(HashType.Match, otherMod, selected) != true)
+                return false; // unrelated mod or loading, we don't care
 
             var actionType = GetModAction(origin, selected);
 

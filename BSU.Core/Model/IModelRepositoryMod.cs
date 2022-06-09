@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
+using BSU.CoreCommon.Hashes;
+using BSU.Hashes;
 
 namespace BSU.Core.Model
 {
-    internal interface IModelRepositoryMod
+    internal interface IModelRepositoryMod : IHashCollection
     {
         public void SetSelection(ModSelection selection);
         string Identifier { get; }
@@ -16,8 +19,6 @@ namespace BSU.Core.Model
         LoadingState State { get; }
         Task<ModUpdateInfo?> StartUpdate(IProgress<FileSyncStats>? progress, CancellationToken cancellationToken);
         ModInfo GetModInfo();
-        MatchHash GetMatchHash();
-        VersionHash GetVersionHash();
         ModSelection GetCurrentSelection();
         event Action<IModelRepositoryMod> StateChanged;
         PersistedSelection? GetPreviousSelection();

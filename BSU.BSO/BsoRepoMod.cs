@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.BSO.FileStructures;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 using Newtonsoft.Json;
 using NLog;
@@ -233,6 +234,13 @@ namespace BSU.BSO
                 _logger.Error(e, $"Error while syncing {_url} / {path}");
                 throw;
             }
+        }
+
+        public async Task<HashCollection> GetHashes(CancellationToken cancellationToken)
+        {
+            var versionHash = await VersionHash.CreateAsync(this, cancellationToken);
+            var matchHash = await MatchHash.CreateAsync(this, cancellationToken);
+            return new HashCollection(versionHash, matchHash);
         }
     }
 }

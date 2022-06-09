@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 
 namespace BSU.CoreCommon
@@ -19,5 +22,6 @@ namespace BSU.CoreCommon
 
         Task<string> GetTitle(CancellationToken cancellationToken);
         string Path { get; }
+        Dictionary<Type, Func<CancellationToken, Task<IModHash>>> GetHashFunctions();
     }
 }

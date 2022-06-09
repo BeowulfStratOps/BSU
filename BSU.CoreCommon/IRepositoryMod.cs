@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 
 namespace BSU.CoreCommon
@@ -61,5 +62,7 @@ namespace BSU.CoreCommon
         /// <param name="cancellationToken">Can be used to cancel this operation.</param>
         /// <param name="fileSystem"></param>
         Task UpdateTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken);
+
+        Task<HashCollection> GetHashes(CancellationToken cancellationToken);
     }
 }

@@ -1,17 +1,10 @@
-﻿namespace BSU.Core
+﻿using BSU.Core.Hashes;
+using BSU.CoreCommon.Hashes;
+
+namespace BSU.Core
 {
     /// <summary>
     /// Represents a mod version an update is aiming for.
     /// </summary>
-    public class UpdateTarget
-    {
-        public readonly string Hash;
-
-        public UpdateTarget(string hash)
-        {
-            Hash = hash;
-        }
-
-        public override string ToString() => $"{Hash}";
-    }
+    public record UpdateTarget(HashCollection Hashes, string Title);
 }

@@ -38,6 +38,8 @@ internal class BiKeyCopyService
 
     private void CheckRepository(IModelRepository repository)
     {
+        // TODO
+        /*
         var state = _stateService.GetStateFor(repository);
         if (state != CalculatedRepositoryStateEnum.Ready && state != CalculatedRepositoryStateEnum.ReadyPartial) return;
 
@@ -57,5 +59,6 @@ internal class BiKeyCopyService
                 File.WriteAllBytes(keyPath, content);
             }
         }
+        */
     }
 }

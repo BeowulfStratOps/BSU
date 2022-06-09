@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
@@ -10,6 +11,8 @@ using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
+using BSU.Hashes;
 using NLog;
 
 namespace BSU.Core.Model
@@ -22,8 +25,7 @@ namespace BSU.Core.Model
         public string Identifier { get; }
         public IModelRepository ParentRepository { get; }
 
-        private MatchHash? _matchHash;
-        private VersionHash? _versionHash;
+        private HashCollection _hashes = null!;
 
         private ModSelection _selection = new ModSelectionNone();
 
@@ -79,13 +81,12 @@ namespace BSU.Core.Model
             }
         }
 
-        private async Task<(MatchHash matchHash, VersionHash versionHash, ModInfo modInfo)> LoadAsync(CancellationToken cancellationToken)
+        private async Task<(HashCollection, ModInfo modInfo)> LoadAsync(CancellationToken cancellationToken)
         {
-            var matchHash = await MatchHash.CreateAsync(_implementation, cancellationToken);
-            var versionHash = await VersionHash.CreateAsync(_implementation, cancellationToken);
+            var hashes = await _implementation.GetHashes(cancellationToken);
             var modInfo = await GetModInfo(cancellationToken);
 
-            return (matchHash, versionHash, modInfo);
+            return (hashes, modInfo);
         }
 
         private void Load()
@@ -94,11 +95,12 @@ namespace BSU.Core.Model
             {
                 try
                 {
-                    (_matchHash, _versionHash, _modInfo) = getResult();
+                    (_hashes, _modInfo) = getResult();
                     State = LoadingState.Loaded;
                 }
                 catch (Exception e)
                 {
+                    // TODO: not shown in gui atm
                     _logger.Error(e);
                     State = LoadingState.Error;
                 }
@@ -123,17 +125,9 @@ namespace BSU.Core.Model
             return _modInfo!;
         }
 
-        public MatchHash GetMatchHash()
-        {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _matchHash!;
-        }
+        public Task<IModHash> GetHash(Type type) => _hashes.GetHash(type);
 
-        public VersionHash GetVersionHash()
-        {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _versionHash!;
-        }
+        public List<Type> GetSupportedHashTypes() => _hashes.GetSupportedHashTypes();
 
         public void SetSelection(ModSelection selection)
         {
@@ -161,16 +155,17 @@ namespace BSU.Core.Model
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
-                var updateTask = storageMod.Update(_implementation, _matchHash!, _versionHash!, progress, cancellationToken);
+                var updateTarget = new UpdateTarget(_hashes, storageMod.Identifier);
+                var updateTask = storageMod.Update(_implementation, updateTarget, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, storageMod);
             }
 
             if (Selection is ModSelectionDownload actionDownload)
             {
-                var updateTarget = new UpdateTarget(_versionHash!.GetHashString());
-                var mod = await actionDownload.DownloadStorage.CreateMod(actionDownload.DownloadName, updateTarget, _matchHash!);
+                var mod = await actionDownload.DownloadStorage.CreateMod(actionDownload.DownloadName, _hashes);
                 Selection = new ModSelectionStorageMod(mod);
-                var updateTask = mod.Update(_implementation, _matchHash!, _versionHash, progress, cancellationToken);
+                var target = new UpdateTarget(_hashes, actionDownload.DownloadName);
+                var updateTask = mod.Update(_implementation, target, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, mod);
             }
 

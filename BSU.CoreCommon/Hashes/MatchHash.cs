@@ -6,14 +6,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.CoreCommon;
 
-namespace BSU.Core.Hashes
+namespace BSU.CoreCommon.Hashes
 {
     /// <summary>
     /// Hash to determine whether two mod file-sets belong to the same mod. e.g. ace 3.5 and ace 3.12 are both ACE3
     /// </summary>
-    public class MatchHash
+    [HashClass(HashType.Match, 10)]
+    public class MatchHash : IModHash
     {
         private const float Threshold = 0.8f; // at least 80% pbo names match required
 
@@ -87,7 +87,7 @@ namespace BSU.Core.Hashes
         /// <param name="other"></param>
         /// <returns></returns>
 
-        public bool IsMatch(MatchHash other)
+        private bool IsMatch(MatchHash other)
         {
             // TODO: improve this by A LOT
             // TODO: include folder name
@@ -117,6 +117,12 @@ namespace BSU.Core.Hashes
         public static MatchHash CreateEmpty()
         {
             return new MatchHash(Array.Empty<string>(), null);
+        }
+
+        public bool IsMatch(IModHash other)
+        {
+            if (other is not MatchHash otherHash) throw new InvalidOperationException();
+            return IsMatch(otherHash);
         }
     }
 }

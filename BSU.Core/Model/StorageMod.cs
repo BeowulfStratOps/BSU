@@ -12,6 +12,7 @@ using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using NLog;
 
 namespace BSU.Core.Model
@@ -25,8 +26,7 @@ namespace BSU.Core.Model
         public bool IsDeleted { get; private set; }
         private readonly IStorageMod _implementation;
 
-        private MatchHash? _matchHash;
-        private VersionHash? _versionHash;
+        private readonly HashManager _hashes = new();
         private string? _title;
 
         private UpdateTarget? _updateTarget;
@@ -45,12 +45,12 @@ namespace BSU.Core.Model
                 var old = _state;
                 _state = value;
                 _logger.Debug($"Changing state from {old} to {value}");
-                StateChanged?.Invoke(this);
+                StateChanged?.Invoke();
             }
         }
 
         public StorageMod(IStorageMod implementation, string identifier,
-            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IServiceProvider services, MatchHash? createMatchHash = null)
+            IPersistedStorageModState internalState, IModelStorage parent, bool canWrite, IServiceProvider services)
         {
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
@@ -60,20 +60,14 @@ namespace BSU.Core.Model
             _implementation = implementation;
             Identifier = identifier;
 
+            _hashes.JobCompleted += () => _dispatcher.ExecuteSynchronized(() => StateChanged?.Invoke());
+
             _updateTarget = _internalState.UpdateTarget;
             if (_updateTarget != null)
             {
-                _title = identifier;
-                _versionHash = VersionHash.FromDigest(_updateTarget.Hash);
-                if (createMatchHash != null)
-                {
-                    _state = StorageModStateEnum.CreatedWithUpdateTarget;
-                    _matchHash = createMatchHash;
-                }
-                else
-                {
-                    Load(true);
-                }
+                _hashes.Set(_updateTarget.Hashes);
+                _title = _updateTarget.Title;
+                _state = StorageModStateEnum.CreatedWithUpdateTarget;
             }
             else
             {
@@ -81,20 +75,16 @@ namespace BSU.Core.Model
             }
         }
 
-        private async Task<(MatchHash matchHash, VersionHash versionHash, string title, Dictionary<string, byte[]> keyFiles)> LoadAsync(CancellationToken cancellationToken)
+        private async Task<string> LoadAsync(CancellationToken cancellationToken)
         {
-            var versionHash = await VersionHash.CreateAsync(_implementation, cancellationToken);
-            var matchHash = await MatchHash.CreateAsync(_implementation, cancellationToken);
             var title = await _implementation.GetTitle(cancellationToken);
 
-            var keyFiles = await ReadKeyFiles(cancellationToken);
-
-            return (matchHash, versionHash, title, keyFiles);
+            return title;
         }
 
         private static readonly Regex BikeyRegex = new("^/keys/([^/]+.bikey)$", RegexOptions.Compiled);
 
-        private async Task<Dictionary<string, byte[]>> ReadKeyFiles(CancellationToken cancellationToken)
+        public async Task<Dictionary<string, byte[]>> GetKeyFiles(CancellationToken cancellationToken)
         {
             var result = new Dictionary<string, byte[]>();
 
@@ -113,44 +103,37 @@ namespace BSU.Core.Model
             return result;
         }
 
-        private void Load(bool onlyMatchHash)
+        private void Load(bool withUpdateTarget)
         {
             Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInDispatcher(_dispatcher, getResult =>
             {
                 try
                 {
-                    (_matchHash, var versionHash, _title, var keyFiles) = getResult();
-                    _keyFiles = new ReadOnlyDictionary<string, byte[]>(keyFiles);
-                    if (onlyMatchHash)
+                    _title = getResult();
+                    foreach (var (type, func) in _implementation.GetHashFunctions())
                     {
-                        SetState(StorageModStateEnum.CreatedWithUpdateTarget, StorageModStateEnum.Loading);
+                        _hashes.AddHashFunction(type, func);
                     }
-                    else
-                    {
-                        _versionHash = versionHash;
-                        SetState(StorageModStateEnum.Created, StorageModStateEnum.Loading);
-                    }
+                    SetState(
+                        withUpdateTarget ? StorageModStateEnum.CreatedWithUpdateTarget : StorageModStateEnum.Created,
+                        StorageModStateEnum.Loading);
                 }
                 catch (Exception e)
                 {
                     _logger.Error(e);
-                    // TOOD: should this be reported to user directly?
+                    // TODO: should this be reported to user directly?
                     SetState(StorageModStateEnum.Error, StorageModStateEnum.Loading);
                 }
             });
         }
 
-        public VersionHash GetVersionHash()
+        public Task<IModHash> GetHash(Type type)
         {
             if (State == StorageModStateEnum.Loading) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _versionHash!;
+            return _hashes.GetHash(type);
         }
 
-        public MatchHash GetMatchHash()
-        {
-            if (State == StorageModStateEnum.Loading) throw new InvalidOperationException($"Not allowed in State {State}");
-            return _matchHash!;
-        }
+        public List<Type> GetSupportedHashTypes() => _hashes.GetSupportedTypes();
 
         public StorageModStateEnum GetState() => State;
 
@@ -163,12 +146,6 @@ namespace BSU.Core.Model
         }
 
         public string GetAbsolutePath() => _implementation.Path;
-        public ReadOnlyDictionary<string, byte[]> GetKeyFiles()
-        {
-            if (State != StorageModStateEnum.Created) throw new InvalidOperationException();
-
-            return _keyFiles;
-        }
 
         private UpdateTarget? UpdateTarget
         {
@@ -180,17 +157,16 @@ namespace BSU.Core.Model
             }
         }
 
-        public event Action<IModelStorageMod>? StateChanged;
+        public event Action? StateChanged;
 
-        public async Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch,
-            VersionHash targetVersion,
+        public async Task<UpdateResult> Update(IRepositoryMod repositoryMod, UpdateTarget target,
             IProgress<FileSyncStats>? progress, CancellationToken cancellationToken)
         {
             _logger.Trace("Progress: Waiting");
             progress?.Report(new FileSyncStats(FileSyncState.Waiting));
-            _matchHash = targetMatch;
-            _versionHash = targetVersion;
-            UpdateTarget = new UpdateTarget(targetVersion.GetHashString());
+            await _hashes.Reset();
+            _hashes.Set(target.Hashes);
+            UpdateTarget = target;
             SetState(StorageModStateEnum.Updating, StorageModStateEnum.Created,
                 StorageModStateEnum.CreatedWithUpdateTarget);
 
@@ -220,7 +196,6 @@ namespace BSU.Core.Model
                 }
                 else
                 {
-                    UpdateTarget = new UpdateTarget(targetVersion.GetHashString());
                     SetState(StorageModStateEnum.CreatedWithUpdateTarget, StorageModStateEnum.Updating);
                 }
             });

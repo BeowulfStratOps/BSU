@@ -10,6 +10,7 @@ using BSU.Core.Hashes;
 using BSU.Core.Ioc;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using NLog;
 
 namespace BSU.Core.Model
@@ -99,13 +100,13 @@ namespace BSU.Core.Model
             return new List<IModelStorageMod>(_mods!);
         }
 
-        public async Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget, MatchHash createMatchHash)
+        public async Task<IModelStorageMod> CreateMod(string identifier, HashCollection hashes)
         {
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
-            state.UpdateTarget = updateTarget;
-            var storageMod = new StorageMod(mod, identifier, state, this, true, _services, createMatchHash);
+            state.UpdateTarget = new UpdateTarget(hashes, identifier);
+            var storageMod = new StorageMod(mod, identifier, state, this, true, _services);
             _mods!.Add(storageMod);
             AddedMod?.Invoke(storageMod);
             return storageMod;

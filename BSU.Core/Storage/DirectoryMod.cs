@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Concurrency;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 using NLog;
 
@@ -127,5 +129,14 @@ namespace BSU.Core.Storage
             File.Delete(GetFullFilePath(path));
             return Task.CompletedTask;
         }
+
+        public Dictionary<Type, Func<CancellationToken, Task<IModHash>>> GetHashFunctions() => new()
+        {
+            { typeof(VersionHash), WrapHashFunc(ct => VersionHash.CreateAsync(this, ct)) },
+            { typeof(MatchHash), WrapHashFunc(ct => MatchHash.CreateAsync(this, ct)) }
+        };
+
+        private static Func<CancellationToken, Task<IModHash>> WrapHashFunc<T>(Func<CancellationToken, Task<T>> func)
+            where T : IModHash => async ct => await Task.Run(() => func(ct), ct);
     }
 }

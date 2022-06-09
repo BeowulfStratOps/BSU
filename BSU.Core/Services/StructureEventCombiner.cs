@@ -50,7 +50,7 @@ namespace BSU.Core.Services
         private void AddStorageMod(IModelStorageMod mod)
         {
             _logger.Trace($"Added storage mod {mod.ParentStorage.Name}/{mod.Identifier}");
-            mod.StateChanged += _ => OnAnyChange();
+            mod.StateChanged += OnAnyChange;
             OnAnyChange();
         }
 
