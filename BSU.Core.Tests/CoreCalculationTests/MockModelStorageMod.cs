@@ -10,26 +10,30 @@ using BSU.Core.Persistence;
 using BSU.Core.Sync;
 using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 
 namespace BSU.Core.Tests.CoreCalculationTests
 {
     internal class MockModelStorageMod : IModelStorageMod
     {
-        private readonly MatchHash? _matchHash;
-        private readonly VersionHash? _versionHash;
+        private readonly HashCollection _hashes;
         private readonly StorageModStateEnum _state;
 
         public MockModelStorageMod(int? match, int? version, StorageModStateEnum state)
         {
-            _matchHash = match != null ? TestUtils.GetMatchHash((int)match).Result : null;
-            _versionHash = version != null ? TestUtils.GetVersionHash((int)version).Result : null;
+            var hashes = new List<IModHash>();
+            if (match != null)
+                hashes.Add(TestUtils.GetMatchHash((int)match).Result);
+            if (version != null)
+                hashes.Add(TestUtils.GetVersionHash((int)version).Result);
+            _hashes = new HashCollection(hashes.ToArray());
             _state = state;
         }
 
 
-        public event Action<IModelStorageMod>? StateChanged;
+        public event Action? StateChanged;
 
-        public Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats>? progress,
+        public Task<UpdateResult> Update(IRepositoryMod repositoryMod, UpdateTarget target, IProgress<FileSyncStats>? progress,
             CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
@@ -49,9 +53,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
         public string Identifier { get; } = null!;
         public IModelStorage ParentStorage { get; } = null!;
         public bool IsDeleted { get; } = false;
-        public VersionHash GetVersionHash() => _versionHash ?? throw new InvalidOperationException();
-
-        public MatchHash GetMatchHash() => _matchHash ?? throw new InvalidOperationException();
 
 
         public StorageModStateEnum GetState() => _state;
@@ -69,10 +70,12 @@ namespace BSU.Core.Tests.CoreCalculationTests
         {
             throw new NotImplementedException();
         }
-
-        public ReadOnlyDictionary<string, byte[]> GetKeyFiles()
+        public Task<Dictionary<string, byte[]>> GetKeyFiles(CancellationToken token)
         {
             throw new NotImplementedException();
         }
+        
+        public Task<IModHash> GetHash(Type type) => _hashes.GetHash(type);
+        public List<Type> GetSupportedHashTypes() => _hashes.GetSupportedHashTypes();
     }
 }

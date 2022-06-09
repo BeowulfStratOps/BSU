@@ -20,6 +20,7 @@ namespace BSU.Core.Tests
         {
         }
 
+        /*
         // TODO: use the load task
         internal static (MockStorageMod, StorageMod, TestDispatcher) CreateStorageMod(UpdateTarget? stateTarget = null)
         {
@@ -167,6 +168,6 @@ namespace BSU.Core.Tests
             Assert.Equal(UpdateResult.Failed, result);
             Assert.True(targetMatchHash.IsMatch(storageMod.GetMatchHash()));
             Assert.True(targetVersionHash.IsMatch(storageMod.GetVersionHash()));
-        }
+        }*/
     }
 }

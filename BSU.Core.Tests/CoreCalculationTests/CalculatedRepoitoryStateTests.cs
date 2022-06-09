@@ -1,8 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.Tests.AutoSelectionTests;
 using BSU.Core.Tests.Util;
+using BSU.CoreCommon.Hashes;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
@@ -49,8 +53,10 @@ namespace BSU.Core.Tests.CoreCalculationTests
             mock.Setup(m => m.State).Returns(LoadingState.Loaded);
             var matchHash = TestUtils.GetMatchHash(1).Result;
             var versionHash = TestUtils.GetVersionHash(1).Result;
-            mock.Setup(m => m.GetMatchHash()).Returns(matchHash);
-            mock.Setup(m => m.GetVersionHash()).Returns(versionHash);
+            mock.Setup(m => m.GetSupportedHashTypes())
+                .Returns(new List<Type> { typeof(MatchHash), typeof(VersionHash) });
+            mock.Setup(m => m.GetHash(typeof(MatchHash))).Returns(Task.FromResult((IModHash)matchHash));
+            mock.Setup(m => m.GetHash(typeof(VersionHash))).Returns(Task.FromResult((IModHash)versionHash));
             return mock.Object;
         }
 

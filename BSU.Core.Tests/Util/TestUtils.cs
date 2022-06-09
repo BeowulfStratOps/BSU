@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.Tests.Mocks;
+using BSU.CoreCommon.Hashes;
 using Moq;
 using Xunit;
 
@@ -52,14 +54,20 @@ namespace BSU.Core.Tests.Util
             var canWrite = action != ModActionEnum.UnusableSteam;
 
             mock.Setup(m => m.GetState()).Returns(state);
-            mock.Setup(m => m.GetMatchHash()).Returns(GetMatchHash(match).Result);
-            mock.Setup(m => m.GetVersionHash()).Returns(GetVersionHash(version).Result);
+            mock.Setup(m => m.GetSupportedHashTypes())
+                .Returns(new List<Type> { typeof(MatchHash), typeof(VersionHash) });
+            mock.Setup(m => m.GetSupportedHashTypes())
+                .Returns(new List<Type> { typeof(MatchHash), typeof(VersionHash) });
+            mock.Setup(m => m.GetHash(typeof(MatchHash))).Returns(Task.FromResult<IModHash>(GetMatchHash(match).Result));
+            mock.Setup(m => m.GetHash(typeof(VersionHash))).Returns(Task.FromResult<IModHash>(GetVersionHash(version).Result));
             mock.Setup(m => m.CanWrite).Returns(canWrite);
 
             var checkObj = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
+            checkObj.Setup(m => m.GetSupportedHashTypes())
+                .Returns(new List<Type> { typeof(MatchHash), typeof(VersionHash) });
             checkObj.Setup(m => m.State).Returns(LoadingState.Loaded);
-            checkObj.Setup(m => m.GetMatchHash()).Returns(GetMatchHash(repoModMatch).Result);
-            checkObj.Setup(m => m.GetVersionHash()).Returns(GetVersionHash(repoModVersion).Result);
+            checkObj.Setup(m => m.GetHash(typeof(MatchHash))).Returns(Task.FromResult<IModHash>(GetMatchHash(repoModMatch).Result));
+            checkObj.Setup(m => m.GetHash(typeof(VersionHash))).Returns(Task.FromResult<IModHash>(GetVersionHash(repoModVersion).Result));
 
             Assert.Equal(action, CoreCalculation.GetModAction(checkObj.Object, mock.Object));
 

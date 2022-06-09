@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 
 namespace BSU.Core.Tests.Mocks
@@ -66,6 +67,10 @@ namespace BSU.Core.Tests.Mocks
 
         public Task<string> GetTitle(CancellationToken cancellationToken) => Task.FromResult("Test");
         public string Path => throw new NotImplementedException();
+        public Dictionary<Type, Func<CancellationToken, Task<IModHash>>> GetHashFunctions()
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)
         {

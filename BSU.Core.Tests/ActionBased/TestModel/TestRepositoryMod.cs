@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 
 namespace BSU.Core.Tests.ActionBased.TestModel;
@@ -79,4 +80,10 @@ internal class TestRepositoryMod : IRepositoryMod
     {
         await DownloadTo(path, fileSystem, progress, cancellationToken);
     }
+
+    public async Task<HashCollection> GetHashes(CancellationToken cancellationToken) =>
+        new(
+            await MatchHash.CreateAsync(this, cancellationToken),
+            await VersionHash.CreateAsync(this, cancellationToken)
+        );
 }

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Tests.Mocks;
+using BSU.CoreCommon.Hashes;
 using Xunit;
 
 namespace BSU.Core.Tests
