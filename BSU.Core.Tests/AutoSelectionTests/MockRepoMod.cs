@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
@@ -7,6 +8,7 @@ using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
 using BSU.Core.Tests.Util;
+using BSU.CoreCommon.Hashes;
 
 namespace BSU.Core.Tests.AutoSelectionTests;
 
@@ -14,13 +16,13 @@ internal class MockRepoMod : IModelRepositoryMod
 {
     private readonly PersistedSelection? _previousSelection;
     private ModSelection _selection = new ModSelectionNone();
-    private readonly MatchHash _matchHash;
-    private readonly VersionHash _versionHash;
+    private readonly HashCollection _hashes;
 
     public MockRepoMod(int match, int version, LoadingState state, PersistedSelection? previousSelection = null)
     {
-        _matchHash = TestUtils.GetMatchHash(match).Result;
-        _versionHash = TestUtils.GetVersionHash(version).Result;
+        var matchHash = TestUtils.GetMatchHash(match).Result;
+        var versionHash = TestUtils.GetVersionHash(version).Result;
+        _hashes = new HashCollection(matchHash, versionHash);
         State = state;
         _previousSelection = previousSelection;
     }
@@ -30,7 +32,6 @@ internal class MockRepoMod : IModelRepositoryMod
         _selection = selection;
     }
 
-    public string DownloadIdentifier { get; set; } = null!;
     public string Identifier { get; } = null!;
     public IModelRepository ParentRepository { get; } = null!;
     public LoadingState State { get; }
@@ -44,9 +45,6 @@ internal class MockRepoMod : IModelRepositoryMod
         throw new NotImplementedException();
     }
 
-    public MatchHash GetMatchHash() => _matchHash;
-
-    public VersionHash GetVersionHash() => _versionHash;
 
     public ModSelection GetCurrentSelection() => _selection;
 
@@ -54,5 +52,7 @@ internal class MockRepoMod : IModelRepositoryMod
     public PersistedSelection? GetPreviousSelection() => _previousSelection;
 
     public event Action<IModelRepositoryMod>? SelectionChanged;
-    public event Action<IModelRepositoryMod>? DownloadIdentifierChanged;
+    public Task<IModHash> GetHash(Type type) => _hashes.GetHash(type);
+
+    public List<Type> GetSupportedHashTypes() => _hashes.GetSupportedHashTypes();
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 
 namespace BSU.Core.Tests.ActionBased.TestModel;
@@ -80,6 +81,12 @@ internal class TestStorageMod : IStorageMod
     }
 
     public string Path { get; } = null!;
+
+    public Dictionary<Type, Func<CancellationToken, Task<IModHash>>> GetHashFunctions() => new()
+    {
+        { typeof(VersionHash), async ct => await VersionHash.CreateAsync(this, ct) },
+        { typeof(MatchHash), async ct => await MatchHash.CreateAsync(this, ct) }
+    };
 }
 
 internal class WriteAfterDisposeMemoryStream : MemoryStream

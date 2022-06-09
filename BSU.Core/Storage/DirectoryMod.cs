@@ -132,11 +132,8 @@ namespace BSU.Core.Storage
 
         public Dictionary<Type, Func<CancellationToken, Task<IModHash>>> GetHashFunctions() => new()
         {
-            { typeof(VersionHash), WrapHashFunc(ct => VersionHash.CreateAsync(this, ct)) },
-            { typeof(MatchHash), WrapHashFunc(ct => MatchHash.CreateAsync(this, ct)) }
+            { typeof(VersionHash), async ct => await Task.Run(() => VersionHash.CreateAsync(this, ct), ct)},
+            { typeof(MatchHash), async ct => await Task.Run(() => MatchHash.CreateAsync(this, ct), ct)},
         };
-
-        private static Func<CancellationToken, Task<IModHash>> WrapHashFunc<T>(Func<CancellationToken, Task<T>> func)
-            where T : IModHash => async ct => await Task.Run(() => func(ct), ct);
     }
 }

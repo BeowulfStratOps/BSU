@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 
 namespace BSU.Core.Tests.Mocks
@@ -77,6 +78,11 @@ namespace BSU.Core.Tests.Mocks
         public async Task UpdateTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
             await DownloadTo(path, fileSystem, progress, cancellationToken);
+        }
+
+        public Task<HashCollection> GetHashes(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

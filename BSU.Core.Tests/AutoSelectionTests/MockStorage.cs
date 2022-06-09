@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
+using BSU.CoreCommon.Hashes;
 using Moq;
 
 namespace BSU.Core.Tests.AutoSelectionTests;
@@ -26,8 +27,7 @@ internal class MockStorage : IModelStorage
     }
 
     public List<IModelStorageMod> GetMods() => _mods;
-
-    public Task<IModelStorageMod> CreateMod(string identifier, UpdateTarget updateTarget, MatchHash matchHash)
+    public Task<IModelStorageMod> CreateMod(string identifier, HashCollection hashes)
     {
         throw new NotImplementedException();
     }

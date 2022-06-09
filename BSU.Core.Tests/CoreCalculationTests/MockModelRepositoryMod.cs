@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
@@ -7,19 +8,20 @@ using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
 using BSU.Core.Tests.Util;
+using BSU.CoreCommon.Hashes;
 
 namespace BSU.Core.Tests.CoreCalculationTests
 {
     internal class MockModelRepositoryMod : IModelRepositoryMod
     {
-        private readonly MatchHash? _matchHash;
-        private readonly VersionHash? _versionHash;
+        private readonly HashCollection _hashes;
         private ModSelection _selection = new ModSelectionLoading();
 
         public MockModelRepositoryMod(int match, int version)
         {
-            _matchHash = TestUtils.GetMatchHash(match).Result;
-            _versionHash = TestUtils.GetVersionHash(version).Result;
+            var matchHash = TestUtils.GetMatchHash(match).Result;
+            var versionHash = TestUtils.GetVersionHash(version).Result;
+            _hashes = new HashCollection(matchHash, versionHash);
         }
 
         public void SetSelection(ModSelection selection)
@@ -42,10 +44,6 @@ namespace BSU.Core.Tests.CoreCalculationTests
             throw new NotImplementedException();
         }
 
-        public MatchHash GetMatchHash() => _matchHash ?? throw new InvalidOperationException();
-
-        public VersionHash GetVersionHash() => _versionHash ?? throw new InvalidOperationException();
-
         public ModSelection GetCurrentSelection() => _selection;
 
         public event Action<IModelRepositoryMod>? StateChanged;
@@ -55,6 +53,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
         }
 
         public event Action<IModelRepositoryMod>? SelectionChanged;
-        public event Action<IModelRepositoryMod>? DownloadIdentifierChanged;
+        public Task<IModHash> GetHash(Type type) => _hashes.GetHash(type);
+        public List<Type> GetSupportedHashTypes() => _hashes.GetSupportedHashTypes();
     }
 }

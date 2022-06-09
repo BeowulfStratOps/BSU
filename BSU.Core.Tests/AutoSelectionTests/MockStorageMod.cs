@@ -10,29 +10,30 @@ using BSU.Core.Persistence;
 using BSU.Core.Sync;
 using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 
 namespace BSU.Core.Tests.AutoSelectionTests;
 
 internal class MockStorageMod : IModelStorageMod
 {
     private readonly StorageModStateEnum _state;
-    private readonly MatchHash _matchHash;
-    private readonly VersionHash _versionHash;
+    private readonly HashCollection _hashes;
 
     public MockStorageMod(IModelStorage parent, int match, int version, StorageModStateEnum state, bool canWrite,
         string? identifier)
     {
-        _matchHash = TestUtils.GetMatchHash(match).Result;
-        _versionHash = TestUtils.GetVersionHash(version).Result;
+        var matchHash = TestUtils.GetMatchHash(match).Result;
+        var versionHash = TestUtils.GetVersionHash(version).Result;
+        _hashes = new HashCollection(matchHash, versionHash);
         _state = state;
         ParentStorage = parent;
         Identifier = identifier ?? Guid.NewGuid().ToString();
         CanWrite = canWrite;
     }
 
-    public event Action<IModelStorageMod>? StateChanged;
+    public event Action? StateChanged;
 
-    public Task<UpdateResult> Update(IRepositoryMod repositoryMod, MatchHash targetMatch, VersionHash targetVersion, IProgress<FileSyncStats>? progress,
+    public Task<UpdateResult> Update(IRepositoryMod repositoryMod, UpdateTarget target, IProgress<FileSyncStats>? progress,
         CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
@@ -52,11 +53,13 @@ internal class MockStorageMod : IModelStorageMod
     public string Identifier { get; }
     public IModelStorage ParentStorage { get; }
     public bool IsDeleted { get; }
-    public VersionHash GetVersionHash() => _versionHash;
-
-    public MatchHash GetMatchHash() => _matchHash;
 
     public StorageModStateEnum GetState() => _state;
+
+    public Task<Dictionary<string, byte[]>> GetKeyFiles(CancellationToken token)
+    {
+        throw new NotImplementedException();
+    }
 
     public string GetTitle()
     {
@@ -73,10 +76,8 @@ internal class MockStorageMod : IModelStorageMod
         throw new NotImplementedException();
     }
 
-    public ReadOnlyDictionary<string, byte[]> GetKeyFiles()
-    {
-        throw new NotImplementedException();
-    }
-
     public override string ToString() => Identifier;
+    public Task<IModHash> GetHash(Type type) => _hashes.GetHash(type);
+
+    public List<Type> GetSupportedHashTypes() => _hashes.GetSupportedHashTypes();
 }
