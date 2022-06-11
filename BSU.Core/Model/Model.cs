@@ -60,7 +60,7 @@ namespace BSU.Core.Model
 
             // TODO: should they be registered somewhere?
             new AutoSelectionActor(_services, this);
-            new StructureEventCombiner(_services, this);
+            new EventCombineActor(_services, this);
         }
 
         private void DoFirstStartSetup()
