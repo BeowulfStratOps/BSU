@@ -84,6 +84,11 @@ internal class Model : IDisposable
         Services.Add<IInteractionService>(interactionService);
         Services.Add<IDispatcher>(_dispatcher);
         Services.Add<IEventManager>(eventManager);
+        Services.Add<IModActionService>(new ModActionService());
+        Services.Add<IStorageService>(new StorageService());
+        Services.Add<IConflictService>(new ConflictService(Services));
+        Services.Add<IAutoSelectionService>(new AutoSelectionService(Services));
+        Services.Add<IErrorService>(new ErrorService(Services));
         Services.Add<IRepositoryStateService>(new RepositoryStateService(Services));
         Services.Add<IDialogService>(new DialogService(Services));
         var types = new Types();

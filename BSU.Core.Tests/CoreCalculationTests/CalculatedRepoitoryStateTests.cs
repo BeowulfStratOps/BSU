@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.Tests.AutoSelectionTests;
@@ -66,7 +67,12 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var repo = new Mock<IModelRepository>(MockBehavior.Strict);
             repo.Setup(r => r.State).Returns(LoadingState.Loaded);
             repo.Setup(r => r.GetMods()).Returns(mods.ToList());
-            return CoreCalculation.GetRepositoryState(repo.Object, mods.ToList());
+            var services = new ServiceProvider();
+            services.Add<IModActionService>(new ModActionService());
+            services.Add<IConflictService>(new ConflictService(services));
+            services.Add<IErrorService>(new ErrorService(services));
+            var repoService = new RepositoryStateService(services);
+            return repoService.GetRepositoryState(repo.Object, mods.ToList());
         }
 
         [Fact]

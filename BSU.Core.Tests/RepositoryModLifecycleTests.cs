@@ -4,6 +4,7 @@ using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
+using BSU.Core.Services;
 using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
 using Moq;
@@ -25,6 +26,7 @@ public class RepositoryLifecycleTests : LoggedTest
         var services = new ServiceProvider();
         services.Add<IDispatcher>(null!);
         services.Add<IEventManager>(new EventManager());
+        services.Add<IModActionService>(new ModActionService());
         return new RepositoryMod(implementation.Object, "asdf", state, null!, services);
     }
 

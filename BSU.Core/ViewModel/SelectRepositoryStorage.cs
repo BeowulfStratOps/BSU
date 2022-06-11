@@ -82,6 +82,8 @@ namespace BSU.Core.ViewModel
             Ok = new DelegateCommand(HandleOk, !updateAfter);
             AddStorage = new DelegateCommand(HandleAdd);
             _repository = repository;
+            _autoSelectionService = serviceProvider.Get<IAutoSelectionService>();
+            _modActionService = serviceProvider.Get<IModActionService>();
             var model = serviceProvider.Get<IModel>();
             _viewModelService = serviceProvider.Get<IViewModelService>();
             _model = serviceProvider.Get<IModel>();
@@ -143,9 +145,9 @@ namespace BSU.Core.ViewModel
             foreach (var mod in _repository.GetMods())
             {
                 var steamUsage = UseSteam
-                    ? AutoSelectorCalculation.SteamUsage.UseSteamAndPreferIt
-                    : AutoSelectorCalculation.SteamUsage.DontUseSteam;
-                var updateSelection = AutoSelectorCalculation.GetAutoSelection(_model, mod, steamUsage, true);
+                    ? IAutoSelectionService.SteamUsage.UseSteamAndPreferIt
+                    : IAutoSelectionService.SteamUsage.DontUseSteam;
+                var updateSelection = _autoSelectionService.GetAutoSelection(_model, mod, steamUsage, true);
                 if (updateSelection != null)
                     mod.SetSelection(updateSelection);
             }
@@ -166,7 +168,7 @@ namespace BSU.Core.ViewModel
             var selections = mods.Select(m =>
             {
                 var selection = m.GetCurrentSelection();
-                var action = ModAction.Create(selection, m);
+                var action = ModAction.Create(selection, m, _modActionService);
                 return (m, action);
             }).ToList();
 
@@ -191,7 +193,7 @@ namespace BSU.Core.ViewModel
             Mods = _repository.GetMods().OrderBy(m => m.Identifier).Select((mod, index) =>
             {
                 var selection = mod.GetCurrentSelection();
-                var action = ModAction.Create(selection, mod);
+                var action = ModAction.Create(selection, mod, _modActionService);
                 var entry = new ModStorageSelectionInfo(mod.Identifier, action, index % 2);
                 return entry;
             }).ToList();
@@ -206,6 +208,8 @@ namespace BSU.Core.ViewModel
 
         private readonly IEventManager _eventManager;
         private readonly IModel _model;
+        private readonly IAutoSelectionService _autoSelectionService;
+        private readonly IModActionService _modActionService;
 
         private void HandleOk(object? objWindow)
         {

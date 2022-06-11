@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Services;
 
@@ -43,6 +44,8 @@ namespace BSU.Core.ViewModel.Util
         public DelegateCommand Open { get; }
 
         private bool _canOpen = true;
+        private readonly IModActionService _modActionService;
+
         public bool CanOpen
         {
             get => _canOpen;
@@ -53,10 +56,11 @@ namespace BSU.Core.ViewModel.Util
             }
         }
 
-        internal ModActionTree(IModelRepositoryMod repoMod, IModel model)
+        internal ModActionTree(IModelRepositoryMod repoMod, IServiceProvider serviceProvider)
         {
             _repoMod = repoMod;
-            _model = model;
+            _model = serviceProvider.Get<IModel>();
+            _modActionService = serviceProvider.Get<IModActionService>();
             Open = new DelegateCommand(() => IsOpen = true);
             Update();
         }
@@ -64,7 +68,7 @@ namespace BSU.Core.ViewModel.Util
         public void Update()
         {
             var currentSelection = _repoMod.GetCurrentSelection();
-            Selection = ModAction.Create(currentSelection, _repoMod, SetSelection);
+            Selection = ModAction.Create(currentSelection, _repoMod, _modActionService, SetSelection);
             Storages.Clear();
             Storages.Add(new SelectableModAction(new SelectDisabled(), SetSelection,
                 false, true));
@@ -77,12 +81,12 @@ namespace BSU.Core.ViewModel.Util
 
                 foreach (var mod in storage.GetMods())
                 {
-                    var actionType = CoreCalculation.GetModAction(_repoMod, mod);
+                    var actionType = _modActionService.GetModAction(_repoMod, mod);
                     if (actionType is ModActionEnum.Unusable or ModActionEnum.Loading) continue;
                     var action = new SelectMod(mod, actionType);
                     var isSelected = _repoMod.GetCurrentSelection() is ModSelectionStorageMod storageMod &&
                                      storageMod.StorageMod == mod;
-                    var enabled = (storage.CanWrite && actionType != ModActionEnum.Loading) || actionType == ModActionEnum.Use;
+                    var enabled = storage.CanWrite || actionType == ModActionEnum.Use;
                     actions.Add(new SelectableModAction(action, SetSelection, isSelected, enabled));
                 }
 

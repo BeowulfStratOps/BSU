@@ -21,7 +21,7 @@ namespace BSU.Core.Tests.CoreCalculationTests
                 CanWrite = canWrite
             };
 
-            return CoreCalculation.GetModAction(repoMod, storageMod);
+            return new ModActionService().GetModAction(repoMod, storageMod);
         }
 
 

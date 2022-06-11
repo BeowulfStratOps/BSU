@@ -41,12 +41,12 @@ namespace BSU.Core.ViewModel
 
         internal RepositoryMod(IModelRepositoryMod mod, IServiceProvider services, int stripeIndex)
         {
-            var model = services.Get<IModel>();
-            Actions = new ModActionTree(mod, model);
+            _model = services.Get<IModel>();
+            _errorService = services.Get<IErrorService>();
+            Actions = new ModActionTree(mod, services);
             Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
             Mod = mod;
             _stripeIndex = stripeIndex;
-            _model = model;
             Name = mod.Identifier;
             ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded);
 
@@ -92,6 +92,8 @@ namespace BSU.Core.ViewModel
         public bool NotIsExpanded => !IsExpanded;
 
         private int _stripeIndex;
+        private readonly IErrorService _errorService;
+
         public int StripeIndex
         {
             get => _stripeIndex;
@@ -100,7 +102,7 @@ namespace BSU.Core.ViewModel
 
         private void Update()
         {
-            ErrorText = CoreCalculation.GetErrorForSelection(Mod, _model.GetRepositoryMods()) ?? "";
+            ErrorText = _errorService.GetErrorForSelection(Mod, _model.GetRepositoryMods()) ?? "";
             Actions.Update();
         }
 

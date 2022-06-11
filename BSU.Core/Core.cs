@@ -48,11 +48,16 @@ namespace BSU.Core
             services.Add<IDialogService>(new DialogService(services));
             services.Add(EventManager);
             services.Add(themeService);
+            services.Add<IModActionService>(new ModActionService());
+            services.Add<IStorageService>(new StorageService());
+            services.Add<IConflictService>(new ConflictService(services));
+            services.Add<IErrorService>(new ErrorService(services));
+            services.Add<IAutoSelectionService>(new AutoSelectionService(services));
             services.Add<IRepositoryStateService>(new RepositoryStateService(services));
 
             // TODO: should this be registered somewhere?
-            new PresetGeneratorService(services);
-            new BiKeyCopyService(services);
+            new PresetGeneratorActor(services);
+            new BiKeyCopyActor(services);
 
             var model = new Model.Model(state, services);
             services.Add<IModel>(model);

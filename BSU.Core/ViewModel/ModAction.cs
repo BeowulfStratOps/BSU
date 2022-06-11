@@ -8,7 +8,7 @@ namespace BSU.Core.ViewModel
 {
     public abstract class ModAction : ObservableBase, IEquatable<ModAction>
     {
-        internal static ModAction Create(ModSelection selection, IModelRepositoryMod parent, Action<ModAction>? downloadNameChanged = null)
+        internal static ModAction Create(ModSelection selection, IModelRepositoryMod parent, IModActionService modActionService, Action<ModAction>? downloadNameChanged = null)
         {
             downloadNameChanged ??= _ => { };
             return selection switch
@@ -18,7 +18,7 @@ namespace BSU.Core.ViewModel
                 ModSelectionDisabled => new SelectDisabled(),
                 ModSelectionDownload download => new SelectStorage(download.DownloadStorage, download.DownloadName, downloadNameChanged),
                 ModSelectionStorageMod actionStorageMod => new SelectMod(actionStorageMod.StorageMod,
-                    CoreCalculation.GetModAction(parent, actionStorageMod.StorageMod)),
+                    modActionService.GetModAction(parent, actionStorageMod.StorageMod)),
                 _ => throw new ArgumentException()
             };
         }

@@ -14,6 +14,7 @@ namespace BSU.Core.ViewModel
         private readonly IModelStorageMod _modelStorageMod;
         private string _title;
         private readonly IModel _model;
+        private readonly IStorageService _storageService;
 
         public string Title
         {
@@ -41,6 +42,7 @@ namespace BSU.Core.ViewModel
         {
             _modelStorageMod = mod;
             _model = serviceProvider.Get<IModel>();
+            _storageService = serviceProvider.Get<IStorageService>();
             _title = mod.Identifier;
 
             mod.StateChanged += OnStateChanged;
@@ -54,7 +56,7 @@ namespace BSU.Core.ViewModel
 
         private void Update()
         {
-            var usedBy = CoreCalculation.GetUsedBy(_modelStorageMod, _model.GetRepositoryMods());
+            var usedBy = _storageService.GetUsedBy(_modelStorageMod, _model.GetRepositoryMods());
             var names = usedBy.Select(m => $"{m.ParentRepository.Name}").ToList();
             UsedBy = names.Any() ? string.Join(", ", names) : null;
         }
