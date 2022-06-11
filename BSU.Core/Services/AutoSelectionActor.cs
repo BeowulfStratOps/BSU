@@ -9,10 +9,11 @@ internal class AutoSelectionActor
 {
     private readonly IAutoSelectionService _autoSelectionService;
 
-    public AutoSelectionActor(IServiceProvider serviceProvider, IModel model)
+    public AutoSelectionActor(IServiceProvider serviceProvider)
     {
         var eventManager = serviceProvider.Get<IEventManager>();
         _autoSelectionService = serviceProvider.Get<IAutoSelectionService>();
+        var model = serviceProvider.Get<IModel>();
         eventManager.Subscribe<AnythingChangedEvent>(_ => OnAnyChange(model));
     }
 

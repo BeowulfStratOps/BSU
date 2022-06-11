@@ -200,17 +200,18 @@ namespace BSU.Core.ViewModel
 
         public bool NotIsRunning => !IsRunning;
 
-        internal Repository(IModelRepository modelRepository, IServiceProvider serviceProvider)
+        internal Repository(IModelRepository modelRepository, IServiceProvider serviceProvider, IViewModelService viewModelService)
         {
+            _services = serviceProvider;
             ModelRepository = modelRepository;
             _model = serviceProvider.Get<IModel>();
-            Navigator = serviceProvider.Get<INavigator>();
-            var viewModelService = serviceProvider.Get<IViewModelService>();
+            Navigator = viewModelService;
+            _viewModelService = viewModelService;
             _interactionService = serviceProvider.Get<IInteractionService>();
             var asyncVoidExecutor = serviceProvider.Get<IAsyncVoidExecutor>();
             Delete = new DelegateCommand(DoDelete, false);
             Update = new DelegateCommand(() => asyncVoidExecutor.Execute(DoUpdate));
-            Details = new DelegateCommand(() => viewModelService.NavigateToRepository(this));
+            Details = new DelegateCommand(() => Navigator.NavigateToRepository(this));
             Play = new DelegateCommand(DoPlay);
             StopPlaying = new DelegateCommand(() => asyncVoidExecutor.Execute(DoStopPlaying));
             Pause = new DelegateCommand(DoPause, false);
@@ -220,7 +221,6 @@ namespace BSU.Core.ViewModel
             var eventManager = serviceProvider.Get<IEventManager>();
             eventManager.Subscribe<CalculatedStateChangedEvent>(UpdateState);
             _stateService = serviceProvider.Get<IRepositoryStateService>();
-            _services = serviceProvider;
         }
 
         private void UpdateState(CalculatedStateChangedEvent evt)
@@ -248,7 +248,7 @@ namespace BSU.Core.ViewModel
 
         private void DoChooseDownloadLocation()
         {
-            var vm = new SelectRepositoryStorage(ModelRepository, _services, false);
+            var vm = new SelectRepositoryStorage(ModelRepository, _services, false, _viewModelService);
             _interactionService.SelectRepositoryStorage(vm);
         }
 
@@ -349,7 +349,7 @@ namespace BSU.Core.ViewModel
 
             _model.DeleteRepository(ModelRepository, removeData == DeletionTypeEnum.DeleteMods);
 
-            if ((bool) objOnDetailsPage!) _services.Get<INavigator>().NavigateBack();
+            if ((bool) objOnDetailsPage!) Navigator.NavigateBack();
         }
 
         public async Task DoUpdate()
@@ -461,6 +461,8 @@ namespace BSU.Core.ViewModel
         }
 
         private bool _updateCheckMarkVisible = true;
+        private readonly IViewModelService _viewModelService;
+
         public bool UpdateCheckMarkVisible
         {
             get => _updateCheckMarkVisible;

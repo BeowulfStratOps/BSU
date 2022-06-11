@@ -12,19 +12,19 @@ namespace BSU.Core.ViewModel
     {
         private readonly IServiceProvider _services;
         private readonly IModel _model;
-        private readonly IViewModelService _viewModelService;
         private readonly IInteractionService _interactionService;
         private readonly IRepositoryStateService _repoStateService;
+        private readonly IViewModelService _viewModelService;
         public ObservableCollection<Repository> Repositories { get; } = new();
         public DelegateCommand AddRepository { get; }
 
         public INavigator Navigator { get; init; }
 
-        internal RepositoriesPage(IServiceProvider services)
+        internal RepositoriesPage(IServiceProvider services, IViewModelService viewModelService)
         {
             _services = services;
-            _viewModelService = services.Get<IViewModelService>();
-            Navigator = _services.Get<INavigator>();
+            Navigator = viewModelService;
+            _viewModelService = viewModelService;
             _model = services.Get<IModel>();
             _repoStateService = services.Get<IRepositoryStateService>();
             _interactionService = services.Get<IInteractionService>();
@@ -40,7 +40,7 @@ namespace BSU.Core.ViewModel
 
         private void AddedRepository(IModelRepository modelRepository)
         {
-            var repository = new Repository(modelRepository, _services);
+            var repository = new Repository(modelRepository, _services, _viewModelService);
             Repositories.Add(repository);
         }
 
@@ -52,9 +52,9 @@ namespace BSU.Core.ViewModel
 
             var repo = _model.AddRepository(vm.RepoType, vm.Url.Trim(), vm.Name.Trim());
 
-            var vmRepo = _viewModelService.FindVmRepo(repo);
+            var vmRepo = Repositories.Single(r => r.ModelRepository == repo);
 
-            var selectStorageVm = new SelectRepositoryStorage(repo, _services, true);
+            var selectStorageVm = new SelectRepositoryStorage(repo, _services, true, _viewModelService);
             if (!_interactionService.SelectRepositoryStorage(selectStorageVm)) return;
 
             _services.Get<IAsyncVoidExecutor>().Execute(async () =>
