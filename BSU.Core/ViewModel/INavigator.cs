@@ -4,4 +4,5 @@ public interface INavigator
 {
     void NavigateToStorages();
     void NavigateBack();
+    void NavigateToRepository(Repository repository);
 }

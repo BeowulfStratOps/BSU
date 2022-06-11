@@ -2,10 +2,8 @@
 
 namespace BSU.Core.ViewModel
 {
-    internal interface IViewModelService
+    internal interface IViewModelService : INavigator
     {
-        void NavigateToRepository(Repository repository);
         IModelStorage? AddStorage();
-        Repository FindVmRepo(IModelRepository repo);
     }
 }

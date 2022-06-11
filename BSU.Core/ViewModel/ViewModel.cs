@@ -17,17 +17,17 @@ namespace BSU.Core.ViewModel
         internal readonly StoragePage StoragePage;
         private readonly IDispatcher _dispatcher;
 
-        internal ViewModel(ServiceProvider services)
+        internal ViewModel(IServiceProvider services)
         {
-            var eventManager = services.Get<IEventManager>();
-            eventManager.Subscribe<ErrorEvent>(AddError);
-            eventManager.Subscribe<NotificationEvent>(AddNotification);
-            services.Add<IViewModelService>(this);
-            services.Add<INavigator>(this);
             _serviceProvider = services;
             _dispatcher = services.Get<IDispatcher>();
-            RepoPage = new RepositoriesPage(services);
-            StoragePage = new StoragePage(services);
+            var eventManager = services.Get<IEventManager>();
+            
+            eventManager.Subscribe<ErrorEvent>(AddError);
+            eventManager.Subscribe<NotificationEvent>(AddNotification);
+            
+            RepoPage = new RepositoriesPage(_serviceProvider, this);
+            StoragePage = new StoragePage(_serviceProvider, this);
             Navigator = new Navigator(RepoPage);
             Settings = new DelegateCommand(OpenSettings);
         }
@@ -66,14 +66,9 @@ namespace BSU.Core.ViewModel
             return StoragePage.DoAddStorage();
         }
 
-        Repository IViewModelService.FindVmRepo(IModelRepository repo)
-        {
-            return RepoPage.Repositories.Single(r => r.ModelRepository == repo);
-        }
-
         public ObservableCollection<Notification> Notifications { get; } = new();
         public readonly DelegateCommand Settings;
-        private readonly ServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         private void AddError(ErrorEvent error)
         {

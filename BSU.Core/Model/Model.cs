@@ -50,17 +50,7 @@ namespace BSU.Core.Model
         {
             PersistentState = persistentState;
 
-            if (PersistentState.GetStorages().All(e => e.Item1.Type != "STEAM"))
-                PersistentState.AddStorage("Steam", "steam", "STEAM");
-
-            if (PersistentState.CheckIsFirstStart())
-                DoFirstStartSetup();
-
             _services = services;
-
-            // TODO: should they be registered somewhere?
-            new AutoSelectionActor(_services, this);
-            new EventCombineActor(_services, this);
         }
 
         private void DoFirstStartSetup()
@@ -75,6 +65,12 @@ namespace BSU.Core.Model
 
         public void Load()
         {
+            if (PersistentState.GetStorages().All(e => e.Item1.Type != "STEAM"))
+                PersistentState.AddStorage("Steam", "steam", "STEAM");
+
+            if (PersistentState.CheckIsFirstStart())
+                DoFirstStartSetup();
+            
             foreach (var (repositoryEntry, repositoryState) in PersistentState.GetRepositories())
             {
                 CreateRepository(repositoryEntry, repositoryState);

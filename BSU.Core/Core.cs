@@ -54,15 +54,18 @@ namespace BSU.Core
             services.Add<IErrorService>(new ErrorService(services));
             services.Add<IAutoSelectionService>(new AutoSelectionService(services));
             services.Add<IRepositoryStateService>(new RepositoryStateService(services));
-
-            // TODO: should this be registered somewhere?
-            new PresetGeneratorActor(services);
-            new BiKeyCopyActor(services);
-
+            
             var model = new Model.Model(state, services);
             services.Add<IModel>(model);
 
-            // TODO: should we use different service providers to avoid accidental abuse?
+            // TODO: build service provider from registrations 
+            
+            // TODO: should this be registered somewhere? - only if we want to stop them to cleanly dispose things.
+            new PresetGeneratorActor(services);
+            new BiKeyCopyActor(services);
+            new AutoSelectionActor(services);
+            new EventCombineActor(services);
+
             _viewModel = new ViewModel.ViewModel(services);
 
             SetStartingTheme(settings, EventManager, themeService);

@@ -16,10 +16,10 @@ namespace BSU.Core.ViewModel
 
         public INavigator Navigator { get; init; }
 
-        internal StoragePage(IServiceProvider services)
+        internal StoragePage(IServiceProvider services, INavigator navigator)
         {
             _services = services;
-            Navigator = services.Get<INavigator>();
+            Navigator = navigator;
             var model = services.Get<IModel>();
             _model = model;
             AddStorage = new DelegateCommand(() => DoAddStorage());

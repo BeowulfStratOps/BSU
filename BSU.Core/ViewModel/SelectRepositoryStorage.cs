@@ -14,7 +14,6 @@ namespace BSU.Core.ViewModel
     {
         public bool UpdateAfter { get; }
         private readonly IModelRepository _repository;
-        private readonly IViewModelService _viewModelService;
         private bool _isLoading = true;
         private bool _useSteam;
         private List<ModStorageSelectionInfo> _mods = new();
@@ -76,7 +75,7 @@ namespace BSU.Core.ViewModel
         }
 
 
-        internal SelectRepositoryStorage(IModelRepository repository, IServiceProvider serviceProvider, bool updateAfter)
+        internal SelectRepositoryStorage(IModelRepository repository, IServiceProvider serviceProvider, bool updateAfter, IViewModelService viewModelService)
         {
             UpdateAfter = updateAfter;
             Ok = new DelegateCommand(HandleOk, !updateAfter);
@@ -85,7 +84,8 @@ namespace BSU.Core.ViewModel
             _autoSelectionService = serviceProvider.Get<IAutoSelectionService>();
             _modActionService = serviceProvider.Get<IModActionService>();
             var model = serviceProvider.Get<IModel>();
-            _viewModelService = serviceProvider.Get<IViewModelService>();
+            _services = serviceProvider;
+            _viewModelService = viewModelService;
             _model = serviceProvider.Get<IModel>();
 
             _repository.StateChanged += _ => TryLoad(); // TODO: memory leak!
@@ -210,6 +210,8 @@ namespace BSU.Core.ViewModel
         private readonly IModel _model;
         private readonly IAutoSelectionService _autoSelectionService;
         private readonly IModActionService _modActionService;
+        private readonly IServiceProvider _services;
+        private readonly IViewModelService _viewModelService;
 
         private void HandleOk(object? objWindow)
         {
