@@ -14,6 +14,7 @@ namespace BSU.Core.ViewModel
         private readonly IModel _model;
         private readonly IViewModelService _viewModelService;
         private readonly IInteractionService _interactionService;
+        private readonly IRepositoryStateService _repoStateService;
         public ObservableCollection<Repository> Repositories { get; } = new();
         public DelegateCommand AddRepository { get; }
 
@@ -25,6 +26,7 @@ namespace BSU.Core.ViewModel
             _viewModelService = services.Get<IViewModelService>();
             Navigator = _services.Get<INavigator>();
             _model = services.Get<IModel>();
+            _repoStateService = services.Get<IRepositoryStateService>();
             _interactionService = services.Get<IInteractionService>();
 
             AddRepository = new DelegateCommand(DoAddRepository);
@@ -57,7 +59,7 @@ namespace BSU.Core.ViewModel
 
             _services.Get<IAsyncVoidExecutor>().Execute(async () =>
             {
-                var state = CoreCalculation.GetRepositoryState(repo, _model.GetRepositoryMods());
+                var state = _repoStateService.GetRepositoryState(repo, _model.GetRepositoryMods());
                 if (state == CalculatedRepositoryStateEnum.NeedsSync)
                     await vmRepo.DoUpdate();
             });

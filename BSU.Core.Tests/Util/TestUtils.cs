@@ -69,7 +69,7 @@ namespace BSU.Core.Tests.Util
             checkObj.Setup(m => m.GetHash(typeof(MatchHash))).Returns(Task.FromResult<IModHash>(GetMatchHash(repoModMatch).Result));
             checkObj.Setup(m => m.GetHash(typeof(VersionHash))).Returns(Task.FromResult<IModHash>(GetVersionHash(repoModVersion).Result));
 
-            Assert.Equal(action, CoreCalculation.GetModAction(checkObj.Object, mock.Object));
+            Assert.Equal(action, new ModActionService().GetModAction(checkObj.Object, mock.Object));
 
             return mock.Object;
         }

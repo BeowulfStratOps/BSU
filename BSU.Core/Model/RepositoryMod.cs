@@ -59,6 +59,7 @@ namespace BSU.Core.Model
             _dispatcher = services.Get<IDispatcher>();
             _eventManager = services.Get<IEventManager>();
             _implementation = implementation;
+            _modActionService = services.Get<IModActionService>();
             Identifier = identifier;
 
             if (_internalState.Selection?.Type == PersistedSelectionType.DoNothing)
@@ -151,7 +152,7 @@ namespace BSU.Core.Model
             if (Selection is ModSelectionStorageMod actionStorageMod)
             {
                 var storageMod = actionStorageMod.StorageMod;
-                var action = CoreCalculation.GetModAction(this, storageMod);
+                var action = _modActionService.GetModAction(this, storageMod);
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
@@ -175,6 +176,7 @@ namespace BSU.Core.Model
         private LoadingState _state;
         private readonly IDispatcher _dispatcher;
         private readonly IEventManager _eventManager;
+        private readonly IModActionService _modActionService;
 
         public override string ToString() => Identifier;
     }

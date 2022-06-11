@@ -1,4 +1,5 @@
-﻿using BSU.Core.Model;
+﻿using BSU.Core.Ioc;
+using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.Tests.Util;
@@ -11,8 +12,15 @@ namespace BSU.Core.Tests.AutoSelectionTests
 
     public class AutoselectTests : LoggedTest
     {
+        private readonly AutoSelectionService _autoSelector;
+
         public AutoselectTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
+            var services = new ServiceProvider();
+            services.Add<IModActionService>(new ModActionService());
+            services.Add<IStorageService>(new StorageService());
+            services.Add<IConflictService>(new ConflictService(services));
+            _autoSelector = new AutoSelectionService(services);
         }
 
         private static (MockModel model, MockRepo repo, MockStorage storage) GetModel()
@@ -28,7 +36,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
             var repoMod = repo.AddMod();
             var storageMod = storage.AddMod();
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
 
             var selected = Assert.IsType<ModSelectionStorageMod>(selection);
             Assert.Equal(storageMod, selected.StorageMod);
@@ -43,7 +51,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
 
             repo.AddMod(version: 3); // conflict
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
 
             var selected = Assert.IsType<ModSelectionStorageMod>(selection);
             Assert.Equal(storageMod, selected.StorageMod);
@@ -60,7 +68,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
             var mod2 = repo2.AddMod(version: 3); // conflict
             mod2.SetSelection(new ModSelectionStorageMod(storageMod));
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
 
             Assert.IsType<ModSelectionNone>(selection);
         }
@@ -73,7 +81,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
             var storageMod = storage.AddMod();
             storage.AddMod(version: 2);
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
 
             var selected = Assert.IsType<ModSelectionStorageMod>(selection);
             Assert.Equal(storageMod, selected.StorageMod);
@@ -87,7 +95,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
             var storageMod = storage.AddMod();
             storage.AddMod(canWrite: false);
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
 
             var selected = Assert.IsType<ModSelectionStorageMod>(selection);
             Assert.Equal(storageMod, selected.StorageMod);
@@ -103,7 +111,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
 
             repoMod.SetSelection(new ModSelectionStorageMod(steamMod));
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod, AutoSelectorCalculation.SteamUsage.DontUseSteam, true);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod, IAutoSelectionService.SteamUsage.DontUseSteam, true);
 
             var selected = Assert.IsType<ModSelectionStorageMod>(selection);
             Assert.Equal(nonSteamMod, selected.StorageMod);
@@ -119,7 +127,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
 
             repoMod.SetSelection(new ModSelectionStorageMod(nonSteamMod));
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod, AutoSelectorCalculation.SteamUsage.UseSteamAndPreferIt, true);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod, IAutoSelectionService.SteamUsage.UseSteamAndPreferIt, true);
 
             var selected = Assert.IsType<ModSelectionStorageMod>(selection);
             Assert.Equal(steamMod, selected.StorageMod);
@@ -133,7 +141,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
             var storageMod2 = storage.AddMod(state: StorageModStateEnum.Loading);
             var repoMod = repo.AddMod(previousSelection: PersistedSelection.FromSelection(new ModSelectionStorageMod(storageMod2)));
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
 
             var selected = Assert.IsType<ModSelectionStorageMod>(selection);
             Assert.Equal(storageMod2, selected.StorageMod);
@@ -147,7 +155,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
             var repoMod = repo.AddMod();
             repoMod.SetSelection(new ModSelectionLoading());
 
-            var selection = AutoSelectorCalculation.GetAutoSelection(model, repoMod);
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
 
             Assert.IsType<ModSelectionNone>(selection);
         }

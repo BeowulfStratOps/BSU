@@ -11,7 +11,7 @@ using NLog;
 
 namespace BSU.Core.Services;
 
-internal class PresetGeneratorService
+internal class PresetGeneratorActor
 {
     private readonly Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly IRepositoryStateService _stateService;
@@ -19,20 +19,21 @@ internal class PresetGeneratorService
     private readonly IDispatcher _dispatcher;
     private readonly IServiceProvider _serviceProvider;
 
-    public PresetGeneratorService(IServiceProvider serviceProvider)
+    public PresetGeneratorActor(IServiceProvider serviceProvider)
     {
         var eventManager = serviceProvider.Get<IEventManager>();
         _stateService = serviceProvider.Get<IRepositoryStateService>();
         _eventManager = serviceProvider.Get<IEventManager>();
         _dispatcher = serviceProvider.Get<IDispatcher>();
         _serviceProvider = serviceProvider;
-        eventManager.Subscribe<CalculatedStateChangedEvent>(evt => CheckRepository(evt.Repository));
+        eventManager.Subscribe<CalculatedStateChangedEvent>(evt =>
+            CheckRepository(evt.Repository, _serviceProvider.Get<IModel>()));
         eventManager.Subscribe<SettingsChangedEvent>(_ =>
         {
             var model = _serviceProvider.Get<IModel>();
             foreach (var repository in model.GetRepositories())
             {
-                CheckRepository(repository);
+                CheckRepository(repository, model);
             }
         });
     }
@@ -46,12 +47,12 @@ internal class PresetGeneratorService
         return name;
     }
 
-    private void CheckRepository(IModelRepository repository)
+    private void CheckRepository(IModelRepository repository, IModel model)
     {
         var settings = _serviceProvider.Get<IModel>().GetSettings();
         if (settings.UseBsuLauncher) return;
 
-        var state = _stateService.GetStateFor(repository);
+        var state = _stateService.GetRepositoryState(repository, model.GetRepositoryMods());
         if (state != CalculatedRepositoryStateEnum.Ready && state != CalculatedRepositoryStateEnum.ReadyPartial) return;
         if (repository.GetMods().All(mod => mod.GetCurrentSelection() is ModSelectionDisabled)) return; // don't create an empty preset
 

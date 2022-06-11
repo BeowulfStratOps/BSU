@@ -10,13 +10,13 @@ using NLog;
 
 namespace BSU.Core.Services;
 
-internal class BiKeyCopyService
+internal class BiKeyCopyActor
 {
     private readonly Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly IRepositoryStateService _stateService;
     private readonly DirectoryInfo? _keyDirectory;
 
-    public BiKeyCopyService(IServiceProvider serviceProvider)
+    public BiKeyCopyActor(IServiceProvider serviceProvider)
     {
         var eventManager = serviceProvider.Get<IEventManager>();
         _stateService = serviceProvider.Get<IRepositoryStateService>();

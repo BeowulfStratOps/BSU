@@ -226,7 +226,7 @@ namespace BSU.Core.ViewModel
         private void UpdateState(CalculatedStateChangedEvent evt)
         {
             if (evt.Repository != ModelRepository) return;
-            CalculatedState = _stateService.GetStateFor(ModelRepository);
+            CalculatedState = _stateService.GetRepositoryState(ModelRepository, _model.GetRepositoryMods());
             UpdateButtonStates();
         }
 
