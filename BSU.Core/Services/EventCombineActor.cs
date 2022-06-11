@@ -6,12 +6,12 @@ using NLog;
 
 namespace BSU.Core.Services
 {
-    internal class StructureEventCombiner
+    internal class EventCombineActor
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly IEventManager _eventManager;
 
-        public StructureEventCombiner(IServiceProvider serviceProvider, IModel model)
+        public EventCombineActor(IServiceProvider serviceProvider, IModel model)
         {
             _eventManager = serviceProvider.Get<IEventManager>();
             model.AddedRepository += AddedRepository;
