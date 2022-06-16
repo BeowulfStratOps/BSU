@@ -8,7 +8,7 @@ namespace BSU.Core.Tests.Util
 {
     public class LoggedTest
     {
-        protected ITestOutputHelper OutputHelper;
+        protected readonly ITestOutputHelper OutputHelper;
 
         protected LoggedTest(ITestOutputHelper outputHelper)
         {

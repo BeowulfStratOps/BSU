@@ -1,9 +1,14 @@
 using System;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Tests.Mocks;
+using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
+using Moq;
 using Xunit;
 
 namespace BSU.Core.Tests
@@ -90,16 +95,30 @@ namespace BSU.Core.Tests
 
         private static async Task<MatchHash> CreateStorageMod(string[] names, string? name)
         {
-            var storageMod = new MockStorageMod(Task.CompletedTask);
-            AddFiles(storageMod, names, name);
-            return await MatchHash.CreateAsync(storageMod, CancellationToken.None);
+            var mod = new Mock<IStorageMod>(MockBehavior.Strict);
+            mod.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(Task.FromResult(names.ToList()));
+            if (name != null)
+            {
+                var modCpp = "name=\"" + name.Replace("\"", "\\\"") + "\";";
+                mod.Setup(m => m.OpenRead("/mod.cpp", It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult<Stream?>(new MemoryStream(Encoding.UTF8.GetBytes(modCpp))));
+            }
+            else
+            {
+                mod.Setup(m => m.OpenRead("/mod.cpp", It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult<Stream?>(null));
+            }
+
+            //var storageMod = new MockStorageMod(Task.CompletedTask);
+            //AddFiles(storageMod, names, name);
+            return await MatchHash.CreateAsync(mod.Object, CancellationToken.None);
         }
 
         private static async Task<MatchHash> CreateRepoMod(string[] names, string? name)
         {
-            var repoMod = new MockRepositoryMod();
-            AddFiles(repoMod, names, name);
-            return await MatchHash.CreateAsync(repoMod, CancellationToken.None);
+            var mod = new Mock<IRepositoryMod>(MockBehavior.Strict);
+            mod.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(Task.FromResult(names.ToList()));
+            return await MatchHash.CreateAsync(mod.Object, CancellationToken.None);
         }
 
         private static async Task<bool> Check(string[] fileNames1, string? modName1, string[] fileNames2, string? modName2)

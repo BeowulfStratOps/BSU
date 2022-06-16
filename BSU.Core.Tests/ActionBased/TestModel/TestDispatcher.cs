@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.Concurrency;
 
-namespace BSU.Core.Tests.Mocks
+namespace BSU.Core.Tests.ActionBased.TestModel
 {
     internal class TestDispatcher : IDispatcher
     {

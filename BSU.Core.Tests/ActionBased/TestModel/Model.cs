@@ -93,9 +93,9 @@ internal class Model : IDisposable
         Services.Add<IDialogService>(new DialogService(Services));
         var types = new Types();
 
-        types.AddRepoType("BSO", CreateRepository);
-        types.AddStorageType("DIRECTORY", p => CreateStorage(p, false));
-        types.AddStorageType("STEAM", p => CreateStorage(p, true));
+        types.AddRepoType("BSO", (u, _) => CreateRepository(u));
+        types.AddStorageType("DIRECTORY", (p, _) => CreateStorage(p, false));
+        types.AddStorageType("STEAM", (p, _) => CreateStorage(p, true));
 
         Services.Add(types);
 

@@ -1,6 +1,9 @@
-﻿using BSU.Core.Model;
+﻿using System.Collections.Generic;
+using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.Tests.Util;
+using BSU.CoreCommon.Hashes;
+using Moq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,14 +17,21 @@ namespace BSU.Core.Tests.CoreCalculationTests
 
         private ModActionEnum DoCheck(int repoHash, int repoVersion, int? storageHash, int? storageVersion,  StorageModStateEnum state, bool canWrite = true)
         {
-            // TODO: restructure a bit for less parameter passing all over the place
-            var repoMod = new MockModelRepositoryMod(repoHash, repoVersion);
-            var storageMod = new MockModelStorageMod(storageHash, storageVersion, state)
-            {
-                CanWrite = canWrite
-            };
+            var repoMod = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
+            repoMod.SetupHashes(new TestMatchHash(repoHash), new TestVersionHash(repoVersion));
+            repoMod.Setup(m => m.State).Returns(LoadingState.Loaded);
 
-            return new ModActionService().GetModAction(repoMod, storageMod);
+            var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
+            var storageHashes = new List<IModHash>();
+            if (storageHash != null)
+                storageHashes.Add(new TestMatchHash((int)storageHash));
+            if (storageVersion != null)
+                storageHashes.Add(new TestVersionHash((int)storageVersion));
+            storageMod.SetupHashes(storageHashes.ToArray());
+            storageMod.Setup(m => m.GetState()).Returns(state);
+            storageMod.Setup(m => m.CanWrite).Returns(canWrite);
+
+            return new ModActionService().GetModAction(repoMod.Object, storageMod.Object);
         }
 
 

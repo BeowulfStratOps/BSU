@@ -22,8 +22,8 @@ internal class MockStorageMod : IModelStorageMod
     public MockStorageMod(IModelStorage parent, int match, int version, StorageModStateEnum state, bool canWrite,
         string? identifier)
     {
-        var matchHash = TestUtils.GetMatchHash(match).Result;
-        var versionHash = TestUtils.GetVersionHash(version).Result;
+        var matchHash = new TestMatchHash(match);
+        var versionHash = new TestVersionHash(version);
         _hashes = new HashCollection(matchHash, versionHash);
         _state = state;
         ParentStorage = parent;

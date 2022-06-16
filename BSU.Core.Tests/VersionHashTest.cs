@@ -1,9 +1,15 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Hashes;
 using BSU.Core.Tests.Mocks;
+using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
+using BSU.Hashes;
+using Moq;
 using Xunit;
 
 namespace BSU.Core.Tests
@@ -123,16 +129,25 @@ namespace BSU.Core.Tests
 
         private static async Task<VersionHash> CreateStorageMod(Dictionary<string, string> files)
         {
-            var storageMod = new MockStorageMod();
-            AddFiles(storageMod, files);
-            return await VersionHash.CreateAsync(storageMod, CancellationToken.None);
+            var mod = new Mock<IStorageMod>(MockBehavior.Strict);
+            mod.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(Task.FromResult(files.Keys.ToList()));
+            mod.Setup(m => m.OpenRead(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns((string path, CancellationToken _) =>
+                Task.FromResult<Stream?>(new MemoryStream(Encoding.UTF8.GetBytes(files[path]))));
+            return await VersionHash.CreateAsync(mod.Object, CancellationToken.None);
         }
 
         private static async Task<VersionHash> CreateRepositoryMod(Dictionary<string, string> files)
         {
-            var repoMod = new MockRepositoryMod();
-            AddFiles(repoMod, files);
-            return await VersionHash.CreateAsync(repoMod, CancellationToken.None);
+            var mod = new Mock<IRepositoryMod>(MockBehavior.Strict);
+            mod.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(Task.FromResult(files.Keys.ToList()));
+            mod.Setup(m => m.GetFileHash(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns((string path, CancellationToken _) =>
+            {
+                var data = Encoding.UTF8.GetBytes(files[path]);
+                using var stream = new MemoryStream(data);
+                var hash = Sha1AndPboHash.BuildAsync(stream, Utils.GetExtension(path), CancellationToken.None).Result;
+                return Task.FromResult<FileHash>(hash);
+            });
+            return await VersionHash.CreateAsync(mod.Object, CancellationToken.None);
         }
 
         private static async Task<bool> Check(Dictionary<string, string> files1, Dictionary<string, string> files2)

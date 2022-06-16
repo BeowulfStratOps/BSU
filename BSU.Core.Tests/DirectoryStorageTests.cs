@@ -37,7 +37,7 @@ namespace BSU.Core.Tests
         {
             await using var file = Create("@ace", "mod.cpp");
             await file.WriteLineAsync("Ey yo");
-            var storage = new DirectoryStorage(_tmpDir.FullName);
+            var storage = new DirectoryStorage(_tmpDir.FullName, new TestJobManager());
 
             var mods = await storage.GetMods(CancellationToken.None);
             Assert.Single(mods);
@@ -49,7 +49,7 @@ namespace BSU.Core.Tests
         {
             await using var file = Create("@ace", "mod.cpp");
             await file.WriteLineAsync("Ey yo");
-            var storage = new DirectoryStorage(_tmpDir.FullName);
+            var storage = new DirectoryStorage(_tmpDir.FullName, new TestJobManager());
             var mods = await storage.GetMods(CancellationToken.None);
             await using var newFile = await (mods.Values.Single().OpenWrite("/addons/addon2.pbo", CancellationToken.None));
             await newFile.WriteAsync(new byte[] { 1, 2, 3 });
@@ -61,7 +61,7 @@ namespace BSU.Core.Tests
         private async Task DontCreateFileWhenReading()
         {
             await Create("@ace", "some_other_file").DisposeAsync();
-            var storage = new DirectoryStorage(_tmpDir.FullName);
+            var storage = new DirectoryStorage(_tmpDir.FullName, new TestJobManager());
             var mods = await storage.GetMods(CancellationToken.None);
             await mods.Values.Single().OpenRead("/mod.cpp", CancellationToken.None);
             Assert.False(File.Exists(Path.Join(_tmpDir.FullName, "@ace", "mod.cpp")));
