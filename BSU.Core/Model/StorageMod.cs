@@ -57,6 +57,7 @@ namespace BSU.Core.Model
             ParentStorage = parent;
             CanWrite = canWrite;
             _dispatcher = services.Get<IDispatcher>();
+            _jobManager = services.Get<IJobManager>();
             _implementation = implementation;
             Identifier = identifier;
 
@@ -83,6 +84,7 @@ namespace BSU.Core.Model
         }
 
         private static readonly Regex BikeyRegex = new("^/keys/([^/]+.bikey)$", RegexOptions.Compiled);
+        private readonly IJobManager _jobManager;
 
         public async Task<Dictionary<string, byte[]>> GetKeyFiles(CancellationToken cancellationToken)
         {
@@ -105,7 +107,7 @@ namespace BSU.Core.Model
 
         private void Load(bool withUpdateTarget)
         {
-            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInDispatcher(_dispatcher, getResult =>
+            _jobManager.Run(() => LoadAsync(CancellationToken.None), getResult =>
             {
                 try
                 {
@@ -124,7 +126,7 @@ namespace BSU.Core.Model
                     // TODO: should this be reported to user directly?
                     SetState(StorageModStateEnum.Error, StorageModStateEnum.Loading);
                 }
-            });
+            }, CancellationToken.None);
         }
 
         public Task<IModHash> GetHash(Type type)
@@ -180,9 +182,7 @@ namespace BSU.Core.Model
 
             ReportProgress(new FileSyncStats(FileSyncState.Waiting));
 
-            var result =
-                await Task.Run(
-                    async () => await RepoSync.UpdateAsync(repositoryMod, this, _implementation, cancellationToken,
+            var result = await _jobManager.Run(() => RepoSync.UpdateAsync(repositoryMod, this, _implementation, cancellationToken,
                         progress), CancellationToken.None);
 
             ReportProgress(new FileSyncStats(FileSyncState.None));

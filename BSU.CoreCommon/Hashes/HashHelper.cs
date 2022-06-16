@@ -21,7 +21,7 @@ public static class HashHelper
             .MaxBy(GetPriority);
 
         if (supportedType == null)
-            throw new InvalidOperationException();
+            throw new NotSupportedException($"Could not find a common hash of type {type} for {mod1} and {mod2}. Candidates were {string.Join(", ", supportedTypes1)} and {string.Join(", ", supportedTypes2)}.");
 
         var hashTask1 = mod1.GetHash(supportedType);
         var hashTask2 = mod2.GetHash(supportedType);

@@ -69,11 +69,11 @@ namespace BSU.BSO
         private BsoFileHash? GetFileEntry(string path) =>
             _hashFile?.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
-        public BsoRepoMod(string url, string expectedHash)
+        public BsoRepoMod(string url, string expectedHash, IJobManager jobManager)
         {
             _url = url;
             _expectedHash = expectedHash;
-            _loading = Task.Run(() => Load(CancellationToken.None));
+            _loading = jobManager.Run(() => Load(CancellationToken.None), CancellationToken.None);
         }
 
         private async Task Load(CancellationToken cancellationToken)
