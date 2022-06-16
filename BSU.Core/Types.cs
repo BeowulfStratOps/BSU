@@ -16,39 +16,39 @@ namespace BSU.Core
             get
             {
                 var types = new Types();
-                types.AddRepoType(BsoRepo.RepoType, url => new BsoRepo(url));
-                types.AddStorageType("STEAM", _ => new SteamStorage());
-                types.AddStorageType("DIRECTORY", path => new DirectoryStorage(path));
+                types.AddRepoType(BsoRepo.RepoType, (url, jobManager) => new BsoRepo(url, jobManager));
+                types.AddStorageType("STEAM", (_, jobManager) => new SteamStorage(jobManager));
+                types.AddStorageType("DIRECTORY", (path, jobManager) => new DirectoryStorage(path, jobManager));
                 return types;
             }
         }
 
-        private readonly Dictionary<string, Func<string, IRepository>> _repoTypes = new();
+        private readonly Dictionary<string, Func<string, IJobManager, IRepository>> _repoTypes = new();
 
-        private readonly Dictionary<string, Func<string, IStorage>> _storageTypes = new();
+        private readonly Dictionary<string, Func<string, IJobManager, IStorage>> _storageTypes = new();
 
-        public void AddRepoType(string name, Func<string, IRepository> create) =>
+        public void AddRepoType(string name, Func<string, IJobManager, IRepository> create) =>
             _repoTypes.Add(name, create);
 
         public IEnumerable<string> GetRepoTypes() => _repoTypes.Keys.ToList();
 
-        public void AddStorageType(string name, Func<string, IStorage> create) =>
+        public void AddStorageType(string name, Func<string, IJobManager, IStorage> create) =>
             _storageTypes.Add(name, create);
 
         public IEnumerable<string> GetStorageTypes() => _storageTypes.Keys.ToList();
 
-        internal IRepository GetRepoImplementation(string repoType, string repoUrl)
+        internal IRepository GetRepoImplementation(string repoType, string repoUrl, IJobManager jobManager)
         {
             if (!_repoTypes.TryGetValue(repoType, out var create))
                 throw new NotSupportedException($"Repo type {repoType} is not supported.");
-            return create(repoUrl);
+            return create(repoUrl, jobManager);
         }
 
-        internal IStorage GetStorageImplementation(string storageType, string path)
+        internal IStorage GetStorageImplementation(string storageType, string path, IJobManager jobManager)
         {
             if (!_storageTypes.TryGetValue(storageType, out var create))
                 throw new NotSupportedException($"Storage type {storageType} is not supported.");
-            return create(path);
+            return create(path, jobManager);
         }
 
         public async Task<ServerUrlCheck?> CheckUrl(string url, CancellationToken cancellationToken)

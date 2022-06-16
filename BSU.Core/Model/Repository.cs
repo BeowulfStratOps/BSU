@@ -37,6 +37,7 @@ namespace BSU.Core.Model
         private ServerInfo? _serverInfo;
         private readonly IDispatcher _dispatcher;
         private readonly IEventManager _eventManager;
+        private readonly IJobManager _jobManager;
 
         public Repository(IRepository implementation, string name, string location,
             IRepositoryState internalState, IServiceProvider services)
@@ -46,6 +47,7 @@ namespace BSU.Core.Model
             _services = services;
             _dispatcher = services.Get<IDispatcher>();
             _eventManager = services.Get<IEventManager>();
+            _jobManager = services.Get<IJobManager>();
             Location = location;
             Implementation = implementation;
             Name = name;
@@ -74,7 +76,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(LoadAsync).ContinueInDispatcher(_dispatcher, getResult =>
+            _jobManager.Run(LoadAsync, getResult =>
             {
                 try
                 {
@@ -95,7 +97,7 @@ namespace BSU.Core.Model
                     _logger.Error(e);
                     State = LoadingState.Error;
                 }
-            });
+            }, CancellationToken.None);
         }
 
         public List<IModelRepositoryMod> GetMods()

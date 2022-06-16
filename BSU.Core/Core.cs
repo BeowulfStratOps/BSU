@@ -8,6 +8,7 @@ using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.ViewModel;
+using BSU.CoreCommon;
 using NLog;
 
 [assembly: InternalsVisibleTo("BSU.Core.Tests")]
@@ -44,6 +45,7 @@ namespace BSU.Core
             services.Add<IAsyncVoidExecutor>(new AsyncVoidExecutor());
             services.Add(Types.Default);
             services.Add(dispatcher);
+            services.Add<IJobManager>(new JobManager(dispatcher));
             services.Add(interactionService);
             services.Add<IDialogService>(new DialogService(services));
             services.Add(EventManager);

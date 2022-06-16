@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Concurrency;
 using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
@@ -21,12 +20,14 @@ namespace BSU.Core.Storage
 
         protected readonly DirectoryInfo Dir;
         private readonly IStorage _parentStorage;
+        private readonly IJobManager _jobManager;
 
-        public DirectoryMod(DirectoryInfo dir, IStorage parentStorage)
+        public DirectoryMod(DirectoryInfo dir, IStorage parentStorage, IJobManager jobManager)
         {
             Logger = LogHelper.GetLoggerWithIdentifier(this, dir.Name);
             Dir = dir;
             _parentStorage = parentStorage;
+            _jobManager = jobManager;
         }
 
         /// <summary>
@@ -132,8 +133,8 @@ namespace BSU.Core.Storage
 
         public Dictionary<Type, Func<CancellationToken, Task<IModHash>>> GetHashFunctions() => new()
         {
-            { typeof(VersionHash), async ct => await Task.Run(() => VersionHash.CreateAsync(this, ct), ct)},
-            { typeof(MatchHash), async ct => await Task.Run(() => MatchHash.CreateAsync(this, ct), ct)},
+            { typeof(VersionHash), async ct => await _jobManager.Run(() => VersionHash.CreateAsync(this, ct), ct)},
+            { typeof(MatchHash), async ct => await _jobManager.Run(() => MatchHash.CreateAsync(this, ct), ct)},
         };
     }
 }

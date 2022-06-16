@@ -22,12 +22,14 @@ namespace BSU.Core.Storage
         private Dictionary<string, IStorageMod>? _mods;
 
         private readonly Task _loading;
+        private readonly IJobManager _jobManager;
 
-        public DirectoryStorage(string path)
+        public DirectoryStorage(string path, IJobManager jobManager)
         {
             _path = path;
-            _logger = LogHelper.GetLoggerWithIdentifier(this, path.Split(new[]{'/','\\'})[^1]);
-            _loading = Task.Run(() => Load(CancellationToken.None));
+            _logger = LogHelper.GetLoggerWithIdentifier(this, path.Split('/', '\\')[^1]);
+            _loading = jobManager.Run(() => Load(CancellationToken.None), CancellationToken.None);
+            _jobManager = jobManager;
         }
 
         private Task Load(CancellationToken cancellationToken)
@@ -35,7 +37,7 @@ namespace BSU.Core.Storage
             if (!new DirectoryInfo(_path).Exists) throw new DirectoryNotFoundException();
             // TODO: async?
             _mods = new DirectoryInfo(_path).EnumerateDirectories("@*")
-                .ToDictionary(di => di.Name, di => (IStorageMod) new DirectoryMod(di, this));
+                .ToDictionary(di => di.Name, di => (IStorageMod) new DirectoryMod(di, this, _jobManager));
             return Task.CompletedTask;
         }
 
@@ -53,7 +55,7 @@ namespace BSU.Core.Storage
             var dir = new DirectoryInfo(Path.Combine(_path, identifier));
             if (dir.Exists) throw new InvalidOperationException("Path exists");
             dir.Create();
-            return new DirectoryMod(dir, this);
+            return new DirectoryMod(dir, this, _jobManager);
         }
 
         public async Task RemoveMod(string identifier, CancellationToken cancellationToken)
@@ -67,6 +69,6 @@ namespace BSU.Core.Storage
 
         public string Location() => _path;
 
-        public virtual bool CanWrite() => true;
+        public bool CanWrite() => true;
     }
 }

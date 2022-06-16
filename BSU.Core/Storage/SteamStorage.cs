@@ -15,12 +15,14 @@ namespace BSU.Core.Storage
     /// </summary>
     public class SteamStorage : IStorage
     {
+        private readonly IJobManager _jobManager;
         private readonly DirectoryInfo? _basePath;
         private Dictionary<string, IStorageMod>? _mods;
         private readonly Task _loading;
 
-        public SteamStorage()
+        public SteamStorage(IJobManager jobManager)
         {
+            _jobManager = jobManager;
             var workshopPath = GetWorkshopPath();
             if (workshopPath == null)
             {
@@ -29,7 +31,7 @@ namespace BSU.Core.Storage
                 return;
             }
             _basePath = new DirectoryInfo(workshopPath);
-            _loading = Task.Run(() => Load(CancellationToken.None));
+            _loading = jobManager.Run(() => Load(CancellationToken.None), CancellationToken.None);
         }
 
         private Task Load(CancellationToken cancellationToken)
@@ -50,7 +52,7 @@ namespace BSU.Core.Storage
                 folders.Add(mod);
             }
 
-            _mods = folders.ToDictionary(di => di.Name, di => (IStorageMod) new SteamMod(di, this));
+            _mods = folders.ToDictionary(di => di.Name, di => (IStorageMod) new SteamMod(di, this, _jobManager));
             return Task.CompletedTask;
         }
 

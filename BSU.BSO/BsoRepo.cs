@@ -22,11 +22,13 @@ namespace BSU.BSO
         private Dictionary<string, IRepositoryMod>? _mods;
         private ServerFile? _serverFile;
         private readonly Task _loading;
+        private readonly IJobManager _jobManager;
 
-        public BsoRepo(string url)
+        public BsoRepo(string url, IJobManager jobManager)
         {
             _url = url;
-            _loading = Task.Run(() => Load(CancellationToken.None));
+            _loading = jobManager.Run(() => Load(CancellationToken.None), CancellationToken.None);
+            _jobManager = jobManager;
         }
 
         private async Task Load(CancellationToken cancellationToken)
@@ -40,7 +42,7 @@ namespace BSU.BSO
             parts[^1] = "";
             var baseUrl = string.Join('/', parts);
             _mods = _serverFile.ModFolders.ToDictionary(m => m.ModName,
-                m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName, m.Hash));
+                m => (IRepositoryMod) new BsoRepoMod(baseUrl + m.ModName, m.Hash, _jobManager));
         }
 
         public async Task<Dictionary<string, IRepositoryMod>> GetMods(CancellationToken cancellationToken)

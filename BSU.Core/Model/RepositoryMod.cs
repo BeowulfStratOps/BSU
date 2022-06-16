@@ -56,7 +56,7 @@ namespace BSU.Core.Model
             _logger = LogHelper.GetLoggerWithIdentifier(this, identifier);
             _internalState = internalState;
             ParentRepository = parentRepository;
-            _dispatcher = services.Get<IDispatcher>();
+            _jobManager = services.Get<IJobManager>();
             _eventManager = services.Get<IEventManager>();
             _implementation = implementation;
             _modActionService = services.Get<IModActionService>();
@@ -92,7 +92,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(() => LoadAsync(CancellationToken.None)).ContinueInDispatcher(_dispatcher, getResult =>
+            _jobManager.Run(() => LoadAsync(CancellationToken.None), getResult =>
             {
                 try
                 {
@@ -105,7 +105,7 @@ namespace BSU.Core.Model
                     _logger.Error(e);
                     State = LoadingState.Error;
                 }
-            });
+            }, CancellationToken.None);
         }
 
         private ModInfo? _modInfo;
@@ -174,9 +174,9 @@ namespace BSU.Core.Model
         }
 
         private LoadingState _state;
-        private readonly IDispatcher _dispatcher;
         private readonly IEventManager _eventManager;
         private readonly IModActionService _modActionService;
+        private readonly IJobManager _jobManager;
 
         public override string ToString() => Identifier;
     }

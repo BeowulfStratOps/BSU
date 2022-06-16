@@ -84,7 +84,7 @@ namespace BSU.Core.Model
         private Repository CreateRepository(IRepositoryEntry data, IRepositoryState state)
         {
             var types = _services.Get<Types>();
-            var implementation = types.GetRepoImplementation(data.Type, data.Url);
+            var implementation = types.GetRepoImplementation(data.Type, data.Url, _services.Get<IJobManager>());
             var repository = new Repository(implementation, data.Name, data.Url, state, _services);
             _repositories.Add(repository);
             AddedRepository?.Invoke(repository);
@@ -94,7 +94,7 @@ namespace BSU.Core.Model
         private Storage CreateStorage(IStorageEntry data, IStorageState state)
         {
             var types = _services.Get<Types>();
-            var implementation = types.GetStorageImplementation(data.Type, data.Path);
+            var implementation = types.GetStorageImplementation(data.Type, data.Path, _services.Get<IJobManager>());
             var storage = new Storage(implementation, data.Name, state, _services);
             _storages.Add(storage);
             AddedStorage?.Invoke(storage);

@@ -14,7 +14,7 @@ namespace BSU.Core.Storage
     /// </summary>
     public class SteamMod : DirectoryMod
     {
-        public SteamMod(DirectoryInfo directory, IStorage parentStorage) : base(directory, parentStorage)
+        public SteamMod(DirectoryInfo directory, IStorage parentStorage, IJobManager jobManager) : base(directory, parentStorage, jobManager)
         {
             // Directory mod should consider the writable flag of it's parent storage
         }

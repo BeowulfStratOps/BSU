@@ -26,8 +26,8 @@ namespace BSU.Core.Model
         private List<IModelStorageMod>? _mods; // TODO: use a property to block access while state is invalid
         private readonly ILogger _logger;
         private LoadingState _state = LoadingState.Loading;
-        private readonly IDispatcher _dispatcher;
         private readonly IEventManager _eventManager;
+        private readonly IJobManager _jobManager;
 
         public event Action<IModelStorage>? StateChanged;
         public event Action<IModelStorageMod>? AddedMod;
@@ -37,8 +37,8 @@ namespace BSU.Core.Model
             _logger = LogHelper.GetLoggerWithIdentifier(this, name);
             _internalState = internalState;
             _services = services;
-            _dispatcher = services.Get<IDispatcher>();
             _eventManager = services.Get<IEventManager>();
+            _jobManager = services.Get<IJobManager>();
             Implementation = implementation;
             Name = name;
             Identifier = internalState.Identifier;
@@ -64,7 +64,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            Task.Run(LoadAsync).ContinueInDispatcher(_dispatcher, getResult =>
+            _jobManager.Run(LoadAsync, getResult =>
             {
                 try
                 {
@@ -91,7 +91,7 @@ namespace BSU.Core.Model
                     _logger.Error(e);
                     State = LoadingState.Error;
                 }
-            });
+            }, CancellationToken.None);
         }
 
         public List<IModelStorageMod> GetMods()
