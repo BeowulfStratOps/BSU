@@ -20,8 +20,8 @@ internal class MockRepoMod : IModelRepositoryMod
 
     public MockRepoMod(int match, int version, LoadingState state, PersistedSelection? previousSelection = null)
     {
-        var matchHash = TestUtils.GetMatchHash(match).Result;
-        var versionHash = TestUtils.GetVersionHash(version).Result;
+        var matchHash = new TestMatchHash(match);
+        var versionHash = new TestVersionHash(version);
         _hashes = new HashCollection(matchHash, versionHash);
         State = state;
         _previousSelection = previousSelection;

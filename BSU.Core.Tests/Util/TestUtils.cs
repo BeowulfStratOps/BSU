@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Services;
-using BSU.Core.Tests.Mocks;
 using BSU.CoreCommon.Hashes;
 using Moq;
 using Xunit;
@@ -14,24 +12,14 @@ namespace BSU.Core.Tests.Util
 {
     internal static class TestUtils
     {
-        internal static async Task<MatchHash> GetMatchHash(int match)
+        public static void SetupHashes<T1>(this Mock<T1> mock, params IModHash[] hashes) where T1 : class, IHashCollection
         {
-            var mockRepo = new MockRepositoryMod();
-            for (int i = 0; i < 3; i++)
+            foreach (var hash in hashes)
             {
-                mockRepo.SetFile($"/addons/{match}_{i}.pbo", i.ToString());
+                mock.Setup(o => o.GetHash(hash.GetType())).Returns(Task.FromResult(hash));   
             }
-            return await MatchHash.CreateAsync(mockRepo, CancellationToken.None);
-        }
 
-        internal static async Task<VersionHash> GetVersionHash(int version)
-        {
-            var mockRepo = new MockRepositoryMod();
-            for (int i = 0; i < 3; i++)
-            {
-                mockRepo.SetFile($"/addons/file_{i}.pbo", version.ToString() + i);
-            }
-            return await VersionHash.CreateAsync(mockRepo, CancellationToken.None);
+            mock.Setup(o => o.GetSupportedHashTypes()).Returns(hashes.Select(h => h.GetType()).ToList);
         }
 
         public static IModelStorageMod StorageModFromAction(ModActionEnum action, int repoModMatch = 1, int repoModVersion = 1)
@@ -54,21 +42,12 @@ namespace BSU.Core.Tests.Util
             var canWrite = action != ModActionEnum.UnusableSteam;
 
             mock.Setup(m => m.GetState()).Returns(state);
-            mock.Setup(m => m.GetSupportedHashTypes())
-                .Returns(new List<Type> { typeof(MatchHash), typeof(VersionHash) });
-            mock.Setup(m => m.GetSupportedHashTypes())
-                .Returns(new List<Type> { typeof(MatchHash), typeof(VersionHash) });
-            mock.Setup(m => m.GetHash(typeof(MatchHash))).Returns(Task.FromResult<IModHash>(GetMatchHash(match).Result));
-            mock.Setup(m => m.GetHash(typeof(VersionHash))).Returns(Task.FromResult<IModHash>(GetVersionHash(version).Result));
+            mock.SetupHashes(new TestMatchHash(match), new TestVersionHash(version));
             mock.Setup(m => m.CanWrite).Returns(canWrite);
 
             var checkObj = new Mock<IModelRepositoryMod>(MockBehavior.Strict);
-            checkObj.Setup(m => m.GetSupportedHashTypes())
-                .Returns(new List<Type> { typeof(MatchHash), typeof(VersionHash) });
+            checkObj.SetupHashes(new TestMatchHash(repoModMatch), new TestVersionHash(repoModVersion));
             checkObj.Setup(m => m.State).Returns(LoadingState.Loaded);
-            checkObj.Setup(m => m.GetHash(typeof(MatchHash))).Returns(Task.FromResult<IModHash>(GetMatchHash(repoModMatch).Result));
-            checkObj.Setup(m => m.GetHash(typeof(VersionHash))).Returns(Task.FromResult<IModHash>(GetVersionHash(repoModVersion).Result));
-
             Assert.Equal(action, new ModActionService().GetModAction(checkObj.Object, mock.Object));
 
             return mock.Object;

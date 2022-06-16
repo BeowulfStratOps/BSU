@@ -2,7 +2,7 @@
 using BSU.Core.Launch;
 using BSU.Core.Persistence;
 
-namespace BSU.Core.Tests.Mocks
+namespace BSU.Core.Tests.ActionBased.TestModel
 {
     internal class MockSettings : ISettings
     {
