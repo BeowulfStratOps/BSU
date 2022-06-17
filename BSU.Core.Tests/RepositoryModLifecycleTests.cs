@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
@@ -7,6 +10,7 @@ using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
+using BSU.CoreCommon.Hashes;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,9 +26,16 @@ public class RepositoryLifecycleTests : LoggedTest
     private RepositoryMod BuildRepositoryMod(Func<PersistedSelection?> getPersistedSelection, Action<PersistedSelection?> setPersistedSelection)
     {
         var implementation = new Mock<IRepositoryMod>(MockBehavior.Strict);
+        implementation.Setup(i => i.GetHashes(It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(new HashCollection()));
+        implementation.Setup(i => i.GetDisplayInfo(It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(("", "")));
+        implementation.Setup(i => i.GetFileList(It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(new List<string>()));
         IPersistedRepositoryModState state = new PersistedRepositoryModState(getPersistedSelection, setPersistedSelection);
         var services = new ServiceProvider();
         services.Add<IDispatcher>(null!);
+        services.Add<IJobManager>(new TestJobManager());
         services.Add<IEventManager>(new EventManager());
         services.Add<IModActionService>(new ModActionService());
         return new RepositoryMod(implementation.Object, "asdf", state, null!, services);

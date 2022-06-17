@@ -83,6 +83,7 @@ internal class Model : IDisposable
         var interactionService = new TestInteractionService(HandleInteraction);
         Services.Add<IInteractionService>(interactionService);
         Services.Add<IDispatcher>(_dispatcher);
+        Services.Add<IJobManager>(new TestJobManager());
         Services.Add<IEventManager>(eventManager);
         Services.Add<IModActionService>(new ModActionService());
         Services.Add<IStorageService>(new StorageService());

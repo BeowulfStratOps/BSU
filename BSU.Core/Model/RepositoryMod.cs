@@ -101,7 +101,7 @@ namespace BSU.Core.Model
                 }
                 catch (Exception e)
                 {
-                    // TODO: not shown in gui atm
+                    // TODO: not shown in gui atm -> should show up as errored, but no notification
                     _logger.Error(e);
                     State = LoadingState.Error;
                 }

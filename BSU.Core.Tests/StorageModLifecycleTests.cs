@@ -23,24 +23,31 @@ namespace BSU.Core.Tests
         {
         }
         
-        // TODO: use the load task
-        private static StorageMod CreateStorageMod(int? match = null, int? version = null, UpdateTarget? stateTarget = null, Func<bool>? shouldThrow = null)
+        // TODO: what should happen if a hash fails?
+        private static StorageMod CreateStorageMod(int? match = null, int? version = null,
+            UpdateTarget? stateTarget = null, Func<bool>? shouldThrow = null)
         {
+            Func<Task<T>> ResultOrExceptionTask<T>(T value)
+            {
+                return () =>
+                {
+                    if (shouldThrow?.Invoke() ?? false)
+                        return Task.FromException<T>(new TestException());
+                    return Task.FromResult(value);
+                };
+            }
+
             var mockStorage = new Mock<IStorageMod>(MockBehavior.Strict);
-            mockStorage.Setup(m => m.GetTitle(It.IsAny<CancellationToken>())).Returns(Task.FromResult(""));
+            mockStorage.Setup(m => m.GetTitle(It.IsAny<CancellationToken>())).Returns(ResultOrExceptionTask(""));
             var hashFuncs = new Dictionary<Type, Func<CancellationToken, Task<IModHash>>>();
             if (match != null)
-                hashFuncs.Add(typeof(TestMatchHash), _ => Task.FromResult<IModHash>(new TestMatchHash((int)match)));
+                hashFuncs.Add(typeof(TestMatchHash), _ => ResultOrExceptionTask((IModHash)new TestMatchHash((int)match))());
             if (version != null)
-                hashFuncs.Add(typeof(TestVersionHash), _ => Task.FromResult<IModHash>(new TestVersionHash((int)version)));
+                hashFuncs.Add(typeof(TestVersionHash), _ => ResultOrExceptionTask((IModHash)new TestVersionHash((int)version))());
             mockStorage.Setup(m => m.GetHashFunctions()).Returns(hashFuncs);
 
-            mockStorage.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(() =>
-            {
-                if (shouldThrow?.Invoke() ?? false)
-                    throw new TestException();
-                return Task.FromResult(new List<string>());
-            });
+            mockStorage.Setup(m => m.GetFileList(It.IsAny<CancellationToken>()))
+                .Returns(ResultOrExceptionTask(new List<string>()));
 
             var state = new Mock<IPersistedStorageModState>(MockBehavior.Strict);
             state.SetupProperty(x => x.UpdateTarget, stateTarget);
@@ -132,6 +139,7 @@ namespace BSU.Core.Tests
 
             var update = storageMod.Update(repo, CreateUpdateTarget(2, 2), null, cts.Token);
 
+            OutputHelper.WriteLine("Cancelling now");
             cts.Cancel();
             await update;
 
@@ -142,7 +150,7 @@ namespace BSU.Core.Tests
         [Fact]
         private void ErrorLoad()
         {
-            var storageMod = CreateStorageMod(shouldThrow: () => true);
+            var storageMod = CreateStorageMod(match: 1, shouldThrow: () => true);
             
             Assert.Equal(StorageModStateEnum.Error, storageMod.GetState());
         }

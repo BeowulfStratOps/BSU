@@ -45,6 +45,8 @@ internal class HashManager
         _hashFunctions.Clear();
         var runningTasks = _hashTasks.Values.ToList();
         _hashTasks.Clear();
+        
+        // TODO: make new functions available here
 
         try
         {
