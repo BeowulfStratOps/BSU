@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon.Hashes;
@@ -27,6 +28,7 @@ namespace BSU.CoreCommon
         /// </summary>
         /// <param name="path">Relative path. Using forward slashes, starting with a forward slash, and in lower case.</param>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="FileNotFoundException"></exception>
         /// <returns></returns>
         Task<byte[]> GetFile(string path, CancellationToken cancellationToken);
 

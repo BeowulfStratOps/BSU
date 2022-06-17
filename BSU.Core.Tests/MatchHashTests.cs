@@ -99,26 +99,45 @@ namespace BSU.Core.Tests
             mod.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(Task.FromResult(names.ToList()));
             if (name != null)
             {
-                var modCpp = "name=\"" + name.Replace("\"", "\\\"") + "\";";
                 mod.Setup(m => m.OpenRead("/mod.cpp", It.IsAny<CancellationToken>()))
-                    .Returns(Task.FromResult<Stream?>(new MemoryStream(Encoding.UTF8.GetBytes(modCpp))));
+                    .Returns(Task.FromResult<Stream?>(new MemoryStream(BuildModCpp(name))));
             }
             else
             {
                 mod.Setup(m => m.OpenRead("/mod.cpp", It.IsAny<CancellationToken>()))
                     .Returns(Task.FromResult<Stream?>(null));
             }
+            
+            var hash = await MatchHash.CreateAsync(mod.Object, CancellationToken.None);
+            return hash;
+        }
 
-            //var storageMod = new MockStorageMod(Task.CompletedTask);
-            //AddFiles(storageMod, names, name);
-            return await MatchHash.CreateAsync(mod.Object, CancellationToken.None);
+        private static byte[] BuildModCpp(string name)
+        {
+            var modCpp = "name=\"" + name.Replace("\"", "\\\"") + "\";";
+            return Encoding.UTF8.GetBytes(modCpp);
         }
 
         private static async Task<MatchHash> CreateRepoMod(string[] names, string? name)
         {
             var mod = new Mock<IRepositoryMod>(MockBehavior.Strict);
-            mod.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(Task.FromResult(names.ToList()));
-            return await MatchHash.CreateAsync(mod.Object, CancellationToken.None);
+            var fileList = names.ToList();
+            if (name != null)
+            {
+                fileList.Add("/mod.cpp");
+                mod.Setup(m => m.GetFile("/mod.cpp", It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(BuildModCpp(name)));
+            }
+            else
+            {
+                mod.Setup(m => m.GetFile("/mod.cpp", It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromException<byte[]>(new FileNotFoundException()));
+            }
+
+            mod.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(Task.FromResult(fileList));
+            
+            var hash = await MatchHash.CreateAsync(mod.Object, CancellationToken.None);
+            return hash;
         }
 
         private static async Task<bool> Check(string[] fileNames1, string? modName1, string[] fileNames2, string? modName2)
