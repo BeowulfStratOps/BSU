@@ -8,7 +8,6 @@ using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
-using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
@@ -78,10 +77,11 @@ namespace BSU.Core.Tests
 
         private static UpdateTarget CreateUpdateTarget(int match, int version)
         {
-            return new UpdateTarget(new HashCollection(
+            return new UpdateTarget(new List<IModHash>
+            {
                 new TestMatchHash(match),
                 new TestVersionHash(version)
-            ), "title");
+            }, "title");
         }
 
         [Fact]

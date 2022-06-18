@@ -15,7 +15,7 @@ public interface IHashCollection
 
 public class HashCollection : IHashCollection
 {
-    // Immutable!
+    // Immutable
     
     private readonly List<IModHash> _hashes;
 

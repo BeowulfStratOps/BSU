@@ -105,7 +105,7 @@ namespace BSU.Core.Model
             if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
             var mod = await Implementation.CreateMod(identifier, CancellationToken.None);
             var state = _internalState.GetMod(identifier);
-            state.UpdateTarget = new UpdateTarget(hashes, identifier);
+            state.UpdateTarget = new UpdateTarget(hashes.GetAll().ToList(), identifier);
             var storageMod = new StorageMod(mod, identifier, state, this, true, _services);
             _mods!.Add(storageMod);
             AddedMod?.Invoke(storageMod);

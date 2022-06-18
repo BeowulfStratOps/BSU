@@ -37,7 +37,7 @@ internal class HashManager
 
     public List<Type> GetSupportedTypes() => _hashFunctions.Keys.ToList();
 
-    public async Task Reset(HashCollection newHashes)
+    public async Task Reset(IEnumerable<IModHash> newHashes)
     {
         _cts.Cancel();
         _cts = new CancellationTokenSource();
@@ -58,9 +58,9 @@ internal class HashManager
         }
     }
 
-    public void Set(HashCollection hashes)
+    public void Set(IEnumerable<IModHash> hashes)
     {
-        foreach (var hash in hashes.GetAll())
+        foreach (var hash in hashes)
         {
             AddHashFunction(hash.GetType(), _ => Task.FromResult(hash));
         }

@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
-using BSU.Core.Tests.Mocks;
 using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
@@ -117,14 +115,6 @@ namespace BSU.Core.Tests
                     {"some.pbo", "xxAAAABBBBCCCCDDDDEEEE"},
                     {"asdf.dll", "xyz"}
                 }));
-        }
-
-        private static void AddFiles(IMockedFiles mod, Dictionary<string, string> files)
-        {
-            foreach (var file in files)
-            {
-                mod.SetFile(file.Key, file.Value);
-            }
         }
 
         private static async Task<VersionHash> CreateStorageMod(Dictionary<string, string> files)
