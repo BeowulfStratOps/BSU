@@ -14,7 +14,7 @@ internal class TestRepositoryMod : IRepositoryMod
 {
     private readonly TaskCompletionSource _loadTcs = new();
     public Dictionary<string, byte[]> Files = null!;
-    private readonly TaskCompletionSource _updateTcs = new();
+    private readonly List<TaskCompletionSource> _updateTcs = new();
 
     public void Load(Dictionary<string, byte[]> files)
     {
@@ -24,7 +24,11 @@ internal class TestRepositoryMod : IRepositoryMod
 
     public void FinishUpdate()
     {
-        _updateTcs.SetResult();
+        // workaround. because using a single TCS for all update work-units somehow results in continuations running in different threads, even in an StaFact
+        foreach (var tcs in _updateTcs)
+        {
+            tcs.SetResult();
+        }
     }
 
     public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
@@ -61,7 +65,9 @@ internal class TestRepositoryMod : IRepositoryMod
 
     public async Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
     {
-        await _updateTcs.Task;
+        var tcs = new TaskCompletionSource();
+        _updateTcs.Add(tcs);
+        await tcs.Task;
         var data = Files[path];
         await using var stream = await fileSystem.OpenWrite(path, cancellationToken);
         stream.SetLength(0);

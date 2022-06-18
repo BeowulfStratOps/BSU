@@ -83,6 +83,7 @@ internal class Model : IAsyncDisposable
         //new BiKeyCopyActor(Services);
         new AutoSelectionActor(Services);
         new EventCombineActor(Services);
+        new RepositoryStateActor(Services);
 
         var vm = new ViewModel.ViewModel(Services);
         

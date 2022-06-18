@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Tests.Util;
@@ -10,7 +9,7 @@ using BSU.Core.ViewModel;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace BSU.Core.Tests.ActionBased;
+namespace BSU.Core.Tests.ViewModelIntegration;
 
 public class UserStories : LoggedTest
 {
