@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using BSU.Core.ViewModel;
 using BSU.CoreCommon;
 
-namespace BSU.Core.Tests.ActionBased.TestModel;
+namespace BSU.Core.Tests.ViewModelIntegration.TestModel;
 
 internal class DeterministicJobManager : IJobManager
 {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using BSU.Core.Concurrency;
 
-namespace BSU.Core.Tests.ActionBased.TestModel
+namespace BSU.Core.Tests.ViewModelIntegration.TestModel
 {
     internal class TestDispatcher : IDispatcher
     {

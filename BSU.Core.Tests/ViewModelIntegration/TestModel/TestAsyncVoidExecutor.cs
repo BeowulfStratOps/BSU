@@ -5,7 +5,7 @@ using BSU.Core.Events;
 using BSU.Core.ViewModel;
 using NLog;
 
-namespace BSU.Core.Tests.ActionBased.TestModel;
+namespace BSU.Core.Tests.ViewModelIntegration.TestModel;
 
 internal class TestAsyncVoidExecutor : IAsyncVoidExecutor
 {

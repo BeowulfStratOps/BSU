@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BSU.Core.ViewModel;
 
-namespace BSU.Core.Tests.ActionBased.TestModel;
+namespace BSU.Core.Tests.ViewModelIntegration.TestModel;
 
 internal class TestInteractionService : IInteractionService
 {

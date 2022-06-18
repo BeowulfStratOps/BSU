@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
 
-namespace BSU.Core.Tests.ActionBased.TestModel;
+namespace BSU.Core.Tests.ViewModelIntegration.TestModel;
 
 internal class TestStorage : IStorage
 {
