@@ -13,6 +13,7 @@ namespace BSU.Core.ViewModel.Util
         private readonly string? _actionCode;
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
+        // TODO: create AsyncDelegateCommand
         public DelegateCommand(Action action, bool canExecute = true, [CallerArgumentExpression("action")] string? actionCode = null)
         {
             _action = action;

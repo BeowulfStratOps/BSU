@@ -48,7 +48,7 @@ namespace BSU.Core
             services.Add(dispatcher);
             var jobManager = new JobManager(dispatcher);
             services.Add<IJobManager>(jobManager);
-            services.Add<IUpdateService>(new UpdateService(jobManager));
+            services.Add<IUpdateService>(new UpdateService(services));
             services.Add(interactionService);
             services.Add<IDialogService>(new DialogService(services));
             services.Add(EventManager);

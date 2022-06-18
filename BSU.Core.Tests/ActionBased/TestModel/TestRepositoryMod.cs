@@ -12,28 +12,19 @@ namespace BSU.Core.Tests.ActionBased.TestModel;
 
 internal class TestRepositoryMod : IRepositoryMod
 {
-    private readonly TestModelInterface _testModelInterface;
     private readonly TaskCompletionSource _loadTcs = new();
     public Dictionary<string, byte[]> Files = null!;
     private readonly TaskCompletionSource _updateTcs = new();
 
-    public TestRepositoryMod(TestModelInterface testModelInterface)
-    {
-        _testModelInterface = testModelInterface;
-    }
-
     public void Load(Dictionary<string, byte[]> files)
     {
-        _testModelInterface.DoInModelThread(() =>
-        {
-            Files = files;
-            _loadTcs.SetResult();
-        }, true);
+        Files = files;
+        _loadTcs.SetResult();
     }
 
     public void FinishUpdate()
     {
-        _testModelInterface.DoInModelThread(() => _updateTcs.SetResult(), false);
+        _updateTcs.SetResult();
     }
 
     public async Task<List<string>> GetFileList(CancellationToken cancellationToken)
@@ -49,9 +40,11 @@ internal class TestRepositoryMod : IRepositoryMod
         return await Sha1AndPboHash.BuildAsync(memStream, ".pbo", cancellationToken);
     }
 
-    public Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
+    public async Task<byte[]> GetFile(string path, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await _loadTcs.Task;
+        if (!Files.TryGetValue(path, out var data)) throw new FileNotFoundException();
+        return data;
     }
 
     public async Task<(string name, string version)> GetDisplayInfo(CancellationToken cancellationToken)

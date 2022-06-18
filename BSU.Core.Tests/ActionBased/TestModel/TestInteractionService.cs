@@ -1,37 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.ViewModel;
 
 namespace BSU.Core.Tests.ActionBased.TestModel;
 
 internal class TestInteractionService : IInteractionService
 {
+    private readonly Stack<IDialog> _dialogStack = new(); 
+
     public record MessagePopupDto(string Message, string Title);
-
-    private readonly Func<ModelActionContext, object?> _handleInteraction;
-
-    public TestInteractionService(Func<ModelActionContext, object?> handleInteraction)
+    
+    private async Task<TResult> Handle<TViewModel, TResult>(TViewModel viewModel)
     {
-        _handleInteraction = handleInteraction;
+        var tcs = new TaskCompletionSource<object?>();
+        var dialog = new Dialog<TViewModel>(viewModel, tcs);
+        _dialogStack.Push(dialog);
+        var result = await tcs.Task;
+        var check = _dialogStack.Pop();
+        if (check != dialog)
+            throw new InvalidOperationException();
+        return (TResult)result!;
     }
 
-    private object? Handle(object viewModel, IDialogContext? dialogContext = null)
-    {
-        dialogContext ??= new DialogContext();
-        return _handleInteraction(new ModelActionContext(viewModel, dialogContext));
-    }
+    public Task<bool> AddRepository(AddRepository viewModel) => Handle<AddRepository, bool>(viewModel);
+    public Task<bool> AddStorage(AddStorage viewModel) => Handle<AddStorage, bool>(viewModel);
 
-    public bool AddRepository(AddRepository viewModel) => (bool)Handle(viewModel, new TestClosable())!;
-    public bool AddStorage(AddStorage viewModel) => (bool)Handle(viewModel, new TestClosable())!;
-
-    public void MessagePopup(string message, string title, MessageImageEnum image) => Handle(new MessagePopupDto(message, title));
-    public T OptionsPopup<T>(string message, string title, Dictionary<T, string> options, MessageImageEnum image) where T : notnull
+    public Task MessagePopup(string message, string title, MessageImageEnum image) => Handle<MessagePopupDto, object>(new MessagePopupDto(message, title));
+    public Task<T> OptionsPopup<T>(string message, string title, Dictionary<T, string> options, MessageImageEnum image) where T : notnull
     {
         throw new NotImplementedException();
     }
 
-    public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel) => (bool)Handle(viewModel, new TestClosable())!;
-    public bool GlobalSettings(GlobalSettings vm)
+    public Task<bool> SelectRepositoryStorage(SelectRepositoryStorage viewModel) => Handle<SelectRepositoryStorage, bool>(viewModel);
+    public Task<bool> GlobalSettings(GlobalSettings vm)
     {
         throw new NotImplementedException();
     }
@@ -40,4 +43,12 @@ internal class TestInteractionService : IInteractionService
     {
         throw new NotImplementedException();
     }
+
+    public void SetViewModel(ViewModel.ViewModel vm)
+    {
+        if (_dialogStack.Any()) throw new InvalidOperationException();
+        _dialogStack.Push(new Dialog<ViewModel.ViewModel>(vm, null!));
+    }
+
+    public object GetCurrentDialog() => _dialogStack.Peek();
 }

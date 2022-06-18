@@ -27,7 +27,7 @@ namespace BSU.BSO
         public BsoRepo(string url, IJobManager jobManager)
         {
             _url = url;
-            _loading = jobManager.Run(() => Load(CancellationToken.None), CancellationToken.None);
+            _loading = jobManager.Run("Bso Repo Load", () => Load(CancellationToken.None), CancellationToken.None);
             _jobManager = jobManager;
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using BSU.Core.Ioc;
 
 namespace BSU.Core.ViewModel;
@@ -14,10 +15,10 @@ internal class DialogService : IDialogService
         _services = services;
     }
 
-    public AddStorageDialogResult? AddStorage()
+    public async Task<AddStorageDialogResult?> AddStorage()
     {
         var vm = new AddStorage(_services);
-        if (!_interactionService.AddStorage(vm)) return null;
+        if (!await _interactionService.AddStorage(vm)) return null;
         var type = vm.GetStorageType();
         var name = vm.GetName();
         var path = vm.GetPath();
@@ -27,7 +28,7 @@ internal class DialogService : IDialogService
 
 internal interface IDialogService
 {
-    AddStorageDialogResult? AddStorage();
+    Task<AddStorageDialogResult?> AddStorage();
 }
 
 internal record AddStorageDialogResult(string Type, string Name, string Path);

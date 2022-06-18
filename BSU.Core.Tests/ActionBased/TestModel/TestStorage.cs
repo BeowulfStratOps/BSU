@@ -8,32 +8,27 @@ namespace BSU.Core.Tests.ActionBased.TestModel;
 
 internal class TestStorage : IStorage
 {
-    private readonly TestModelInterface _testModelInterface;
     private readonly TaskCompletionSource _loadTcs = new();
     private Dictionary<string, IStorageMod> _mods = null!;
     private readonly bool _canWrite;
 
     public TestStorageMod GetMod(string modName) => (TestStorageMod)_mods[modName];
 
-    public TestStorage(TestModelInterface testModelInterface, bool canWrite)
+    public TestStorage(bool canWrite)
     {
-        _testModelInterface = testModelInterface;
         _canWrite = canWrite;
     }
 
-    public void Load(IEnumerable<string> mods)
+    public void Load(params string[] mods)
     {
         var modsDict = new Dictionary<string, IStorageMod>();
         foreach (var modName in mods)
         {
-            var mod = new TestStorageMod(_testModelInterface);
+            var mod = new TestStorageMod();
             modsDict.Add(modName, mod);
         }
-        _testModelInterface.DoInModelThread(() =>
-        {
-            _mods = modsDict;
-            _loadTcs.SetResult();
-        }, true);
+        _mods = modsDict;
+        _loadTcs.SetResult();
     }
 
     public void LoadEmpty()
@@ -44,10 +39,7 @@ internal class TestStorage : IStorage
 
     public void Load(Exception exception)
     {
-        _testModelInterface.DoInModelThread(() =>
-        {
-            _loadTcs.SetException(exception);
-        }, true);
+        _loadTcs.SetException(exception);
     }
 
     public bool CanWrite() => _canWrite;
@@ -61,7 +53,7 @@ internal class TestStorage : IStorage
     public async Task<IStorageMod> CreateMod(string identifier, CancellationToken cancellationToken)
     {
         await _loadTcs.Task;
-        var mod = new TestStorageMod(_testModelInterface);
+        var mod = new TestStorageMod();
         _mods.Add(identifier, mod);
         return mod;
     }

@@ -14,11 +14,11 @@ public class JobManager : IJobManager
         _dispatcher = dispatcher;
     }
 
-    public Task Run(Func<Task> action, CancellationToken cancellationToken) => Task.Run(action, cancellationToken);
+    public Task Run(string jobName, Func<Task> action, CancellationToken cancellationToken) => Task.Run(action, cancellationToken);
 
-    public Task<T> Run<T>(Func<Task<T>> action, CancellationToken cancellationToken) => Task.Run(action, cancellationToken);
+    public Task<T> Run<T>(string jobName, Func<Task<T>> action, CancellationToken cancellationToken) => Task.Run(action, cancellationToken);
 
-    public void Run<T>(Func<Task<T>> action, Action<Func<T>> synchronizedContinuation, CancellationToken cancellationToken)
+    public void Run<T>(string jobName, Func<Task<T>> action, Action<Func<T>> synchronizedContinuation, CancellationToken cancellationToken)
     {
         var task = Task.Run(action, cancellationToken); 
         task.ContinueInDispatcher(_dispatcher, synchronizedContinuation);

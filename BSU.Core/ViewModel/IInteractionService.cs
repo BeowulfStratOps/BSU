@@ -1,18 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BSU.Core.ViewModel
 {
     public interface IInteractionService
     {
-        bool AddRepository(AddRepository viewModel);
+        Task<bool> AddRepository(AddRepository viewModel);
 
-        bool AddStorage(AddStorage viewModel);
+        Task<bool> AddStorage(AddStorage viewModel);
 
-        void MessagePopup(string message, string title, MessageImageEnum image);
+        Task MessagePopup(string message, string title, MessageImageEnum image);
 
-        T OptionsPopup<T>(string message, string title, Dictionary<T, string> options, MessageImageEnum image) where T : notnull;
-        bool SelectRepositoryStorage(SelectRepositoryStorage viewModel);
-        bool GlobalSettings(GlobalSettings vm);
+        Task<T> OptionsPopup<T>(string message, string title, Dictionary<T, string> options, MessageImageEnum image) where T : notnull;
+        Task<bool> SelectRepositoryStorage(SelectRepositoryStorage viewModel);
+        Task<bool> GlobalSettings(GlobalSettings vm);
         void CloseBsu();
     }
 

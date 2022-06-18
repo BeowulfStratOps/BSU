@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Services;
@@ -28,8 +29,9 @@ namespace BSU.Core.ViewModel
             _model = services.Get<IModel>();
             _repoStateService = services.Get<IRepositoryStateService>();
             _interactionService = services.Get<IInteractionService>();
+            var asyncVoidService = services.Get<IAsyncVoidExecutor>();
 
-            AddRepository = new DelegateCommand(DoAddRepository);
+            AddRepository = new DelegateCommand(() => asyncVoidService.Execute(DoAddRepository));
             _model.AddedRepository += repository => AddedRepository(repository);
             _model.RemovedRepository += repository =>
             {
@@ -44,25 +46,22 @@ namespace BSU.Core.ViewModel
             Repositories.Add(repository);
         }
 
-        private void DoAddRepository()
+        private async Task DoAddRepository()
         {
             // TODO: use some ioc stuff instead of creating the viewModel explicitly
             var vm = new AddRepository(_model, _services);
-            if (!_interactionService.AddRepository(vm)) return;
+            if (!await _interactionService.AddRepository(vm)) return;
 
             var repo = _model.AddRepository(vm.RepoType, vm.Url.Trim(), vm.Name.Trim());
 
             var vmRepo = Repositories.Single(r => r.ModelRepository == repo);
 
             var selectStorageVm = new SelectRepositoryStorage(repo, _services, true, _viewModelService);
-            if (!_interactionService.SelectRepositoryStorage(selectStorageVm)) return;
+            if (!await _interactionService.SelectRepositoryStorage(selectStorageVm)) return;
 
-            _services.Get<IAsyncVoidExecutor>().Execute(async () =>
-            {
-                var state = _repoStateService.GetRepositoryState(repo, _model.GetRepositoryMods());
-                if (state == CalculatedRepositoryStateEnum.NeedsSync)
-                    await vmRepo.DoUpdate();
-            });
+            var state = _repoStateService.GetRepositoryState(repo, _model.GetRepositoryMods());
+            if (state == CalculatedRepositoryStateEnum.NeedsSync)
+                await vmRepo.DoUpdate();
         }
     }
 }
