@@ -26,25 +26,25 @@ namespace BSU.Core.Sync
             _logger = logger;
         }
 
-        private static async Task<RepoSync> BuildAsync(IRepositoryMod repository, StorageMod storage,
-            IStorageMod implementation, Logger logger, CancellationToken cancellationToken)
+        private static async Task<RepoSync> BuildAsync(IRepositoryMod repository, IStorageMod storage, Logger logger,
+            CancellationToken cancellationToken)
         {
             logger.Debug($"Building sync actions {storage} to {repository}");
 
             var allActions = new List<SyncWorkUnit>();
             var repositoryList = await repository.GetFileList(cancellationToken);
-            var storageList = await implementation.GetFileList(cancellationToken);
+            var storageList = await storage.GetFileList(cancellationToken);
             var storageListCopy = new List<string>(storageList);
             foreach (var repoFile in repositoryList)
             {
                 if (storageList.Contains(repoFile))
                 {
                     var repoFileHash = await repository.GetFileHash(repoFile, cancellationToken);
-                    var storageFileHash = await implementation.GetFileHash(repoFile, cancellationToken);
+                    var storageFileHash = await storage.GetFileHash(repoFile, cancellationToken);
                     if (!repoFileHash.Equals(storageFileHash))
                     {
                         var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
-                        allActions.Add(new UpdateAction(repository, implementation, repoFile, fileSize));
+                        allActions.Add(new UpdateAction(repository, storage, repoFile, fileSize));
                         storageListCopy.Remove(repoFile + ".part");
                     }
 
@@ -53,13 +53,13 @@ namespace BSU.Core.Sync
                 else
                 {
                     var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
-                    allActions.Add(new DownloadAction(repository, implementation, repoFile, fileSize));
+                    allActions.Add(new DownloadAction(repository, storage, repoFile, fileSize));
                 }
             }
 
             foreach (var storageModFile in storageListCopy)
             {
-                allActions.Add(new DeleteAction(implementation, storageModFile));
+                allActions.Add(new DeleteAction(storage, storageModFile));
             }
 
             logger.Debug($"Download actions: {allActions.OfType<DownloadAction>().Count()}");
@@ -76,12 +76,17 @@ namespace BSU.Core.Sync
             await task.WithUpdates(TimeSpan.FromMilliseconds(50), () => ProgressCallback(progress));
         }
 
-        public static async Task<UpdateResult> UpdateAsync(IRepositoryMod repository, StorageMod storage, IStorageMod implementation, CancellationToken cancellationToken, IProgress<FileSyncStats>? progress)
+        public static async Task<UpdateResult> UpdateAsync(IRepositoryMod repository, IStorageMod storageMod, CancellationToken cancellationToken, IProgress<FileSyncStats>? progress)
         {
+            progress?.Report(new FileSyncStats(FileSyncState.Waiting));
+
+            cancellationToken.Register(() => progress?.Report(new FileSyncStats(FileSyncState.Stopping)));
+            
             var logger = LogHelper.GetLoggerWithIdentifier(typeof(RepoSync), Guid.NewGuid().ToString());
             try
             {
-                var repoSync = await BuildAsync(repository, storage, implementation, logger, cancellationToken);
+                // TODO: add progress stages
+                var repoSync = await BuildAsync(repository, storageMod, logger, cancellationToken);
                 await repoSync.UpdateAsync(cancellationToken, progress);
             }
             catch (IOException e) when ((e.HResult & 0xFFFF) == 32) // 32: sharing violation, aka open in arma
@@ -94,9 +99,12 @@ namespace BSU.Core.Sync
                 logger.Error(e);
                 return UpdateResult.Failed;
             }
+            finally
+            {
+                progress?.Report(new FileSyncStats(FileSyncState.None));
+            }
 
             logger.Trace("Progress: None");
-            progress?.Report(new FileSyncStats(FileSyncState.None));
             return UpdateResult.Success;
         }
 
