@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using BSU.Core.ViewModel;
 using BSU.GUI.Dialogs;
@@ -16,39 +17,38 @@ namespace BSU.GUI.Actions
             _owner = owner;
         }
 
-        public bool AddRepository(AddRepository viewModel)
+        public Task<bool> AddRepository(AddRepository viewModel)
         {
-            return (bool)new AddRepositoryDialog(viewModel).ShowDialog()!;
+            return Task.FromResult((bool)new AddRepositoryDialog(viewModel).ShowDialog()!);
         }
 
-        public bool AddStorage(AddStorage viewModel)
+        public Task<bool> AddStorage(AddStorage viewModel)
         {
-            return (bool)new AddStorageDialog(viewModel).ShowDialog()!;
+            return Task.FromResult((bool)new AddStorageDialog(viewModel).ShowDialog()!);
         }
 
-        public void MessagePopup(string message, string title, MessageImageEnum image)
+        public Task MessagePopup(string message, string title, MessageImageEnum image)
         {
             new MessageDialog(message, title, image).ShowDialog();
+            return Task.CompletedTask;
         }
 
-        public T OptionsPopup<T>(string message, string title, Dictionary<T, string> options, MessageImageEnum image) where T : notnull
+        public Task<T> OptionsPopup<T>(string message, string title, Dictionary<T, string> options, MessageImageEnum image) where T : notnull
         {
             var dialog = new OptionsDialog(message, title, options.ToDictionary(kv => (object)kv.Key, kv => kv.Value),
                 image);
             var result = dialog.ShowDialog();
-            if (result != true)
-                return default!;
-            return (T)dialog.Result!;
+            return result != true ? Task.FromResult<T>(default!) : Task.FromResult((T)dialog.Result!);
         }
 
-        public bool SelectRepositoryStorage(SelectRepositoryStorage viewModel)
+        public Task<bool> SelectRepositoryStorage(SelectRepositoryStorage viewModel)
         {
-            return (bool)new SelectRepositoryStorageDialog(viewModel).ShowDialog()!;
+            return Task.FromResult((bool)new SelectRepositoryStorageDialog(viewModel).ShowDialog()!);
         }
 
-        public bool GlobalSettings(GlobalSettings vm)
+        public Task<bool> GlobalSettings(GlobalSettings vm)
         {
-            return (bool)new GlobalSettingsDialog(vm).ShowDialog()!;
+            return Task.FromResult((bool)new GlobalSettingsDialog(vm).ShowDialog()!);
         }
 
         public void CloseBsu()

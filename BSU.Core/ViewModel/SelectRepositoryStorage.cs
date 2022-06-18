@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
@@ -79,7 +80,8 @@ namespace BSU.Core.ViewModel
         {
             UpdateAfter = updateAfter;
             Ok = new DelegateCommand(HandleOk, !updateAfter);
-            AddStorage = new DelegateCommand(HandleAdd);
+            var asyncVoidExecutor = serviceProvider.Get<IAsyncVoidExecutor>();
+            AddStorage = new DelegateCommand(() => asyncVoidExecutor.Execute(HandleAdd));
             _repository = repository;
             _autoSelectionService = serviceProvider.Get<IAutoSelectionService>();
             _modActionService = serviceProvider.Get<IModActionService>();
@@ -123,9 +125,9 @@ namespace BSU.Core.ViewModel
             Storage ??= storageSelection;
         }
 
-        private void HandleAdd()
+        private async Task HandleAdd()
         {
-            var storage = _viewModelService.AddStorage();
+            var storage = await _viewModelService.AddStorage();
             if (storage != null)
                 AddWhenLoaded(storage);
         }

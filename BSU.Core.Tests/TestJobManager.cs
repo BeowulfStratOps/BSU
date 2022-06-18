@@ -8,7 +8,7 @@ namespace BSU.Core.Tests;
 internal class TestJobManager : IJobManager
 {
     // TODO: wrap canceled exceptions in tasks?
-    public Task Run(Func<Task> action, CancellationToken cancellationToken)
+    public Task Run(string jobName, Func<Task> action, CancellationToken cancellationToken)
     {
         var task = action();
         try
@@ -22,7 +22,7 @@ internal class TestJobManager : IJobManager
         return task;
     }
 
-    public Task<T> Run<T>(Func<Task<T>> action, CancellationToken cancellationToken)
+    public Task<T> Run<T>(string jobName, Func<Task<T>> action, CancellationToken cancellationToken)
     {
         var task = action();
         try
@@ -36,7 +36,7 @@ internal class TestJobManager : IJobManager
         return task;
     }
 
-    public void Run<T>(Func<Task<T>> action, Action<Func<T>> synchronizedContinuation, CancellationToken cancellationToken)
+    public void Run<T>(string jobName, Func<Task<T>> action, Action<Func<T>> synchronizedContinuation, CancellationToken cancellationToken)
     {
         var task = action();
         try

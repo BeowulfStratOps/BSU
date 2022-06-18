@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BSU.Core.Model;
 using BSU.Core.Tests.ActionBased.TestModel;
-using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using BSU.Core.ViewModel;
 using Xunit;
@@ -17,111 +18,102 @@ public class UserStories : LoggedTest
     {
     }
 
-    [Fact]
-    private void TestDownload()
+    [StaFact]
+    private async Task TestDownload()
     {
-        using var model = new TestModel.Model();
+        var model = new TestModel.Model(OutputHelper);
 
-        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+        var vm = await model.WaitForDialog<ViewModel.ViewModel>();
+        model.GetStorage("steam").Load();
 
-        model.Do(() => vm.ViewModel.RepoPage.AddRepository.Execute());
+        vm.ViewModel.RepoPage.AddRepository.Execute();
 
-        var addRepoDialog = model.WaitForDialog<AddRepository>();
+        var addRepoDialog = await model.WaitForDialog<AddRepository>();
 
-        model.Do(() =>
-        {
-            addRepoDialog.ViewModel.Name = "Test";
-            addRepoDialog.ViewModel.Url = "test";
-            addRepoDialog.ViewModel.RepoType = "BSO";
-            addRepoDialog.ViewModel.Ok.Execute(addRepoDialog.Closable);
-        });
+        addRepoDialog.ViewModel.Name = "Test";
+        addRepoDialog.ViewModel.Url = "test";
+        addRepoDialog.ViewModel.RepoType = "BSO";
+        addRepoDialog.ViewModel.Ok.Execute(addRepoDialog.Closable);
 
         var repo = model.GetRepository("test");
-        repo.Load(new[] { "@mod1" });
+        repo.Load("@mod1");
         var repositoryMod = repo.GetMod("@mod1");
         repositoryMod.Load(FileHelper.CreateFiles(1, 1));
 
-        var selectRepositoryStorage = model.WaitForDialog<SelectRepositoryStorage>();
+        var selectRepositoryStorage = await model.WaitForDialog<SelectRepositoryStorage>();
 
-        model.Do(() =>
-        {
-            Assert.False(selectRepositoryStorage.ViewModel.IsLoading);
-            Assert.False(selectRepositoryStorage.ViewModel.Ok.CanExecute(null));
-            selectRepositoryStorage.ViewModel.AddStorage.Execute();
-        });
+        Assert.False(selectRepositoryStorage.ViewModel.IsLoading);
+        Assert.False(selectRepositoryStorage.ViewModel.Ok.CanExecute(null));
+        selectRepositoryStorage.ViewModel.AddStorage.Execute();
 
-        var addStorage = model.WaitForDialog<AddStorage>();
+        var addStorage = await model.WaitForDialog<AddStorage>();
 
-        model.Do(() =>
-        {
-            addStorage.ViewModel.Name = "asdf";
-            addStorage.ViewModel.Path = "test";
-            addStorage.ViewModel.Ok.Execute(addStorage.Closable);
-        });
+        addStorage.ViewModel.Name = "asdf";
+        addStorage.ViewModel.Path = "test";
+        addStorage.ViewModel.Ok.Execute(addStorage.Closable);
 
         var storage = model.GetStorage("test");
         storage.Load(Array.Empty<string>());
 
-        model.Do(() =>
-        {
-            var (modName, modAction, _) = selectRepositoryStorage.ViewModel.Mods[0];
-            Assert.Equal("@mod1", modName);
-            Assert.IsType<SelectStorage>(modAction);
+        var (modName, modAction, _) = selectRepositoryStorage.ViewModel.Mods[0];
+        Assert.Equal("@mod1", modName);
+        Assert.IsType<SelectStorage>(modAction);
 
-            selectRepositoryStorage.ViewModel.Ok.Execute(selectRepositoryStorage.Closable);
-        });
+        selectRepositoryStorage.ViewModel.Ok.Execute(selectRepositoryStorage.Closable);
 
         var repoVm = vm.ViewModel.RepoPage.Repositories[0];
-        model.WaitFor(1000, () => repoVm.UpdateProgress.Active);
+        Assert.True(repoVm.UpdateProgress.Active);
         Assert.Equal("Preparing", repoVm.UpdateProgress.Stage);
 
         var storageMod = storage.GetMod("@mod1");
-        storageMod.Load(new Dictionary<string, byte[]>(), true);
+        storageMod.Load(new Dictionary<string, byte[]>());
 
         repositoryMod.FinishUpdate();
 
-        var popup = model.WaitForDialog<TestInteractionService.MessagePopupDto>(60000);
-        model.Do(() => popup.Closable.SetResult(null));
+        var popup = await model.WaitForDialog<TestInteractionService.MessagePopupDto>();
+        popup.Closable.Close(true);
 
-        model.WaitFor(500, () => !repoVm.UpdateProgress.Active);
+        Assert.False(repoVm.UpdateProgress.Active);
 
         FileHelper.AssertFileEquality(repositoryMod.Files, storageMod.Files);
-
-        model.CheckErrorEvents();
     }
 
-    [Fact]
-    private void TestLoad()
+    [StaFact]
+    private async Task TestLoad()
     {
-        using var model = new TestModel.Model(new[] { "repo" }, new[] { "storage" });
+        await using var model = new TestModel.Model(OutputHelper, new[] { "repo" }, new[] { "storage" });
 
-        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+        var vm = await model.WaitForDialog<ViewModel.ViewModel>();
 
         var repo = model.GetRepository("repo");
+        
+        model.GetStorage("steam").Load();
         var storage = model.GetStorage("storage");
 
-        repo.Load(new[] { "@mod" });
-        storage.Load(new[] { "@mod" });
+        repo.Load("@mod");
+        storage.Load("@mod");
 
         var repoMod = repo.GetMod("@mod");
         var storageMod = storage.GetMod("@mod");
 
         repoMod.Load(FileHelper.CreateFiles(1, 1));
-        storageMod.Load(FileHelper.CreateFiles(1, 1), false);
+        storageMod.Load(FileHelper.CreateFiles(1, 1));
 
         var repoVm = vm.ViewModel.RepoPage.Repositories[0];
         var selection = repoVm.Mods[0].Actions.Selection;
         Assert.IsType<SelectMod>(selection);
         Assert.Equal("storage", ((SelectMod)selection).StorageName);
         Assert.Equal(ModActionEnum.Use, ((SelectMod)selection).ActionType);
+        
+        Assert.Empty(model.ErrorEvents);
     }
 
-    [Fact]
-    private void TestSlowLoading()
+    [StaFact]
+    private async Task TestSlowLoading()
     {
-        using var model = new TestModel.Model(new[] { "repo" }, new[] { "storage" });
+        var model = new TestModel.Model(OutputHelper, new[] { "repo" }, new[] { "storage" });
 
-        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+        var vm = await model.WaitForDialog<ViewModel.ViewModel>();
 
         var repo = model.GetRepository("repo");
         var storage = model.GetStorage("storage");
@@ -129,35 +121,34 @@ public class UserStories : LoggedTest
         var repoVm = vm.ViewModel.RepoPage.Repositories[0];
         Assert.Equal(CalculatedRepositoryStateEnum.Loading, repoVm.CalculatedState);
 
-        repo.Load(new[] { "@mod" });
-        storage.Load(new[] { "@mod" });
+        repo.Load("@mod");
+        storage.Load("@mod");
+        model.GetStorage("steam").Load();
 
         var repoMod = repo.GetMod("@mod");
         var storageMod = storage.GetMod("@mod");
 
         repoMod.Load(FileHelper.CreateFiles(1, 1));
-        storageMod.Load(FileHelper.CreateFiles(1, 1), false);
+        storageMod.Load(FileHelper.CreateFiles(1, 1));
 
         Assert.Equal(CalculatedRepositoryStateEnum.Ready, repoVm.CalculatedState);
     }
 
-    [Fact]
-    private void TestShowStorageError()
+    [StaFact]
+    private async Task TestShowStorageError()
     {
-        using var model = new TestModel.Model();
+        var model = new TestModel.Model(OutputHelper);
+        model.GetStorage("steam").Load();
 
-        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+        var vm = await model.WaitForDialog<ViewModel.ViewModel>();
 
-        model.Do(() => vm.ViewModel.StoragePage.AddStorage.Execute());
+       vm.ViewModel.StoragePage.AddStorage.Execute();
 
-        var addStorage = model.WaitForDialog<AddStorage>();
+        var addStorage = await model.WaitForDialog<AddStorage>();
 
-        model.Do(() =>
-        {
-            addStorage.ViewModel.Name = "asdf";
-            addStorage.ViewModel.Path = "test";
-            addStorage.ViewModel.Ok.Execute(addStorage.Closable);
-        });
+        addStorage.ViewModel.Name = "asdf";
+        addStorage.ViewModel.Path = "test";
+        addStorage.ViewModel.Ok.Execute(addStorage.Closable);
 
         var storage = model.GetStorage("test");
         storage.Load(new TestException());
@@ -169,17 +160,17 @@ public class UserStories : LoggedTest
         model.ErrorEvents.Clear();
     }
 
-    [Fact]
-    private void TestDownloadWithSteam()
+    [StaFact]
+    private async Task TestDownloadWithSteam()
     {
-        using var model = new TestModel.Model(new[] { "test" }, new[] { "test" }, false);
+        var model = new TestModel.Model(OutputHelper, new[] { "test" }, new[] { "test" });
 
-        var vm = model.WaitForDialog<ViewModel.ViewModel>();
+        var vm = await model.WaitForDialog<ViewModel.ViewModel>();
 
-        model.Do(() => vm.ViewModel.RepoPage.AddRepository.Execute());
+        vm.ViewModel.RepoPage.AddRepository.Execute();
 
         var repo = model.GetRepository("test");
-        repo.Load(new[] { "@mod1", "@mod2" });
+        repo.Load("@mod1", "@mod2");
         var repositoryMod1 = repo.GetMod("@mod1");
         repositoryMod1.Load(FileHelper.CreateFiles(1, 1));
         var repositoryMod2 = repo.GetMod("@mod2");
@@ -189,25 +180,19 @@ public class UserStories : LoggedTest
         storage.Load(Array.Empty<string>());
 
         var steam = model.GetStorage("steam");
-        steam.Load(new[] { "@mod2" });
+        steam.Load("@mod2");
         var steamMod = steam.GetMod("@mod2");
-        steamMod.Load(FileHelper.CreateFiles(2, 2), false);
+        steamMod.Load(FileHelper.CreateFiles(2, 2));
 
-        model.Do(() =>
-        {
-            vm.ViewModel.RepoPage.Repositories[0].ChooseDownloadLocation.Execute();
-        });
+        vm.ViewModel.RepoPage.Repositories[0].ChooseDownloadLocation.Execute();
 
-        var selectRepositoryStorage = model.WaitForDialog<SelectRepositoryStorage>();
+        var selectRepositoryStorage = await model.WaitForDialog<SelectRepositoryStorage>();
 
         var sVm = selectRepositoryStorage.ViewModel;
         Assert.False(sVm.IsLoading);
         Assert.True(sVm.Ok.CanExecute(null));
 
-        model.Do(() =>
-        {
-            sVm.UseSteam = false;
-        });
+        sVm.UseSteam = false;
 
         Assert.False(sVm.UseSteam);
 

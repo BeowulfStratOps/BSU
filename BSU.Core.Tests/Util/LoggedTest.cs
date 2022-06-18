@@ -3,6 +3,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace BSU.Core.Tests.Util
 {
@@ -32,10 +33,17 @@ namespace BSU.Core.Tests.Util
 
             protected override void Write(LogEventInfo logEvent)
             {
-                _startTime ??= logEvent.TimeStamp;
-                var delta = logEvent.TimeStamp - (DateTime)_startTime;
-                var message = Layout.Render(logEvent);
-                _outputHelper.WriteLine(FormattableString.Invariant($"{delta.TotalSeconds:F3}|{message}"));
+                try
+                {
+                    _startTime ??= logEvent.TimeStamp;
+                    var delta = logEvent.TimeStamp - (DateTime)_startTime;
+                    var message = Layout.Render(logEvent);
+                    _outputHelper.WriteLine(FormattableString.Invariant($"{delta.TotalSeconds:F3}|{message}"));
+                }
+                catch (Exception e)
+                {
+                    _outputHelper.WriteLine("Error in XUnitTarget logger!");
+                }
             }
         }
     }

@@ -209,10 +209,10 @@ namespace BSU.Core.ViewModel
             _viewModelService = viewModelService;
             _interactionService = serviceProvider.Get<IInteractionService>();
             var asyncVoidExecutor = serviceProvider.Get<IAsyncVoidExecutor>();
-            Delete = new DelegateCommand(DoDelete, false);
+            Delete = new DelegateCommand(obj => asyncVoidExecutor.Execute(() => DoDelete(obj)), false);
             Update = new DelegateCommand(() => asyncVoidExecutor.Execute(DoUpdate));
             Details = new DelegateCommand(() => Navigator.NavigateToRepository(this));
-            Play = new DelegateCommand(DoPlay);
+            Play = new DelegateCommand(() => asyncVoidExecutor.Execute(DoPlay));
             StopPlaying = new DelegateCommand(() => asyncVoidExecutor.Execute(DoStopPlaying));
             Pause = new DelegateCommand(DoPause, false);
             ChooseDownloadLocation = new DelegateCommand(DoChooseDownloadLocation, false);
@@ -252,7 +252,7 @@ namespace BSU.Core.ViewModel
             _interactionService.SelectRepositoryStorage(vm);
         }
 
-        private void DoPlay()
+        private async Task DoPlay()
         {
             if (_runningProcessHandle != null) throw new InvalidOperationException();
 
@@ -273,7 +273,7 @@ namespace BSU.Core.ViewModel
                     { true, "Launch" },
                     { false, "Cancel" }
                 };
-                var goAhead = _interactionService.OptionsPopup(warningMessage, "Launch Game", options, MessageImageEnum.Warning);
+                var goAhead = await _interactionService.OptionsPopup(warningMessage, "Launch Game", options, MessageImageEnum.Warning);
                 if (!goAhead) return;
             }
 
@@ -302,7 +302,7 @@ namespace BSU.Core.ViewModel
             }
             else
             {
-                _interactionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch", MessageImageEnum.Error);
+                await _interactionService.MessagePopup(launchResult.GetFailedReason(), "Failed to launch", MessageImageEnum.Error);
             }
         }
 
@@ -326,7 +326,7 @@ namespace BSU.Core.ViewModel
             KeepMods
         }
 
-        private void DoDelete(object? objOnDetailsPage)
+        private async Task DoDelete(object? objOnDetailsPage)
         {
             // TODO: this doesn't look like it belongs here
             var text = $"Removing repository {Name}. Do you want to remove mods used by this repository?";
@@ -338,12 +338,12 @@ namespace BSU.Core.ViewModel
                 { DeletionTypeEnum.Cancel, "Cancel" }
             };
 
-            var removeData = _interactionService.OptionsPopup(text, "Remove Repository", options, MessageImageEnum.Question);
+            var removeData = await _interactionService.OptionsPopup(text, "Remove Repository", options, MessageImageEnum.Question);
             if (removeData == DeletionTypeEnum.Cancel) return;
 
             if (removeData == DeletionTypeEnum.DeleteMods)
             {
-                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImageEnum.Error);
+                await _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImageEnum.Error);
                 return;
             }
 

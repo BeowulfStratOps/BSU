@@ -1,89 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
+using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
-using BSU.Core.Tests.Mocks;
 using BSU.Core.ViewModel;
+using BSU.Core.ViewModel.Util;
 using BSU.CoreCommon;
-using NLog;
-using Xunit;
+using Xunit.Abstractions;
 
 namespace BSU.Core.Tests.ActionBased.TestModel;
 
-internal class Model : IDisposable
+internal class Model : IAsyncDisposable
 {
-    // idea: have a user thread and a model thread.
-    // That way the test can be written linearly and suspend the model instead of having to deal with callbacks en masse
-
-    private readonly Thread _modelThread;
-
-    private bool _shutDown;
-
-    private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-
-    private readonly AutoResetEvent _modelThreadSuspended = new(false);
-    private readonly AutoResetEvent _modelThreadContinue = new(false);
-    private Action? _modelThreadAction;
-    private Exception? _modelThreadException;
+    private readonly ITestOutputHelper _outputHelper;
     private readonly TestDispatcher _dispatcher = new();
 
     private readonly Dictionary<string, TestRepository> _repositories = new();
     private readonly Dictionary<string, TestStorage> _storages = new();
 
     public readonly List<ErrorEvent> ErrorEvents = new();
-    private readonly TestModelInterface _testModelInterface;
-
-    private ModelActionContext _currentContext = null!;
 
     public readonly ServiceProvider Services = new();
+    private readonly ViewModel.ViewModel _model;
+    private readonly TestInteractionService _interactionService;
+    private readonly TestAsyncVoidExecutor _asyncVoidExecutor;
+    private readonly DeterministicJobManager _jobManager;
 
-    private record ModelBuildParams(IEnumerable<string> Repositories, IEnumerable<string> Storages, bool SteamLoaded);
-
-    public Model(IEnumerable<string>? repositories = null, IEnumerable<string>? storages = null, bool steamLoaded = true)
+    public Model(ITestOutputHelper outputHelper, IEnumerable<string>? repositories = null, IEnumerable<string>? storages = null)
     {
-        var buildParams = new ModelBuildParams(repositories ?? Array.Empty<string>(), storages ?? Array.Empty<string>(), steamLoaded);
-
-        _testModelInterface = new TestModelInterface(DoInModelThreadWithWait);
-        _modelThread = new Thread(ModelThread);
-        _modelThread.Start(buildParams);
-        _modelThreadSuspended.WaitOne();
-        if (_modelThreadException != null)
-            throw new ModelFailedException(_modelThreadException);
-    }
-
-    private void DoInModelThreadWithWait(Action action, bool wait)
-    {
-        Do(() =>
-        {
-            action();
-            if (wait) _dispatcher.WaitForWork();
-        });
-    }
-
-    private void CheckException()
-    {
-        if (_modelThreadException != null)
-            throw new ModelFailedException(_modelThreadException);
-    }
-
-    private object BuildModel(ModelBuildParams modelBuildParams)
-    {
+        _outputHelper = outputHelper;
         var eventManager = new EventManager();
 
-        var asyncVoidExecutor = new TestAsyncVoidExecutor(eventManager);
+        _asyncVoidExecutor = new TestAsyncVoidExecutor(eventManager);
 
-        Services.Add<IAsyncVoidExecutor>(asyncVoidExecutor);
+        _interactionService = new TestInteractionService();
+
+        Services.Add<IAsyncVoidExecutor>(_asyncVoidExecutor);
         eventManager.Subscribe<ErrorEvent>(e => ErrorEvents.Add(e));
 
-        var interactionService = new TestInteractionService(HandleInteraction);
-        Services.Add<IInteractionService>(interactionService);
+        Services.Add<IInteractionService>(_interactionService);
         Services.Add<IDispatcher>(_dispatcher);
-        Services.Add<IJobManager>(new TestJobManager());
+        _jobManager = new DeterministicJobManager(_asyncVoidExecutor);
+        Services.Add<IJobManager>(_jobManager);
+        Services.Add<IUpdateService>(new UpdateService(Services));
         Services.Add<IEventManager>(eventManager);
         Services.Add<IModActionService>(new ModActionService());
         Services.Add<IStorageService>(new StorageService());
@@ -101,11 +66,11 @@ internal class Model : IDisposable
         Services.Add(types);
 
         var settings = new MockSettings();
-        foreach (var repository in modelBuildParams.Repositories)
+        foreach (var repository in repositories ?? new List<string>())
         {
             settings.Repositories.Add(new RepositoryEntry(repository, "BSO", repository, Guid.NewGuid()));
         }
-        foreach (var storage in modelBuildParams.Storages)
+        foreach (var storage in storages ?? new List<string>())
         {
             settings.Storages.Add(new StorageEntry(storage , "DIRECTORY", storage, Guid.NewGuid()));
         }
@@ -113,156 +78,94 @@ internal class Model : IDisposable
         persistentState.CheckIsFirstStart();
         var model = new BSU.Core.Model.Model(persistentState, Services);
         Services.Add<IModel>(model);
+        
+        //new PresetGeneratorActor(Services);
+        //new BiKeyCopyActor(Services);
+        new AutoSelectionActor(Services);
+        new EventCombineActor(Services);
 
         var vm = new ViewModel.ViewModel(Services);
+        
 
         model.Load();
 
-        if (modelBuildParams.SteamLoaded)
-        {
-            _storages["steam"].LoadEmpty();
-        }
+        _interactionService.SetViewModel(vm);
 
-        return vm;
+        _model = vm;
     }
 
     private IStorage CreateStorage(string url, bool isSteam)
     {
-        var storage = new TestStorage(_testModelInterface, !isSteam);
+        var storage = new TestStorage(!isSteam);
         _storages.Add(url, storage);
         return storage;
     }
 
     private IRepository CreateRepository(string url)
     {
-        var repo = new TestRepository(_testModelInterface);
+        var repo = new TestRepository();
         _repositories.Add(url, repo);
         return repo;
-    }
-
-    private object? HandleInteraction(ModelActionContext context)
-    {
-        var oldContext = _currentContext;
-        _currentContext = context;
-        var result = WorkLoop(context);
-        _currentContext = oldContext;
-        return result;
-    }
-
-    private void ModelThread(object? buildParamsObj)
-    {
-        try
-        {
-            var buildParams = (ModelBuildParams)buildParamsObj!;
-            var model = BuildModel(buildParams);
-            _dispatcher.Work();
-            var context = new ModelActionContext(model, new TestClosable());
-            _currentContext = context;
-            WorkLoop(context);
-        }
-        catch (Exception e)
-        {
-            _modelThreadException = e;
-            _modelThreadSuspended.Set();
-        }
-    }
-
-    private object? WorkLoop(ModelActionContext context)
-    {
-        while (true)
-        {
-            if (_shutDown) return null;
-            _modelThreadSuspended.Set();
-            while (!_shutDown)
-            {
-                if (_modelThreadContinue.WaitOne(100))
-                    break;
-                if (_shutDown)
-                    _logger.Warn("Failed to shutdown properly");
-            }
-            if (_shutDown)
-            {
-                _modelThreadSuspended.Set();
-                return null;
-            }
-            _modelThreadAction!();
-            _dispatcher.Work();
-            if (context.Dialog.TryGetResult(out var dialogResult))
-                return dialogResult;
-        }
-    }
-
-    public void Do(Action action)
-    {
-        if (Thread.CurrentThread == _modelThread)
-            throw new InvalidOperationException("Can only be called from the test/user thread");
-        if (_modelThreadException != null) throw new InvalidOperationException("Model is in a faulted state!");
-        _modelThreadAction = action;
-        _modelThreadContinue.Set();
-        _modelThreadSuspended.WaitOne();
-        CheckException();
-    }
-
-    public void Dispose()
-    {
-        _shutDown = true;
-        _modelThreadContinue.Set();
-        _modelThread.Join();
-        CheckErrorEvents();
-    }
-
-    public void CheckErrorEvents()
-    {
-        Assert.Empty(ErrorEvents);
-        ErrorEvents.Clear();
-    }
-
-    public void WaitFor(int timeoutMs, Func<bool> condition, Func<string>? timeoutMessage = null)
-    {
-        var start = DateTime.Now;
-        while ((DateTime.Now - start).TotalMilliseconds < timeoutMs)
-        {
-            if (condition()) return;
-            Do(() => { });
-            Thread.Sleep(1);
-        }
-        throw new TimeoutException(timeoutMessage?.Invoke());
     }
 
     public TestRepository GetRepository(string url) => _repositories[url];
 
     public TestStorage GetStorage(string path) => _storages[path];
 
-    public Dialog<T> WaitForDialog<T>(int timeoutMs = 100)
+    public async Task<Dialog<T>> WaitForDialog<T>()
     {
-        var start = DateTime.Now;
-        while ((DateTime.Now - start).TotalMilliseconds < timeoutMs)
+        for (int i = 0; i < TaskYieldLimit; i++)
         {
-            if (_currentContext.Active is T active)
-                return new Dialog<T>(active, _currentContext.Dialog);
-            Do(() => { });
+            if (_interactionService.GetCurrentDialog() is Dialog<T> dialog)
+                return dialog;
+            await Task.Yield();
         }
-        throw new TimeoutException();
+
+        throw new TaskYieldLimitReachedException();
+    }
+
+    private const int TaskYieldLimit = 100;
+
+    public async ValueTask DisposeAsync()
+    {
+        var jobs = _jobManager.GetRunningJobs();
+        if (jobs.Any())
+            _outputHelper.WriteLine($"There are still running jobs: {string.Join(", ", jobs)}");
+        if (!await _asyncVoidExecutor.WaitForRunningTasks())
+            _outputHelper.WriteLine($"Unfinished tasks in the AsyncVoidExecutor");
     }
 }
 
-internal class Dialog<T>
+internal class TaskYieldLimitReachedException : Exception
 {
-    public T ViewModel { get; }
-    public IDialogContext Closable { get; }
+}
 
-    public Dialog(T viewModel, IDialogContext closable)
+internal class Dialog<TViewModel> : IDialog
+{
+    public TViewModel ViewModel { get; }
+    private readonly TaskCompletionSource<object?> _tcs;
+
+    public ICloseable Closable => new ClosableTask(r => _tcs.SetResult(r));
+
+    public Dialog(TViewModel viewModel, TaskCompletionSource<object?> tcs)
     {
         ViewModel = viewModel;
-        Closable = closable;
+        _tcs = tcs;
+    }
+
+    private class ClosableTask : ICloseable
+    {
+        private readonly Action<bool> _close;
+
+        public ClosableTask(Action<bool> close)
+        {
+            _close = close;
+        }
+
+        public void Close(bool result) => _close(result);
     }
 }
 
-internal record ModelActionContext(object Active, IDialogContext Dialog);
-
-internal class ModelFailedException : Exception
+internal interface IDialog
 {
-    public ModelFailedException(Exception modelThreadException) : base("Model failed", modelThreadException)
-    {
-    }
 }

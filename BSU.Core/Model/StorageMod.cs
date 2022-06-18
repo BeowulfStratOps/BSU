@@ -107,7 +107,7 @@ namespace BSU.Core.Model
 
         private void Load(bool withUpdateTarget)
         {
-            _jobManager.Run(() => LoadAsync(CancellationToken.None), getResult =>
+            _jobManager.Run("Load Storage Mod", () => LoadAsync(CancellationToken.None), getResult =>
             {
                 try
                 {

@@ -12,23 +12,14 @@ namespace BSU.Core.Tests.ActionBased.TestModel;
 
 internal class TestStorageMod : IStorageMod
 {
-    private readonly TestModelInterface _testModelInterface;
     private readonly TaskCompletionSource _loadTcs = new();
     private readonly object _fileLock = new();
     public Dictionary<string, byte[]> Files = new();
 
-    public TestStorageMod(TestModelInterface testModelInterface)
+    public void Load(Dictionary<string, byte[]> files)
     {
-        _testModelInterface = testModelInterface;
-    }
-
-    public void Load(Dictionary<string, byte[]> files, bool createdForDownload)
-    {
-        _testModelInterface.DoInModelThread(() =>
-        {
-            Files = files;
-            _loadTcs.SetResult();
-        }, !createdForDownload);
+        Files = files;
+        _loadTcs.SetResult();
     }
 
     public async Task<Stream> OpenWrite(string path, CancellationToken cancellationToken)

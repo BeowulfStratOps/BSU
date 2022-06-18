@@ -53,7 +53,7 @@ public class EventManager : IEventManager
         stopWatch.Start();
 
         var guid = Guid.NewGuid();
-        _logger.Trace($"Executing {list.Count} handler(s) for  event {evt}-{guid}.");
+        _logger.Trace($"Executing {list.Count} handler(s) for event {evt}-{guid}.");
         foreach (var handler in list.Cast<Action<T>>())
         {
             handler(@evt);

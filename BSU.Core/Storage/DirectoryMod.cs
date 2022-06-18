@@ -133,8 +133,8 @@ namespace BSU.Core.Storage
 
         public Dictionary<Type, Func<CancellationToken, Task<IModHash>>> GetHashFunctions() => new()
         {
-            { typeof(VersionHash), async ct => await _jobManager.Run(() => VersionHash.CreateAsync(this, ct), ct)},
-            { typeof(MatchHash), async ct => await _jobManager.Run(() => MatchHash.CreateAsync(this, ct), ct)},
+            { typeof(VersionHash), async ct => await _jobManager.Run("Version Hash", () => VersionHash.CreateAsync(this, ct), ct)},
+            { typeof(MatchHash), async ct => await _jobManager.Run("Match Hash", () => MatchHash.CreateAsync(this, ct), ct)},
         };
     }
 }

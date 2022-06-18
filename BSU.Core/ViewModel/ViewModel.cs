@@ -11,7 +11,7 @@ using BSU.Core.ViewModel.Util;
 
 namespace BSU.Core.ViewModel
 {
-    public class ViewModel : ObservableBase, IViewModelService, INavigator
+    public class ViewModel : ObservableBase, IViewModelService
     {
         internal readonly RepositoriesPage RepoPage;
         internal readonly StoragePage StoragePage;
@@ -22,6 +22,7 @@ namespace BSU.Core.ViewModel
             _serviceProvider = services;
             _dispatcher = services.Get<IDispatcher>();
             var eventManager = services.Get<IEventManager>();
+            var asyncVoidExecutor = services.Get<IAsyncVoidExecutor>();
             
             eventManager.Subscribe<ErrorEvent>(AddError);
             eventManager.Subscribe<NotificationEvent>(AddNotification);
@@ -29,16 +30,16 @@ namespace BSU.Core.ViewModel
             RepoPage = new RepositoriesPage(_serviceProvider, this);
             StoragePage = new StoragePage(_serviceProvider, this);
             Navigator = new Navigator(RepoPage);
-            Settings = new DelegateCommand(OpenSettings);
+            Settings = new DelegateCommand(() => asyncVoidExecutor.Execute(OpenSettings));
         }
 
-        private void OpenSettings()
+        private async Task OpenSettings()
         {
             var interactionService = _serviceProvider.Get<IInteractionService>();
             var model = _serviceProvider.Get<IModel>();
             var themeService = _serviceProvider.Get<IThemeService>();
             var vm = new GlobalSettings(model.GetSettings(), themeService);
-            if (interactionService.GlobalSettings(vm))
+            if (await interactionService.GlobalSettings(vm))
                 model.SetSettings(vm.ToModelSettings());
             else
                 themeService.SetTheme(model.GetSettings().Theme!); // reset theme
@@ -61,9 +62,9 @@ namespace BSU.Core.ViewModel
             Navigator.Back();
         }
 
-        IModelStorage? IViewModelService.AddStorage()
+        async Task<IModelStorage?> IViewModelService.AddStorage()
         {
-            return StoragePage.DoAddStorage();
+            return await StoragePage.DoAddStorage();
         }
 
         public ObservableCollection<Notification> Notifications { get; } = new();

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;
@@ -22,7 +23,8 @@ namespace BSU.Core.ViewModel
             Navigator = navigator;
             var model = services.Get<IModel>();
             _model = model;
-            AddStorage = new DelegateCommand(() => DoAddStorage());
+            var asyncVoidExecutor = services.Get<IAsyncVoidExecutor>();
+            AddStorage = new DelegateCommand(() => asyncVoidExecutor.Execute(DoAddStorage));
             model.AddedStorage += OnAddStorage;
             model.RemovedStorage += storage =>
             {
@@ -41,10 +43,10 @@ namespace BSU.Core.ViewModel
             Storages.Add(storage);
         }
 
-        internal IModelStorage? DoAddStorage()
+        internal async Task<IModelStorage?> DoAddStorage()
         {
             // TODO: could be in a separate class
-            var dialogResult = _services.Get<IDialogService>().AddStorage();
+            var dialogResult = await _services.Get<IDialogService>().AddStorage();
             if (dialogResult == null) return null;
             return _model.AddStorage(dialogResult.Type, dialogResult.Path, dialogResult.Name);
         }

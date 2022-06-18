@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
@@ -64,7 +65,8 @@ namespace BSU.Core.ViewModel
         {
             _isLoading = storage.State == LoadingState.Loading;
             CanWrite = storage.CanWrite;
-            Delete = new DelegateCommand(DoDelete, storage.State != LoadingState.Loading);
+            var asyncVoidExecutor = serviceProvider.Get<IAsyncVoidExecutor>();
+            Delete = new DelegateCommand(() => asyncVoidExecutor.Execute(DoDelete), storage.State != LoadingState.Loading);
             ToggleShowMods = new DelegateCommand(() => IsShowingMods = !IsShowingMods);
             ModelStorage = storage;
             var model = serviceProvider.Get<IModel>();
@@ -102,7 +104,7 @@ namespace BSU.Core.ViewModel
             KeepMods
         }
 
-        private void DoDelete()
+        private async Task DoDelete()
         {
             if (!_storage.IsAvailable() || !_storage.CanWrite) // Errored loading, probably because the folder doesn't exist anymore. or steam
             {
@@ -120,13 +122,13 @@ namespace BSU.Core.ViewModel
                 { DeletionTypeEnum.Cancel, "Cancel" },
             };
 
-            var removeMods =  _interactionService.OptionsPopup(text, "Remove Storage", options, MessageImageEnum.Question);
+            var removeMods = await _interactionService.OptionsPopup(text, "Remove Storage", options, MessageImageEnum.Question);
             if (removeMods == DeletionTypeEnum.Cancel) return;
 
 
             if (removeMods == DeletionTypeEnum.DeleteMods)
             {
-                _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImageEnum.Error);
+                await _interactionService.MessagePopup("Removing mods is not supported yet.", "Not supported", MessageImageEnum.Error);
                 return;
             }
 
