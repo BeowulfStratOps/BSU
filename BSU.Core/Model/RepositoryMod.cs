@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
@@ -156,7 +157,7 @@ namespace BSU.Core.Model
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
                 if (action != ModActionEnum.Update && action != ModActionEnum.ContinueUpdate && action != ModActionEnum.AbortAndUpdate) return null;
 
-                var updateTarget = new UpdateTarget(_hashes, storageMod.Identifier);
+                var updateTarget = new UpdateTarget(_hashes.GetAll().ToList(), storageMod.Identifier);
                 var updateTask = storageMod.Update(_implementation, updateTarget, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, storageMod);
             }
@@ -165,7 +166,7 @@ namespace BSU.Core.Model
             {
                 var mod = await actionDownload.DownloadStorage.CreateMod(actionDownload.DownloadName, _hashes);
                 Selection = new ModSelectionStorageMod(mod);
-                var target = new UpdateTarget(_hashes, actionDownload.DownloadName);
+                var target = new UpdateTarget(_hashes.GetAll().ToList(), actionDownload.DownloadName);
                 var updateTask = mod.Update(_implementation, target, progress, cancellationToken);
                 return new ModUpdateInfo(updateTask, mod);
             }

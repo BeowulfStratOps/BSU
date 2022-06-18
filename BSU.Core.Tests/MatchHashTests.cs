@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
-using BSU.Core.Tests.Mocks;
 using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
 using Moq;
@@ -82,16 +80,6 @@ namespace BSU.Core.Tests
         }
 
         // TODO: test keys
-
-        private static void AddFiles(IMockedFiles mod, string[] names, string? name)
-        {
-            foreach (var fileName in names)
-            {
-                mod.SetFile(fileName, "");
-            }
-
-            if (name != null) mod.SetFile("/mod.cpp", "name=\"" + name.Replace("\"", "\\\"") + "\";");
-        }
 
         private static async Task<MatchHash> CreateStorageMod(string[] names, string? name)
         {

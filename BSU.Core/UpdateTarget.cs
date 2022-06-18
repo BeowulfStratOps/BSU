@@ -1,4 +1,4 @@
-﻿using BSU.Core.Hashes;
+﻿using System.Collections.Generic;
 using BSU.CoreCommon.Hashes;
 
 namespace BSU.Core
@@ -6,5 +6,5 @@ namespace BSU.Core
     /// <summary>
     /// Represents a mod version an update is aiming for.
     /// </summary>
-    public record UpdateTarget(HashCollection Hashes, string Title);
+    public record UpdateTarget(List<IModHash> Hashes, string Title);
 }
