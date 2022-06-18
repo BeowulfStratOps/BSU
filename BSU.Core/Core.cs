@@ -70,6 +70,7 @@ namespace BSU.Core
             new BiKeyCopyActor(services);
             new AutoSelectionActor(services);
             new EventCombineActor(services);
+            new RepositoryStateActor(services);
 
             _viewModel = new ViewModel.ViewModel(services);
 
