@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Model;
-using BSU.Core.Tests.ActionBased.TestModel;
 using BSU.Core.Tests.Util;
+using BSU.Core.Tests.ViewModelIntegration.TestModel;
 using BSU.Core.ViewModel;
 using Xunit;
 using Xunit.Abstractions;
@@ -21,7 +21,7 @@ public class UserStories : LoggedTest
     [StaFact]
     private async Task TestDownload()
     {
-        var model = new TestModel.Model(OutputHelper);
+        var model = new ViewModelIntegration.TestModel.Model(OutputHelper);
 
         var vm = await model.WaitForDialog<ViewModel.ViewModel>();
         model.GetStorage("steam").Load();
@@ -81,7 +81,7 @@ public class UserStories : LoggedTest
     [StaFact]
     private async Task TestLoad()
     {
-        await using var model = new TestModel.Model(OutputHelper, new[] { "repo" }, new[] { "storage" });
+        await using var model = new ViewModelIntegration.TestModel.Model(OutputHelper, new[] { "repo" }, new[] { "storage" });
 
         var vm = await model.WaitForDialog<ViewModel.ViewModel>();
 
@@ -111,7 +111,7 @@ public class UserStories : LoggedTest
     [StaFact]
     private async Task TestSlowLoading()
     {
-        var model = new TestModel.Model(OutputHelper, new[] { "repo" }, new[] { "storage" });
+        var model = new ViewModelIntegration.TestModel.Model(OutputHelper, new[] { "repo" }, new[] { "storage" });
 
         var vm = await model.WaitForDialog<ViewModel.ViewModel>();
 
@@ -137,7 +137,7 @@ public class UserStories : LoggedTest
     [StaFact]
     private async Task TestShowStorageError()
     {
-        var model = new TestModel.Model(OutputHelper);
+        var model = new ViewModelIntegration.TestModel.Model(OutputHelper);
         model.GetStorage("steam").Load();
 
         var vm = await model.WaitForDialog<ViewModel.ViewModel>();
@@ -163,7 +163,7 @@ public class UserStories : LoggedTest
     [StaFact]
     private async Task TestDownloadWithSteam()
     {
-        var model = new TestModel.Model(OutputHelper, new[] { "test" }, new[] { "test" });
+        var model = new ViewModelIntegration.TestModel.Model(OutputHelper, new[] { "test" }, new[] { "test" });
 
         var vm = await model.WaitForDialog<ViewModel.ViewModel>();
 

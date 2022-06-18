@@ -14,7 +14,7 @@ using BSU.Core.ViewModel.Util;
 using BSU.CoreCommon;
 using Xunit.Abstractions;
 
-namespace BSU.Core.Tests.ActionBased.TestModel;
+namespace BSU.Core.Tests.ViewModelIntegration.TestModel;
 
 internal class Model : IAsyncDisposable
 {

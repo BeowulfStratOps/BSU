@@ -1,6 +1,6 @@
 ﻿using System.Windows.Input;
 
-namespace BSU.Core.Tests.ActionBased.TestModel;
+namespace BSU.Core.Tests.ViewModelIntegration.TestModel;
 
 public static class Extensions
 {

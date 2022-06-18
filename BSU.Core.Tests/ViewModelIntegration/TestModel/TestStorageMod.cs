@@ -8,7 +8,7 @@ using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
 using BSU.Hashes;
 
-namespace BSU.Core.Tests.ActionBased.TestModel;
+namespace BSU.Core.Tests.ViewModelIntegration.TestModel;
 
 internal class TestStorageMod : IStorageMod
 {
