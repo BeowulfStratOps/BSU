@@ -37,7 +37,7 @@ internal class HashManager
 
     public List<Type> GetSupportedTypes() => _hashFunctions.Keys.ToList();
 
-    public async Task Reset()
+    public async Task Reset(HashCollection newHashes)
     {
         _cts.Cancel();
         _cts = new CancellationTokenSource();
@@ -46,7 +46,7 @@ internal class HashManager
         var runningTasks = _hashTasks.Values.ToList();
         _hashTasks.Clear();
         
-        // TODO: make new functions available here
+        Set(newHashes);
 
         try
         {

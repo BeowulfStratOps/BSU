@@ -5,6 +5,7 @@ using BSU.Core.Concurrency;
 using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
+using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.ViewModel;
@@ -45,7 +46,9 @@ namespace BSU.Core
             services.Add<IAsyncVoidExecutor>(new AsyncVoidExecutor());
             services.Add(Types.Default);
             services.Add(dispatcher);
-            services.Add<IJobManager>(new JobManager(dispatcher));
+            var jobManager = new JobManager(dispatcher);
+            services.Add<IJobManager>(jobManager);
+            services.Add<IUpdateService>(new UpdateService(jobManager));
             services.Add(interactionService);
             services.Add<IDialogService>(new DialogService(services));
             services.Add(EventManager);

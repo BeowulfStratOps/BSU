@@ -7,6 +7,7 @@ using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
+using BSU.Core.Sync;
 using BSU.Core.Tests.Mocks;
 using BSU.Core.Tests.Util;
 using BSU.CoreCommon;
@@ -25,29 +26,22 @@ namespace BSU.Core.Tests
         
         // TODO: what should happen if a hash fails?
         private static StorageMod CreateStorageMod(int? match = null, int? version = null,
-            UpdateTarget? stateTarget = null, Func<bool>? shouldThrow = null)
+            UpdateTarget? stateTarget = null, bool loadingShouldThrow = false, Func<Task<UpdateResult>>? updateFunc = null)
         {
-            Func<Task<T>> ResultOrExceptionTask<T>(T value)
-            {
-                return () =>
-                {
-                    if (shouldThrow?.Invoke() ?? false)
-                        return Task.FromException<T>(new TestException());
-                    return Task.FromResult(value);
-                };
-            }
-
             var mockStorage = new Mock<IStorageMod>(MockBehavior.Strict);
-            mockStorage.Setup(m => m.GetTitle(It.IsAny<CancellationToken>())).Returns(ResultOrExceptionTask(""));
+            
+            if (loadingShouldThrow)
+                mockStorage.Setup(m => m.GetTitle(It.IsAny<CancellationToken>())).Returns(Task.FromException<string>(new TestException()));
+            else
+                mockStorage.Setup(m => m.GetTitle(It.IsAny<CancellationToken>())).Returns(Task.FromResult(""));
+            
+            
             var hashFuncs = new Dictionary<Type, Func<CancellationToken, Task<IModHash>>>();
             if (match != null)
-                hashFuncs.Add(typeof(TestMatchHash), _ => ResultOrExceptionTask((IModHash)new TestMatchHash((int)match))());
+                hashFuncs.Add(typeof(TestMatchHash), _ => Task.FromResult((IModHash)new TestMatchHash((int)match)));
             if (version != null)
-                hashFuncs.Add(typeof(TestVersionHash), _ => ResultOrExceptionTask((IModHash)new TestVersionHash((int)version))());
+                hashFuncs.Add(typeof(TestVersionHash), _ => Task.FromResult((IModHash)new TestVersionHash((int)version)));
             mockStorage.Setup(m => m.GetHashFunctions()).Returns(hashFuncs);
-
-            mockStorage.Setup(m => m.GetFileList(It.IsAny<CancellationToken>()))
-                .Returns(ResultOrExceptionTask(new List<string>()));
 
             var state = new Mock<IPersistedStorageModState>(MockBehavior.Strict);
             state.SetupProperty(x => x.UpdateTarget, stateTarget);
@@ -58,17 +52,21 @@ namespace BSU.Core.Tests
             var serviceProvider = new ServiceProvider();
             serviceProvider.Add(eventBus.Object);
             serviceProvider.Add<IJobManager>(new TestJobManager());
+            var updateService = new Mock<IUpdateService>(MockBehavior.Strict);
+
+            if (updateFunc != null)
+                updateService.Setup(u => u.UpdateAsync(It.IsAny<IRepositoryMod>(), It.IsAny<IStorageMod>(),
+                    It.IsAny<CancellationToken>(), It.IsAny<IProgress<FileSyncStats>?>())).Returns(updateFunc);
+            
+            serviceProvider.Add(updateService.Object);
             var storageMod = new StorageMod(mockStorage.Object, "mystorage", state.Object, null!, true, serviceProvider);
 
             return storageMod;
         }
 
-        private static IRepositoryMod CreateRepoMod(int match, int version)
+        private static IRepositoryMod CreateRepoMod()
         {
             var mock = new Mock<IRepositoryMod>(MockBehavior.Strict);
-
-            mock.Setup(m => m.GetFileList(It.IsAny<CancellationToken>())).Returns(Task.FromResult(new List<string>()));
-
             return mock.Object;
         }
 
@@ -103,54 +101,37 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
-        private void UpdateWithTarget()
+        private async Task UpdateWithTarget()
         {
-            var storageMod = CreateStorageMod(stateTarget: CreateUpdateTarget(1, 1));
+            var tcs = new TaskCompletionSource<UpdateResult>();
+            var storageMod = CreateStorageMod(stateTarget: CreateUpdateTarget(1, 1), updateFunc: () => tcs.Task);
 
-            var repo = CreateRepoMod(2, 2);
-            storageMod.Update(repo, CreateUpdateTarget(2, 2), null, CancellationToken.None);
-            // TODO: wait for preparation, but not actual update?
+            var repo = CreateRepoMod();
+            var update = storageMod.Update(repo, CreateUpdateTarget(2, 2), null, CancellationToken.None);
 
             Assert.Equal(StorageModStateEnum.Updating, storageMod.GetState());
             CheckHashes(storageMod, 2, 2);
+
+            tcs.SetResult(UpdateResult.Success);
+            await update;
         }
 
         [Fact]
         private async Task Updated()
         {
-            var storageMod = CreateStorageMod();
+            var storageMod = CreateStorageMod(updateFunc: () => Task.FromResult(UpdateResult.Success));
 
-            var repo = CreateRepoMod(2, 2);
-            var update = storageMod.Update(repo, CreateUpdateTarget(2, 2), null, CancellationToken.None);
-            await update;
+            var repo = CreateRepoMod();
+            await storageMod.Update(repo, CreateUpdateTarget(2, 2), null, CancellationToken.None);
 
             Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
             CheckHashes(storageMod, 2, 2);
         }
 
         [Fact]
-        private async Task UpdateAborted()
-        {
-            var storageMod = CreateStorageMod();
-
-            var repo = CreateRepoMod(2, 2);
-
-            var cts = new CancellationTokenSource();
-
-            var update = storageMod.Update(repo, CreateUpdateTarget(2, 2), null, cts.Token);
-
-            OutputHelper.WriteLine("Cancelling now");
-            cts.Cancel();
-            await update;
-
-            Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
-            CheckHashes(storageMod, 2, 2);
-        }
-
-        [Fact]
         private void ErrorLoad()
         {
-            var storageMod = CreateStorageMod(match: 1, shouldThrow: () => true);
+            var storageMod = CreateStorageMod(match: 1, loadingShouldThrow: true);
             
             Assert.Equal(StorageModStateEnum.Error, storageMod.GetState());
         }
@@ -158,18 +139,14 @@ namespace BSU.Core.Tests
         [Fact]
         private async Task ErrorUpdate()
         {
-            var shouldThrow = false;
-            var storageMod = CreateStorageMod(shouldThrow: () => shouldThrow);
+            var storageMod = CreateStorageMod(updateFunc: () => Task.FromResult(UpdateResult.Failed));
 
-            var repo = CreateRepoMod(2, 2);
+            var repo = CreateRepoMod();
+
+            await storageMod.Update(repo, CreateUpdateTarget(2, 2), null, CancellationToken.None);
             
-            shouldThrow = true;
+            Assert.Equal(StorageModStateEnum.CreatedWithUpdateTarget, storageMod.GetState());
 
-            var update = storageMod.Update(repo, CreateUpdateTarget(2, 2), null, CancellationToken.None);
-
-            var result = await update;
-
-            Assert.Equal(UpdateResult.Failed, result);
             CheckHashes(storageMod, 2, 2);
         }
     }
