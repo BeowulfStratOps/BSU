@@ -27,6 +27,7 @@ namespace BSU.Core.Model
 
         private readonly HashManager _hashes = new();
         private string? _title;
+        private Dictionary<string, byte[]>? _keyFiles = null;
 
         private readonly ILogger _logger;
 
@@ -73,18 +74,26 @@ namespace BSU.Core.Model
             }
         }
 
-        private async Task<string> LoadAsync(CancellationToken cancellationToken)
+        private async Task<(string title, Dictionary<string, byte[]> keyFiles)> LoadAsync(CancellationToken cancellationToken)
         {
             var title = await _implementation.GetTitle(cancellationToken);
+            var keyFiles = await GetKeyFilesAsync(cancellationToken);
 
-            return title;
+            return (title, keyFiles);
         }
 
         private static readonly Regex BikeyRegex = new("^/keys/([^/]+.bikey)$", RegexOptions.Compiled);
         private readonly IJobManager _jobManager;
         private readonly IUpdateService _updateService;
 
-        public async Task<Dictionary<string, byte[]>> GetKeyFiles(CancellationToken cancellationToken)
+        public Dictionary<string, byte[]> GetKeyFiles()
+        {
+            if (State != StorageModStateEnum.Created) throw new InvalidOperationException();
+            if (_keyFiles == null) throw new NullReferenceException(nameof(_keyFiles));
+            return _keyFiles!;
+        }
+
+        private async Task<Dictionary<string, byte[]>> GetKeyFilesAsync(CancellationToken cancellationToken)
         {
             var result = new Dictionary<string, byte[]>();
 
@@ -111,7 +120,7 @@ namespace BSU.Core.Model
             {
                 try
                 {
-                    _title = getResult();
+                    (_title, _keyFiles) = getResult();
                     
                     foreach (var (type, func) in _implementation.GetHashFunctions())
                     {
@@ -163,7 +172,9 @@ namespace BSU.Core.Model
 
             var result = await _updateService.UpdateAsync(repositoryMod, _implementation, cancellationToken, progress);
 
-            _dispatcher.ExecuteSynchronized(() =>
+            _keyFiles = await GetKeyFilesAsync(CancellationToken.None);
+            
+                _dispatcher.ExecuteSynchronized(() =>
             {
                 if (result == UpdateResult.Success)
                 {

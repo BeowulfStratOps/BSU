@@ -15,11 +15,13 @@ internal class BiKeyCopyActor
     private readonly Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly IRepositoryStateService _stateService;
     private readonly DirectoryInfo? _keyDirectory;
+    private readonly IModel _model;
 
     public BiKeyCopyActor(IServiceProvider serviceProvider)
     {
         var eventManager = serviceProvider.Get<IEventManager>();
         _stateService = serviceProvider.Get<IRepositoryStateService>();
+        _model = serviceProvider.Get<IModel>();
 
         var gamePath = ArmaData.GetGamePath();
 
@@ -38,9 +40,7 @@ internal class BiKeyCopyActor
 
     private void CheckRepository(IModelRepository repository)
     {
-        // TODO
-        /*
-        var state = _stateService.GetStateFor(repository);
+        var state = _stateService.GetRepositoryState(repository, _model.GetRepositoryMods());
         if (state != CalculatedRepositoryStateEnum.Ready && state != CalculatedRepositoryStateEnum.ReadyPartial) return;
 
         // enumerate once, as we call the CheckRepository function a LOT, and in most cases we don't need to change anything
@@ -59,6 +59,5 @@ internal class BiKeyCopyActor
                 File.WriteAllBytes(keyPath, content);
             }
         }
-        */
     }
 }
