@@ -56,7 +56,7 @@ internal class MockStorageMod : IModelStorageMod
 
     public StorageModStateEnum GetState() => _state;
 
-    public Task<Dictionary<string, byte[]>> GetKeyFiles(CancellationToken token)
+    public Dictionary<string, byte[]> GetKeyFiles()
     {
         throw new NotImplementedException();
     }

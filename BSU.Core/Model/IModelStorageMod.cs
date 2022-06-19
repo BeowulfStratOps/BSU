@@ -28,7 +28,7 @@ namespace BSU.Core.Model
         StorageModStateEnum GetState();
         void Delete(bool removeData);
         string GetAbsolutePath();
-        Task<Dictionary<string, byte[]>> GetKeyFiles(CancellationToken token);
+        Dictionary<string, byte[]> GetKeyFiles();
         string GetTitle();
     }
 }
