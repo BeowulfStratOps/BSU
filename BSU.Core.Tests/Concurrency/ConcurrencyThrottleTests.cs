@@ -7,7 +7,6 @@ using BSU.Core.Concurrency;
 using BSU.Core.Tests.Util;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace BSU.Core.Tests.Concurrency;
 
@@ -19,159 +18,113 @@ public class ConcurrencyThrottleTest : LoggedTest
 
     private class WorkUnit
     {
-        private readonly int _delayMs;
-        private readonly Action? _onStarted;
-        private readonly Action? _onFinished;
+        private readonly Func<Task> _createTask;
+        public Task? Task;
 
-        public WorkUnit(int delayMs, Action? onStarted = null, Action? onFinished = null)
+        public WorkUnit(Func<Task> createTask)
         {
-            _delayMs = delayMs;
-            _onStarted = onStarted;
-            _onFinished = onFinished;
+            _createTask = createTask;
         }
-        public bool WasCalled { get; private set; }
 
-        public async Task Do()
+        public Task Do()
         {
-            WasCalled = true;
-            _onStarted?.Invoke();
-            await Task.Delay(_delayMs);
-            _onFinished?.Invoke();
+            
+            if (Task != null)
+                throw new InvalidOperationException();
+            Task = _createTask();
+            return Task;
         }
     }
 
     [Fact]
     private async Task Success()
     {
+        var tcs = new TaskCompletionSource();
+        
         var infos = new List<WorkUnit>
         {
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
+            new(() => tcs.Task),
         };
 
-        var startTime = DateTime.Now;
+        var throttleTask = ConcurrencyThrottle.Do(infos, i => i.Do(), CancellationToken.None);
 
-        await ConcurrencyThrottle.Do(infos, i => i.Do(), CancellationToken.None);
+        Assert.False(throttleTask.IsCompleted);
+        tcs.SetResult();
 
-        var duration = (DateTime.Now - startTime).TotalSeconds;
-        Assert.True(duration < 3);
-        Assert.All(infos, info => Assert.True(info.WasCalled));
+        await throttleTask;
+
+        Assert.All(infos, info => Assert.True(info.Task is { IsCompletedSuccessfully: true }));
     }
 
     [Fact]
     private async Task Cancel()
     {
-        var cts = new CancellationTokenSource();
+        var tcs1 = new TaskCompletionSource();
+        var tcs2 = new TaskCompletionSource();
 
         var infos = new List<WorkUnit>
         {
-            new(2000),
-            new(2000),
-            new(2000),
-            new(2000),
-            new(1000, onFinished: cts.Cancel),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
+            new(() => tcs1.Task),
+            new(() => tcs1.Task),
+            new(() => tcs1.Task),
+            new(() => tcs2.Task),
+            new(() => tcs2.Task),
+            new(() => tcs2.Task),
+            new(() => tcs2.Task),
+            new(() => tcs2.Task),
+            new(() => tcs2.Task),
+            new(() => tcs2.Task),
+            new(() => tcs1.Task),
+            new(() => tcs1.Task),
         };
 
-        var startTime = DateTime.Now;
+        var cts = new CancellationTokenSource();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(
-            () => ConcurrencyThrottle.Do(infos, i => i.Do(), cts.Token));
+        var throttleTask = ConcurrencyThrottle.Do(infos, i => i.Do(), cts.Token);
+        
+        tcs1.SetResult();
+        cts.Cancel();
+        tcs2.SetCanceled(cts.Token);
 
-        var duration = (DateTime.Now - startTime).TotalSeconds;
-        Assert.True(duration < 3);
-        var called = infos.Count(wu => wu.WasCalled);
-        if (called > 7)
-            throw new AssertActualExpectedException("<=6", called, "Called more than expected");
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => throttleTask);
+
+        var succeeded = infos.Count(wu => wu.Task?.IsCompletedSuccessfully ?? false);
+        Assert.Equal(3, succeeded);
     }
 
     [Fact]
-    private async Task Exception()
+    private async Task Exceptions()
     {
-        async Task Test()
-        {
-            await Task.Delay(100);
-            throw new TestException();
-        }
-
-        await Test().ContinueWith(async t =>
-        {
-            await t;
-        });
-
-        var cts = new CancellationTokenSource();
-
         var infos = new List<WorkUnit>
         {
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000, onFinished: () => throw new TestException()),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
+            new(() => Task.CompletedTask),
+            new(() => Task.CompletedTask),
+            new(() => Task.FromException(new TestException())),
+            new(() => Task.FromException(new TestException())),
+            new(() => Task.FromException(new TestException())),
+            new(() => Task.FromException(new TestException())),
+            new(() => Task.FromException(new TestException())),
+            new(() => Task.CompletedTask),
+            new(() => Task.CompletedTask),
+            new(() => Task.CompletedTask),
+            new(() => Task.CompletedTask),
+            new(() => Task.CompletedTask)
         };
 
-        var startTime = DateTime.Now;
+        var throttleTask = ConcurrencyThrottle.Do(infos, i => i.Do(), CancellationToken.None);
+        await Assert.ThrowsAnyAsync<Exception>(() => throttleTask);
 
-        await Assert.ThrowsAsync<TestException>(() => ConcurrencyThrottle.Do(infos, i => i.Do(), cts.Token));
-
-        var duration = (DateTime.Now - startTime).TotalSeconds;
-        Assert.True(duration < 3);
-        Assert.All(infos, info => Assert.True(info.WasCalled));
-    }
-
-    [Fact]
-    private async Task ManyExceptions()
-    {
-        async Task Test()
-        {
-            await Task.Delay(100);
-            throw new TestException();
-        }
-
-        await Test().ContinueWith(async t =>
-        {
-            await t;
-        });
-
-        var cts = new CancellationTokenSource();
-
-        var infos = new List<WorkUnit>
-        {
-            new(1000, onFinished: () => throw new TestException()),
-            new(1000, onFinished: () => throw new TestException()),
-            new(1000, onFinished: () => throw new TestException()),
-            new(1000, onFinished: () => throw new TestException()),
-            new(1000, onFinished: () => throw new TestException()),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-            new(1000),
-        };
-
-        var startTime = DateTime.Now;
-
-        await Assert.ThrowsAsync<TestException>(() => ConcurrencyThrottle.Do(infos, i => i.Do(), cts.Token));
-
-        var duration = (DateTime.Now - startTime).TotalSeconds;
-        Assert.True(duration < 3);
-        Assert.All(infos, info => Assert.True(info.WasCalled));
+        Assert.Equal(7, infos.Count(i => i.Task!.IsCompletedSuccessfully));
     }
 }
