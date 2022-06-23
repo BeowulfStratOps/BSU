@@ -9,6 +9,7 @@ namespace BSU.Core.Concurrency
     {
         private static readonly SemaphoreSlim Semaphore = new(5); // TODO: get from config
 
+        // This only limits concurrent tasks, it does not provide any parallel execution on its own -> created tasks should be on the threadpool for this to be really useful
         public static async Task Do<T>(IEnumerable<T> workItems, Func<T, Task> taskCreator, CancellationToken cancellationToken)
         {
             var started = new List<Task>();
