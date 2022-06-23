@@ -94,6 +94,8 @@ internal class AutoSelectionService : IAutoSelectionService
 
     public ModSelection? GetSelection(IModel model, IModelRepositoryMod mod, IAutoSelectionService.SteamUsage steamUsage)
     {
+        if (mod.State == LoadingState.Error) return new ModSelectionDisabled();
+        
         _logger.Trace($"Checking auto-selection for mod {mod.Identifier}");
 
         if (model.GetStorages().Any(s => s.State == LoadingState.Loading)) return new ModSelectionLoading();
@@ -133,6 +135,8 @@ internal class AutoSelectionService : IAutoSelectionService
     {
         var currentSelection = mod.GetCurrentSelection();
 
+        if (mod.State == LoadingState.Error && currentSelection is not ModSelectionDisabled) return true;
+        
         return currentSelection switch
         {
             ModSelectionNone => true,

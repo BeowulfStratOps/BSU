@@ -159,5 +159,32 @@ namespace BSU.Core.Tests.AutoSelectionTests
 
             Assert.IsType<ModSelectionNone>(selection);
         }
+        
+        [Fact]
+        private void RepoModError()
+        {
+            var (model, repo, storage) = GetModel();
+
+            storage.AddMod(1, 1);
+            var repoMod = repo.AddMod(state: LoadingState.Error);
+
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
+
+            Assert.IsType<ModSelectionDisabled>(selection);
+        }
+        
+        [Fact]
+        private void RepoModErrorPlusSteam()
+        {
+            var (model, repo, storage) = GetModel();
+
+            storage.AddMod(1, 1);
+            storage.AddMod(0, 0, canWrite: false);
+            var repoMod = repo.AddMod(state: LoadingState.Error);
+
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
+
+            Assert.IsType<ModSelectionDisabled>(selection);
+        }
     }
 }

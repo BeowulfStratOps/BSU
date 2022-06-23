@@ -76,4 +76,23 @@ public class RepositoryLifecycleTests : LoggedTest
 
         Assert.Equal(PersistedSelection.FromSelection(new ModSelectionDisabled()), saved);
     }
+    
+    [Fact]
+    private void ErrorSetsSelectionToDisabled()
+    {
+        var implementation = new Mock<IRepositoryMod>(MockBehavior.Strict);
+        implementation.Setup(i => i.GetHashes(It.IsAny<CancellationToken>()))
+            .Returns(Task.FromException<HashCollection>(new TestException()));
+       
+        IPersistedRepositoryModState state = new PersistedRepositoryModState(() => null, _ => { });
+        var services = new ServiceProvider();
+        services.Add<IDispatcher>(null!);
+        services.Add<IJobManager>(new TestJobManager());
+        services.Add<IEventManager>(new EventManager());
+        services.Add<IModActionService>(new ModActionService());
+        var repoMod = new RepositoryMod(implementation.Object, "asdf", state, null!, services);
+
+        Assert.Equal(LoadingState.Error, repoMod.State);
+        Assert.IsType<ModSelectionDisabled>(repoMod.GetCurrentSelection());
+    }
 }

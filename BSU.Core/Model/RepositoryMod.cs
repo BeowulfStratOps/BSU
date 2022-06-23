@@ -102,8 +102,8 @@ namespace BSU.Core.Model
                 }
                 catch (Exception e)
                 {
-                    // TODO: not shown in gui atm -> should show up as errored, but no notification
                     _logger.Error(e);
+                    Selection = new ModSelectionDisabled();
                     State = LoadingState.Error;
                 }
             }, CancellationToken.None);
@@ -142,16 +142,14 @@ namespace BSU.Core.Model
 
         public async Task<ModUpdateInfo?> StartUpdate(IProgress<FileSyncStats>? progress, CancellationToken cancellationToken)
         {
-            if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
-
-            if (Selection == null) throw new InvalidOperationException("Can't update if the selection is null");
-
             // TODO: switch
 
             if (Selection is ModSelectionDisabled) return null;
 
             if (Selection is ModSelectionStorageMod actionStorageMod)
             {
+                if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
+
                 var storageMod = actionStorageMod.StorageMod;
                 var action = _modActionService.GetModAction(this, storageMod);
                 if (action == ModActionEnum.AbortActiveAndUpdate) throw new NotImplementedException();
@@ -164,6 +162,8 @@ namespace BSU.Core.Model
 
             if (Selection is ModSelectionDownload actionDownload)
             {
+                if (State != LoadingState.Loaded) throw new InvalidOperationException($"Not allowed in State {State}");
+
                 var mod = await actionDownload.DownloadStorage.CreateMod(actionDownload.DownloadName, _hashes);
                 Selection = new ModSelectionStorageMod(mod);
                 var target = new UpdateTarget(_hashes.GetAll().ToList(), actionDownload.DownloadName);
