@@ -42,8 +42,11 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" IsHitTestVisible="False" VerticalAlignment="Center">
                     <TextBlock Margin="3, 0"  DockPanel.Dock="Left" FontWeight="Bold" Text="{Binding Path=Name, FallbackValue=ModName}" />
                 </StackPanel>
+                
+                
+                <TextBlock Grid.Column="2" Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}" Foreground="{StaticResource IndicatorError}">Error: Failed to load</TextBlock>
 
-                <Grid Grid.Column="2" DockPanel.Dock="Right" MouseLeftButtonDown="SelectedMouseDown" MouseLeftButtonUp="SelectedMouseUp">
+                <Grid Grid.Column="2" MouseLeftButtonDown="SelectedMouseDown" MouseLeftButtonUp="SelectedMouseUp" Visibility="{Binding NotHasError, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid.Style>
                         <Style TargetType="Grid">
                             <Setter Property="Background" Value="{Binding StripeIndex, Converter={StaticResource StripeColorBrushConverter}}"></Setter>

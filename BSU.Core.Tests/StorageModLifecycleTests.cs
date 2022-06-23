@@ -28,6 +28,9 @@ namespace BSU.Core.Tests
             UpdateTarget? stateTarget = null, bool loadingShouldThrow = false, Func<Task<UpdateResult>>? updateFunc = null)
         {
             var mockStorage = new Mock<IStorageMod>(MockBehavior.Strict);
+
+            mockStorage.Setup(m => m.GetFileList(It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(new List<string>()));
             
             if (loadingShouldThrow)
                 mockStorage.Setup(m => m.GetTitle(It.IsAny<CancellationToken>())).Returns(Task.FromException<string>(new TestException()));

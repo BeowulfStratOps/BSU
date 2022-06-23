@@ -30,6 +30,22 @@ namespace BSU.Core.ViewModel
             }
         }
 
+        private bool _hasError;
+
+        public bool HasError
+        {
+            get => _hasError;
+            set
+            {
+                if (_hasError == value) return;
+                _hasError = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(NotHasError));
+            }
+        }
+
+        public bool NotHasError => !_hasError;
+
         public FileSyncProgress UpdateProgress { get; } = new();
 
         public ModActionTree Actions { get; }
@@ -46,9 +62,10 @@ namespace BSU.Core.ViewModel
             Actions = new ModActionTree(mod, services);
             Actions.SelectionChanged += () => SetSelectionFromView(Actions.Selection);
             Mod = mod;
+            HasError = Mod.State == LoadingState.Error;
             _stripeIndex = stripeIndex;
             Name = mod.Identifier;
-            ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded);
+            ToggleExpand = new DelegateCommand(() => IsExpanded = !IsExpanded && !HasError);
 
             mod.StateChanged += _ => OnStateChanged();
             services.Get<IEventManager>().Subscribe<AnythingChangedEvent>(_ => Update());
@@ -57,6 +74,7 @@ namespace BSU.Core.ViewModel
 
         private void OnStateChanged()
         {
+            HasError = Mod.State == LoadingState.Error;
             Info = Mod.GetModInfo();
         }
 
