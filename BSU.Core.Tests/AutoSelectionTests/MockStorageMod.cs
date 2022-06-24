@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
@@ -52,7 +50,7 @@ internal class MockStorageMod : IModelStorageMod
     public bool CanWrite { get; }
     public string Identifier { get; }
     public IModelStorage ParentStorage { get; }
-    public bool IsDeleted { get; }
+    public bool IsDeleted { get; } = false;
 
     public StorageModStateEnum GetState() => _state;
 

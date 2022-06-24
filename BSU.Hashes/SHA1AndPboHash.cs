@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,9 @@ namespace BSU.Hashes
                 {
                     var storedHash = new byte[20];
                     file.Seek(-20L, SeekOrigin.End);
-                    await file.ReadAsync(storedHash, 0, 20, cancellationToken);
+                    var read = await file.ReadAsync(storedHash, cancellationToken);
+                    if (read != storedHash.Length)
+                        throw new NotImplementedException();
                     return new Sha1AndPboHash(storedHash);
                 }
 

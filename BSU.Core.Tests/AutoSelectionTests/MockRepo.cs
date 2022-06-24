@@ -4,7 +4,6 @@ using BSU.Core.Launch;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.CoreCommon;
-using Moq;
 
 namespace BSU.Core.Tests.AutoSelectionTests;
 
@@ -26,7 +25,7 @@ internal class MockRepo : IModelRepository
 
     public List<IModelRepositoryMod> GetMods() => _mods;
 
-    public Guid Identifier { get; }
+    public Guid Identifier { get; } = Guid.NewGuid();
     public string Name { get; } = "";
     public LoadingState State { get; }
     public ServerInfo GetServerInfo()
@@ -35,7 +34,7 @@ internal class MockRepo : IModelRepository
     }
 
     public event Action<IModelRepository>? StateChanged;
-    public GameLaunchResult? Launch(GlobalSettings settings)
+    public GameLaunchResult Launch(GlobalSettings settings)
     {
         throw new NotImplementedException();
     }

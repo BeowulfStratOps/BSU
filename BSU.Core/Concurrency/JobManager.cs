@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BSU.CoreCommon;
 using NLog;
-using NLog.Fluent;
 
 namespace BSU.Core.Concurrency;
 

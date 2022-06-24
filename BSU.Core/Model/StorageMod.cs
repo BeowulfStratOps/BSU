@@ -27,7 +27,7 @@ namespace BSU.Core.Model
 
         private readonly HashManager _hashes = new();
         private string? _title;
-        private Dictionary<string, byte[]>? _keyFiles = null;
+        private Dictionary<string, byte[]>? _keyFiles;
 
         private readonly ILogger _logger;
 
@@ -105,9 +105,9 @@ namespace BSU.Core.Model
 
                 using var stream = await _implementation.OpenRead(file, cancellationToken);
                 var content = new byte[stream!.Length];
-                stream.Read(content);
-                // TODO: make sure we get everything
-                // TODO: make async
+                var read = stream.Read(content);
+                if (read != content.Length)
+                    throw new NotImplementedException();
                 result.Add(name, content);
             }
 

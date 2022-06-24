@@ -137,7 +137,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
         private void KeepSelectionFromPreviousRun()
         {
             var (model, repo, storage) = GetModel();
-            var storageMod1 = storage.AddMod();
+            storage.AddMod();
             var storageMod2 = storage.AddMod(state: StorageModStateEnum.Loading);
             var repoMod = repo.AddMod(previousSelection: PersistedSelection.FromSelection(new ModSelectionStorageMod(storageMod2)));
 
@@ -150,7 +150,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
         [Fact]
         private void MoveOnFromLoading()
         {
-            var (model, repo, storage) = GetModel();
+            var (model, repo, _) = GetModel();
 
             var repoMod = repo.AddMod();
             repoMod.SetSelection(new ModSelectionLoading());
@@ -165,7 +165,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
         {
             var (model, repo, storage) = GetModel();
 
-            storage.AddMod(1, 1);
+            storage.AddMod();
             var repoMod = repo.AddMod(state: LoadingState.Error);
 
             var selection = _autoSelector.GetAutoSelection(model, repoMod);
@@ -178,7 +178,7 @@ namespace BSU.Core.Tests.AutoSelectionTests
         {
             var (model, repo, storage) = GetModel();
 
-            storage.AddMod(1, 1);
+            storage.AddMod();
             storage.AddMod(0, 0, canWrite: false);
             var repoMod = repo.AddMod(state: LoadingState.Error);
 

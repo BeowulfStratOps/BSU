@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;

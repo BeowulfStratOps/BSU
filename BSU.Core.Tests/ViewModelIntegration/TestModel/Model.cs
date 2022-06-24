@@ -27,7 +27,6 @@ internal class Model : IAsyncDisposable
     public readonly List<ErrorEvent> ErrorEvents = new();
 
     public readonly ServiceProvider Services = new();
-    private readonly ViewModel.ViewModel _model;
     private readonly TestInteractionService _interactionService;
     private readonly TestAsyncVoidExecutor _asyncVoidExecutor;
     private readonly DeterministicJobManager _jobManager;
@@ -87,12 +86,9 @@ internal class Model : IAsyncDisposable
 
         var vm = new ViewModel.ViewModel(Services);
         
-
         model.Load();
 
         _interactionService.SetViewModel(vm);
-
-        _model = vm;
     }
 
     private IStorage CreateStorage(string url, bool isSteam)

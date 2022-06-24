@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.Core.Persistence;
 using BSU.CoreCommon.Hashes;
-using BSU.Hashes;
 
 namespace BSU.Core.Model
 {
