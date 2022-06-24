@@ -28,7 +28,7 @@ namespace BSU.Core.Storage
         {
             _path = path;
             _logger = LogHelper.GetLoggerWithIdentifier(this, path.Split('/', '\\')[^1]);
-            _loading = jobManager.Run("Load Directory Storage", () => Load(CancellationToken.None), CancellationToken.None);
+            _loading = jobManager.Run($"Load Directory Storage {path}", () => Load(CancellationToken.None), CancellationToken.None);
             _jobManager = jobManager;
         }
 

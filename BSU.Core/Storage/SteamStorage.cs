@@ -31,7 +31,7 @@ namespace BSU.Core.Storage
                 return;
             }
             _basePath = new DirectoryInfo(workshopPath);
-            _loading = jobManager.Run("Load Steam Storage", () => Load(CancellationToken.None), CancellationToken.None);
+            _loading = jobManager.Run($"Load Steam Storage {_basePath}", () => Load(CancellationToken.None), CancellationToken.None);
         }
 
         private Task Load(CancellationToken cancellationToken)

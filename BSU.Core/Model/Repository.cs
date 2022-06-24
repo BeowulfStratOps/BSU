@@ -76,7 +76,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            _jobManager.Run("Load Repository", LoadAsync, getResult =>
+            _jobManager.Run($"Load Repository {Name}", LoadAsync, getResult =>
             {
                 try
                 {
