@@ -13,7 +13,7 @@ internal static class BsuPrototypeMigration
         if (!File.Exists(settingsPath))
             return null;
         var json = File.ReadAllText(settingsPath);
-        var settings = JsonConvert.DeserializeObject<PrototypePersistentSettings>(json);
+        var settings = JsonConvert.DeserializeObject<PrototypePersistentSettings>(json) ?? throw new InvalidDataException();
         var modPath = new DirectoryInfo(settings.ModPath);
         return modPath.Exists ? modPath : null;
     }

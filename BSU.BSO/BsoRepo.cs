@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -36,7 +37,7 @@ namespace BSU.BSO
             using var client = new HttpClient();
             _logger.Debug($"Downloading server file from {_url}");
             var serverFileJson = await client.GetStringAsync(_url, cancellationToken);
-            _serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
+            _serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson) ?? throw new InvalidDataException();
 
             var parts = _url.Split('/');
             parts[^1] = "";
@@ -71,7 +72,7 @@ namespace BSU.BSO
             {
                 using var client = new HttpClient();
                 var serverFileJson = await client.GetStringAsync(url, cancellationToken);
-                var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson);
+                var serverFile = JsonConvert.DeserializeObject<ServerFile>(serverFileJson) ?? throw new InvalidDataException();
                 return new ServerUrlCheck(GetServerInfo(serverFile), RepoType);
             }
             catch

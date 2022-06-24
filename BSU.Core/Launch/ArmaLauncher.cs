@@ -152,7 +152,7 @@ public static class ArmaLauncher
 
         var json = await File.ReadAllTextAsync(localPath);
 
-        return JsonConvert.DeserializeObject<Local>(json);
+        return JsonConvert.DeserializeObject<Local>(json) ?? throw new InvalidDataException();
     }
 
     private static void UpdateLocal(List<string> modFolders, Local local)

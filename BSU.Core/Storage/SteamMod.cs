@@ -36,8 +36,8 @@ namespace BSU.Core.Storage
                 result.EnsureSuccessStatusCode();
                 var response = await result.Content.ReadAsStringAsync(cancellationToken);
                 var root = JToken.Parse(response);
-                var results = (JArray)root["response"]["publishedfiledetails"];
-                var title = (string)results[0]["title"];
+                var results = (JArray)root["response"]!["publishedfiledetails"]!;
+                var title = (string)results[0]["title"]!;
                 return title;
             }
             catch (Exception e)
