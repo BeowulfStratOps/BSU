@@ -3,7 +3,6 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace BSU.Core.Tests.Util
 {
@@ -40,7 +39,7 @@ namespace BSU.Core.Tests.Util
                     var message = Layout.Render(logEvent);
                     _outputHelper.WriteLine(FormattableString.Invariant($"{delta.TotalSeconds:F3}|{message}"));
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     _outputHelper.WriteLine("Error in XUnitTarget logger!");
                 }

@@ -86,7 +86,6 @@ namespace BSU.Core.ViewModel
             _autoSelectionService = serviceProvider.Get<IAutoSelectionService>();
             _modActionService = serviceProvider.Get<IModActionService>();
             var model = serviceProvider.Get<IModel>();
-            _services = serviceProvider;
             _viewModelService = viewModelService;
             _model = serviceProvider.Get<IModel>();
 
@@ -212,7 +211,6 @@ namespace BSU.Core.ViewModel
         private readonly IModel _model;
         private readonly IAutoSelectionService _autoSelectionService;
         private readonly IModActionService _modActionService;
-        private readonly IServiceProvider _services;
         private readonly IViewModelService _viewModelService;
 
         private void HandleOk(object? objWindow)

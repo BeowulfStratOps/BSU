@@ -40,17 +40,17 @@
                     You can review the selection below and continue if you agree with the selection, or select Cancel to make changes manually.
                 </TextBlock>
 
-                <CheckBox Foreground="{DynamicResource PopupForeground}" DockPanel.Dock="Top" Margin="0, 5" Visibility="{Binding ShowSteamOption, Converter={StaticResource BoolToVisibility}}"
+                <CheckBox Foreground="{DynamicResource PopupForeground}" DockPanel.Dock="Top" Margin="0, 5"
                           IsChecked="{Binding UseSteam}">
                     Use mods you have downloaded from Steam Workshop.
                 </CheckBox>
 
-                <Label DockPanel.Dock="Top" Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">Download Location</Label>
-                <DockPanel DockPanel.Dock="Top" Height="25" Visibility="{Binding ShowDownload, Converter={StaticResource BoolToVisibility}}">
+                <Label DockPanel.Dock="Top">Download Location</Label>
+                <DockPanel DockPanel.Dock="Top" Height="25">
                     <userControls:SvgButton DockPanel.Dock="Right" Command="{Binding AddStorage}" Svg="{StaticResource SvgAdd}"
                                             Width="25" Height="{Binding Path=Height, ElementName=ComboBox}" ToolTip="Add new Download Location"/>
                     <ComboBox ItemsSource="{Binding Storages}" IsSynchronizedWithCurrentItem="True" SelectedIndex="0"
-                              SelectedItem="{Binding Storage}" IsEnabled="{Binding DownloadEnabled}"
+                              SelectedItem="{Binding Storage}"
                               x:Name="ComboBox" Margin="0,0,5,0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>

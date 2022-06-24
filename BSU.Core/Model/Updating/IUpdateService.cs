@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using BSU.Core.Ioc;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
-using NLog;
 
 namespace BSU.Core.Model.Updating;
 

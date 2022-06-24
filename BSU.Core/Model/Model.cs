@@ -7,7 +7,6 @@ using BSU.Core.Events;
 using BSU.Core.Ioc;
 using BSU.Core.Launch;
 using BSU.Core.Persistence;
-using BSU.Core.Services;
 using BSU.CoreCommon;
 using NLog;
 
@@ -60,7 +59,7 @@ namespace BSU.Core.Model
 
             var bsuDownloadLocation = BsuPrototypeMigration.TryGetDownloadLocation();
             if (bsuDownloadLocation != null)
-                PersistentState.AddStorage(bsuDownloadLocation!.Name, bsuDownloadLocation.FullName, "DIRECTORY");
+                PersistentState.AddStorage(bsuDownloadLocation.Name, bsuDownloadLocation.FullName, "DIRECTORY");
         }
 
         public void Load()

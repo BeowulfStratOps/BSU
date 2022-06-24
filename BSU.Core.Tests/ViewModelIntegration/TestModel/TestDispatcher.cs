@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
 using BSU.Core.Concurrency;
 
 namespace BSU.Core.Tests.ViewModelIntegration.TestModel

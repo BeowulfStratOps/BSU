@@ -373,7 +373,7 @@ namespace BSU.Core.ViewModel
 
                 if (!updateStats.Failed.Any() && !updateStats.FailedSharingViolation.Any())
                 {
-                    _interactionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete", MessageImageEnum.Success);
+                    await _interactionService.MessagePopup($"Update completed in {(DateTime.Now-startTime):hh\\:mm\\:ss}.", "Update Complete", MessageImageEnum.Success);
                     return;
                 }
 
@@ -388,7 +388,7 @@ namespace BSU.Core.ViewModel
                     updatedText += "\nFailed due to unknown reason (see logs): " + string.Join(", ",
                         updateStats.Failed.Select(s => $"{s.ParentStorage.Name}/{s.Identifier}"));
                 }
-                _interactionService.MessagePopup(updatedText, "Update finished", MessageImageEnum.Success);
+                await _interactionService.MessagePopup(updatedText, "Update finished", MessageImageEnum.Success);
             }
             catch (OperationCanceledException)
             {

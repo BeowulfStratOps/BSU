@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Core.Concurrency;
-using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.CoreCommon;
 using NLog;

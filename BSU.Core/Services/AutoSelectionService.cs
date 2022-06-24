@@ -85,14 +85,13 @@ internal class AutoSelectionService : IAutoSelectionService
                 var preferred = foundNonSteam ?? foundSteam;
                 if (preferred != null)
                     return preferred;
-                continue;
             }
         }
 
         return null;
     }
 
-    public ModSelection? GetSelection(IModel model, IModelRepositoryMod mod, IAutoSelectionService.SteamUsage steamUsage)
+    public ModSelection GetSelection(IModel model, IModelRepositoryMod mod, IAutoSelectionService.SteamUsage steamUsage)
     {
         if (mod.State == LoadingState.Error) return new ModSelectionDisabled();
         

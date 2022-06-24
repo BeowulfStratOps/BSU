@@ -48,7 +48,7 @@ public static class TestUtil
 
         Assert.Contains("/hash.json", destinationFiles);
         var hashJson = Encoding.UTF8.GetString(destinationFiles["/hash.json"]);
-        var hashFile = JsonConvert.DeserializeObject<HashFile>(hashJson);
+        var hashFile = JsonConvert.DeserializeObject<HashFile>(hashJson) ?? throw new InvalidDataException();
         var writtenHashes = hashFile.Hashes.OrderBy(h => h.FileName).ToList();
 
         Assert.Equal(expectedHashes.Count, writtenHashes.Count);

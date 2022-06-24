@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.CoreCommon.Hashes;
-using Moq;
 
 namespace BSU.Core.Tests.AutoSelectionTests;
 
@@ -32,10 +30,10 @@ internal class MockStorage : IModelStorage
         throw new NotImplementedException();
     }
 
-    public bool CanWrite { get; }
+    public bool CanWrite { get; } = false;
     public Guid Identifier { get; }
     public string Name { get; } = "";
-    public bool IsDeleted { get; }
+    public bool IsDeleted { get; } = false;
     public LoadingState State { get; }
     public PersistedSelection AsStorageIdentifier()
     {

@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Hashes;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
-using BSU.Hashes;
 
 namespace BSU.Core.Model
 {

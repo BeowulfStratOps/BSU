@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.ViewModel.Util;

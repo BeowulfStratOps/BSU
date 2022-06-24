@@ -52,7 +52,7 @@ Print version:      ./BSU.Server version");
         try
         {
             var configJson = File.ReadAllText(configPath);
-            config = JsonConvert.DeserializeObject<PresetConfig>(configJson);
+            config = JsonConvert.DeserializeObject<PresetConfig>(configJson) ?? throw new InvalidDataException();
         }
         catch (FileNotFoundException)
         {

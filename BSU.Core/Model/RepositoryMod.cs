@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BSU.Core.Concurrency;
 using BSU.Core.Events;
-using BSU.Core.Hashes;
 using BSU.Core.Ioc;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
@@ -13,7 +11,6 @@ using BSU.Core.Services;
 using BSU.Core.Sync;
 using BSU.CoreCommon;
 using BSU.CoreCommon.Hashes;
-using BSU.Hashes;
 using NLog;
 
 namespace BSU.Core.Model
