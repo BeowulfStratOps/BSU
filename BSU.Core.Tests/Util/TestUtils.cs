@@ -12,14 +12,21 @@ namespace BSU.Core.Tests.Util
 {
     internal static class TestUtils
     {
-        public static void SetupHashes<T1>(this Mock<T1> mock, params IModHash[] hashes) where T1 : class, IHashCollection
+        public static void SetupHashes<T1>(this Mock<T1> mock, params IModHash[] hashes)
+            where T1 : class, IHashCollection =>
+            SetupHashes(mock, hashes.ToDictionary(h => h.GetType(), h => (IModHash?)h));
+
+        public static void SetupHashes<T1>(this Mock<T1> mock, Dictionary<Type, IModHash?> hashes) where T1 : class, IHashCollection
         {
-            foreach (var hash in hashes)
+            foreach (var (type, hash) in hashes)
             {
-                mock.Setup(o => o.GetHash(hash.GetType())).Returns(Task.FromResult(hash));   
+                if (hash != null)
+                    mock.Setup(o => o.GetHash(type)).Returns(Task.FromResult(hash));
+                else
+                    mock.Setup(o => o.GetHash(type)).Returns(new TaskCompletionSource<IModHash>().Task);
             }
 
-            mock.Setup(o => o.GetSupportedHashTypes()).Returns(hashes.Select(h => h.GetType()).ToList);
+            mock.Setup(o => o.GetSupportedHashTypes()).Returns(hashes.Keys.ToList());
         }
 
         public static IModelStorageMod StorageModFromAction(ModActionEnum action, int repoModMatch = 1, int repoModVersion = 1)

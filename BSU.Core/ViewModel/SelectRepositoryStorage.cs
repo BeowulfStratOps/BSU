@@ -165,7 +165,7 @@ namespace BSU.Core.ViewModel
 
             var mods = _repository.GetMods();
 
-            if (mods.Any(m => m.GetCurrentSelection() is ModSelectionLoading)) return;
+            if (mods.Any(m => m.State == LoadingState.Loading || m.GetCurrentSelection() is ModSelectionLoading)) return;
 
             var selections = mods.Select(m =>
             {

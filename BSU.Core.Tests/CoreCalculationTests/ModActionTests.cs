@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using BSU.Core.Model;
 using BSU.Core.Services;
 using BSU.Core.Tests.Util;
@@ -9,9 +11,9 @@ using Xunit.Abstractions;
 
 namespace BSU.Core.Tests.CoreCalculationTests
 {
-    public class MatchMakerTests : LoggedTest
+    public class ModActionTests : LoggedTest
     {
-        public MatchMakerTests(ITestOutputHelper outputHelper) : base(outputHelper)
+        public ModActionTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
 
@@ -22,12 +24,12 @@ namespace BSU.Core.Tests.CoreCalculationTests
             repoMod.Setup(m => m.State).Returns(LoadingState.Loaded);
 
             var storageMod = new Mock<IModelStorageMod>(MockBehavior.Strict);
-            var storageHashes = new List<IModHash>();
-            if (storageHash != null)
-                storageHashes.Add(new TestMatchHash((int)storageHash));
-            if (storageVersion != null)
-                storageHashes.Add(new TestVersionHash((int)storageVersion));
-            storageMod.SetupHashes(storageHashes.ToArray());
+            var storageHashes = new Dictionary<Type, IModHash?>
+            {
+                { typeof(TestMatchHash), storageHash == null ? null : new TestMatchHash((int)storageHash) },
+                { typeof(TestVersionHash), storageVersion == null ? null : new TestVersionHash((int)storageVersion) }
+            };
+            storageMod.SetupHashes(storageHashes);
             storageMod.Setup(m => m.GetState()).Returns(state);
             storageMod.Setup(m => m.CanWrite).Returns(canWrite);
 
@@ -105,6 +107,22 @@ namespace BSU.Core.Tests.CoreCalculationTests
             var action = DoCheck(1, 1, 1, 2, StorageModStateEnum.Created, false);
 
             Assert.Equal(ModActionEnum.UnusableSteam, action);
+        }
+        
+        [Fact]
+        private void LoadingMatchHash()
+        {
+            var action = DoCheck(1, 1, null, 1, StorageModStateEnum.Created);
+
+            Assert.Equal(ModActionEnum.Loading, action);
+        }
+        
+        [Fact]
+        private void LoadingVersionHash()
+        {
+            var action = DoCheck(1, 1, 1, null, StorageModStateEnum.Created);
+
+            Assert.Equal(ModActionEnum.Loading, action);
         }
     }
 }
