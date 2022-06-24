@@ -31,7 +31,7 @@ namespace BSU.Core.Persistence
             var data = JsonConvert.DeserializeObject<SettingsData>(json, new JsonSerializerSettings
             {
                 TypeNameHandling = TypeNameHandling.Auto
-            });
+            }) ?? throw new InvalidDataException();
             return new Settings(path, data);
         }
 

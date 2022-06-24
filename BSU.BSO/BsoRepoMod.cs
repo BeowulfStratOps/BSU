@@ -82,7 +82,7 @@ namespace BSU.BSO
             _logger.Trace($"Downloading hash file from {_url}");
             var hashFileJson = await client.GetStringAsync(_url + "/hash.json", cancellationToken);
             _logger.Trace("Finished downloading hash file");
-            _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson);
+            _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson) ?? throw new InvalidDataException();
             var actualHash = _hashFile.BuildModHash();
             _logger.Debug($"Expected hash: {_expectedHash}. Actual hash: {actualHash}.");
             if (actualHash != _expectedHash)
