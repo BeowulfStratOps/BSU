@@ -73,7 +73,7 @@ namespace BSU.BSO
         {
             _url = url;
             _expectedHash = expectedHash;
-            _loading = jobManager.Run("Bso Repo Mod Load", () => Load(CancellationToken.None), CancellationToken.None);
+            _loading = jobManager.Run($"Bso Repo Mod Load {_url}", () => Load(CancellationToken.None), CancellationToken.None);
         }
 
         private async Task Load(CancellationToken cancellationToken)

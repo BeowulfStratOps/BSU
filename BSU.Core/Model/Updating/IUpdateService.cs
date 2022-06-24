@@ -25,7 +25,7 @@ internal class UpdateService : IUpdateService
     public async Task<UpdateResult> UpdateAsync(IRepositoryMod repositoryMod, IStorageMod storageMod,
         CancellationToken cancellationToken, IProgress<FileSyncStats>? progress)
     {
-        var result = await _jobManager.Run("Update Mod", () => RepoSync.UpdateAsync(repositoryMod, storageMod, cancellationToken,
+        var result = await _jobManager.Run($"Update Mod {storageMod.Path}", () => RepoSync.UpdateAsync(repositoryMod, storageMod, cancellationToken,
             progress), cancellationToken);
 
         return result;

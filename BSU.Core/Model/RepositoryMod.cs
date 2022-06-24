@@ -93,7 +93,7 @@ namespace BSU.Core.Model
 
         private void Load()
         {
-            _jobManager.Run("Load Repository Mod", () => LoadAsync(CancellationToken.None), getResult =>
+            _jobManager.Run($"Load Repository Mod {Identifier}", () => LoadAsync(CancellationToken.None), getResult =>
             {
                 try
                 {
