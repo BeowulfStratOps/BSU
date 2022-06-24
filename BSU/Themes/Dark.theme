@@ -34,7 +34,7 @@ PresetListPanelForeground=#F5F5F5
 SelectionBackground=#171717
 SelectionBackgroundHover=#6495ED
 SelectionBackgroundSelected=#4db0ff
-SelectionBorder=#000000
+SelectionBorder=#f5f5f5
 SelectionForeground=#F5F5F5
 SelectionStorageForeground=#F5F5F5
 
