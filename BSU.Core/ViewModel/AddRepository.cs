@@ -99,8 +99,8 @@ namespace BSU.Core.ViewModel
         public List<KnownUrl> KnownUrls { get; } = new()
         {
             new KnownUrl("Beowulf", "http://sync.bso.ovh/server.json"),
-            new KnownUrl("Beowulf 'NAAAAAM", "http://sync.bso.ovh/server-vn.json"),
-            new KnownUrl("Beowulf - WS Compat", "http://sync.bso.ovh/server-compat.json")
+            new KnownUrl("Beowulf - WS Compat", "http://sync.bso.ovh/server-compat.json"),
+            new KnownUrl("Beowulf 'NAAAAAM", "http://sync.bso.ovh/server-vn.json")
         };
 
         public string RepoType { get; set; } = null!;
