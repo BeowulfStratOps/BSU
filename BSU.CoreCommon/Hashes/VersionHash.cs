@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using BSU.Hashes;
@@ -15,7 +16,8 @@ namespace BSU.CoreCommon.Hashes
     [HashClass(HashType.Version, 10)]
     public class VersionHash : IModHash
     {
-        private readonly byte[] _hash;
+        // public for serialization
+        public byte[] Hash { get; }
 
         // TODO: use more specialized interface to get files
         public static async Task<VersionHash> CreateAsync(IStorageMod mod, CancellationToken cancellationToken)
@@ -32,9 +34,10 @@ namespace BSU.CoreCommon.Hashes
             return new VersionHash(BuildHash(hashes));
         }
 
-        private VersionHash(byte[] hash)
+        [JsonConstructor]
+        public VersionHash(byte[] hash)
         {
-            _hash = hash;
+            Hash = hash;
         }
 
         // TODO: use more specialized interface to get files
@@ -57,7 +60,7 @@ namespace BSU.CoreCommon.Hashes
         /// <returns></returns>
         private bool IsMatch(VersionHash other)
         {
-            return _hash.SequenceEqual(other._hash);
+            return Hash.SequenceEqual(other.Hash);
         }
 
         /// <summary>
@@ -79,24 +82,13 @@ namespace BSU.CoreCommon.Hashes
             return sha1.ComputeHash(Encoding.UTF8.GetBytes(builder.ToString()));
         }
 
-        public string GetHashString() => Utils.ToHexString(_hash);
-
-        public static VersionHash CreateEmpty()
-        {
-            using var sha1 = SHA1.Create();
-            return new VersionHash(sha1.ComputeHash(Array.Empty<byte>()));
-        }
+        public string GetHashString() => Utils.ToHexString(Hash);
 
         public override string ToString() => GetHashString();
         public bool IsMatch(IModHash other)
         {
             if (other is not VersionHash otherHash) throw new InvalidOperationException();
             return IsMatch(otherHash);
-        }
-
-        public static VersionHash FromDigest(string hashString)
-        {
-            return new VersionHash(Utils.FromHexString(hashString));
         }
     }
 }
