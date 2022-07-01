@@ -181,17 +181,27 @@ namespace BSU.BSO
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="destination"></param>
+        /// <param name="bufferSize"></param>
+        /// <param name="progress">Total Progress</param>
+        /// <param name="cancellationToken"></param>
         private static async Task CopyToWithProgress(Stream source, Stream destination, int bufferSize, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
             // borrowed from Stream.CopyTo
             var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+            ulong copiedTotal = 0;
             try
             {
                 int read;
                 while ((read = await source.ReadAsync(buffer, cancellationToken)) != 0)
                 {
                     await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-                    progress?.Report((ulong)read);
+                    copiedTotal += (uint)read;
+                    progress?.Report(copiedTotal);
                 }
             }
             finally
@@ -220,7 +230,8 @@ namespace BSU.BSO
             {
 
                 if (seed == null) throw new InvalidOperationException();
-                Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, progress, cancellationToken);
+                var syncProgress = new SyncProgress(progress.Report);
+                Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, syncProgress, cancellationToken);
                 await seed.DisposeAsync();
                 await fileStream.DisposeAsync();
                 await fileSystem.Move(partPath, path, cancellationToken);
@@ -233,6 +244,23 @@ namespace BSU.BSO
                 await fileStream.DisposeAsync();
                 _logger.Error(e, $"Error while syncing {_url} / {path}");
                 throw;
+            }
+        }
+
+        private class SyncProgress : IProgress<ulong>
+        {
+            private readonly Action<ulong> _reportTotal;
+            private ulong _total = 0;
+
+            public SyncProgress(Action<ulong> reportTotal)
+            {
+                _reportTotal = reportTotal;
+            }
+            
+            public void Report(ulong value)
+            {
+                _total += value;
+                _reportTotal(_total);
             }
         }
 

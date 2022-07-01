@@ -24,7 +24,7 @@ namespace BSU.Core.Sync
         {
             Logger.Trace($"{Storage}, {_repository} Updating {Path}");
             var progress = new SynchronousProgress<ulong>();
-            progress.ProgressChanged += (_, count) => _done += count;
+            progress.ProgressChanged += (_, done) => _done = done;
             // updating might require some CPU resources, so we want it on the threadpool
             await Task.Run(() => _repository.UpdateTo(Path, Storage, progress, cancellationToken), cancellationToken);
         }

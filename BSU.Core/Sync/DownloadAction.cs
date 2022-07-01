@@ -23,8 +23,8 @@ namespace BSU.Core.Sync
         {
             Logger.Trace($"{_repository} Downloading {Path}");
             var progress = new SynchronousProgress<ulong>();
-            progress.ProgressChanged += (_, count) => _done += count;
-            await _repository.DownloadTo(Path, Storage, progress, cancellationToken);
+            progress.ProgressChanged += (_, done) => _done = done;
+            await Task.Run(() => _repository.DownloadTo(Path, Storage, progress, cancellationToken), cancellationToken);
         }
 
         public override FileSyncStats GetStats()
