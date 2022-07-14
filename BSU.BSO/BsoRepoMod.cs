@@ -147,6 +147,8 @@ namespace BSU.BSO
 
         public async Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
+            // TODO: retry
+            
             await _loading;
 
             var url = _url + GetRealPath(path);
@@ -212,6 +214,8 @@ namespace BSU.BSO
 
         public async Task UpdateTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
+            // TODO: retry
+            
             await _loading;
 
             _logger.Debug($"Updating file {_url} / {path}");
