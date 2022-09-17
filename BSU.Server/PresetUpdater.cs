@@ -69,7 +69,7 @@ public static class PresetUpdater
                 return;
             }
 
-            var storage = new BunnyCDNStorage(config.BunnyCdn.ZoneName, config.BunnyCdn.ApiKey);
+            var storage = new BunnyCDNStorage(config.BunnyCdn.ZoneName, config.BunnyCdn.ApiKey, config.BunnyCdn.Region);
 
             storage.UploadAsync(Util.StringToStream(serverFileJson), path).GetAwaiter().GetResult();
 
