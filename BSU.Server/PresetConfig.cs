@@ -23,6 +23,7 @@ public class PresetConfig
 
 public class BunnyCdnConfig
 {
+    public string Region { get; set; } = "de";
     public string ZoneName { get; set; } = "";
     public string ApiKey { get; set; } = "";
 }
