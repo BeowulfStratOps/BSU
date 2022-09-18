@@ -22,7 +22,7 @@ public class BunnyCdnDestination : IDestinationMod
         _modName = modName;
         _dryRun = dryRun;
         _changedFileTracker = changedFileTracker;
-        _storage = new BunnyCDNStorage(config.ZoneName, config.ApiKey);
+        _storage = new BunnyCDNStorage(config.ZoneName, config.ApiKey, config.Region);
         var httpClientField = _storage.GetType().GetField("_http", BindingFlags.NonPublic | BindingFlags.Instance);
         var httpClient = (HttpClient)httpClientField!.GetValue(_storage)!;
         httpClient.Timeout = new TimeSpan(1, 0, 0);
