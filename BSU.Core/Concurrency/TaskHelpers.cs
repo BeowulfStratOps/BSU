@@ -46,7 +46,7 @@ namespace BSU.Core.Concurrency
             {
                 dispatcher.ExecuteSynchronized(() =>
                 {
-                    continuation(() => taskResult.Result);
+                    continuation(() => taskResult.GetAwaiter().GetResult());
                 });
             }, null);
         }

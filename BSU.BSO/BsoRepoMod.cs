@@ -27,7 +27,7 @@ namespace BSU.BSO
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _url;
-        private readonly string _expectedHash;
+        private readonly string? _expectedHash;
         private HashFile? _hashFile;
         private readonly Task _loading;
         private readonly HttpClient _client = new();
@@ -58,7 +58,7 @@ namespace BSU.BSO
             catch (Exception e)
             {
                 _logger.Error(e, $"Failed to download {_url} / {path}");
-                throw;
+                throw new FileNotFoundException(_url);
             }
             _logger.Trace($"Finsihed downloading {_url} / {path}");
             return data;
@@ -69,7 +69,7 @@ namespace BSU.BSO
         private BsoFileHash? GetFileEntry(string path) =>
             _hashFile?.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
-        public BsoRepoMod(string url, string expectedHash, IJobManager jobManager)
+        public BsoRepoMod(string url, string? expectedHash, IJobManager jobManager)
         {
             _url = url;
             _expectedHash = expectedHash;
@@ -85,8 +85,8 @@ namespace BSU.BSO
             _hashFile = JsonConvert.DeserializeObject<HashFile>(hashFileJson) ?? throw new InvalidDataException();
             var actualHash = _hashFile.BuildModHash();
             _logger.Debug($"Expected hash: {_expectedHash}. Actual hash: {actualHash}.");
-            if (actualHash != _expectedHash)
-                // TODO: will have the mod stuck on loading
+            // expected hash is a new feature. server might not have implemented it yet.
+            if (_expectedHash != null && actualHash != _expectedHash)
                 throw new InvalidDataException($"Expected hash: {_expectedHash}. Actual hash: {actualHash}.");
         }
 
