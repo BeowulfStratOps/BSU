@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BSU.Core.Hashes;
 using BSU.Core.Model;
 using BSU.Core.Model.Updating;
 using BSU.Core.Persistence;
@@ -15,14 +16,14 @@ namespace BSU.Core.Tests.AutoSelectionTests;
 internal class MockStorageMod : IModelStorageMod
 {
     private readonly StorageModStateEnum _state;
-    private readonly HashCollection _hashes;
+    public readonly HashManager Hashes = new();
 
     public MockStorageMod(IModelStorage parent, int match, int version, StorageModStateEnum state, bool canWrite,
         string? identifier)
     {
-        var matchHash = new TestMatchHash(match);
-        var versionHash = new TestVersionHash(version);
-        _hashes = new HashCollection(matchHash, versionHash);
+        Hashes.Add(new[] { new TestMatchHash(match) });
+        Hashes.Add(new[] { new TestVersionHash(version) });
+        
         _state = state;
         ParentStorage = parent;
         Identifier = identifier ?? Guid.NewGuid().ToString();
@@ -75,7 +76,7 @@ internal class MockStorageMod : IModelStorageMod
     }
 
     public override string ToString() => Identifier;
-    public Task<IModHash> GetHash(Type type) => _hashes.GetHash(type);
+    public Task<IModHash> GetHash(Type type) => Hashes.GetHash(type);
 
-    public List<Type> GetSupportedHashTypes() => _hashes.GetSupportedHashTypes();
+    public List<Type> GetSupportedHashTypes() => Hashes.GetSupportedTypes();
 }

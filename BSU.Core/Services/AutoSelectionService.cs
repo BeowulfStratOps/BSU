@@ -7,9 +7,30 @@ using NLog;
 
 namespace BSU.Core.Services;
 
+internal class AutoSelectionResult
+{
+    private readonly IModelStorageMod? _mod;
+    public bool IsLoading { get; }
+    public bool IsSuccess => _mod != null;
+    public IModelStorageMod Mod => _mod ?? throw new InvalidOperationException();
+
+    public AutoSelectionResult(IModelStorageMod mod)
+    {
+        _mod = mod;
+    }
+
+    private AutoSelectionResult(bool isLoading)
+    {
+        IsLoading = isLoading;
+    }
+
+    public static AutoSelectionResult Loading { get; } = new(true);
+    public static AutoSelectionResult None { get; } = new(false);
+}
+
 internal interface IAutoSelectionService
 {
-    IModelStorageMod? AutoSelect(IModelRepositoryMod repoMod,
+    AutoSelectionResult AutoSelect(IModelRepositoryMod repoMod,
         IEnumerable<IModelStorageMod> storageMods, List<IModelRepositoryMod> allRepoMods, SteamUsage steamUsage);
 
     ModSelection? GetSelection(IModel model, IModelRepositoryMod mod, SteamUsage steamUsage);
@@ -39,8 +60,8 @@ internal class AutoSelectionService : IAutoSelectionService
         _modActionService = serviceProvider.Get<IModActionService>();
         _storageService = serviceProvider.Get<IStorageService>();
     }
-
-    public IModelStorageMod? AutoSelect(IModelRepositoryMod repoMod,
+    
+    public AutoSelectionResult AutoSelect(IModelRepositoryMod repoMod,
         IEnumerable<IModelStorageMod> storageMods, List<IModelRepositoryMod> allRepoMods, IAutoSelectionService.SteamUsage steamUsage)
     {
         var byActionType = new Dictionary<ModActionEnum, List<IModelStorageMod>>();
@@ -50,6 +71,8 @@ internal class AutoSelectionService : IAutoSelectionService
             if (_conflictService.GetConflictsUsingMod(repoMod, storageMod, allRepoMods).Any())
                 continue;
             var action = _modActionService.GetModAction(repoMod, storageMod);
+            if (action == ModActionEnum.Loading)
+                return AutoSelectionResult.Loading;
             byActionType.AddInBin(action, storageMod);
         }
 
@@ -68,7 +91,7 @@ internal class AutoSelectionService : IAutoSelectionService
             if (steamUsage == IAutoSelectionService.SteamUsage.DontUseSteam)
             {
                 if (foundNonSteam != null)
-                    return foundNonSteam;
+                    return new AutoSelectionResult(foundNonSteam);
                 continue;
             }
 
@@ -76,7 +99,7 @@ internal class AutoSelectionService : IAutoSelectionService
             {
                 var preferred = foundSteam ?? foundNonSteam;
                 if (preferred != null)
-                    return preferred;
+                    return new AutoSelectionResult(preferred);
                 continue;
             }
 
@@ -84,11 +107,11 @@ internal class AutoSelectionService : IAutoSelectionService
             {
                 var preferred = foundNonSteam ?? foundSteam;
                 if (preferred != null)
-                    return preferred;
+                    return new AutoSelectionResult(preferred);
             }
         }
 
-        return null;
+        return AutoSelectionResult.None;
     }
 
     public ModSelection GetSelection(IModel model, IModelRepositoryMod mod, IAutoSelectionService.SteamUsage steamUsage)
@@ -114,11 +137,14 @@ internal class AutoSelectionService : IAutoSelectionService
         if (model.GetStorageMods().Any(s => s.GetState() == StorageModStateEnum.Loading)) return new ModSelectionLoading();
         if (model.GetRepositories().Any(s => s.State == LoadingState.Loading)) return new ModSelectionLoading();
         if (model.GetRepositoryMods().Any(s => s.State == LoadingState.Loading)) return new ModSelectionLoading();
-
-        var selectedMod = AutoSelect(mod, storageMods, model.GetRepositoryMods(), steamUsage);
-
-        if (selectedMod != null)
-            return new ModSelectionStorageMod(selectedMod);
+        
+        var selectionResult = AutoSelect(mod, storageMods, model.GetRepositoryMods(), steamUsage);
+        
+        if (selectionResult.IsLoading)
+            return new ModSelectionLoading();
+        
+        if (selectionResult.IsSuccess)
+            return new ModSelectionStorageMod(selectionResult.Mod);
 
         var storage = model.GetStorages().FirstOrDefault(s => s.CanWrite && s.IsAvailable());
         if (storage != null)

@@ -46,7 +46,7 @@ internal class HashManager
         var runningTasks = _hashTasks.Values.ToList();
         _hashTasks.Clear();
         
-        Set(newHashes);
+        Add(newHashes);
 
         try
         {
@@ -58,7 +58,7 @@ internal class HashManager
         }
     }
 
-    public void Set(IEnumerable<IModHash> hashes)
+    public void Add(IEnumerable<IModHash> hashes)
     {
         foreach (var hash in hashes)
         {

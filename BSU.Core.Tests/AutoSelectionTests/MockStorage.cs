@@ -17,7 +17,7 @@ internal class MockStorage : IModelStorage
 
     private readonly List<IModelStorageMod> _mods = new();
 
-    public IModelStorageMod AddMod(int match = 1, int version = 1, StorageModStateEnum state = StorageModStateEnum.Created, bool canWrite = true, string? identifier = null)
+    public MockStorageMod AddMod(int match = 1, int version = 1, StorageModStateEnum state = StorageModStateEnum.Created, bool canWrite = true, string? identifier = null)
     {
         var mod = new MockStorageMod(this, match, version, state, canWrite, identifier);
         _mods.Add(mod);
