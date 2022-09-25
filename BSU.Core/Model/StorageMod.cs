@@ -64,7 +64,7 @@ namespace BSU.Core.Model
             var updateTarget = _internalState.UpdateTarget;
             if (updateTarget != null)
             {
-                _hashes.Set(updateTarget.Hashes);
+                _hashes.Add(updateTarget.Hashes);
                 _title = updateTarget.Title;
                 _state = StorageModStateEnum.CreatedWithUpdateTarget;
             }

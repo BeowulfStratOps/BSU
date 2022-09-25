@@ -1,8 +1,11 @@
-﻿using BSU.Core.Ioc;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using BSU.Core.Ioc;
 using BSU.Core.Model;
 using BSU.Core.Persistence;
 using BSU.Core.Services;
 using BSU.Core.Tests.Util;
+using BSU.CoreCommon.Hashes;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -185,6 +188,21 @@ namespace BSU.Core.Tests.AutoSelectionTests
             var selection = _autoSelector.GetAutoSelection(model, repoMod);
 
             Assert.IsType<ModSelectionDisabled>(selection);
+        }
+        
+        [Fact]
+        private void ReturnLoadingWhileHashing()
+        {
+            var (model, repo, storage) = GetModel();
+
+            var repoMod = repo.AddMod();
+            var storageMod = storage.AddMod();
+            storageMod.Hashes.Reset(new[] { new TestMatchHash(1) }).Wait();
+            storageMod.Hashes.AddHashFunction(typeof(TestVersionHash), _ => new TaskCompletionSource<IModHash>().Task);
+
+            var selection = _autoSelector.GetAutoSelection(model, repoMod);
+
+            Assert.IsType<ModSelectionLoading>(selection);
         }
     }
 }

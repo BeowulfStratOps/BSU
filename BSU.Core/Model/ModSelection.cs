@@ -64,7 +64,7 @@ namespace BSU.Core.Model
         {
             if (!DownloadName.StartsWith("@"))
             {
-                error = "Must start with a '@'";
+                error = "Must start with an '@'";
                 return false;
             }
 
@@ -85,7 +85,7 @@ namespace BSU.Core.Model
             return true;
         }
 
-        public override string ToString() => $"Storage:{DownloadStorage.Name}/{DownloadName}";
+        public override string ToString() => $"Download:{DownloadStorage.Name}/{DownloadName}";
         public override bool Equals(ModSelection? other)
         {
             return other is ModSelectionDownload download && download.DownloadStorage.Equals(DownloadStorage) && download.DownloadName == DownloadName;
