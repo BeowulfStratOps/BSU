@@ -111,7 +111,9 @@ internal class Model : IAsyncDisposable
 
     public async Task<Dialog<T>> WaitForDialog<T>()
     {
-        for (int i = 0; i < TaskYieldLimit; i++)
+        var timeoutAt = DateTime.UtcNow + DialogWaitTimeout;
+
+        while (DateTime.UtcNow < timeoutAt)
         {
             if (_interactionService.GetCurrentDialog() is Dialog<T> dialog)
                 return dialog;
@@ -121,7 +123,7 @@ internal class Model : IAsyncDisposable
         throw new TaskYieldLimitReachedException();
     }
 
-    private const int TaskYieldLimit = 100;
+    private static readonly TimeSpan DialogWaitTimeout = TimeSpan.FromSeconds(5);
 
     public async ValueTask DisposeAsync()
     {
