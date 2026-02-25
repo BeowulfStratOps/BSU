@@ -38,7 +38,7 @@ namespace BSU.GUI
 
             try
             {
-                var settingsLocation = Path.Combine(parentPath, "settings.json");
+                var settingsLocation = ResolveSettingsLocation(parentPath);
                 var interactionService = new InteractionService(mainWindow);
 
                 var dispatcher = new SimpleDispatcher(Dispatcher.CurrentDispatcher);
@@ -71,6 +71,43 @@ namespace BSU.GUI
                 _logger.Error(e);
                 throw;
             }
+        }
+
+        private string ResolveSettingsLocation(string legacyRootPath)
+        {
+            var roamingDataRoot = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "BSU");
+            Directory.CreateDirectory(roamingDataRoot);
+
+            var newSettingsPath = Path.Combine(roamingDataRoot, "settings.json");
+            if (File.Exists(newSettingsPath))
+            {
+                return newSettingsPath;
+            }
+
+            var legacySettingsPath = Path.Combine(legacyRootPath, "settings.json");
+            if (!File.Exists(legacySettingsPath))
+            {
+                return newSettingsPath;
+            }
+
+            try
+            {
+                File.Copy(legacySettingsPath, newSettingsPath, overwrite: false);
+                _logger.Info($"Migrated settings from '{legacySettingsPath}' to '{newSettingsPath}'");
+            }
+            catch (IOException e)
+            {
+                // If another process raced the copy, continue with new path.
+                _logger.Warn(e, $"Failed to copy legacy settings to '{newSettingsPath}'");
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                _logger.Warn(e, $"No access while copying legacy settings to '{newSettingsPath}'");
+            }
+
+            return newSettingsPath;
         }
     }
 }
