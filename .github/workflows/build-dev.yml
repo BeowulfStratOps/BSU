@@ -10,26 +10,33 @@ jobs:
     name: Build and Publish
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
+    - name: Setup GitVersion
+      uses: gittools/actions/gitversion/setup@v3
+      with:
+        versionSpec: '5.x'
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v3
+      id: gitversion
     - name: Create Version String
-      run: Write-Host "::set-output name=VERSION_STRING::$(git describe --tags --abbrev=0).$($env:GITHUB_RUN_NUMBER)"
       id: version-string
+      run: |
+        $VersionString = "${{ steps.gitversion.outputs.MajorMinorPatch }}-dev.${{ steps.gitversion.outputs.CommitsSinceVersionSource }}.${{ steps.gitversion.outputs.ShortSha }}"
+        "VERSION_STRING=$VersionString" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
     - name: Install dependencies
       run: dotnet restore --packages packages
-    - name: Set csproj version
-      run: (Get-Content BSU/BSU.GUI.csproj).replace('<Version>0.0.0</Version>', '<Version>${{ steps.version-string.outputs.VERSION_STRING }}</Version>') | Set-Content BSU/BSU.GUI.csproj
     - name: Build
-      run: dotnet build --configuration Release --no-restore BSU
+      run: dotnet build --configuration Release --no-restore BSU /p:Version=${{ steps.version-string.outputs.VERSION_STRING }} /p:InformationalVersion=${{ steps.gitversion.outputs.InformationalVersion }}
     - name: Test
       run: dotnet test
     - name: Publish
-      run: dotnet publish -c Release -o publish BSU --self-contained -r win-x64
+      run: dotnet publish -c Release -o publish BSU --self-contained -r win-x64 /p:Version=${{ steps.version-string.outputs.VERSION_STRING }} /p:InformationalVersion=${{ steps.gitversion.outputs.InformationalVersion }}
     - name: Remove createdump.exe
       run: rm publish/createdump.exe
     - name: Package

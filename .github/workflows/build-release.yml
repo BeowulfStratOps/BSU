@@ -10,28 +10,32 @@ jobs:
     name: build-test-package
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
-    - name: Create Version String
-      run: Write-Host "::set-output name=VERSION_STRING::$($env:GITHUB_REF_NAME).0"
-      id: version-string
+    - name: Setup GitVersion
+      uses: gittools/actions/gitversion/setup@v3
+      with:
+        versionSpec: '5.x'
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v3
+      id: gitversion
     - name: Install dependencies
       run: dotnet restore --packages packages
-    - name: Set csproj version
-      run: (Get-Content BSU/BSU.GUI.csproj).replace('<Version>0.0.0</Version>', '<Version>${{ steps.version-string.outputs.VERSION_STRING }}</Version>') | Set-Content BSU/BSU.GUI.csproj
     - name: Build
-      run: dotnet build --configuration Release --no-restore BSU
+      run: dotnet build --configuration Release --no-restore BSU /p:Version=${{ steps.gitversion.outputs.NuGetVersionV2 }} /p:InformationalVersion=${{ steps.gitversion.outputs.InformationalVersion }}
     - name: Test
       run: dotnet test
     - name: Publish
-      run: dotnet publish -c Release -o publish BSU --self-contained -r win-x64
+      run: dotnet publish -c Release -o publish BSU --self-contained -r win-x64 /p:Version=${{ steps.gitversion.outputs.NuGetVersionV2 }} /p:InformationalVersion=${{ steps.gitversion.outputs.InformationalVersion }}
     - name: Remove createdump.exe
       run: rm publish/createdump.exe
     - name: Package
-      run: nuget pack -OutputFileNamesWithoutVersion -Version ${{ steps.version-string.outputs.VERSION_STRING }}
+      run: nuget pack -OutputFileNamesWithoutVersion -Version ${{ steps.gitversion.outputs.NuGetVersionV2 }}
     - name: Releasify
       run: powershell.exe -ExecutionPolicy Bypass -Command "packages\squirrel.windows\1.9.0\tools\Squirrel.exe -r releases --setupIcon BSU/icon.ico --no-msi --no-delta --releasify BSU.nupkg ... | Write-Output"
     - name: configure AWS
