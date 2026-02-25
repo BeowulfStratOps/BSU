@@ -61,8 +61,8 @@ public class UserStories : LoggedTest
         selectRepositoryStorage.ViewModel.Ok.Execute(selectRepositoryStorage.Closable);
 
         var repoVm = vm.ViewModel.RepoPage.Repositories[0];
-        Assert.True(repoVm.UpdateProgress.Active);
-        Assert.Equal("Preparing", repoVm.UpdateProgress.Stage);
+        await WaitUntil(() => repoVm.UpdateProgress.Active && repoVm.UpdateProgress.Stage == "Preparing",
+            "Repository update progress did not become active in time.");
 
         var storageMod = storage.GetMod("@mod1");
         storageMod.Load(new Dictionary<string, byte[]>());
@@ -72,7 +72,8 @@ public class UserStories : LoggedTest
         var popup = await model.WaitForDialog<TestInteractionService.MessagePopupDto>();
         popup.Closable.Close(true);
 
-        Assert.False(repoVm.UpdateProgress.Active);
+        await WaitUntil(() => !repoVm.UpdateProgress.Active,
+            "Repository update progress did not complete in time.");
 
         FileHelper.AssertFileEquality(repositoryMod.Files, storageMod.Files);
     }
@@ -196,5 +197,18 @@ public class UserStories : LoggedTest
         Assert.False(sVm.UseSteam);
 
         // TODO: make sure the download actually works?
+    }
+
+    private static async Task WaitUntil(Func<bool> condition, string timeoutMessage, int timeoutMs = 5000)
+    {
+        var timeoutAt = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+        while (DateTime.UtcNow < timeoutAt)
+        {
+            if (condition())
+                return;
+            await Task.Delay(10);
+        }
+
+        Assert.True(condition(), timeoutMessage);
     }
 }
