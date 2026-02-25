@@ -1,15 +1,12 @@
 mode: ContinuousDeployment
-next-version: 5.1.0
+next-version: 5.1.1
 tag-prefix: '[vV]?'
 
 branches:
   master:
     regex: ^master$
-    label: dev
+    tag: dev
     increment: Patch
-    is-main-branch: true
-    prevent-increment:
-      of-merged-branch: true
 
 ignore:
   sha: []

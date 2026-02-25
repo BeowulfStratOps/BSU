@@ -13,6 +13,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v4
       with:
@@ -27,7 +28,8 @@ jobs:
     - name: Create Version String
       id: version-string
       run: |
-        $VersionString = "${{ steps.gitversion.outputs.MajorMinorPatch }}-dev.${{ steps.gitversion.outputs.CommitsSinceVersionSource }}.${{ steps.gitversion.outputs.ShortSha }}"
+        $VersionString = "${{ steps.gitversion.outputs.MajorMinorPatch }}-dev${{ steps.gitversion.outputs.CommitsSinceVersionSource }}${{ steps.gitversion.outputs.ShortSha }}"
+        Write-Host "Using VERSION_STRING=$VersionString"
         "VERSION_STRING=$VersionString" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
     - name: Install dependencies
       run: dotnet restore --packages packages
