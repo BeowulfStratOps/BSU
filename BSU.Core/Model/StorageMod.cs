@@ -62,7 +62,7 @@ namespace BSU.Core.Model
             _hashes.JobCompleted += () => _dispatcher.ExecuteSynchronized(() => StateChanged?.Invoke());
 
             var updateTarget = _internalState.UpdateTarget;
-            if (updateTarget != null)
+            if (updateTarget?.Hashes != null && updateTarget.Hashes.Count > 0)
             {
                 _hashes.Add(updateTarget.Hashes);
                 _title = updateTarget.Title;
@@ -70,6 +70,11 @@ namespace BSU.Core.Model
             }
             else
             {
+                if (updateTarget != null)
+                {
+                    _logger.Warn("Ignoring incompatible persisted update target without hashes.");
+                    _internalState.UpdateTarget = null;
+                }
                 Load(false);
             }
         }

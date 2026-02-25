@@ -104,6 +104,15 @@ namespace BSU.Core.Tests
         }
 
         [Fact]
+        private void CreatedWithLegacyTargetWithoutHashes()
+        {
+            var legacyTarget = new UpdateTarget(null!, "title");
+            var storageMod = CreateStorageMod(stateTarget: legacyTarget);
+
+            Assert.Equal(StorageModStateEnum.Created, storageMod.GetState());
+        }
+
+        [Fact]
         private async Task UpdateWithTarget()
         {
             var tcs = new TaskCompletionSource<UpdateResult>();

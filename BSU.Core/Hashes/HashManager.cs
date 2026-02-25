@@ -58,10 +58,15 @@ internal class HashManager
         }
     }
 
-    public void Add(IEnumerable<IModHash> hashes)
+    public void Add(IEnumerable<IModHash>? hashes)
     {
+        if (hashes == null)
+            return;
+
         foreach (var hash in hashes)
         {
+            if (hash == null)
+                continue;
             AddHashFunction(hash.GetType(), _ => Task.FromResult(hash));
         }
     }
