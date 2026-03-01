@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 
 namespace BSU.CoreCommon.Hashes
 {
@@ -15,6 +16,7 @@ namespace BSU.CoreCommon.Hashes
     [HashClass(HashType.Match, 10)]
     public class MatchHash : IModHash
     {
+        private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
         private const float Threshold = 0.8f; // at least 80% pbo names match required
 
         private static readonly Regex AddonsPboRegex =
@@ -34,7 +36,9 @@ namespace BSU.CoreCommon.Hashes
             if (modCpp != null)
             {
                 using var reader = new StreamReader(modCpp);
-                var entries = ModUtil.ParseModCpp(reader.ReadToEnd());
+                var entries = ModUtil.ParseModCpp(
+                    reader.ReadToEnd(),
+                    key => Logger.Warn($"Duplicate mod.cpp key '{key}' in storage mod '{mod.Path}'. Using last value."));
                 name = entries.GetValueOrDefault("name");
                 if (name != null)
                 {
@@ -72,7 +76,10 @@ namespace BSU.CoreCommon.Hashes
             string? name = null;
             if (modCppData != null)
             {
-                name = ModUtil.ParseModCpp(Encoding.UTF8.GetString(modCppData)).GetValueOrDefault("name");
+                name = ModUtil.ParseModCpp(
+                        Encoding.UTF8.GetString(modCppData),
+                        key => Logger.Warn($"Duplicate mod.cpp key '{key}' in repository mod. Using last value."))
+                    .GetValueOrDefault("name");
                 if (name != null) name = CleanName(name);
             }
 

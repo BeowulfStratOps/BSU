@@ -40,12 +40,31 @@ namespace BSU.CoreCommon
         /// Parse simple mod.cpp contents
         /// </summary>
         /// <param name="data"></param>
+        /// <param name="onDuplicateKey">Called once per duplicate key found.</param>
         /// <returns></returns>
-        public static Dictionary<string, string> ParseModCpp(string data)
+        public static Dictionary<string, string> ParseModCpp(string data, Action<string>? onDuplicateKey = null)
         {
             data = data.Replace("\r", "");
             var matches = Regex.Matches(data, "^([a-zA-Z_]+)\\s*=\\s*\"([^\"]*)\";$", RegexOptions.Multiline);
-            return matches.ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+            // Some mods repeat keys in mod.cpp; keep the last value to avoid hard failure.
+            var result = new Dictionary<string, string>();
+            HashSet<string>? loggedDuplicates = onDuplicateKey == null ? null : new HashSet<string>();
+            foreach (Match match in matches)
+            {
+                var key = match.Groups[1].Value;
+                var value = match.Groups[2].Value;
+                if (result.ContainsKey(key))
+                {
+                    if (loggedDuplicates == null || loggedDuplicates.Add(key))
+                    {
+                        onDuplicateKey?.Invoke(key);
+                    }
+                }
+
+                result[key] = value;
+            }
+
+            return result;
         }
 
         /// <summary>
