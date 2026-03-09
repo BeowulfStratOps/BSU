@@ -25,8 +25,9 @@ namespace BSU.GUI
 
             var branchFilePath = Path.Combine(parentPath, "branch");
             var squirrel = new SquirrelHelper(branchFilePath);
-
+#if !DEBUG
             squirrel.HandleEvents();
+#endif
             base.OnStartup(startupEventArgs);
             var mainWindow = new MainWindow();
             Thread.CurrentThread.Name = "main";

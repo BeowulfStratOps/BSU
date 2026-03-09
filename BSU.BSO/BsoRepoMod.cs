@@ -147,6 +147,7 @@ namespace BSU.BSO
 
         public async Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
+            
             // TODO: retry
             
             await _loading;
@@ -155,8 +156,8 @@ namespace BSU.BSO
 
             _logger.Trace($"Downloading content {_url} / {path}");
 
-            await using var fileStream = await fileSystem.OpenWrite(path, cancellationToken);
-
+            var partPath = path + ".part";
+            
             try
             {
                 var response = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -165,20 +166,38 @@ namespace BSU.BSO
 
                 try
                 {
-                    await CopyToWithProgress(stream, fileStream, 10 * 1024 * 1024, progress, cancellationToken);
+                    await using (var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken))
+                    {
+                        await CopyToWithProgress(stream, fileStream, 10 * 1024 * 1024, progress, cancellationToken);
+                        fileStream.SetLength(fileStream.Position);
+                    } 
+                    // Get the hash of the file, use the extension from the original path to use the PBO logic 
+                    var entry = GetFileEntry(path) ?? throw new FileNotFoundException(path);
+                    var partRead = await fileSystem.OpenRead(partPath, cancellationToken) ?? throw new FileNotFoundException(partPath);
+                    var partHash = await Sha1AndPboHash.BuildAsync(partRead, Utils.GetExtension(path), cancellationToken);
+                    var expectedHash = new Sha1AndPboHash(entry.Hash);
+
+                    if (!partHash.Equals(expectedHash))
+                    {
+                        _logger.Warn($"Hash mismatch for {path}. Expected {expectedHash}, got {partHash}");
+                        await fileSystem.Delete(partPath, cancellationToken);
+                        throw new InvalidDataException($"Hash mismatch for {path}");
+                    }
+                    
+                    
+                    await fileSystem.Move(partPath, path, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger.Info($"Aborted downloading content {_url} / {path}");
+                    _logger.Info($"Aborted downloading content {_url} / {partPath}");
                     throw;
                 }
 
-                fileStream.SetLength(fileStream.Position);
-                _logger.Trace($"Finished downloading content {_url} / {path}");
+                _logger.Trace($"Finished downloading content {_url} / {partPath}");
             }
             catch (Exception e)
             {
-                _logger.Error(e, $"Error while trying to download {path}");
+                _logger.Error(e, $"Error while trying to download {partPath}");
                 throw;
             }
         }
