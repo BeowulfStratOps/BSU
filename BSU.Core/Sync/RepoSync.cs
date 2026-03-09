@@ -40,10 +40,13 @@ namespace BSU.Core.Sync
                 {
                     var repoFileHash = await repository.GetFileHash(repoFile, cancellationToken);
                     var storageFileHash = await storage.GetFileHash(repoFile, cancellationToken);
-                    if (!repoFileHash.Equals(storageFileHash))
+                    
+                    var repoFileSize = await repository.GetFileSize(repoFile, cancellationToken);
+                    await using var storageFile = await storage.OpenRead(repoFile, cancellationToken);
+                    var storageFileSize = (ulong)(storageFile?.Length ?? throw new FileNotFoundException(repoFile));
+                    if (!repoFileHash.Equals(storageFileHash) || repoFileSize != storageFileSize)
                     {
-                        var fileSize = await repository.GetFileSize(repoFile, cancellationToken);
-                        allActions.Add(new UpdateAction(repository, storage, repoFile, fileSize));
+                        allActions.Add(new UpdateAction(repository, storage, repoFile, repoFileSize));
                         storageListCopy.Remove(repoFile + ".part");
                     }
 
