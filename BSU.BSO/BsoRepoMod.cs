@@ -23,11 +23,13 @@ namespace BSU.BSO
     internal class BsoRepoMod : IRepositoryMod
     {
         // TODO: re-use http clients?
+        private const int DefaultMaxTransferAttempts = 3;
 
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly string _url;
         private readonly string? _expectedHash;
+        private readonly int _maxTransferAttempts;
         private HashFile? _hashFile;
         private readonly Task _loading;
         private readonly HttpClient _client = new();
@@ -69,10 +71,11 @@ namespace BSU.BSO
         private BsoFileHash? GetFileEntry(string path) =>
             _hashFile?.Hashes.SingleOrDefault(h => h.FileName.ToLowerInvariant() == path);
 
-        public BsoRepoMod(string url, string? expectedHash, IJobManager jobManager)
+        public BsoRepoMod(string url, string? expectedHash, IJobManager jobManager, int maxTransferAttempts = DefaultMaxTransferAttempts)
         {
             _url = url;
             _expectedHash = expectedHash;
+            _maxTransferAttempts = maxTransferAttempts > 0 ? maxTransferAttempts : DefaultMaxTransferAttempts;
             _loading = jobManager.Run($"Bso Repo Mod Load {_url}", () => Load(CancellationToken.None), CancellationToken.None);
         }
 
@@ -147,73 +150,39 @@ namespace BSU.BSO
 
         public async Task DownloadTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
-            
-            // TODO: retry
-            
             await _loading;
 
             var url = _url + GetRealPath(path);
-
-            _logger.Trace($"Downloading content {_url} / {path}");
-
             var partPath = path + ".part";
-            
-            try
+            await ExecuteWithRetriesAsync("download", path, partPath, fileSystem, cancellationToken, async () =>
             {
-                var response = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                _logger.Trace($"Downloading content {_url} / {path}");
+                using var response = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 response.EnsureSuccessStatusCode();
                 await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
-                try
+                await using (var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken))
                 {
-                    await using (var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken))
-                    {
-                        await CopyToWithProgress(stream, fileStream, 10 * 1024 * 1024, progress, cancellationToken);
-                        fileStream.SetLength(fileStream.Position);
-                    } 
-                    // Get the hash of the file, use the extension from the original path to use the PBO logic 
-                    var entry = GetFileEntry(path) ?? throw new FileNotFoundException(path);
-                    var partRead = await fileSystem.OpenRead(partPath, cancellationToken) ?? throw new FileNotFoundException(partPath);
-                    if ((ulong)partRead.Length != entry.FileSize)
-                    {
-                        await partRead.DisposeAsync();
-                        throw new InvalidDataException(
-                            $"Size mismatch for {path}. Expected {entry.FileSize}, got {(ulong)partRead.Length}.");
-                    }
-                    var partHash = await Sha1AndPboHash.BuildAsync(partRead, Utils.GetExtension(path), cancellationToken);
-                    var expectedHash = new Sha1AndPboHash(entry.Hash);
-
-                    if (!partHash.Equals(expectedHash))
-                    {
-                        _logger.Warn($"Hash mismatch for {path}. Expected {expectedHash}, got {partHash}");
-                        await fileSystem.Delete(partPath, cancellationToken);
-                        throw new InvalidDataException($"Hash mismatch for {path}");
-                    }
-                    
-                    
-                    await fileSystem.Move(partPath, path, cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.Info($"Aborted downloading content {_url} / {partPath}");
-                    throw;
+                    await CopyToWithProgress(stream, fileStream, 10 * 1024 * 1024, progress, cancellationToken);
+                    fileStream.SetLength(fileStream.Position);
                 }
 
+                var entry = GetFileEntry(path) ?? throw new FileNotFoundException(path);
+                var partRead = await fileSystem.OpenRead(partPath, cancellationToken) ?? throw new FileNotFoundException(partPath);
+                if ((ulong)partRead.Length != entry.FileSize)
+                {
+                    await partRead.DisposeAsync();
+                    throw new InvalidDataException($"Size mismatch for {path}. Expected {entry.FileSize}, got {(ulong)partRead.Length}.");
+                }
+
+                var partHash = await Sha1AndPboHash.BuildAsync(partRead, Utils.GetExtension(path), cancellationToken);
+                var expectedHash = new Sha1AndPboHash(entry.Hash);
+                if (!partHash.Equals(expectedHash))
+                    throw new InvalidDataException($"Hash mismatch for {path}.");
+
+                await fileSystem.Move(partPath, path, cancellationToken);
                 _logger.Trace($"Finished downloading content {_url} / {partPath}");
-            }
-            catch (Exception e)
-            {
-                try
-                {
-                    await fileSystem.Delete(partPath, CancellationToken.None);
-                }
-                catch
-                {
-                    // best effort cleanup of temp files
-                }
-                _logger.Error(e, $"Error while trying to download {partPath}");
-                throw;
-            }
+            });
         }
 
         /// <summary>
@@ -247,48 +216,111 @@ namespace BSU.BSO
 
         public async Task UpdateTo(string path, IFileSystem fileSystem, IProgress<ulong> progress, CancellationToken cancellationToken)
         {
-            // TODO: retry
-            
             await _loading;
 
             _logger.Debug($"Updating file {_url} / {path}");
 
             var url = _url + GetRealPath(path);
-            await using var cfData = await _client.GetStreamAsync(url + ".zsync", cancellationToken);
-            var controlFile = new ControlFile(cfData);
-
-            var downloader = new RangeDownloader(new Uri(url), _client);
-
             var partPath = path + ".part";
-            var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken);
-            var seed = await fileSystem.OpenRead(path, cancellationToken);
-
             try
             {
-
-                if (seed == null) throw new InvalidOperationException();
-                var syncProgress = new SyncProgress(progress.Report);
-                Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, syncProgress, cancellationToken);
-                fileStream.SetLength(fileStream.Position);
-                await seed.DisposeAsync();
-                await fileStream.DisposeAsync();
-
-                var extension = Utils.GetExtension(path).ToLowerInvariant();
-                if (extension == "pbo" || extension == "ebo")
+                await ExecuteWithRetriesAsync("update", path, partPath, fileSystem, cancellationToken, async () =>
                 {
-                    await VerifyWithControlFile(path, partPath, controlFile, fileSystem, cancellationToken);
-                }
+                    await using var cfData = await _client.GetStreamAsync(url + ".zsync", cancellationToken);
+                    var controlFile = new ControlFile(cfData);
+                    var downloader = new RangeDownloader(new Uri(url), _client);
+                    var syncProgress = new SyncProgress(progress.Report);
 
-                await fileSystem.Move(partPath, path, cancellationToken);
-                _logger.Debug($"Finished updating file {_url} / {path}");
+                    await using var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken);
+                    await using var seed = await fileSystem.OpenRead(path, cancellationToken);
+                    if (seed == null) throw new InvalidOperationException();
+
+                    Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, syncProgress, cancellationToken);
+                    fileStream.SetLength(fileStream.Position);
+
+                    var extension = Utils.GetExtension(path).ToLowerInvariant();
+                    if (extension == "pbo" || extension == "ebo")
+                    {
+                        await VerifyWithControlFile(path, partPath, controlFile, fileSystem, cancellationToken);
+                    }
+
+                    await fileSystem.Move(partPath, path, cancellationToken);
+                    _logger.Debug($"Finished updating file {_url} / {path}");
+                });
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not OperationCanceledException)
             {
-                if (seed != null)
-                    await seed.DisposeAsync();
-                await fileStream.DisposeAsync();
-                _logger.Error(e, $"Error while syncing {_url} / {path}");
-                throw;
+                _logger.Warn($"Update failed for {path} after {_maxTransferAttempts} attempts; falling back to full download.");
+                await DownloadTo(path, fileSystem, progress, cancellationToken);
+            }
+        }
+
+        private async Task ExecuteWithRetriesAsync(string operation, string path, string partPath, IFileSystem fileSystem,
+            CancellationToken cancellationToken, Func<Task> action)
+        {
+            Exception? lastError = null;
+            for (int attempt = 1; attempt <= _maxTransferAttempts; attempt++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await CleanupPartFile(partPath, fileSystem);
+                try
+                {
+                    await action();
+                    return;
+                }
+                catch (Exception e) when (e is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                {
+                    await CleanupPartFile(partPath, fileSystem);
+                    throw;
+                }
+                catch (Exception e) when (IsRetryable(e, cancellationToken) && attempt < _maxTransferAttempts)
+                {
+                    lastError = e;
+                    _logger.Warn($"{operation} retry {attempt}/{_maxTransferAttempts} for {path}: {e.GetType().Name}");
+                    await CleanupPartFile(partPath, fileSystem);
+                    await Task.Delay(GetRetryDelay(attempt), cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    lastError = e;
+                    await CleanupPartFile(partPath, fileSystem);
+                    throw;
+                }
+            }
+
+            if (lastError != null)
+                throw lastError;
+        }
+
+        private static bool IsRetryable(Exception exception, CancellationToken cancellationToken)
+        {
+            if (exception is OperationCanceledException)
+                return !cancellationToken.IsCancellationRequested;
+            return exception is HttpRequestException or IOException or InvalidDataException;
+        }
+
+        private static TimeSpan GetRetryDelay(int attempt)
+        {
+            var jitter = Random.Shared.Next(0, 200);
+            var delayMs = attempt switch
+            {
+                1 => 300,
+                2 => 1000,
+                _ => 2500
+            };
+            return TimeSpan.FromMilliseconds(delayMs + jitter);
+        }
+
+        private static async Task CleanupPartFile(string partPath, IFileSystem fileSystem)
+        {
+            try
+            {
+                if (await fileSystem.HasFile(partPath, CancellationToken.None))
+                    await fileSystem.Delete(partPath, CancellationToken.None);
+            }
+            catch
+            {
+                // best effort cleanup
             }
         }
 
