@@ -42,7 +42,8 @@ namespace BSU.Core.Sync
                     var storageFileHash = await storage.GetFileHash(repoFile, cancellationToken);
                     
                     var repoFileSize = await repository.GetFileSize(repoFile, cancellationToken);
-                    var storageFileSize = (ulong) new FileInfo(Path.Combine(storage.Path, repoFile)).Length;
+                    await using var storageFile = await storage.OpenRead(repoFile, cancellationToken);
+                    var storageFileSize = (ulong)(storageFile?.Length ?? throw new FileNotFoundException(repoFile));
                     if (!repoFileHash.Equals(storageFileHash) || repoFileSize != storageFileSize)
                     {
                         allActions.Add(new UpdateAction(repository, storage, repoFile, repoFileSize));

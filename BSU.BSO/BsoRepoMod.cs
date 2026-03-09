@@ -174,6 +174,12 @@ namespace BSU.BSO
                     // Get the hash of the file, use the extension from the original path to use the PBO logic 
                     var entry = GetFileEntry(path) ?? throw new FileNotFoundException(path);
                     var partRead = await fileSystem.OpenRead(partPath, cancellationToken) ?? throw new FileNotFoundException(partPath);
+                    if ((ulong)partRead.Length != entry.FileSize)
+                    {
+                        await partRead.DisposeAsync();
+                        throw new InvalidDataException(
+                            $"Size mismatch for {path}. Expected {entry.FileSize}, got {(ulong)partRead.Length}.");
+                    }
                     var partHash = await Sha1AndPboHash.BuildAsync(partRead, Utils.GetExtension(path), cancellationToken);
                     var expectedHash = new Sha1AndPboHash(entry.Hash);
 
@@ -197,6 +203,14 @@ namespace BSU.BSO
             }
             catch (Exception e)
             {
+                try
+                {
+                    await fileSystem.Delete(partPath, CancellationToken.None);
+                }
+                catch
+                {
+                    // best effort cleanup of temp files
+                }
                 _logger.Error(e, $"Error while trying to download {partPath}");
                 throw;
             }
