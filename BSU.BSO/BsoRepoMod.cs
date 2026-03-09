@@ -255,8 +255,16 @@ namespace BSU.BSO
                 if (seed == null) throw new InvalidOperationException();
                 var syncProgress = new SyncProgress(progress.Report);
                 Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, syncProgress, cancellationToken);
+                fileStream.SetLength(fileStream.Position);
                 await seed.DisposeAsync();
                 await fileStream.DisposeAsync();
+
+                var extension = Utils.GetExtension(path).ToLowerInvariant();
+                if (extension == "pbo" || extension == "ebo")
+                {
+                    await VerifyWithControlFile(path, partPath, controlFile, fileSystem, cancellationToken);
+                }
+
                 await fileSystem.Move(partPath, path, cancellationToken);
                 _logger.Debug($"Finished updating file {_url} / {path}");
             }
@@ -268,6 +276,47 @@ namespace BSU.BSO
                 _logger.Error(e, $"Error while syncing {_url} / {path}");
                 throw;
             }
+        }
+
+        private static async Task VerifyWithControlFile(string path, string partPath, ControlFile controlFile,
+            IFileSystem fileSystem, CancellationToken cancellationToken)
+        {
+            var header = controlFile.GetHeader();
+            var localPart = await fileSystem.OpenRead(partPath, cancellationToken);
+            if (localPart == null) throw new FileNotFoundException(partPath);
+
+            await using (localPart)
+            {
+                if (localPart.Length != header.Length)
+                    throw new InvalidDataException(
+                        $"Zsync length mismatch for {path}: expected {header.Length}, got {localPart.Length}.");
+            }
+
+            // Verify pass: if any range download is required, the part file does not match the control file.
+            var verifyRead = await fileSystem.OpenRead(partPath, cancellationToken);
+            if (verifyRead == null) throw new FileNotFoundException(partPath);
+            await using (verifyRead)
+            {
+                Zsync.Sync(controlFile, new List<Stream> { verifyRead }, new NoDownloadRangeDownloader(path), Stream.Null, null,
+                    cancellationToken);
+            }
+        }
+
+        private sealed class NoDownloadRangeDownloader : IRangeDownloader
+        {
+            private readonly string _path;
+
+            public NoDownloadRangeDownloader(string path)
+            {
+                _path = path;
+            }
+
+            public Stream DownloadRange(long from, long to) =>
+                throw new InvalidDataException(
+                    $"Zsync verify failed for {_path}: unexpected range request [{from}, {to}).");
+
+            public Stream Download() =>
+                throw new InvalidDataException($"Zsync verify failed for {_path}: unexpected full download request.");
         }
 
         private class SyncProgress : IProgress<ulong>
