@@ -213,25 +213,23 @@ namespace BSU.BSO
             var partPath = path + ".part";
             try
             {
-                await ExecuteWithRetriesAsync("update", path, partPath, fileSystem, cancellationToken, async () =>
+                await ExecuteWithRetriesAsync("update", url, path, partPath, fileSystem, cancellationToken, async () =>
                 {
                     await using var cfData = await _client.GetStreamAsync(url + ".zsync", cancellationToken);
                     var controlFile = new ControlFile(cfData);
                     var downloader = new RangeDownloader(new Uri(url), _client);
                     var syncProgress = new SyncProgress(progress.Report);
 
-                    await using var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken);
-                    await using var seed = await fileSystem.OpenRead(path, cancellationToken);
-                    if (seed == null) throw new InvalidOperationException();
-
-                    Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, syncProgress, cancellationToken);
-                    fileStream.SetLength(fileStream.Position);
-
-                    var extension = Utils.GetExtension(path).ToLowerInvariant();
-                    if (extension == "pbo" || extension == "ebo")
+                    await using (var fileStream = await fileSystem.OpenWrite(partPath, cancellationToken))
+                    await using (var seed = await fileSystem.OpenRead(path, cancellationToken))
                     {
-                        await VerifyWithControlFile(path, partPath, controlFile, fileSystem, cancellationToken);
+                        if (seed == null) throw new InvalidOperationException();
+
+                        Zsync.Sync(controlFile, new List<Stream> { seed }, downloader, fileStream, syncProgress, cancellationToken);
+                        fileStream.SetLength(fileStream.Position);
                     }
+
+                    await ValidatePartFile(path, partPath, fileSystem, cancellationToken);
 
                     await fileSystem.Move(partPath, path, cancellationToken);
                     _logger.Debug($"Finished updating file {_url} / {path}");
@@ -239,12 +237,12 @@ namespace BSU.BSO
             }
             catch (Exception e) when (e is not OperationCanceledException)
             {
-                _logger.Warn($"Update failed for {path} after {_maxTransferAttempts} attempts; falling back to full download.");
+                _logger.Warn(e, $"Update failed for {path} from {url} after {_maxTransferAttempts} attempts; falling back to full download.");
                 await DownloadTo(path, fileSystem, progress, cancellationToken);
             }
         }
 
-        private async Task ExecuteWithRetriesAsync(string operation, string path, string partPath, IFileSystem fileSystem,
+        private async Task ExecuteWithRetriesAsync(string operation, string url, string path, string partPath, IFileSystem fileSystem,
             CancellationToken cancellationToken, Func<Task> action)
         {
             Exception? lastError = null;
@@ -265,13 +263,18 @@ namespace BSU.BSO
                 catch (Exception e) when (IsRetryable(e, cancellationToken) && attempt < _maxTransferAttempts)
                 {
                     lastError = e;
-                    _logger.Warn($"{operation} retry {attempt}/{_maxTransferAttempts} for {path}: {e.GetType().Name}");
+                    var partLength = await GetPartLength(partPath, fileSystem, cancellationToken);
+                    _logger.Warn(e,
+                        $"{operation} retry {attempt}/{_maxTransferAttempts} for {path} from {url}; part length: {FormatPartLength(partLength)}.");
                     await CleanupPartFile(partPath, fileSystem);
                     await Task.Delay(GetRetryDelay(attempt), cancellationToken);
                 }
                 catch (Exception e)
                 {
                     lastError = e;
+                    var partLength = await GetPartLength(partPath, fileSystem, cancellationToken);
+                    _logger.Warn(e,
+                        $"{operation} failed on attempt {attempt}/{_maxTransferAttempts} for {path} from {url}; part length: {FormatPartLength(partLength)}.");
                     await CleanupPartFile(partPath, fileSystem);
                     throw;
                 }
@@ -280,6 +283,45 @@ namespace BSU.BSO
             if (lastError != null)
                 throw lastError;
         }
+
+        private async Task ValidatePartFile(string path, string partPath, IFileSystem fileSystem,
+            CancellationToken cancellationToken)
+        {
+            var entry = GetFileEntry(path) ?? throw new FileNotFoundException(path);
+            var partRead = await fileSystem.OpenRead(partPath, cancellationToken) ?? throw new FileNotFoundException(partPath);
+            if ((ulong)partRead.Length != entry.FileSize)
+            {
+                var actualSize = (ulong)partRead.Length;
+                await partRead.DisposeAsync();
+                throw new InvalidDataException($"Size mismatch for {path}. Expected {entry.FileSize}, got {actualSize}.");
+            }
+
+            var partHash = await Sha1AndPboHash.BuildAsync(partRead, Utils.GetExtension(path), cancellationToken);
+            var expectedHash = new Sha1AndPboHash(entry.Hash);
+            if (!partHash.Equals(expectedHash))
+                throw new InvalidDataException($"Hash mismatch for {path}. Expected {expectedHash}, got {partHash}.");
+
+            _logger.Debug($"Validated content for {path}: size {entry.FileSize}, hash {partHash}.");
+        }
+
+        private static async Task<long?> GetPartLength(string partPath, IFileSystem fileSystem,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var partRead = await fileSystem.OpenRead(partPath, cancellationToken);
+                if (partRead == null) return null;
+                await using (partRead)
+                    return partRead.Length;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static string FormatPartLength(long? partLength) =>
+            partLength?.ToString() ?? "unavailable";
 
         private static bool IsRetryable(Exception exception, CancellationToken cancellationToken)
         {
@@ -311,47 +353,6 @@ namespace BSU.BSO
             {
                 // best effort cleanup
             }
-        }
-
-        private static async Task VerifyWithControlFile(string path, string partPath, ControlFile controlFile,
-            IFileSystem fileSystem, CancellationToken cancellationToken)
-        {
-            var header = controlFile.GetHeader();
-            var localPart = await fileSystem.OpenRead(partPath, cancellationToken);
-            if (localPart == null) throw new FileNotFoundException(partPath);
-
-            await using (localPart)
-            {
-                if (localPart.Length != header.Length)
-                    throw new InvalidDataException(
-                        $"Zsync length mismatch for {path}: expected {header.Length}, got {localPart.Length}.");
-            }
-
-            // Verify pass: if any range download is required, the part file does not match the control file.
-            var verifyRead = await fileSystem.OpenRead(partPath, cancellationToken);
-            if (verifyRead == null) throw new FileNotFoundException(partPath);
-            await using (verifyRead)
-            {
-                Zsync.Sync(controlFile, new List<Stream> { verifyRead }, new NoDownloadRangeDownloader(path), Stream.Null, null,
-                    cancellationToken);
-            }
-        }
-
-        private sealed class NoDownloadRangeDownloader : IRangeDownloader
-        {
-            private readonly string _path;
-
-            public NoDownloadRangeDownloader(string path)
-            {
-                _path = path;
-            }
-
-            public Stream DownloadRange(long from, long to) =>
-                throw new InvalidDataException(
-                    $"Zsync verify failed for {_path}: unexpected range request [{from}, {to}).");
-
-            public Stream Download() =>
-                throw new InvalidDataException($"Zsync verify failed for {_path}: unexpected full download request.");
         }
 
         private class SyncProgress : IProgress<ulong>
