@@ -154,7 +154,7 @@ namespace BSU.BSO
 
             var url = _url + GetRealPath(path);
             var partPath = path + ".part";
-            await ExecuteWithRetriesAsync("download", path, partPath, fileSystem, cancellationToken, async () =>
+            await ExecuteWithRetriesAsync("download", url, path, partPath, fileSystem, cancellationToken, async () =>
             {
                 _logger.Trace($"Downloading content {_url} / {path}");
                 using var response = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -167,18 +167,7 @@ namespace BSU.BSO
                     fileStream.SetLength(fileStream.Position);
                 }
 
-                var entry = GetFileEntry(path) ?? throw new FileNotFoundException(path);
-                var partRead = await fileSystem.OpenRead(partPath, cancellationToken) ?? throw new FileNotFoundException(partPath);
-                if ((ulong)partRead.Length != entry.FileSize)
-                {
-                    await partRead.DisposeAsync();
-                    throw new InvalidDataException($"Size mismatch for {path}. Expected {entry.FileSize}, got {(ulong)partRead.Length}.");
-                }
-
-                var partHash = await Sha1AndPboHash.BuildAsync(partRead, Utils.GetExtension(path), cancellationToken);
-                var expectedHash = new Sha1AndPboHash(entry.Hash);
-                if (!partHash.Equals(expectedHash))
-                    throw new InvalidDataException($"Hash mismatch for {path}.");
+                await ValidatePartFile(path, partPath, fileSystem, cancellationToken);
 
                 await fileSystem.Move(partPath, path, cancellationToken);
                 _logger.Trace($"Finished downloading content {_url} / {partPath}");
